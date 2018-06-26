@@ -1,0 +1,32 @@
+---
+- name: collect all api test cases
+  find:
+    paths: "{{ role_path }}/tests"
+    patterns: "{{ testcase }}.yaml"
+  delegate_to: localhost
+  register: test_cases
+
+- name: set test_items
+  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+
+- name: obtain access token
+  fdm_oauth_token:
+    device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+    username: 'admin'
+    password: 'pass'
+    operation: 'request'
+
+- name: run test cases
+  block:
+    - name: run test case (connection=local)
+      include: "{{ test_case_to_run }} ansible_connection=local ansible_become=no"
+      with_items: "{{ test_items }}"
+      loop_control:
+        loop_var: test_case_to_run
+
+  always:
+    - name: revoke access token
+      fdm_oauth_token:
+        device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+        access_token: '{{ access_token }}'
+        operation: 'revoke'

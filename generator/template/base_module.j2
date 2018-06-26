@@ -1,0 +1,199 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Cisco Systems, Inc.
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'network'}
+
+DOCUMENTATION = """
+---
+module: fdm_{{ model_name | camel_to_snake }}
+short_description: Manages {{ model_name }} objects on Cisco FTD devices with FDM
+version_added: "2.7"
+author: "Cisco Systems, Inc."
+options:
+  hostname:
+    description:
+      - Specifies the hostname of the FTD device.
+    required: true
+  access_token:
+    description:
+      - Specifies the token to access the FTD device.
+    required: true
+  refresh_token:
+    description:
+      - Specifies the token to refresh the access token when the current one expires.
+    required: true
+  operation:
+    description:
+      - Specified the name of the operation to execute in the task.
+    required: true
+  register_as:
+    description:
+      - Specifies Ansible fact name that is used to register received response from the FTD device.
+{% for param in params %}
+{% if param.description %}
+  {{ param.name }}
+    description:
+      - {{ param.description }}
+{% endif %}
+{% endfor %}
+"""
+
+EXAMPLES = """
+"""
+
+RETURN = """
+response:
+  description: HTTP response returned from the API call.
+  returned: success
+  type: dict
+error_code:
+  description: HTTP error code returned from the server.
+  returned: error
+  type: int
+msg:
+  description: Error message returned from the server.
+  returned: error
+  type: dict
+"""
+import json
+
+from ansible.module_utils.authorization import retry_on_token_expiration
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.misc import dict_subset, construct_module_result
+from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.urls import open_url
+
+
+{% set class_name = model_name + "Resource" %}
+{% set extra_operations = [] %}
+class {{ class_name }}(object):
+    {% for operation_name, operation_spec in operations.items() %}
+
+    @staticmethod
+    @retry_on_token_expiration
+    def {{ operation_name }}(params):
+{% if operation_spec.path_params %}
+        path_params = dict_subset(params, [{{ operation_spec.path_params.keys() | map('quote') | join(', ') }}])
+{% endif %}
+{% if operation_spec.query_params %}
+        query_params = dict_subset(params, [{{ operation_spec.query_params.keys() | map('quote') | join(', ') }}])
+{% endif %}
+{% if operation_spec.body_params %}
+        body_params = dict_subset(params, [{{ operation_spec.body_params.keys() | map('quote') | join(', ') }}])
+{% endif %}
+
+        url = construct_url(params['hostname'], {{ operation_spec.url_path | quote }}{% if operation_spec.path_params %}, path_params=path_params{% endif %}{% if operation_spec.query_params %}, query_params=query_params{% endif %})
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method={{ operation_spec.http_method | upper | quote }},
+{% if operation_spec.body_params %}
+            data=json.dumps(body_params)
+{% endif %}
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+{% endfor %}
+{% set searchable_by_name = 'get%sList' % model_name in operations.keys() %}
+{% if searchable_by_name %}
+{% do extra_operations.append( "get"+model_name+"ByName" ) %}
+
+    @staticmethod
+    @retry_on_token_expiration
+    def get{{ model_name }}ByName(params):
+        search_params = params.copy()
+        search_params['filter'] = 'name:%s' % params['name']
+        item_generator = iterate_over_pageable_resource({{ class_name }}.get{{ model_name }}List, search_params)
+        return next(item for item in item_generator if item['name'] == params['name'])
+{% endif %}
+{% set eligible_for_upsert = 'get%sList' % model_name in operations.keys() and 'edit%s' % model_name in operations.keys() and 'add%s' % model_name in operations.keys() %}
+{% if eligible_for_upsert %}
+{% do extra_operations.append( "upsert"+model_name ) %}
+
+    @staticmethod
+    @retry_on_token_expiration
+    def upsert{{ model_name }}(params):
+        def is_duplicate_name_error(err):
+            return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
+
+        try:
+            return {{ class_name }}.add{{ model_name }}(params)
+        except HTTPError as e:
+            if is_duplicate_name_error(e):
+                existing_object = {{ class_name }}.get{{ model_name }}ByName(params)
+                params = {{ class_name }}.copy_identity_params(existing_object, params)
+                return {{ class_name }}.edit{{ model_name }}(params)
+            else:
+                raise e
+{% endif %}
+{% if searchable_by_name and 'edit%s' % model_name in operations.keys() %}
+{% do extra_operations.append( "edit"+model_name+"ByName" ) %}
+
+    @staticmethod
+    @retry_on_token_expiration
+    def edit{{ model_name }}ByName(params):
+        existing_object = {{ class_name }}.get{{ model_name }}ByName(params)
+        params = {{ class_name }}.copy_identity_params(existing_object, params)
+        return {{ class_name }}.edit{{ model_name }}(params)
+{% endif %}
+{% if searchable_by_name and 'delete%s' % model_name in operations.keys() %}
+{% do extra_operations.append( "delete"+model_name+"ByName" ) %}
+
+    @staticmethod
+    @retry_on_token_expiration
+    def delete{{ model_name }}ByName(params):
+        existing_object = {{ class_name }}.get{{ model_name }}ByName(params)
+        params = {{ class_name }}.copy_identity_params(existing_object, params)
+        return {{ class_name }}.delete{{ model_name }}(params)
+{% endif %}
+
+    @staticmethod
+    def copy_identity_params(source_object, dest_params):
+        dest_params['objId'] = source_object['id']
+        dest_params['id'] = source_object['id']
+        if 'version' in source_object:
+            dest_params['version'] = source_object['version']
+{% if model_name == 'AccessRule' %}
+        dest_params['ruleId'] = source_object.get('ruleId')
+{% endif %}
+        return dest_params
+
+
+def main():
+    fields = dict(
+        hostname=dict(type='str', required=True),
+        access_token=dict(type='str', required=True),
+        refresh_token=dict(type='str', required=True),
+
+        operation=dict(choices=[{{ operations | map('quote') | join(', ') }}{% if extra_operations %}, {{ extra_operations | map('quote') | join(', ') }}{% endif %}], required=True),
+        register_as=dict(type='str'),
+
+{% for param in params %}
+        {{ param.name }}=dict(type={{ param.type | quote }}),
+{% endfor %}
+    )
+
+    module = AnsibleModule(argument_spec=fields)
+    params = module.params
+
+    try:
+        method_to_call = getattr({{ class_name }}, params['operation'])
+        response = method_to_call(params)
+        result = construct_module_result(response, params)
+        module.exit_json(**result)
+    except HTTPError as e:
+        err_msg = e.read()
+        module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
+    except Exception as e:
+        module.fail_json(changed=False, msg=str(e))
+
+
+if __name__ == '__main__':
+    main()
+
