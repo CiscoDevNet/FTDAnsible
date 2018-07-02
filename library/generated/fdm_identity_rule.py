@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: fdm_access_rule
-short_description: Manages AccessRule objects on Cisco FTD devices with FDM
+module: fdm_identity_rule
+short_description: Manages IdentityRule objects on Cisco FTD devices with FDM
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -34,106 +34,89 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
+  action
+    description:
+      - An enum value that specifies authentication action for directory servers. <br> Values can be one of the following. <br> ACTIVE - Use active authenticate to determine user identity and is applied to HTTP traffic only. <br> PASSIVE - Use passive authentication to determine user identity. <br> NO_AUTH - Do not obtain user identity. Identity-based access rules will not be applied to this traffic. These users are marked as No Authentication Required. <br>
   at
     description:
       - An integer representing where to add the new object in the ordered list. Use 0 to add it at the beginning of the list. If not specified, it will be added at the end of the list
+  authType
+    description:
+      - An enum value that specifies active authentication method (type) supported by the directory server. <br> Values can be one of the following. <br> HTTP Basic - Authenticate users using an unencrypted HTTP Basic Authentication (BA) connection. This is the default. Users log in to the network using their browser's default authentication popup window. <br> NTLM - Authenticate users using an NT LAN Manager (NTLM) connection. This setting is available only with AD realm. Users log in to the network using their browser's default authentication popup window, although you can configure IE and Firefox browsers to transparently authenticate using their Windows domain login. <br> HTTP Negotiate - Allow the device to negotiate the method between the user agent (the application the user is using to initiate the traffic flow) and the Active Directory server. Negotiation results in the strongest commonly supported method being used, in order, NTLM, then basic. Users log in to the network using their browser's default authentication popup window. <br> HTTP Response Page - Prompt users to authenticate using a system-provided web page. This is a form of HTTP Basic authentication. <br>
   destinationNetworks
     description:
-      - A Set of Network objects considered as a destination network.<br>Allowed types are: [Continent, Country, GeoLocation, NetworkObject, NetworkObjectGroup]
+      - An optional list of network objects or geographical locations that defines the network addresses or locations to match through which the traffic is leaving the device from.<br>Allowed types are: [Continent, Country, GeoLocation, NetworkObject, NetworkObjectGroup]
   destinationPorts
     description:
-      - A Set of PortObjectBase objects considered as a destination port.<br>Allowed types are: [ICMPv4PortObject, ICMPv6PortObject, ProtocolObject, TCPPortObject, UDPPortObject, PortObjectGroup]
+      - An optional list of port objects that defines the protocols used to match through which the traffic is leaving the device from.<br>Allowed types are: [ICMPv4PortObject, ICMPv6PortObject, ProtocolObject, TCPPortObject, UDPPortObject, PortObjectGroup]
   destinationZones
     description:
-      - A Set of ZoneBase objects considered considered as a destination zone.<br>Allowed types are: [SecurityZone, TunnelZone]
-  embeddedAppFilter
+      - An optional list of security zones objects containing interfaces to match through which the traffic is leaving the device from.<br>Allowed types are: [SecurityZone, TunnelZone]
+  enabled
     description:
-      - An optional EmbeddedAppFilter object. Providing an object will make the rule be applied only to traffic matching provided app filter's condition(s).
-  eventLogAction
-    description:
-      - A mandatory EventLogAction object that defines the logging options for the rule.
-  filePolicy
-    description:
-      - An optional FilePolicy object. Providing an object will make the rul be applied only to traffic matching the provided file policy's condition(s).<br>Field level constraints: requires malware license. (Note: Additional constraints might exist)<br>Allowed types are: [FilePolicy]
+      - A Boolean value, TRUE (the default) or FALSE. The TRUE value indicates that the rule is active. FALSE indicates the rule is not active and in use.
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
+  guestAccessFallback
+    description:
+      - A Boolean value, TRUE or FALSE. The TRUE value indicates to mark the users who fail authentication as Guest users. FALSE indicates the users failing authentication will be marked as Failed Authentication.
   id
     description:
       - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
-  intrusionPolicy
-    description:
-      - An optional IntrusionPolicy object. Specify an IntrusionPolicy object if you would like the traffic passing through the rule be inspected by the IP object.<br>Field level constraints: requires threat license. (Note: Additional constraints might exist)<br>Allowed types are: [IntrusionPolicy]
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
-  logFiles
-    description:
-      - An optional Boolean object. Logs files matching to the current rule if set to true. Default option is false
   name
     description:
-      - A String object containing the name of the FTDRulebase object. The string can be upto a maximum of 128 characters
+      - A UTF string containing the name for the identity rule. The string can be up to 120 characters.
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
-  ruleAction
+  realm
     description:
-      - A mandatory AcRuleAction object that defines the Access Control Rule action. Possible values are:<br>PERMIT <br>TRUST <br>DENY
+      - The directory realm and server that contains the user accounts for the network.<br>Allowed types are: [LDAPRealm, ActiveDirectoryRealm, SpecialRealm]
   ruleId
     description:
-      - A Long object which holds the rule ID number of the FTDRulebase object.
+      - A unique ID across all Identity rules on a single device.
   sort
     description:
       - The field used to sort the requested object list
   sourceNetworks
     description:
-      - A Set of Network objects considered as a source network.<br>Allowed types are: [Continent, Country, GeoLocation, NetworkObject, NetworkObjectGroup]
+      - An optional list of network objects or geographical locations that defines the network addresses or location to match through which the traffic is entering the device.<br>Allowed types are: [Continent, Country, GeoLocation, NetworkObject, NetworkObjectGroup]
   sourcePorts
     description:
-      - A Set of PortObjectBase objects considered as a source port.<br>Allowed types are: [ICMPv4PortObject, ICMPv6PortObject, ProtocolObject, TCPPortObject, UDPPortObject, PortObjectGroup]
+      - An optional list of port objects that defines the protocols used to match through which the traffic is entering the device.<br>Allowed types are: [ICMPv4PortObject, ICMPv6PortObject, ProtocolObject, TCPPortObject, UDPPortObject, PortObjectGroup]
   sourceZones
     description:
-      - A Set of ZoneBase objects considered as a source zone.<br>Allowed types are: [SecurityZone, TunnelZone]
-  syslogServer
-    description:
-      - An optional SyslogServer object. Specify a syslog server if you want a copy of events matching the current rule to be sent to an external syslog server.<br>Allowed types are: [SyslogServer]
+      - An optional list of security zones object containing interfaces to match through which the traffic is entering the device.<br>Allowed types are: [SecurityZone, TunnelZone]
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
-  urlFilter
-    description:
-      - An optional EmbeddedURLFilter object. Providing an object will make the rule be applied only to traffic matching provided url filter's condition(s).
-  users
-    description:
-      - A Set object containing TrafficIdentity objects. A TrafficIdentity object represents a User/Group of an Active Directory(AD).<br>Allowed types are: [LDAPRealm, ActiveDirectoryRealm, SpecialRealm, TrafficUser, TrafficUserGroup]
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-  vlanTags
-    description:
-      - A Set object of VlanTags associated with the rule.<br>Allowed types are: [VlanTag, VlanTagGroup]
 """
 
 EXAMPLES = """
-- name: Fetch AccessRule with a given name
-  fdm_access_rule:
+- name: Fetch IdentityRule with a given name
+  fdm_identity_rule:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getAccessRuleByName"
-    name: "Ansible AccessRule"
+    operation: "getIdentityRuleByName"
+    name: "Ansible IdentityRule"
 
-- name: Create a AccessRule
-  fdm_access_rule:
+- name: Create a IdentityRule
+  fdm_identity_rule:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: 'addAccessRule'
+    operation: 'addIdentityRule'
 
-    name: "Ansible AccessRule"
-    sourceNetworks: ["{{ networkObject }}"]
-    type: "accessrule"
-    parentId: "default"
+    name: "Ansible IdentityRule"
+    type: "identityrule"
 """
 
 RETURN = """
@@ -160,16 +143,16 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class AccessRuleResource(object):
+class IdentityRuleResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def addAccessRule(params):
+    def addIdentityRule(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'ruleAction', 'eventLogAction', 'vlanTags', 'users', 'embeddedAppFilter', 'urlFilter', 'intrusionPolicy', 'filePolicy', 'logFiles', 'syslogServer', 'id', 'type'])
+        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'realm', 'guestAccessFallback', 'authType', 'action', 'enabled', 'id', 'type'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules', path_params=path_params, query_params=query_params)
+        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules', path_params=path_params, query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='POST',
@@ -181,10 +164,10 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def deleteAccessRule(params):
+    def deleteIdentityRule(params):
         path_params = dict_subset(params, ['parentId', 'objId'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='DELETE',
@@ -195,12 +178,12 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def editAccessRule(params):
+    def editIdentityRule(params):
         path_params = dict_subset(params, ['parentId', 'objId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'ruleAction', 'eventLogAction', 'vlanTags', 'users', 'embeddedAppFilter', 'urlFilter', 'intrusionPolicy', 'filePolicy', 'logFiles', 'syslogServer', 'id', 'type'])
+        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'realm', 'guestAccessFallback', 'authType', 'action', 'enabled', 'id', 'type'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params, query_params=query_params)
+        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='PUT',
@@ -212,10 +195,10 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessRule(params):
+    def getIdentityRule(params):
         path_params = dict_subset(params, ['parentId', 'objId'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -226,11 +209,11 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessRuleList(params):
+    def getIdentityRuleList(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules', path_params=path_params, query_params=query_params)
+        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules', path_params=path_params, query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -241,41 +224,41 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessRuleByName(params):
+    def getIdentityRuleByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(AccessRuleResource.getAccessRuleList, search_params)
+        item_generator = iterate_over_pageable_resource(IdentityRuleResource.getIdentityRuleList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
     @staticmethod
     @retry_on_token_expiration
-    def upsertAccessRule(params):
+    def upsertIdentityRule(params):
         def is_duplicate_name_error(err):
             return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
 
         try:
-            return AccessRuleResource.addAccessRule(params)
+            return IdentityRuleResource.addIdentityRule(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = AccessRuleResource.getAccessRuleByName(params)
-                params = AccessRuleResource.copy_identity_params(existing_object, params)
-                return AccessRuleResource.editAccessRule(params)
+                existing_object = IdentityRuleResource.getIdentityRuleByName(params)
+                params = IdentityRuleResource.copy_identity_params(existing_object, params)
+                return IdentityRuleResource.editIdentityRule(params)
             else:
                 raise e
 
     @staticmethod
     @retry_on_token_expiration
-    def editAccessRuleByName(params):
-        existing_object = AccessRuleResource.getAccessRuleByName(params)
-        params = AccessRuleResource.copy_identity_params(existing_object, params)
-        return AccessRuleResource.editAccessRule(params)
+    def editIdentityRuleByName(params):
+        existing_object = IdentityRuleResource.getIdentityRuleByName(params)
+        params = IdentityRuleResource.copy_identity_params(existing_object, params)
+        return IdentityRuleResource.editIdentityRule(params)
 
     @staticmethod
     @retry_on_token_expiration
-    def deleteAccessRuleByName(params):
-        existing_object = AccessRuleResource.getAccessRuleByName(params)
-        params = AccessRuleResource.copy_identity_params(existing_object, params)
-        return AccessRuleResource.deleteAccessRule(params)
+    def deleteIdentityRuleByName(params):
+        existing_object = IdentityRuleResource.getIdentityRuleByName(params)
+        params = IdentityRuleResource.copy_identity_params(existing_object, params)
+        return IdentityRuleResource.deleteIdentityRule(params)
 
     @staticmethod
     def copy_identity_params(source_object, dest_params):
@@ -283,7 +266,6 @@ class AccessRuleResource(object):
         dest_params['id'] = source_object['id']
         if 'version' in source_object:
             dest_params['version'] = source_object['version']
-        dest_params['ruleId'] = source_object.get('ruleId')
         return dest_params
 
 
@@ -293,44 +275,39 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addAccessRule', 'deleteAccessRule', 'editAccessRule', 'getAccessRule', 'getAccessRuleList', 'getAccessRuleByName', 'upsertAccessRule', 'editAccessRuleByName', 'deleteAccessRuleByName'], required=True),
+        operation=dict(choices=['addIdentityRule', 'deleteIdentityRule', 'editIdentityRule', 'getIdentityRule', 'getIdentityRuleList', 'getIdentityRuleByName', 'upsertIdentityRule', 'editIdentityRuleByName', 'deleteIdentityRuleByName'], required=True),
         register_as=dict(type='str'),
 
+        action=dict(type='str'),
         at=dict(type='int'),
+        authType=dict(type='str'),
         destinationNetworks=dict(type='list'),
         destinationPorts=dict(type='list'),
         destinationZones=dict(type='list'),
-        embeddedAppFilter=dict(type='str'),
-        eventLogAction=dict(type='str'),
-        filePolicy=dict(type='dict'),
+        enabled=dict(type='bool'),
         filter=dict(type='str'),
+        guestAccessFallback=dict(type='bool'),
         id=dict(type='str'),
-        intrusionPolicy=dict(type='dict'),
         limit=dict(type='int'),
-        logFiles=dict(type='bool'),
         name=dict(type='str'),
         objId=dict(type='str'),
         offset=dict(type='int'),
         parentId=dict(type='str'),
-        ruleAction=dict(type='str'),
+        realm=dict(type='dict'),
         ruleId=dict(type='int'),
         sort=dict(type='str'),
         sourceNetworks=dict(type='list'),
         sourcePorts=dict(type='list'),
         sourceZones=dict(type='list'),
-        syslogServer=dict(type='dict'),
         type=dict(type='str'),
-        urlFilter=dict(type='str'),
-        users=dict(type='list'),
         version=dict(type='str'),
-        vlanTags=dict(type='list'),
     )
 
     module = AnsibleModule(argument_spec=fields)
     params = module.params
 
     try:
-        method_to_call = getattr(AccessRuleResource, params['operation'])
+        method_to_call = getattr(IdentityRuleResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

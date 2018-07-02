@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: fdm_access_policy
-short_description: Manages AccessPolicy objects on Cisco FTD devices with FDM
+module: fdm_ipv4_prefix
+short_description: Manages IPV4Prefix objects on Cisco FTD devices with FDM
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -34,36 +34,18 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
-  defaultAction
+  description
     description:
-      - An optional AccessDefaultAction. Provide an AccessDefaultAction object to set a default action to AccessPolicy.
-  filter
+      - <br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
+  entries
     description:
-      - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
+      - <br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   id
     description:
       - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
-  identityPolicySetting
-    description:
-      - An optional IdentityPolicy object. Provide an IdentityPolicy object to associate with the given AccessPolicy.<br>Allowed types are: [IdentityPolicy]
-  limit
-    description:
-      - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
   name
     description:
-      - A string containing the name of the Access Policy. The string should not contain HTML content.
-  offset
-    description:
-      - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
-  securityIntelligence
-    description:
-      - An optional SecurityIntelligencePolicy. Provide a SecurityIntelligencePolicy object to associate with the given AccessPolicy<br>Field level constraints: requires threat license. (Note: Additional constraints might exist)<br>Allowed types are: [SecurityIntelligencePolicy]
-  sort
-    description:
-      - The field used to sort the requested object list
-  sslPolicy
-    description:
-      - An optional SSLPolicy object. Provide a SSLPolicy object to associate with the given AccessPolicy<br>Allowed types are: [SSLPolicy]
+      - A string that represents the name of the object
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
@@ -73,13 +55,13 @@ options:
 """
 
 EXAMPLES = """
-- name: Fetch AccessPolicy with a given name
-  fdm_access_policy:
+- name: Fetch IPV4Prefix with a given name
+  fdm_ipv4_prefix:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getAccessPolicyByName"
-    name: "Ansible AccessPolicy"
+    operation: "getIPV4PrefixByName"
+    name: "Ansible IPV4Prefix"
 """
 
 RETURN = """
@@ -106,15 +88,44 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class AccessPolicyResource(object):
+class IPV4PrefixResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def editAccessPolicy(params):
-        path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'defaultAction', 'sslPolicy', 'id', 'identityPolicySetting', 'securityIntelligence', 'type'])
+    def addIPV4PrefixList(params):
+        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/object/ipv4prefixlists')
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='POST',
+            data=json.dumps(body_params)
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
+    def deleteIPV4PrefixList(params):
+        path_params = dict_subset(params, ['objId'])
+
+        url = construct_url(params['hostname'], '/object/ipv4prefixlists/{objId}', path_params=path_params)
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='DELETE',
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
+    def editIPV4PrefixList(params):
+        path_params = dict_subset(params, ['objId'])
+        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+
+        url = construct_url(params['hostname'], '/object/ipv4prefixlists/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='PUT',
@@ -126,10 +137,10 @@ class AccessPolicyResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessPolicy(params):
+    def getIPV4PrefixList(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/object/ipv4prefixlists/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -140,40 +151,11 @@ class AccessPolicyResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessPolicyList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
-
-        url = construct_url(params['hostname'], '/policy/accesspolicies', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
-        )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getAccessPolicyByName(params):
+    def getIPV4PrefixByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(AccessPolicyResource.getAccessPolicyList, search_params)
+        item_generator = iterate_over_pageable_resource(IPV4PrefixResource.getIPV4PrefixList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editAccessPolicyByName(params):
-        existing_object = AccessPolicyResource.getAccessPolicyByName(params)
-        params = AccessPolicyResource.copy_identity_params(existing_object, params)
-        return AccessPolicyResource.editAccessPolicy(params)
-
-    @staticmethod
-    def copy_identity_params(source_object, dest_params):
-        dest_params['objId'] = source_object['id']
-        dest_params['id'] = source_object['id']
-        if 'version' in source_object:
-            dest_params['version'] = source_object['version']
-        return dest_params
 
 
 def main():
@@ -182,20 +164,14 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['editAccessPolicy', 'getAccessPolicy', 'getAccessPolicyList', 'getAccessPolicyByName', 'editAccessPolicyByName'], required=True),
+        operation=dict(choices=['addIPV4PrefixList', 'deleteIPV4PrefixList', 'editIPV4PrefixList', 'getIPV4PrefixList', 'getIPV4PrefixByName'], required=True),
         register_as=dict(type='str'),
 
-        defaultAction=dict(type='str'),
-        filter=dict(type='str'),
+        description=dict(type='str'),
+        entries=dict(type='list'),
         id=dict(type='str'),
-        identityPolicySetting=dict(type='dict'),
-        limit=dict(type='int'),
         name=dict(type='str'),
         objId=dict(type='str'),
-        offset=dict(type='int'),
-        securityIntelligence=dict(type='dict'),
-        sort=dict(type='str'),
-        sslPolicy=dict(type='dict'),
         type=dict(type='str'),
         version=dict(type='str'),
     )
@@ -204,7 +180,7 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(AccessPolicyResource, params['operation'])
+        method_to_call = getattr(IPV4PrefixResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

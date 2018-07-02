@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: fdm_access_policy
-short_description: Manages AccessPolicy objects on Cisco FTD devices with FDM
+module: fdm_management_ip
+short_description: Manages ManagementIP objects on Cisco FTD devices with FDM
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -34,36 +34,57 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
-  defaultAction
+  dhcpServerAddressPool
     description:
-      - An optional AccessDefaultAction. Provide an AccessDefaultAction object to set a default action to AccessPolicy.
+      - A string which specifies the range of IP addresses that DHCP server can use to assign ip addresses.<br>Field level constraints: must be a valid IP address or IP address range, cannot have HTML. (Note: Additional constraints might exist)
+  dhcpServerEnabled
+    description:
+      - A boolean value, TRUE (the default) or FALSE. The value TRUE enables DHCP server on the Management Interface, so that directly connected clients can obtain their addresses from the DHCP pool. FALSE disables the DHCP server on Management Interface.
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
       - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
-  identityPolicySetting
+  ipv4Address
     description:
-      - An optional IdentityPolicy object. Provide an IdentityPolicy object to associate with the given AccessPolicy.<br>Allowed types are: [IdentityPolicy]
+      - A mandatory string, if IPv6 is not provided, has 48 characters, specifies the IPv4 address for the Management Interface. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+  ipv4Gateway
+    description:
+      - A mandatory string, if IPv4 address is provided, specifies the IPv4 gateway for the Management Interface. The gateway determines how the system can reach the internet to obtain smart licenses, database updates and to reach the management DNS and NTP servers. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+  ipv4Mode
+    description:
+      - An enum value for IPv4 that specifies whether to obtain address through DHCP or Static (default value). Values can be one of the following.<br> Static - Manually configure the ip address.<br> DHCP - Obtain the ip address from a DHCP server.
+  ipv4NetMask
+    description:
+      - A mandatory string, if IPv4 address is provided, specifies the IPv4 Netmask for Management Interface. This specifies the network part of the ipv4 address. The string cannot have HTML tags.<br>Field level constraints: must be a valid netmask, cannot have HTML. (Note: Additional constraints might exist)
+  ipv6Address
+    description:
+      - An optional string, if IPv4 address is provided, up to 128 bits normally represented by groups of 16 bits, specifies the IPv6 address for the Management Interface. Another way of representing 128 bit address is to drop the first consecutive sequence of zero groups. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+  ipv6Gateway
+    description:
+      - A mandatory string, if IPv6 address is provided, specifies the IPv6 gateway for the Management Interface. The gateway determines how the system can reach the internet to obtain smart licenses, database updates and to reach the management DNS and NTP servers. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+  ipv6Mode
+    description:
+      - A mandatory enum value, if IPv6 address is provided, specifies whether to obtain address through DHCP or Static (default value). Values can be one of the following.<br> Static - Manually configure the ip address.<br> DHCP - Obtain the ip address from a DHCP server.
+  ipv6Prefix
+    description:
+      - A mandatory integer object, if IPv6 address is provided, specifies the IPv6 prefix for Management Interface. This number specifies the length of the network part of the address.
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
-  name
+  linkState
     description:
-      - A string containing the name of the Access Policy. The string should not contain HTML content.
+      - An enum value that specifies whether the Physical Interface link state is UP or DOWN (the default). The values can be one of the following. <br> UP - Enables the Physical Interface Link state to UP. <br> DOWN - Enables the Physical interface Link state to DOWN. 
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
-  securityIntelligence
+  routeInternally
     description:
-      - An optional SecurityIntelligencePolicy. Provide a SecurityIntelligencePolicy object to associate with the given AccessPolicy<br>Field level constraints: requires threat license. (Note: Additional constraints might exist)<br>Allowed types are: [SecurityIntelligencePolicy]
+      - A mandatory boolean value, TRUE (the default) or FALSE. The value TRUE enables the management operations like system updates through data Interfaces. The value FALSE uses the management interface to get the updates and management activities on the Firepower device manager.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   sort
     description:
       - The field used to sort the requested object list
-  sslPolicy
-    description:
-      - An optional SSLPolicy object. Provide a SSLPolicy object to associate with the given AccessPolicy<br>Allowed types are: [SSLPolicy]
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
@@ -73,13 +94,13 @@ options:
 """
 
 EXAMPLES = """
-- name: Fetch AccessPolicy with a given name
-  fdm_access_policy:
+- name: Fetch ManagementIP with a given name
+  fdm_management_ip:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getAccessPolicyByName"
-    name: "Ansible AccessPolicy"
+    operation: "getManagementIPByName"
+    name: "Ansible ManagementIP"
 """
 
 RETURN = """
@@ -106,15 +127,15 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class AccessPolicyResource(object):
+class ManagementIPResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def editAccessPolicy(params):
+    def editManagementIP(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'defaultAction', 'sslPolicy', 'id', 'identityPolicySetting', 'securityIntelligence', 'type'])
+        body_params = dict_subset(params, ['version', 'ipv4Mode', 'ipv4Address', 'ipv4NetMask', 'ipv4Gateway', 'ipv6Mode', 'ipv6Address', 'ipv6Prefix', 'ipv6Gateway', 'dhcpServerEnabled', 'dhcpServerAddressPool', 'linkState', 'routeInternally', 'id', 'type'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/devicesettings/default/managementips/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='PUT',
@@ -126,10 +147,10 @@ class AccessPolicyResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessPolicy(params):
+    def getManagementIP(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/devicesettings/default/managementips/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -140,10 +161,10 @@ class AccessPolicyResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessPolicyList(params):
+    def getManagementIPList(params):
         query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies', query_params=query_params)
+        url = construct_url(params['hostname'], '/devicesettings/default/managementips', query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -154,18 +175,18 @@ class AccessPolicyResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessPolicyByName(params):
+    def getManagementIPByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(AccessPolicyResource.getAccessPolicyList, search_params)
+        item_generator = iterate_over_pageable_resource(ManagementIPResource.getManagementIPList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
     @staticmethod
     @retry_on_token_expiration
-    def editAccessPolicyByName(params):
-        existing_object = AccessPolicyResource.getAccessPolicyByName(params)
-        params = AccessPolicyResource.copy_identity_params(existing_object, params)
-        return AccessPolicyResource.editAccessPolicy(params)
+    def editManagementIPByName(params):
+        existing_object = ManagementIPResource.getManagementIPByName(params)
+        params = ManagementIPResource.copy_identity_params(existing_object, params)
+        return ManagementIPResource.editManagementIP(params)
 
     @staticmethod
     def copy_identity_params(source_object, dest_params):
@@ -182,20 +203,27 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['editAccessPolicy', 'getAccessPolicy', 'getAccessPolicyList', 'getAccessPolicyByName', 'editAccessPolicyByName'], required=True),
+        operation=dict(choices=['editManagementIP', 'getManagementIP', 'getManagementIPList', 'getManagementIPByName', 'editManagementIPByName'], required=True),
         register_as=dict(type='str'),
 
-        defaultAction=dict(type='str'),
+        dhcpServerAddressPool=dict(type='str'),
+        dhcpServerEnabled=dict(type='bool'),
         filter=dict(type='str'),
         id=dict(type='str'),
-        identityPolicySetting=dict(type='dict'),
+        ipv4Address=dict(type='str'),
+        ipv4Gateway=dict(type='str'),
+        ipv4Mode=dict(type='str'),
+        ipv4NetMask=dict(type='str'),
+        ipv6Address=dict(type='str'),
+        ipv6Gateway=dict(type='str'),
+        ipv6Mode=dict(type='str'),
+        ipv6Prefix=dict(type='int'),
         limit=dict(type='int'),
-        name=dict(type='str'),
+        linkState=dict(type='str'),
         objId=dict(type='str'),
         offset=dict(type='int'),
-        securityIntelligence=dict(type='dict'),
+        routeInternally=dict(type='bool'),
         sort=dict(type='str'),
-        sslPolicy=dict(type='dict'),
         type=dict(type='str'),
         version=dict(type='str'),
     )
@@ -204,7 +232,7 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(AccessPolicyResource, params['operation'])
+        method_to_call = getattr(ManagementIPResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

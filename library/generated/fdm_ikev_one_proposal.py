@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: fdm_network_object
-short_description: Manages NetworkObject objects on Cisco FTD devices with FDM
+module: fdm_ikev_one_proposal
+short_description: Manages IkevOneProposal objects on Cisco FTD devices with FDM
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -34,69 +34,71 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
-  description
+  authenticationMethod
     description:
-      - A string containing the description information<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
-  dnsResolution
+      - An enum value that specifies the hash or integrity algorithm to use for authentication. Possible values are:<br>ESP_NONE - A null hash algorithm. This is typically used for testing purposes only.<br>ESP_MD5_HMAC - The Message Digest 5 algorithm, which produces a 128-bit digest.<br>ESP_SHA_HMAC - The Secure Hash Algorithm, which produces a 160-bit digest.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+  cryptoRestricted
     description:
-      - DNS Resolution type can be IPV4_ONLY, IPV6_ONLY or IPV4_AND_IPV6
+      - A system-provided Boolean value, TRUE or FALSE. The TRUE value indicates that the proposal uses strong cryptography, which is controlled by export regulations. A device must be registered export-controlled functionality to use a strong encryption proposal.
+  defaultAssignable
+    description:
+      - A system-provided Boolean value, TRUE or FALSE. The TRUE value indicates that the proposal is part of the default set of proposals. The default set differs based on whether the device is registered for export-controlled functionality
+  encryptionMethod
+    description:
+      - An enum value that specifies the Encapsulating Security Protocol (ESP) encryption algorithm for this proposal. Possible values are, in order of strength:<br>ESP_NULL - A null encryption algorithm provides authentication without encryption. This is typically used for testing purposes only.<br>ESP_DES - Data Encryption Standard, which encrypts using 56-bit keys, is a symmetric secret-key block algorithm.<br>ESP_THREE_DES - Triple DES, which encrypts three times using 56-bit keys.<br>ESP_AES - Advanced Encryption Standard is a symmetric cipher algorithm. AES uses 128-bit keys.<br>ESP_AES192 - An Advanced Encryption Standard algorithm that uses 192-bit keys.<br>ESP_AES256 - An Advanced Encryption Standard algorithm that uses 256-bit keys.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   filter
     description:
-      - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name", "subtype".
+      - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
       - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
   isSystemDefined
     description:
-      - A Boolean value, TRUE or FALSE(the default). The TRUE value indicates that this Network object is a system defined object
+      - A Boolean value, TRUE or FALSE (the default). The TRUE value indicates that the system created the object. FALSE indicates that the object is user-defined.
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
+  mode
+    description:
+      - An enum value that specifies the mode in which the IPSec tunnel operates. Possible values are:<br>TUNNEL (the default) - Tunnel mode encapsulates the entire IP packet. The IPSec header is added between the original IP header and a new IP header. Use tunnel mode when the firewall is protecting traffic to and from hosts positioned behind the firewall. Tunnel mode is the normal way regular IPSec is implemented between two firewalls (or other security gateways) that are connected over an untrusted network, such as the Internet.<br>TRANSPORT - Transport mode encapsulates only the upper-layer protocols of an IP packet. The IPSec header is inserted between the IP header and the upper-layer protocol header (such as TCP). Transport mode requires that both the source and destination hosts support IPSec, and can only be used when the destination peer of the tunnel is the final destination of the IP packet. Transport mode is generally used only when protecting a Layer 2 or Layer 3 tunneling protocol such as GRE, L2TP, and DLSW.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   name
     description:
-      - A string that is the name of the network object.
+      - The name of the object, up to 64 characters.
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   sort
     description:
       - The field used to sort the requested object list
-  subType
+  summaryLabel
     description:
-      - An enum value that specifies the network object type<br>HOST - A host type.<br>NETWORK - A network type.<br>FQDN - A FQDN type.<br>(Note that IPRANGE is not supported)<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+      - A system-provided string that describes the IKE proposal.
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
-  value
-    description:
-      - A string that defines the address content for the object. For HOST objects, this is a single IPv4 or IPv6 address without netmask or prefix. For NETWORK objects, this is an IPv4 or IPv6 network address with netmask (in CIDR notation) or prefix. For FQDN objects, this is a Fully qualified domain name.<br>Field level constraints: cannot be null, must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
 """
 
 EXAMPLES = """
-- name: Fetch NetworkObject with a given name
-  fdm_network_object:
+- name: Fetch IkevOneProposal with a given name
+  fdm_ikev_one_proposal:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getNetworkObjectByName"
-    name: "Ansible NetworkObject"
+    operation: "getIkevOneProposalByName"
+    name: "Ansible IkevOneProposal"
 
-- name: Create a NetworkObject
-  fdm_network_object:
+- name: Create a IkevOneProposal
+  fdm_ikev_one_proposal:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: 'addNetworkObject'
+    operation: 'addIkevOneProposal'
 
-    name: "Ansible NetworkObject"
-    description: "From Ansible with love"
-    subType: "NETWORK"
-    value: "192.168.2.0/24"
-    dnsResolution: "IPV4_AND_IPV6"
-    type: "networkobject"
+    name: "Ansible IkevOneProposal"
+    type: "ikevoneproposal"
 """
 
 RETURN = """
@@ -123,14 +125,14 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class NetworkObjectResource(object):
+class IkevOneProposalResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def addNetworkObject(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'subType', 'value', 'isSystemDefined', 'dnsResolution', 'id', 'type'])
+    def addIkevOneProposal(params):
+        body_params = dict_subset(params, ['version', 'name', 'encryptionMethod', 'authenticationMethod', 'mode', 'summaryLabel', 'cryptoRestricted', 'defaultAssignable', 'id', 'isSystemDefined', 'type'])
 
-        url = construct_url(params['hostname'], '/object/networks')
+        url = construct_url(params['hostname'], '/object/ikev1proposals')
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='POST',
@@ -142,10 +144,10 @@ class NetworkObjectResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def deleteNetworkObject(params):
+    def deleteIkevOneProposal(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/networks/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/object/ikev1proposals/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='DELETE',
@@ -156,11 +158,11 @@ class NetworkObjectResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def editNetworkObject(params):
+    def editIkevOneProposal(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'subType', 'value', 'isSystemDefined', 'dnsResolution', 'id', 'type'])
+        body_params = dict_subset(params, ['version', 'name', 'encryptionMethod', 'authenticationMethod', 'mode', 'summaryLabel', 'cryptoRestricted', 'defaultAssignable', 'id', 'isSystemDefined', 'type'])
 
-        url = construct_url(params['hostname'], '/object/networks/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/object/ikev1proposals/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='PUT',
@@ -172,10 +174,10 @@ class NetworkObjectResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getNetworkObject(params):
+    def getIkevOneProposal(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/networks/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/object/ikev1proposals/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -186,10 +188,10 @@ class NetworkObjectResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getNetworkObjectList(params):
+    def getIkevOneProposalList(params):
         query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
 
-        url = construct_url(params['hostname'], '/object/networks', query_params=query_params)
+        url = construct_url(params['hostname'], '/object/ikev1proposals', query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -200,41 +202,41 @@ class NetworkObjectResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getNetworkObjectByName(params):
+    def getIkevOneProposalByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(NetworkObjectResource.getNetworkObjectList, search_params)
+        item_generator = iterate_over_pageable_resource(IkevOneProposalResource.getIkevOneProposalList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
     @staticmethod
     @retry_on_token_expiration
-    def upsertNetworkObject(params):
+    def upsertIkevOneProposal(params):
         def is_duplicate_name_error(err):
             return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
 
         try:
-            return NetworkObjectResource.addNetworkObject(params)
+            return IkevOneProposalResource.addIkevOneProposal(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = NetworkObjectResource.getNetworkObjectByName(params)
-                params = NetworkObjectResource.copy_identity_params(existing_object, params)
-                return NetworkObjectResource.editNetworkObject(params)
+                existing_object = IkevOneProposalResource.getIkevOneProposalByName(params)
+                params = IkevOneProposalResource.copy_identity_params(existing_object, params)
+                return IkevOneProposalResource.editIkevOneProposal(params)
             else:
                 raise e
 
     @staticmethod
     @retry_on_token_expiration
-    def editNetworkObjectByName(params):
-        existing_object = NetworkObjectResource.getNetworkObjectByName(params)
-        params = NetworkObjectResource.copy_identity_params(existing_object, params)
-        return NetworkObjectResource.editNetworkObject(params)
+    def editIkevOneProposalByName(params):
+        existing_object = IkevOneProposalResource.getIkevOneProposalByName(params)
+        params = IkevOneProposalResource.copy_identity_params(existing_object, params)
+        return IkevOneProposalResource.editIkevOneProposal(params)
 
     @staticmethod
     @retry_on_token_expiration
-    def deleteNetworkObjectByName(params):
-        existing_object = NetworkObjectResource.getNetworkObjectByName(params)
-        params = NetworkObjectResource.copy_identity_params(existing_object, params)
-        return NetworkObjectResource.deleteNetworkObject(params)
+    def deleteIkevOneProposalByName(params):
+        existing_object = IkevOneProposalResource.getIkevOneProposalByName(params)
+        params = IkevOneProposalResource.copy_identity_params(existing_object, params)
+        return IkevOneProposalResource.deleteIkevOneProposal(params)
 
     @staticmethod
     def copy_identity_params(source_object, dest_params):
@@ -251,22 +253,24 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addNetworkObject', 'deleteNetworkObject', 'editNetworkObject', 'getNetworkObject', 'getNetworkObjectList', 'getNetworkObjectByName', 'upsertNetworkObject', 'editNetworkObjectByName', 'deleteNetworkObjectByName'], required=True),
+        operation=dict(choices=['addIkevOneProposal', 'deleteIkevOneProposal', 'editIkevOneProposal', 'getIkevOneProposal', 'getIkevOneProposalList', 'getIkevOneProposalByName', 'upsertIkevOneProposal', 'editIkevOneProposalByName', 'deleteIkevOneProposalByName'], required=True),
         register_as=dict(type='str'),
 
-        description=dict(type='str'),
-        dnsResolution=dict(type='str'),
+        authenticationMethod=dict(type='str'),
+        cryptoRestricted=dict(type='bool'),
+        defaultAssignable=dict(type='bool'),
+        encryptionMethod=dict(type='str'),
         filter=dict(type='str'),
         id=dict(type='str'),
         isSystemDefined=dict(type='bool'),
         limit=dict(type='int'),
+        mode=dict(type='str'),
         name=dict(type='str'),
         objId=dict(type='str'),
         offset=dict(type='int'),
         sort=dict(type='str'),
-        subType=dict(type='str'),
+        summaryLabel=dict(type='str'),
         type=dict(type='str'),
-        value=dict(type='str'),
         version=dict(type='str'),
     )
 
@@ -274,7 +278,7 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(NetworkObjectResource, params['operation'])
+        method_to_call = getattr(IkevOneProposalResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: fdm_access_rule
-short_description: Manages AccessRule objects on Cisco FTD devices with FDM
+module: fdm_object_nat_rule
+short_description: Manages ObjectNatRule objects on Cisco FTD devices with FDM
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -37,103 +37,99 @@ options:
   at
     description:
       - An integer representing where to add the new object in the ordered list. Use 0 to add it at the beginning of the list. If not specified, it will be added at the end of the list
-  destinationNetworks
+  description
     description:
-      - A Set of Network objects considered as a destination network.<br>Allowed types are: [Continent, Country, GeoLocation, NetworkObject, NetworkObjectGroup]
-  destinationPorts
+      - An optional string that describes this NAT rule<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+  destinationInterface
     description:
-      - A Set of PortObjectBase objects considered as a destination port.<br>Allowed types are: [ICMPv4PortObject, ICMPv6PortObject, ProtocolObject, TCPPortObject, UDPPortObject, PortObjectGroup]
-  destinationZones
+      - The interface through which traffic exits the device<br>Allowed types are: [PhysicalInterface, SubInterface]
+  dns
     description:
-      - A Set of ZoneBase objects considered considered as a destination zone.<br>Allowed types are: [SecurityZone, TunnelZone]
-  embeddedAppFilter
+      - A Boolean value, TRUE or FALSE (the default). If TRUE, the system translates DNS replies based on this NAT rule, if DNS inspection is enabled
+  enabled
     description:
-      - An optional EmbeddedAppFilter object. Providing an object will make the rule be applied only to traffic matching provided app filter's condition(s).
-  eventLogAction
-    description:
-      - A mandatory EventLogAction object that defines the logging options for the rule.
-  filePolicy
-    description:
-      - An optional FilePolicy object. Providing an object will make the rul be applied only to traffic matching the provided file policy's condition(s).<br>Field level constraints: requires malware license. (Note: Additional constraints might exist)<br>Allowed types are: [FilePolicy]
+      - A Boolean value, TRUE or FALSE (the default). The TRUE value indicates that it is enabled
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
       - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
-  intrusionPolicy
+  interfaceIPv6
     description:
-      - An optional IntrusionPolicy object. Specify an IntrusionPolicy object if you would like the traffic passing through the rule be inspected by the IP object.<br>Field level constraints: requires threat license. (Note: Additional constraints might exist)<br>Allowed types are: [IntrusionPolicy]
+      - A Boolean value, TRUE or FALSE (the default). This option is not supported, please always set this field to FALSE
+  interfaceInTranslatedNetwork
+    description:
+      - A Boolean value, TRUE or FALSE (the default). If TRUE, the system uses the IP address of destination interface as the translated address (interface PAT)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
-  logFiles
-    description:
-      - An optional Boolean object. Logs files matching to the current rule if set to true. Default option is false
   name
     description:
-      - A String object containing the name of the FTDRulebase object. The string can be upto a maximum of 128 characters
+      - A mandatory string that defines the name of this NAT rule
+  natType
+    description:
+      - An enum value that specifies the NAT rule type<br>STATIC - A static type.<br>DYNAMIC - A dynamic type<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+  netToNet
+    description:
+      - A Boolean value, TRUE or FALSE (the default). This option is not supported, please always set this option to FALSE
+  noProxyArp
+    description:
+      - A Boolean value, TRUE or FALSE (the default). If TRUE, the system disables proxy ARP for incoming packets to the mapped IP addresses
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
-  ruleAction
+  originalNetwork
     description:
-      - A mandatory AcRuleAction object that defines the Access Control Rule action. Possible values are:<br>PERMIT <br>TRUST <br>DENY
-  ruleId
+      - The network object that contains the source addresses you are translating. This must be a network object (not a group)<br>Allowed types are: [NetworkObject]
+  originalPort
     description:
-      - A Long object which holds the rule ID number of the FTDRulebase object.
+      - An optional TCP or UDP port object that defines the original port, the one you are translating. Do not specify an object if the port does not matter in the translation<br>Allowed types are: [ICMPv4PortObject, ICMPv6PortObject, ProtocolObject, TCPPortObject, UDPPortObject]
+  patOptions
+    description:
+      - Please ignore this field
+  routeLookup
+    description:
+      - A Boolean value, TRUE or FALSE (the default). If TRUE, the system determines the egress interface using a route lookup instead of using the interface specified in the NAT rule
   sort
     description:
       - The field used to sort the requested object list
-  sourceNetworks
+  sourceInterface
     description:
-      - A Set of Network objects considered as a source network.<br>Allowed types are: [Continent, Country, GeoLocation, NetworkObject, NetworkObjectGroup]
-  sourcePorts
+      - An object to represent the source Interface to filter out traffic that this Nat Rule will apply to<br>Allowed types are: [PhysicalInterface, SubInterface]
+  translatedNetwork
     description:
-      - A Set of PortObjectBase objects considered as a source port.<br>Allowed types are: [ICMPv4PortObject, ICMPv6PortObject, ProtocolObject, TCPPortObject, UDPPortObject, PortObjectGroup]
-  sourceZones
+      - The network object or group that contains the mapped address<br>Allowed types are: [NetworkObject, NetworkObjectGroup]
+  translatedPort
     description:
-      - A Set of ZoneBase objects considered as a source zone.<br>Allowed types are: [SecurityZone, TunnelZone]
-  syslogServer
-    description:
-      - An optional SyslogServer object. Specify a syslog server if you want a copy of events matching the current rule to be sent to an external syslog server.<br>Allowed types are: [SyslogServer]
+      - An optional TCP or UDP port object that defines the translated port, the one you are using to replace the original port. You must use the same protocol type (TCP or UDP) as the object specified in the originalPort<br>Allowed types are: [ICMPv4PortObject, ICMPv6PortObject, ProtocolObject, TCPPortObject, UDPPortObject]
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
-  urlFilter
-    description:
-      - An optional EmbeddedURLFilter object. Providing an object will make the rule be applied only to traffic matching provided url filter's condition(s).
-  users
-    description:
-      - A Set object containing TrafficIdentity objects. A TrafficIdentity object represents a User/Group of an Active Directory(AD).<br>Allowed types are: [LDAPRealm, ActiveDirectoryRealm, SpecialRealm, TrafficUser, TrafficUserGroup]
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-  vlanTags
-    description:
-      - A Set object of VlanTags associated with the rule.<br>Allowed types are: [VlanTag, VlanTagGroup]
 """
 
 EXAMPLES = """
-- name: Fetch AccessRule with a given name
-  fdm_access_rule:
+- name: Fetch ObjectNatRule with a given name
+  fdm_object_nat_rule:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getAccessRuleByName"
-    name: "Ansible AccessRule"
+    operation: "getObjectNatRuleByName"
+    name: "Ansible ObjectNatRule"
 
-- name: Create a AccessRule
-  fdm_access_rule:
+- name: Create a ObjectNatRule
+  fdm_object_nat_rule:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: 'addAccessRule'
+    operation: 'addObjectNatRule'
 
-    name: "Ansible AccessRule"
-    sourceNetworks: ["{{ networkObject }}"]
-    type: "accessrule"
-    parentId: "default"
+    name: "Ansible ObjectNatRule"
+    description: "From Ansible with love"
+    type: "objectnatrule"
 """
 
 RETURN = """
@@ -160,16 +156,16 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class AccessRuleResource(object):
+class ObjectNatRuleResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def addAccessRule(params):
+    def addObjectNatRule(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'ruleAction', 'eventLogAction', 'vlanTags', 'users', 'embeddedAppFilter', 'urlFilter', 'intrusionPolicy', 'filePolicy', 'logFiles', 'syslogServer', 'id', 'type'])
+        body_params = dict_subset(params, ['version', 'name', 'description', 'sourceInterface', 'destinationInterface', 'natType', 'patOptions', 'netToNet', 'noProxyArp', 'dns', 'interfaceIPv6', 'routeLookup', 'enabled', 'originalNetwork', 'translatedNetwork', 'originalPort', 'translatedPort', 'interfaceInTranslatedNetwork', 'id', 'type'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules', path_params=path_params, query_params=query_params)
+        url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules', path_params=path_params, query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='POST',
@@ -181,10 +177,10 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def deleteAccessRule(params):
+    def deleteObjectNatRule(params):
         path_params = dict_subset(params, ['parentId', 'objId'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='DELETE',
@@ -195,12 +191,12 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def editAccessRule(params):
+    def editObjectNatRule(params):
         path_params = dict_subset(params, ['parentId', 'objId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'ruleAction', 'eventLogAction', 'vlanTags', 'users', 'embeddedAppFilter', 'urlFilter', 'intrusionPolicy', 'filePolicy', 'logFiles', 'syslogServer', 'id', 'type'])
+        body_params = dict_subset(params, ['version', 'name', 'description', 'sourceInterface', 'destinationInterface', 'natType', 'patOptions', 'netToNet', 'noProxyArp', 'dns', 'interfaceIPv6', 'routeLookup', 'enabled', 'originalNetwork', 'translatedNetwork', 'originalPort', 'translatedPort', 'interfaceInTranslatedNetwork', 'id', 'type'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params, query_params=query_params)
+        url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='PUT',
@@ -212,10 +208,10 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessRule(params):
+    def getObjectNatRule(params):
         path_params = dict_subset(params, ['parentId', 'objId'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -226,11 +222,11 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessRuleList(params):
+    def getObjectNatRuleList(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules', path_params=path_params, query_params=query_params)
+        url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules', path_params=path_params, query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -241,41 +237,41 @@ class AccessRuleResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getAccessRuleByName(params):
+    def getObjectNatRuleByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(AccessRuleResource.getAccessRuleList, search_params)
+        item_generator = iterate_over_pageable_resource(ObjectNatRuleResource.getObjectNatRuleList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
     @staticmethod
     @retry_on_token_expiration
-    def upsertAccessRule(params):
+    def upsertObjectNatRule(params):
         def is_duplicate_name_error(err):
             return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
 
         try:
-            return AccessRuleResource.addAccessRule(params)
+            return ObjectNatRuleResource.addObjectNatRule(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = AccessRuleResource.getAccessRuleByName(params)
-                params = AccessRuleResource.copy_identity_params(existing_object, params)
-                return AccessRuleResource.editAccessRule(params)
+                existing_object = ObjectNatRuleResource.getObjectNatRuleByName(params)
+                params = ObjectNatRuleResource.copy_identity_params(existing_object, params)
+                return ObjectNatRuleResource.editObjectNatRule(params)
             else:
                 raise e
 
     @staticmethod
     @retry_on_token_expiration
-    def editAccessRuleByName(params):
-        existing_object = AccessRuleResource.getAccessRuleByName(params)
-        params = AccessRuleResource.copy_identity_params(existing_object, params)
-        return AccessRuleResource.editAccessRule(params)
+    def editObjectNatRuleByName(params):
+        existing_object = ObjectNatRuleResource.getObjectNatRuleByName(params)
+        params = ObjectNatRuleResource.copy_identity_params(existing_object, params)
+        return ObjectNatRuleResource.editObjectNatRule(params)
 
     @staticmethod
     @retry_on_token_expiration
-    def deleteAccessRuleByName(params):
-        existing_object = AccessRuleResource.getAccessRuleByName(params)
-        params = AccessRuleResource.copy_identity_params(existing_object, params)
-        return AccessRuleResource.deleteAccessRule(params)
+    def deleteObjectNatRuleByName(params):
+        existing_object = ObjectNatRuleResource.getObjectNatRuleByName(params)
+        params = ObjectNatRuleResource.copy_identity_params(existing_object, params)
+        return ObjectNatRuleResource.deleteObjectNatRule(params)
 
     @staticmethod
     def copy_identity_params(source_object, dest_params):
@@ -283,7 +279,6 @@ class AccessRuleResource(object):
         dest_params['id'] = source_object['id']
         if 'version' in source_object:
             dest_params['version'] = source_object['version']
-        dest_params['ruleId'] = source_object.get('ruleId')
         return dest_params
 
 
@@ -293,44 +288,43 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addAccessRule', 'deleteAccessRule', 'editAccessRule', 'getAccessRule', 'getAccessRuleList', 'getAccessRuleByName', 'upsertAccessRule', 'editAccessRuleByName', 'deleteAccessRuleByName'], required=True),
+        operation=dict(choices=['addObjectNatRule', 'deleteObjectNatRule', 'editObjectNatRule', 'getObjectNatRule', 'getObjectNatRuleList', 'getObjectNatRuleByName', 'upsertObjectNatRule', 'editObjectNatRuleByName', 'deleteObjectNatRuleByName'], required=True),
         register_as=dict(type='str'),
 
         at=dict(type='int'),
-        destinationNetworks=dict(type='list'),
-        destinationPorts=dict(type='list'),
-        destinationZones=dict(type='list'),
-        embeddedAppFilter=dict(type='str'),
-        eventLogAction=dict(type='str'),
-        filePolicy=dict(type='dict'),
+        description=dict(type='str'),
+        destinationInterface=dict(type='dict'),
+        dns=dict(type='bool'),
+        enabled=dict(type='bool'),
         filter=dict(type='str'),
         id=dict(type='str'),
-        intrusionPolicy=dict(type='dict'),
+        interfaceIPv6=dict(type='bool'),
+        interfaceInTranslatedNetwork=dict(type='bool'),
         limit=dict(type='int'),
-        logFiles=dict(type='bool'),
         name=dict(type='str'),
+        natType=dict(type='str'),
+        netToNet=dict(type='bool'),
+        noProxyArp=dict(type='bool'),
         objId=dict(type='str'),
         offset=dict(type='int'),
+        originalNetwork=dict(type='dict'),
+        originalPort=dict(type='dict'),
         parentId=dict(type='str'),
-        ruleAction=dict(type='str'),
-        ruleId=dict(type='int'),
+        patOptions=dict(type='str'),
+        routeLookup=dict(type='bool'),
         sort=dict(type='str'),
-        sourceNetworks=dict(type='list'),
-        sourcePorts=dict(type='list'),
-        sourceZones=dict(type='list'),
-        syslogServer=dict(type='dict'),
+        sourceInterface=dict(type='dict'),
+        translatedNetwork=dict(type='dict'),
+        translatedPort=dict(type='dict'),
         type=dict(type='str'),
-        urlFilter=dict(type='str'),
-        users=dict(type='list'),
         version=dict(type='str'),
-        vlanTags=dict(type='list'),
     )
 
     module = AnsibleModule(argument_spec=fields)
     params = module.params
 
     try:
-        method_to_call = getattr(AccessRuleResource, params['operation'])
+        method_to_call = getattr(ObjectNatRuleResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

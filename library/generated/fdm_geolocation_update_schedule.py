@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: fdm_network_object_group
-short_description: Manages NetworkObjectGroup objects on Cisco FTD devices with FDM
+module: fdm_geolocation_update_schedule
+short_description: Manages GeolocationUpdateSchedule objects on Cisco FTD devices with FDM
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -36,59 +36,70 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   description
     description:
-      - A string containing the description information<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
+      - An optional String value containing description about the Geolocaiton update activity.<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
+  forceOperation
+    description:
+      - For Internal use.
   id
     description:
       - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
-  isSystemDefined
+  jobHistoryUuid
     description:
-      - A Boolean value, TRUE or FALSE(the default). The TRUE value indicates that this Network object group is a system defined object
+      - For Internal use.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+  jobName
+    description:
+      - See derived class.
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
   name
     description:
-      - A string that is the name of the network group object.
-  objects
-    description:
-      - A comma-delimited list of the names of NetworkObject objects that are part of this group<br>Allowed types are: [NetworkObject]
+      - A String containing the user provided identifier associated with a scheduled activity.<br>Field level constraints: length must be between 0 and 32 (inclusive), must match pattern ^[a-zA-Z0-9][a-zA-Z0-9_+-]*$, cannot have HTML. (Note: Additional constraints might exist)
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
+  runTimes
+    description:
+      - A mandatory UTF8 string containing a cron specification (following the Java(tm)/Spring(tm) conventions).<p>The string must contain six space-separated fields representing the seconds, minutes, hours, dayOfTheMonth, month, dayOfTheWeek, year (time is in UTC). Depending on the scheduleType some values are not allowed. For the SINGLE schedule type the following constraints apply:seconds = 0; minutes: 0-59, hours: 0-23, dayOfTheMonth:1-31, month: 1-12, dayOfTheWeek: ?, year: 2017-2099. If the date/time is in the past (with respect to the time when the request is processed), the job is not scheduled.<br>For the DAILY schedule type the following constraints apply: seconds = 0; minutes: 0-59, hours: 0-23, dayOfTheMonth: *, month: *, dayOfTheWeek: *, year: .<br>For the WEEKLY schedule type the following constraints apply: seconds = 0; minutes: 0-59, hours: 0-23, dayOfTheMonth: *, month: *, dayOfTheWeek: 1-7, year: .<br>For the MONTHLY schedule type the following constraints apply: seconds = 0; minutes: 0-59, hours: 0-23, dayOfTheMonth: 1-31, month: *, dayOfTheWeek: ?, year: .<p>Examples:<br>'0 0 12 * * ? ' - schedule  at 12:00 PM (noon) every day.<p>'0 15 10 15 * ? ' - schedule at 10:15 AM on the 15th day of every month.<br>'0 59 23 31 1 ? 2018' schedule at 11:59 PM on Jan/31 2018.<br>Field level constraints: length must be between 0 and 200 (inclusive), must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+  scheduleType
+    description:
+      - A mandatory enum value that specifies the type of job schedule. Only allowed values are:<p>SINGLE - the job will be posted at the given date and time;<p>DAILY - the job will be posted daily at the given time;<p>WEEKLY - the job will be posted weekly at the given day of the week and given time;<p>MONTHLY - the job will be posted monthly at the given day of the month and given time. Note that the job will be posted -according to the system rules- if the day of the month exceeds the number of days in the current month.<p>Note that the job will be posted in the queue at the given time (or immediately), but the actual execution can be delayed if other jobs were scheduled for execution at the same time or are being currently processed. After a system restart, scheduled job will be reposted. if the system is restarted before a scheduled job is executed, the job will not be recovered if the given date/time is in the past.
   sort
     description:
       - The field used to sort the requested object list
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
+  user
+    description:
+      - System provided ID of the user who scheduled the job.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
 """
 
 EXAMPLES = """
-- name: Fetch NetworkObjectGroup with a given name
-  fdm_network_object_group:
+- name: Fetch GeolocationUpdateSchedule with a given name
+  fdm_geolocation_update_schedule:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getNetworkObjectGroupByName"
-    name: "Ansible NetworkObjectGroup"
+    operation: "getGeolocationUpdateScheduleByName"
+    name: "Ansible GeolocationUpdateSchedule"
 
-- name: Create a NetworkObjectGroup
-  fdm_network_object_group:
+- name: Create a GeolocationUpdateSchedule
+  fdm_geolocation_update_schedule:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: 'addNetworkObjectGroup'
+    operation: 'addGeolocationUpdateSchedule'
 
-    name: "Ansible NetworkObjectGroup"
+    name: "Ansible GeolocationUpdateSchedule"
     description: "From Ansible with love"
-    objects: ["{{ networkObject }}"]
-    type: "networkobjectgroup"
+    type: "geolocationupdateschedule"
 """
 
 RETURN = """
@@ -115,14 +126,14 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class NetworkObjectGroupResource(object):
+class GeolocationUpdateScheduleResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def addNetworkObjectGroup(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'id', 'objects', 'type'])
+    def addGeolocationUpdateSchedule(params):
+        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'runTimes', 'name', 'description', 'jobName', 'id', 'type'])
 
-        url = construct_url(params['hostname'], '/object/networkgroups')
+        url = construct_url(params['hostname'], '/managedentity/geolocationupdateschedules')
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='POST',
@@ -134,10 +145,10 @@ class NetworkObjectGroupResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def deleteNetworkObjectGroup(params):
+    def deleteGeolocationUpdateSchedule(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/networkgroups/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/managedentity/geolocationupdateschedules/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='DELETE',
@@ -148,11 +159,11 @@ class NetworkObjectGroupResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def editNetworkObjectGroup(params):
+    def editGeolocationUpdateSchedule(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'id', 'objects', 'type'])
+        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'runTimes', 'name', 'description', 'jobName', 'id', 'type'])
 
-        url = construct_url(params['hostname'], '/object/networkgroups/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/managedentity/geolocationupdateschedules/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='PUT',
@@ -164,10 +175,10 @@ class NetworkObjectGroupResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getNetworkObjectGroup(params):
+    def getGeolocationUpdateSchedule(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/networkgroups/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/managedentity/geolocationupdateschedules/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -178,10 +189,10 @@ class NetworkObjectGroupResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getNetworkObjectGroupList(params):
+    def getGeolocationUpdateScheduleList(params):
         query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
 
-        url = construct_url(params['hostname'], '/object/networkgroups', query_params=query_params)
+        url = construct_url(params['hostname'], '/managedentity/geolocationupdateschedules', query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -192,41 +203,41 @@ class NetworkObjectGroupResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getNetworkObjectGroupByName(params):
+    def getGeolocationUpdateScheduleByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(NetworkObjectGroupResource.getNetworkObjectGroupList, search_params)
+        item_generator = iterate_over_pageable_resource(GeolocationUpdateScheduleResource.getGeolocationUpdateScheduleList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
     @staticmethod
     @retry_on_token_expiration
-    def upsertNetworkObjectGroup(params):
+    def upsertGeolocationUpdateSchedule(params):
         def is_duplicate_name_error(err):
             return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
 
         try:
-            return NetworkObjectGroupResource.addNetworkObjectGroup(params)
+            return GeolocationUpdateScheduleResource.addGeolocationUpdateSchedule(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = NetworkObjectGroupResource.getNetworkObjectGroupByName(params)
-                params = NetworkObjectGroupResource.copy_identity_params(existing_object, params)
-                return NetworkObjectGroupResource.editNetworkObjectGroup(params)
+                existing_object = GeolocationUpdateScheduleResource.getGeolocationUpdateScheduleByName(params)
+                params = GeolocationUpdateScheduleResource.copy_identity_params(existing_object, params)
+                return GeolocationUpdateScheduleResource.editGeolocationUpdateSchedule(params)
             else:
                 raise e
 
     @staticmethod
     @retry_on_token_expiration
-    def editNetworkObjectGroupByName(params):
-        existing_object = NetworkObjectGroupResource.getNetworkObjectGroupByName(params)
-        params = NetworkObjectGroupResource.copy_identity_params(existing_object, params)
-        return NetworkObjectGroupResource.editNetworkObjectGroup(params)
+    def editGeolocationUpdateScheduleByName(params):
+        existing_object = GeolocationUpdateScheduleResource.getGeolocationUpdateScheduleByName(params)
+        params = GeolocationUpdateScheduleResource.copy_identity_params(existing_object, params)
+        return GeolocationUpdateScheduleResource.editGeolocationUpdateSchedule(params)
 
     @staticmethod
     @retry_on_token_expiration
-    def deleteNetworkObjectGroupByName(params):
-        existing_object = NetworkObjectGroupResource.getNetworkObjectGroupByName(params)
-        params = NetworkObjectGroupResource.copy_identity_params(existing_object, params)
-        return NetworkObjectGroupResource.deleteNetworkObjectGroup(params)
+    def deleteGeolocationUpdateScheduleByName(params):
+        existing_object = GeolocationUpdateScheduleResource.getGeolocationUpdateScheduleByName(params)
+        params = GeolocationUpdateScheduleResource.copy_identity_params(existing_object, params)
+        return GeolocationUpdateScheduleResource.deleteGeolocationUpdateSchedule(params)
 
     @staticmethod
     def copy_identity_params(source_object, dest_params):
@@ -243,20 +254,24 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addNetworkObjectGroup', 'deleteNetworkObjectGroup', 'editNetworkObjectGroup', 'getNetworkObjectGroup', 'getNetworkObjectGroupList', 'getNetworkObjectGroupByName', 'upsertNetworkObjectGroup', 'editNetworkObjectGroupByName', 'deleteNetworkObjectGroupByName'], required=True),
+        operation=dict(choices=['addGeolocationUpdateSchedule', 'deleteGeolocationUpdateSchedule', 'editGeolocationUpdateSchedule', 'getGeolocationUpdateSchedule', 'getGeolocationUpdateScheduleList', 'getGeolocationUpdateScheduleByName', 'upsertGeolocationUpdateSchedule', 'editGeolocationUpdateScheduleByName', 'deleteGeolocationUpdateScheduleByName'], required=True),
         register_as=dict(type='str'),
 
         description=dict(type='str'),
         filter=dict(type='str'),
+        forceOperation=dict(type='bool'),
         id=dict(type='str'),
-        isSystemDefined=dict(type='bool'),
+        jobHistoryUuid=dict(type='str'),
+        jobName=dict(type='str'),
         limit=dict(type='int'),
         name=dict(type='str'),
         objId=dict(type='str'),
-        objects=dict(type='list'),
         offset=dict(type='int'),
+        runTimes=dict(type='str'),
+        scheduleType=dict(type='str'),
         sort=dict(type='str'),
         type=dict(type='str'),
+        user=dict(type='str'),
         version=dict(type='str'),
     )
 
@@ -264,7 +279,7 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(NetworkObjectGroupResource, params['operation'])
+        method_to_call = getattr(GeolocationUpdateScheduleResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)
