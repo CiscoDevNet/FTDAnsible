@@ -15,18 +15,6 @@ short_description: Manages CliDeploymentError objects on Cisco FTD devices with 
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
-  hostname:
-    description:
-      - Specifies the hostname of the FTD device.
-    required: true
-  access_token:
-    description:
-      - Specifies the token to access the FTD device.
-    required: true
-  refresh_token:
-    description:
-      - Specifies the token to refresh the access token when the current one expires.
-    required: true
   operation:
     description:
       - Specified the name of the operation to execute in the task.
@@ -37,6 +25,8 @@ options:
   objId
     description:
       - The object ID to fetch. Use "default"
+
+extends_documentation_fragment: fdm
 """
 
 EXAMPLES = """
@@ -61,7 +51,7 @@ import json
 from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
-from ansible.module_utils.misc import dict_subset, construct_module_result
+from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 

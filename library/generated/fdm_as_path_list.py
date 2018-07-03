@@ -15,18 +15,6 @@ short_description: Manages ASPathList objects on Cisco FTD devices with FDM
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
-  hostname:
-    description:
-      - Specifies the hostname of the FTD device.
-    required: true
-  access_token:
-    description:
-      - Specifies the token to access the FTD device.
-    required: true
-  refresh_token:
-    description:
-      - Specifies the token to refresh the access token when the current one expires.
-    required: true
   operation:
     description:
       - Specified the name of the operation to execute in the task.
@@ -34,18 +22,38 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
+  description
+    description:
+      - <br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
+  entries
+    description:
+      - An object holding list of AS Path entries. A minimum of 1 entry is required for each AS Path list object.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
+  id
+    description:
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
+  name
+    description:
+      - A string containing the name of the AS Path list object. Name should be within the numeric range 1-500
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   sort
     description:
       - The field used to sort the requested object list
+  type
+    description:
+      - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
+  version
+    description:
+      - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
+
+extends_documentation_fragment: fdm
 """
 
 EXAMPLES = """
@@ -56,6 +64,17 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: "getASPathListByName"
     name: "Ansible ASPathList"
+
+- name: Create a ASPathList
+  fdm_as_path_list:
+    hostname: "https://127.0.0.1:8585"
+    access_token: 'ACCESS_TOKEN'
+    refresh_token: 'REFRESH_TOKEN'
+    operation: 'addASPathList'
+
+    name: "Ansible ASPathList"
+    description: "From Ansible with love"
+    type: "aspathlist"
 """
 
 RETURN = """
@@ -77,13 +96,72 @@ import json
 from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
-from ansible.module_utils.misc import dict_subset, construct_module_result
+from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
 class ASPathListResource(object):
     
+    @staticmethod
+    @retry_on_token_expiration
+    def addASPathList(params):
+        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+
+        url = construct_url(params['hostname'], '/object/aspathlists')
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='POST',
+            data=json.dumps(body_params)
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
+    def deleteASPathList(params):
+        path_params = dict_subset(params, ['objId'])
+
+        url = construct_url(params['hostname'], '/object/aspathlists/{objId}', path_params=path_params)
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='DELETE',
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
+    def editASPathList(params):
+        path_params = dict_subset(params, ['objId'])
+        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+
+        url = construct_url(params['hostname'], '/object/aspathlists/{objId}', path_params=path_params)
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='PUT',
+            data=json.dumps(body_params)
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
+    def getASPathList(params):
+        path_params = dict_subset(params, ['objId'])
+
+        url = construct_url(params['hostname'], '/object/aspathlists/{objId}', path_params=path_params)
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='GET',
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
     @staticmethod
     @retry_on_token_expiration
     def getASPathListList(params):
@@ -106,6 +184,36 @@ class ASPathListResource(object):
         item_generator = iterate_over_pageable_resource(ASPathListResource.getASPathListList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
+    @staticmethod
+    @retry_on_token_expiration
+    def upsertASPathList(params):
+        def is_duplicate_name_error(err):
+            return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
+
+        try:
+            return ASPathListResource.addASPathList(params)
+        except HTTPError as e:
+            if is_duplicate_name_error(e):
+                existing_object = ASPathListResource.getASPathListByName(params)
+                params = copy_identity_properties(existing_object, params)
+                return ASPathListResource.editASPathList(params)
+            else:
+                raise e
+
+    @staticmethod
+    @retry_on_token_expiration
+    def editASPathListByName(params):
+        existing_object = ASPathListResource.getASPathListByName(params)
+        params = copy_identity_properties(existing_object, params)
+        return ASPathListResource.editASPathList(params)
+
+    @staticmethod
+    @retry_on_token_expiration
+    def deleteASPathListByName(params):
+        existing_object = ASPathListResource.getASPathListByName(params)
+        params = copy_identity_properties(existing_object, params)
+        return ASPathListResource.deleteASPathList(params)
+
 
 def main():
     fields = dict(
@@ -113,13 +221,20 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['getASPathListList', 'getASPathListByName'], required=True),
+        operation=dict(choices=['addASPathList', 'deleteASPathList', 'editASPathList', 'getASPathList', 'getASPathListList', 'getASPathListByName', 'upsertASPathList', 'editASPathListByName', 'deleteASPathListByName'], required=True),
         register_as=dict(type='str'),
 
+        description=dict(type='str'),
+        entries=dict(type='list'),
         filter=dict(type='str'),
+        id=dict(type='str'),
         limit=dict(type='int'),
+        name=dict(type='str'),
+        objId=dict(type='str'),
         offset=dict(type='int'),
         sort=dict(type='str'),
+        type=dict(type='str'),
+        version=dict(type='str'),
     )
 
     module = AnsibleModule(argument_spec=fields)

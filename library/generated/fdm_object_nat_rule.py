@@ -15,18 +15,6 @@ short_description: Manages ObjectNatRule objects on Cisco FTD devices with FDM
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
-  hostname:
-    description:
-      - Specifies the hostname of the FTD device.
-    required: true
-  access_token:
-    description:
-      - Specifies the token to access the FTD device.
-    required: true
-  refresh_token:
-    description:
-      - Specifies the token to refresh the access token when the current one expires.
-    required: true
   operation:
     description:
       - Specified the name of the operation to execute in the task.
@@ -109,6 +97,8 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
+
+extends_documentation_fragment: fdm
 """
 
 EXAMPLES = """
@@ -151,7 +141,7 @@ import json
 from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
-from ansible.module_utils.misc import dict_subset, construct_module_result
+from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
@@ -254,7 +244,7 @@ class ObjectNatRuleResource(object):
         except HTTPError as e:
             if is_duplicate_name_error(e):
                 existing_object = ObjectNatRuleResource.getObjectNatRuleByName(params)
-                params = ObjectNatRuleResource.copy_identity_params(existing_object, params)
+                params = copy_identity_properties(existing_object, params)
                 return ObjectNatRuleResource.editObjectNatRule(params)
             else:
                 raise e
@@ -263,23 +253,15 @@ class ObjectNatRuleResource(object):
     @retry_on_token_expiration
     def editObjectNatRuleByName(params):
         existing_object = ObjectNatRuleResource.getObjectNatRuleByName(params)
-        params = ObjectNatRuleResource.copy_identity_params(existing_object, params)
+        params = copy_identity_properties(existing_object, params)
         return ObjectNatRuleResource.editObjectNatRule(params)
 
     @staticmethod
     @retry_on_token_expiration
     def deleteObjectNatRuleByName(params):
         existing_object = ObjectNatRuleResource.getObjectNatRuleByName(params)
-        params = ObjectNatRuleResource.copy_identity_params(existing_object, params)
+        params = copy_identity_properties(existing_object, params)
         return ObjectNatRuleResource.deleteObjectNatRule(params)
-
-    @staticmethod
-    def copy_identity_params(source_object, dest_params):
-        dest_params['objId'] = source_object['id']
-        dest_params['id'] = source_object['id']
-        if 'version' in source_object:
-            dest_params['version'] = source_object['version']
-        return dest_params
 
 
 def main():

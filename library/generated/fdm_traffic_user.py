@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: fdm_downloadinternalcacertificate
-short_description: Manages downloadinternalcacertificate objects on Cisco FTD devices with FDM
+module: fdm_traffic_user
+short_description: Manages TrafficUser objects on Cisco FTD devices with FDM
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -53,14 +53,28 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class downloadinternalcacertificateResource(object):
+class TrafficUserResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def getdownloadinternalcacertificate(params):
-        path_params = dict_subset(params, ['objId'])
+    def getRealmTrafficUser(params):
+        path_params = dict_subset(params, ['parentId', 'objId'])
 
-        url = construct_url(params['hostname'], '/action/downloadinternalcacertificate/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/object/realms/{parentId}/trafficusers/{objId}', path_params=path_params)
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='GET',
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
+    def getSpecialRealmTrafficUser(params):
+        path_params = dict_subset(params, ['parentId', 'objId'])
+
+        url = construct_url(params['hostname'], '/object/specialrealms/{parentId}/trafficusers/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -76,17 +90,18 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['getdownloadinternalcacertificate'], required=True),
+        operation=dict(choices=['getRealmTrafficUser', 'getSpecialRealmTrafficUser'], required=True),
         register_as=dict(type='str'),
 
         objId=dict(type='str'),
+        parentId=dict(type='str'),
     )
 
     module = AnsibleModule(argument_spec=fields)
     params = module.params
 
     try:
-        method_to_call = getattr(downloadinternalcacertificateResource, params['operation'])
+        method_to_call = getattr(TrafficUserResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

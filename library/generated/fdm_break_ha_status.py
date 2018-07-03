@@ -3,6 +3,52 @@
 # Copyright (c) 2018 Cisco Systems, Inc.
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
+
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'network'}
+
+DOCUMENTATION = """
+---
+module: fdm_break_ha_status
+short_description: Manages BreakHAStatus jobs on Cisco FTD devices with FDM.
+description:
+  - Starts a new BreakHAStatus job and waits until it completes. The status of the job is checked every second.
+    If the job is not completed within the defined timeout interval, the module execution fails.
+version_added: "2.7"
+author: "Cisco Systems, Inc."
+options:
+  timeout:
+    description:
+      - Specifies the maximum time period in seconds for the job to finish. If the job is not completed, the task fails.
+    default: 600
+
+extends_documentation_fragment: fdm
+"""
+
+EXAMPLES = """
+- name: Start BreakHAStatus job and wait for its completion
+  fdm_break_ha_status:
+    hostname: "https://localhost:8585"
+    access_token: 'ACCESS_TOKEN'
+    refresh_token: 'REFRESH_TOKEN'
+    timeout: 900
+"""
+
+RETURN = """
+status:
+  description: The last successfully fetched status of the deployment job.
+  returned: success
+  type: dict
+error_code:
+  description: HTTP error code returned from the server.
+  returned: error
+  type: int
+msg:
+  description: Error message returned from the server.
+  returned: error
+  type: dict
+"""
 import json
 
 from ansible.module_utils.authorization import retry_on_token_expiration
