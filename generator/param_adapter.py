@@ -9,7 +9,7 @@ SWAGGER_ANSIBLE_TYPE_MAPPING = {
 }
 REFERENCE_MODEL = '#/definitions/ReferenceModel'
 
-ParamSpec = namedtuple("ParamSpec", "name type description")
+ParamSpec = namedtuple("ParamSpec", "name type description required")
 
 
 class SwaggerParamAdapter(object):
@@ -20,9 +20,10 @@ class SwaggerParamAdapter(object):
         params = {}
 
         def append_model_params(model_def):
-            for property_name, property_spec in model_def._properties.items():
+            for property_name, property_spec in model_def._model_spec['properties'].items():
                 param_desc = self.swagger_docs.get_model_property_desc(model_name, property_name)
-                params[property_name] = ParamSpec(property_name, self.infer_param_type(property_spec), param_desc)
+                is_required = property_name in model_def._model_spec['required']
+                params[property_name] = ParamSpec(property_name, self.infer_param_type(property_spec), param_desc, is_required)
 
         for param_name, param in operation.params.items():
             if param.param_spec['in'] != 'body':
@@ -46,7 +47,7 @@ class SwaggerParamAdapter(object):
             if param.param_spec['in'] != url_part:
                 continue
             param_desc = self.swagger_docs.get_path_param_desc(operation.path_name, operation.http_method, param_name)
-            params[param_name] = ParamSpec(param_name, self.infer_param_type(param.param_spec), param_desc)
+            params[param_name] = ParamSpec(param_name, self.infer_param_type(param.param_spec), param_desc, param.required)
         return params
 
     @staticmethod

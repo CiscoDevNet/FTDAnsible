@@ -1,77 +1,25 @@
+{% set class_name = model_name + "Resource" %}
+{% set extra_operations = [] %}
+{% set searchable_by_name = 'get%sList' % model_name in operations.keys() %}
+{% set eligible_for_upsert = 'get%sList' % model_name in operations.keys() and 'edit%s' % model_name in operations.keys() and 'add%s' % model_name in operations.keys() %}
 #!/usr/bin/python
 
 # Copyright (c) 2018 Cisco Systems, Inc.
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'network'}
+{% include 'docs/base_docs.j2' %}
 
-DOCUMENTATION = """
----
-module: fdm_{{ model_name | camel_to_snake }}
-short_description: Manages {{ model_name }} objects on Cisco FTD devices with FDM
-version_added: "2.7"
-author: "Cisco Systems, Inc."
-options:
-  hostname:
-    description:
-      - Specifies the hostname of the FTD device.
-    required: true
-  access_token:
-    description:
-      - Specifies the token to access the FTD device.
-    required: true
-  refresh_token:
-    description:
-      - Specifies the token to refresh the access token when the current one expires.
-    required: true
-  operation:
-    description:
-      - Specified the name of the operation to execute in the task.
-    required: true
-  register_as:
-    description:
-      - Specifies Ansible fact name that is used to register received response from the FTD device.
-{% for param in params %}
-{% if param.description %}
-  {{ param.name }}
-    description:
-      - {{ param.description }}
-{% endif %}
-{% endfor %}
-"""
-
-EXAMPLES = """
-"""
-
-RETURN = """
-response:
-  description: HTTP response returned from the API call.
-  returned: success
-  type: dict
-error_code:
-  description: HTTP error code returned from the server.
-  returned: error
-  type: int
-msg:
-  description: Error message returned from the server.
-  returned: error
-  type: dict
-"""
 import json
 
 from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
-from ansible.module_utils.misc import dict_subset, construct_module_result
+from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-{% set class_name = model_name + "Resource" %}
-{% set extra_operations = [] %}
 class {{ class_name }}(object):
     {% for operation_name, operation_spec in operations.items() %}
 
@@ -100,7 +48,6 @@ class {{ class_name }}(object):
         response = open_url(url, **request_params).read()
         return json.loads(response) if response else response
 {% endfor %}
-{% set searchable_by_name = 'get%sList' % model_name in operations.keys() %}
 {% if searchable_by_name %}
 {% do extra_operations.append( "get"+model_name+"ByName" ) %}
 
@@ -112,7 +59,6 @@ class {{ class_name }}(object):
         item_generator = iterate_over_pageable_resource({{ class_name }}.get{{ model_name }}List, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 {% endif %}
-{% set eligible_for_upsert = 'get%sList' % model_name in operations.keys() and 'edit%s' % model_name in operations.keys() and 'add%s' % model_name in operations.keys() %}
 {% if eligible_for_upsert %}
 {% do extra_operations.append( "upsert"+model_name ) %}
 
@@ -127,7 +73,7 @@ class {{ class_name }}(object):
         except HTTPError as e:
             if is_duplicate_name_error(e):
                 existing_object = {{ class_name }}.get{{ model_name }}ByName(params)
-                params = {{ class_name }}.copy_identity_params(existing_object, params)
+                params = copy_identity_properties(existing_object, params)
                 return {{ class_name }}.edit{{ model_name }}(params)
             else:
                 raise e
@@ -139,7 +85,7 @@ class {{ class_name }}(object):
     @retry_on_token_expiration
     def edit{{ model_name }}ByName(params):
         existing_object = {{ class_name }}.get{{ model_name }}ByName(params)
-        params = {{ class_name }}.copy_identity_params(existing_object, params)
+        params = copy_identity_properties(existing_object, params)
         return {{ class_name }}.edit{{ model_name }}(params)
 {% endif %}
 {% if searchable_by_name and 'delete%s' % model_name in operations.keys() %}
@@ -149,20 +95,9 @@ class {{ class_name }}(object):
     @retry_on_token_expiration
     def delete{{ model_name }}ByName(params):
         existing_object = {{ class_name }}.get{{ model_name }}ByName(params)
-        params = {{ class_name }}.copy_identity_params(existing_object, params)
+        params = copy_identity_properties(existing_object, params)
         return {{ class_name }}.delete{{ model_name }}(params)
 {% endif %}
-
-    @staticmethod
-    def copy_identity_params(source_object, dest_params):
-        dest_params['objId'] = source_object['id']
-        dest_params['id'] = source_object['id']
-        if 'version' in source_object:
-            dest_params['version'] = source_object['version']
-{% if model_name == 'AccessRule' %}
-        dest_params['ruleId'] = source_object.get('ruleId')
-{% endif %}
-        return dest_params
 
 
 def main():

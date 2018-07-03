@@ -1,0 +1,45 @@
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'network'}
+
+DOCUMENTATION = """
+---
+module: fdm_{{ model_name | camel_to_snake }}
+short_description: Manages {{ model_name }} jobs on Cisco FTD devices with FDM.
+description:
+  - Starts a new {{ model_name }} job and waits until it completes. The status of the job is checked every second.
+    If the job is not completed within the defined timeout interval, the module execution fails.
+version_added: "2.7"
+author: "Cisco Systems, Inc."
+options:
+  timeout:
+    description:
+      - Specifies the maximum time period in seconds for the job to finish. If the job is not completed, the task fails.
+    default: 600
+
+extends_documentation_fragment: fdm
+"""
+
+EXAMPLES = """
+- name: Start {{ model_name }} job and wait for its completion
+  fdm_{{ model_name | camel_to_snake }}:
+    hostname: "https://localhost:8585"
+    access_token: 'ACCESS_TOKEN'
+    refresh_token: 'REFRESH_TOKEN'
+    timeout: 900
+"""
+
+RETURN = """
+status:
+  description: The last successfully fetched status of the deployment job.
+  returned: success
+  type: dict
+error_code:
+  description: HTTP error code returned from the server.
+  returned: error
+  type: int
+msg:
+  description: Error message returned from the server.
+  returned: error
+  type: dict
+"""

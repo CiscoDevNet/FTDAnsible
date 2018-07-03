@@ -14,7 +14,7 @@ class SwaggerDocsClient(object):
         return cls(swagger_docs)
 
     def get_model_property_desc(self, model_name, property_name):
-        return self.swagger_docs['definitions'][model_name]['properties'][property_name]
+        return self.swagger_docs['definitions'][model_name]['properties'].get(property_name, '')
 
     def get_path_param_desc(self, path, method, param_name):
         params = self.swagger_docs['paths'][path][method]['parameters']

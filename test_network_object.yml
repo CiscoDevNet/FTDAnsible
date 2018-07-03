@@ -21,7 +21,6 @@
             subType: "HOST"
             value: "192.22.22.24"
             type: "networkobject"
-            register_as: "networkObj1"
 
         - name: Create a NETWORK network object
           fdm_network_object:
@@ -34,7 +33,6 @@
             subType: "NETWORK"
             value: "192.23.23.0/24"
             type: "networkobject"
-            register_as: "networkObj2"
 
         - name: Create a network group
           fdm_network_object_group:
@@ -46,9 +44,8 @@
             description: "From Ansible with love"
             type: "networkobjectgroup"
             objects:
-              - "{{ networkObj1 }}"
-              - "{{ networkObj2 }}"
-            register_as: "networkGroup1"
+              - "{{ networkobject_ansible_network_host }}"
+              - "{{ networkobject_ansible_network_network }}"
 
         - name: Update the HOST network object
           fdm_network_object:
@@ -61,10 +58,9 @@
             value: "192.22.22.25"
             subType: "HOST"
             type: "networkobject"
-            register_as: "networkObj1"
 
         - name: Deploy changes
-          fdm_deploy:
+          fdm_deployment:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -76,7 +72,6 @@
             refresh_token: '{{ refresh_token }}'
             operation: 'getNetworkObjectByName'
             name: "Ansible-network-network"
-            register_as: "networkObj2"
 
         - name: Update the network group
           fdm_network_object_group:
@@ -88,8 +83,7 @@
             description: "From Ansible with love. Version 2"
             type: "networkobjectgroup"
             objects:
-              - "{{ networkObj2 }}"
-            register_as: "networkGroup1"
+              - "{{ networkobject_ansible_network_network }}"
 
         - name: Delete a network group
           fdm_network_object_group:
@@ -97,7 +91,7 @@
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
             operation: 'deleteNetworkObjectGroup'
-            objId: "{{ networkGroup1['id'] }}"
+            objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
 
         - name: Delete a HOST network object
           fdm_network_object:
@@ -105,7 +99,7 @@
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
             operation: 'deleteNetworkObject'
-            objId: "{{ networkObj1['id'] }}"
+            objId: "{{ networkobject_ansible_network_host['id'] }}"
 
         - name: Delete a NETWORK network object
           fdm_network_object:
