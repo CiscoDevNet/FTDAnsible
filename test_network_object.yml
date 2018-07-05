@@ -2,7 +2,7 @@
   connection: local
   tasks:
     - name: Obtain access token
-      fdm_oauth_token:
+      ftd_oauth_token:
         device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
         username: '{{ username }}'
         password: '{{ password }}'
@@ -11,7 +11,7 @@
     - name: Managing configuration objects
       block:
         - name: Create a HOST network object
-          fdm_network_object:
+          ftd_network_object:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -23,7 +23,7 @@
             type: "networkobject"
 
         - name: Create a NETWORK network object
-          fdm_network_object:
+          ftd_network_object:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -35,7 +35,7 @@
             type: "networkobject"
 
         - name: Create a network group
-          fdm_network_object_group:
+          ftd_network_object_group:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -48,7 +48,7 @@
               - "{{ networkobject_ansible_network_network }}"
 
         - name: Update the HOST network object
-          fdm_network_object:
+          ftd_network_object:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -60,13 +60,13 @@
             type: "networkobject"
 
         - name: Deploy changes
-          fdm_deployment:
+          ftd_deployment:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
 
         - name: Refresh a NETWORK network object
-          fdm_network_object:
+          ftd_network_object:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -74,7 +74,7 @@
             name: "Ansible-network-network"
 
         - name: Update the network group
-          fdm_network_object_group:
+          ftd_network_object_group:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -86,7 +86,7 @@
               - "{{ networkobject_ansible_network_network }}"
 
         - name: Delete a network group
-          fdm_network_object_group:
+          ftd_network_object_group:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -94,7 +94,7 @@
             objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
 
         - name: Delete a HOST network object
-          fdm_network_object:
+          ftd_network_object:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -102,7 +102,7 @@
             objId: "{{ networkobject_ansible_network_host['id'] }}"
 
         - name: Delete a NETWORK network object
-          fdm_network_object:
+          ftd_network_object:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -111,7 +111,7 @@
 
       always:
         - name: Revoke access token
-          fdm_oauth_token:
+          ftd_oauth_token:
             device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             operation: 'revoke'

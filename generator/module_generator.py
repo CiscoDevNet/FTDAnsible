@@ -67,7 +67,7 @@ def generate_modules_for_resource(resource_name, resource, template, param_adapt
     model_operations_dict = group_operations_by_model(resource_name, resource, param_adapter)
 
     for model_name, operations in model_operations_dict.items():
-        with open('%s/fdm_%s.py' % (OUTPUT_DIR, camel_to_snake(model_name)), "w") as f:
+        with open('%s/ftd_%s.py' % (OUTPUT_DIR, camel_to_snake(model_name)), "w") as f:
             f.write(template.render(
                 model_name=model_name,
                 operations=operations,
@@ -117,8 +117,8 @@ def get_example_properties(model_name):
 
 
 parser = argparse.ArgumentParser(description='Generates Ansible modules from Swagger documentation')
-parser.add_argument('hostname', help='Hostname where FDM can be accessed')
-parser.add_argument('username', help='FDM username that has access to Swagger docs')
+parser.add_argument('hostname', help='Hostname where FTD can be accessed')
+parser.add_argument('username', help='FTD username that has access to Swagger docs')
 parser.add_argument('password', help='Password for the username')
 args = parser.parse_args()
 

@@ -4,8 +4,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: fdm_{{ model_name | camel_to_snake }}
-short_description: Manages {{ model_name }} objects on Cisco FTD devices with FDM
+module: ftd_{{ model_name | camel_to_snake }}
+short_description: Manages {{ model_name }} objects on Cisco FTD devices
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -24,7 +24,7 @@ options:
 {% endif %}
 {% endfor %}
 
-extends_documentation_fragment: fdm
+extends_documentation_fragment: ftd
 """
 
 {% include 'docs/examples.j2' %}

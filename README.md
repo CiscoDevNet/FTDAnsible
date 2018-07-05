@@ -1,4 +1,4 @@
-# FDM Ansible Modules
+# FTD Ansible Modules
 
 ## Common environment setup
 1. Create a virtual environment:
@@ -52,7 +52,7 @@ To generate Ansible modules:
 
 ### Unit Tests
 
-The project contains examples of Ansible unit tests written for `fdm_deploy` module. They can be found in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests
+The project contains examples of Ansible unit tests written for `ftd_deploy` module. They can be found in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests
 in this project also rely on them and including Ansible test module to the Python path is required to run them. When the project is
 developed further, modules and tests will be moved to the Ansible repository and this extra step will be no longer needed.
 
@@ -72,12 +72,12 @@ In order to run the unit tests:
 ### Integration Tests
 
 Ansible integration tests are written in a form of playbooks and are usually run with `ansible-test` utility command from Ansible repository. This project 
-contains examples of integration tests written for `fdm_network_object` module that are located in `test/integration` folder.
+contains examples of integration tests written for `ftd_network_object` module that are located in `test/integration` folder.
 
 As current project is created outside Ansible repository, copying modules/module utils/tests is required before running them. In order to run the integration tests:
 
 1. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
-1. Copy Ansible modules from `library` to `ANSIBLE_DIR/lib/ansible/modules/network/fdm`;
+1. Copy Ansible modules from `library` to `ANSIBLE_DIR/lib/ansible/modules/network/ftd`;
 1. Copy module utils from `module_utils` to `ANSIBLE_DIR/lib/ansible/module_utils`;
 1. Copy integration †ests from `test/integration` to `ANSIBLE_DIR/test/integration/targets`;
 1. Configure test inventory:
@@ -87,8 +87,8 @@ As current project is created outside Ansible repository, copying modules/module
     ${EDITOR:-vi} inventory.networking
     # Add in machines for the platform(s) you wish to test
     ```
-1. Define FDM modules as network modules by adding `fdm` prefix to `ANSIBLE_DIR/test/integration/target-prefixes.network` file;
-1. Run integration tests for `fdm_network_object` module:
+1. Define FTD modules as network modules by adding `ftd` prefix to `ANSIBLE_DIR/test/integration/target-prefixes.network` file;
+1. Run integration tests for `ftd_network_object` module:
     ```
-    ansible-test network-integration --inventory inventory.networking fdm_network_object
+    ansible-test network-integration --inventory inventory.networking ftd_network_object
     ```

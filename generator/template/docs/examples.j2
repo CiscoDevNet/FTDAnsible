@@ -1,7 +1,7 @@
 EXAMPLES = """
 {% if searchable_by_name %}
 - name: Fetch {{ model_name }} with a given name
-  fdm_{{ model_name | camel_to_snake }}:
+  ftd_{{ model_name | camel_to_snake }}:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
@@ -12,7 +12,7 @@ EXAMPLES = """
 {% set add_operation = operations['add%s' % model_name] %}
 
 - name: Create a {{ model_name }}
-  fdm_{{ model_name | camel_to_snake }}:
+  ftd_{{ model_name | camel_to_snake }}:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'

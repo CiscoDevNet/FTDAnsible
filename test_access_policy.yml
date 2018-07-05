@@ -2,7 +2,7 @@
   connection: local
   tasks:
     - name: Obtain access token
-      fdm_oauth_token:
+      ftd_oauth_token:
         device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
         username: 'admin'
         password: '123qwe'
@@ -11,7 +11,7 @@
     - name: Managing configuration objects
       block:
         - name: Create a network object
-          fdm_network_object:
+          ftd_network_object:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -26,7 +26,7 @@
             register_as: "networkObj1"
 
         - name: Fetch default Access Policy
-          fdm_access_policy:
+          ftd_access_policy:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -37,7 +37,7 @@
             register_as: "accessPolicies"
 
         - name: Create an access rule
-          fdm_access_rule:
+          ftd_access_rule:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -52,7 +52,7 @@
             register_as: "accessRule1"
 
         - name: Update the access rule
-          fdm_access_rule:
+          ftd_access_rule:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -67,13 +67,13 @@
             register_as: "accessRule1"
 
         - name: Deploy changes
-          fdm_deploy:
+          ftd_deployment:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
 
         - name: Delete an access rule
-          fdm_access_rule:
+          ftd_access_rule:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -83,7 +83,7 @@
             parentId: "{{ accessPolicies[0]['id'] }}"
 
         - name: Delete a network object
-          fdm_network_object:
+          ftd_network_object:
             hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
@@ -92,7 +92,7 @@
 
       always:
         - name: Revoke access token
-          fdm_oauth_token:
+          ftd_oauth_token:
             device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
             operation: 'revoke'
