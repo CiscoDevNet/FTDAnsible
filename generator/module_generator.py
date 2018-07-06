@@ -24,7 +24,7 @@ OUTPUT_DIR = os.path.join(os.path.dirname(DIR_PATH), 'library/generated')
 
 EXAMPLE_PROPERTIES_FILE_PATH = os.path.join(DIR_PATH, 'resource/example_properties.yml')
 
-IGNORED_MODULES = {'Token', 'CertFileUploadStatus', 'Download', 'Upload', 'HAAction'}
+IGNORED_MODULES = {'Token', 'CertFileUploadStatus', 'Download', 'Upload'}
 JOB_BASED_MODULES = {'BreakHAStatus', 'JoinHAStatus', 'Deployment'}
 
 
@@ -78,14 +78,13 @@ def generate_modules_for_resource(resource_name, resource, template, param_adapt
 
 def group_operations_by_model(resource_name, resource, param_adapter):
     def infer_model_name(operation_name):
-        if operation_name.endswith(resource_name):
+        crud_reg_exp = r'^(get|add|edit|delete)(\w+?)(List)?$'
+        groups = re.match(crud_reg_exp, operation_name)
+
+        if operation_name.endswith(resource_name) or not groups:
             return resource_name
-        reg_ex = r'^(get|add|edit|delete)(\w+?)(List)?$'
-        groups = re.match(reg_ex, operation_name)
-        if groups:
-            return groups[2]
         else:
-            raise ValueError("Invalid operation name: %s" % operation_name)
+            return groups[2]
 
     model_operations = defaultdict(dict)
     for operation_name in dir(resource):
