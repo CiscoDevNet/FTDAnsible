@@ -1,14 +1,13 @@
 import json
 from functools import wraps
 
-import requests
 # When used by Ansible, it requires absolute imports from 'ansible.module_utils' package
 if "ansible.module_utils" in __name__:
     from ansible.module_utils.http import construct_url
-    from ansible.module_utils.six.moves.urllib.error import HTTPError
 else:
     from .http import construct_url
-    from urllib3.exceptions import HTTPError
+from ansible.module_utils.urls import open_url
+from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 AUTH_HEADERS = {
     'Content-Type': 'application/json',
@@ -26,7 +25,8 @@ def request_token(hostname, username, password):
         'password': password
     }
     url = construct_url(hostname, AUTH_PREFIX)
-    return requests.post(url, data=json.dumps(auth_payload), verify=False, headers=AUTH_HEADERS).json()
+    response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS).read()
+    return json.loads(response) if response else response
 
 
 def refresh_token(hostname, refresh_token):
@@ -35,7 +35,8 @@ def refresh_token(hostname, refresh_token):
         'refresh_token': refresh_token
     }
     url = construct_url(hostname, AUTH_PREFIX)
-    return requests.post(url, data=json.dumps(auth_payload), verify=False, headers=AUTH_HEADERS).json()
+    response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS).read()
+    return json.loads(response) if response else response
 
 
 def revoke_token(hostname, token):
@@ -45,7 +46,7 @@ def revoke_token(hostname, token):
         'token_to_revoke': token
     }
     url = construct_url(hostname, AUTH_PREFIX)
-    requests.post(url, data=json.dumps(logout_payload), verify=False, headers=AUTH_HEADERS)
+    open_url(url, method='POST', data=json.dumps(logout_payload), headers=AUTH_HEADERS).read()
 
 
 def retry_on_token_expiration(func):

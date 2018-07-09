@@ -55,9 +55,9 @@ EXAMPLES = """
 
 RETURN = """
 """
-from ansible.module_utils.basic import *
-
 from ansible.module_utils.authorization import request_token, revoke_token
+from ansible.module_utils.basic import *
+from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 
 def main():
@@ -71,15 +71,19 @@ def main():
 
     module = AnsibleModule(argument_spec=fields)
 
-    if module.params['operation'] == 'request':
-        result = request_token(module.params['device_url'], module.params['username'], module.params['password'])
-        module.exit_json(changed=True, ansible_facts={
-            'access_token': result['access_token'],
-            'refresh_token': result['refresh_token']
-        })
-    else:
-        revoke_token(module.params['device_url'], module.params['access_token'])
-        module.exit_json(changed=True)
+    try:
+        if module.params['operation'] == 'request':
+            result = request_token(module.params['device_url'], module.params['username'], module.params['password'])
+            module.exit_json(changed=True, ansible_facts={
+                'access_token': result['access_token'],
+                'refresh_token': result['refresh_token']
+            })
+        else:
+            revoke_token(module.params['device_url'], module.params['access_token'])
+            module.exit_json(changed=True)
+    except HTTPError as e:
+        err_msg = e.read()
+        module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
 
 
 if __name__ == '__main__':
