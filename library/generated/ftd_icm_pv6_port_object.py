@@ -22,18 +22,42 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
+  description
+    description:
+      - An optional unicode alphanumeric string containing a description of the Port Object, up to 200 characters. The string cannot include HTML tags<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
+  icmpv6Code
+    description:
+      - An enum value that specifies the ICMPv6 code.
+  icmpv6Type
+    description:
+      - An enum value that specifies the ICMPv6 type.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+  id
+    description:
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+  isSystemDefined
+    description:
+      - A Boolean value, TRUE or FALSE (the default). The TRUE value indicates that this object is a system defined object
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
+  name
+    description:
+      - A mandatory unicode alphanumeric string containing a unique name for the Port Object, from 1 to 128 characters without spaces. The string cannot include HTML tag. The check for duplicates is performed with a case insensitive search.
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   sort
     description:
       - The field used to sort the requested object list
+  type
+    description:
+      - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
+  version
+    description:
+      - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
 
 extends_documentation_fragment: ftd
 """
@@ -46,6 +70,17 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: "getICMPv6PortObjectByName"
     name: "Ansible ICMPv6PortObject"
+
+- name: Create a ICMPv6PortObject
+  ftd_icm_pv6_port_object:
+    hostname: "https://127.0.0.1:8585"
+    access_token: 'ACCESS_TOKEN'
+    refresh_token: 'REFRESH_TOKEN'
+    operation: 'addICMPv6PortObject'
+
+    name: "Ansible ICMPv6PortObject"
+    description: "From Ansible with love"
+    type: "icmpv6portobject"
 """
 
 RETURN = """
@@ -76,6 +111,65 @@ class ICMPv6PortObjectResource(object):
     
     @staticmethod
     @retry_on_token_expiration
+    def addICMPv6PortObject(params):
+        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'icmpv6Type', 'icmpv6Code', 'id', 'type'])
+
+        url = construct_url(params['hostname'], '/object/icmpv6ports')
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='POST',
+            data=json.dumps(body_params)
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
+    def deleteICMPv6PortObject(params):
+        path_params = dict_subset(params, ['objId'])
+
+        url = construct_url(params['hostname'], '/object/icmpv6ports/{objId}', path_params=path_params)
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='DELETE',
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
+    def editICMPv6PortObject(params):
+        path_params = dict_subset(params, ['objId'])
+        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'icmpv6Type', 'icmpv6Code', 'id', 'type'])
+
+        url = construct_url(params['hostname'], '/object/icmpv6ports/{objId}', path_params=path_params)
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='PUT',
+            data=json.dumps(body_params)
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
+    def getICMPv6PortObject(params):
+        path_params = dict_subset(params, ['objId'])
+
+        url = construct_url(params['hostname'], '/object/icmpv6ports/{objId}', path_params=path_params)
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='GET',
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
     def getICMPv6PortObjectList(params):
         query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
 
@@ -96,6 +190,36 @@ class ICMPv6PortObjectResource(object):
         item_generator = iterate_over_pageable_resource(ICMPv6PortObjectResource.getICMPv6PortObjectList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
+    @staticmethod
+    @retry_on_token_expiration
+    def upsertICMPv6PortObject(params):
+        def is_duplicate_name_error(err):
+            return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
+
+        try:
+            return ICMPv6PortObjectResource.addICMPv6PortObject(params)
+        except HTTPError as e:
+            if is_duplicate_name_error(e):
+                existing_object = ICMPv6PortObjectResource.getICMPv6PortObjectByName(params)
+                params = copy_identity_properties(existing_object, params)
+                return ICMPv6PortObjectResource.editICMPv6PortObject(params)
+            else:
+                raise e
+
+    @staticmethod
+    @retry_on_token_expiration
+    def editICMPv6PortObjectByName(params):
+        existing_object = ICMPv6PortObjectResource.getICMPv6PortObjectByName(params)
+        params = copy_identity_properties(existing_object, params)
+        return ICMPv6PortObjectResource.editICMPv6PortObject(params)
+
+    @staticmethod
+    @retry_on_token_expiration
+    def deleteICMPv6PortObjectByName(params):
+        existing_object = ICMPv6PortObjectResource.getICMPv6PortObjectByName(params)
+        params = copy_identity_properties(existing_object, params)
+        return ICMPv6PortObjectResource.deleteICMPv6PortObject(params)
+
 
 def main():
     fields = dict(
@@ -103,13 +227,22 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(type='str', choices=['getICMPv6PortObjectList', 'getICMPv6PortObjectByName'], required=True),
+        operation=dict(type='str', default='upsertICMPv6PortObject', choices=['addICMPv6PortObject', 'deleteICMPv6PortObject', 'editICMPv6PortObject', 'getICMPv6PortObject', 'getICMPv6PortObjectList', 'getICMPv6PortObjectByName', 'upsertICMPv6PortObject', 'editICMPv6PortObjectByName', 'deleteICMPv6PortObjectByName']),
         register_as=dict(type='str'),
 
+        description=dict(type='str'),
         filter=dict(type='str'),
+        icmpv6Code=dict(type='str'),
+        icmpv6Type=dict(type='str'),
+        id=dict(type='str'),
+        isSystemDefined=dict(type='bool'),
         limit=dict(type='int'),
+        name=dict(type='str'),
+        objId=dict(type='str'),
         offset=dict(type='int'),
         sort=dict(type='str'),
+        type=dict(type='str'),
+        version=dict(type='str'),
     )
 
     module = AnsibleModule(argument_spec=fields)

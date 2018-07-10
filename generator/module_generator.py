@@ -77,14 +77,20 @@ def generate_modules_for_resource(resource_name, resource, template, param_adapt
 
 
 def group_operations_by_model(resource_name, resource, param_adapter):
-    def infer_model_name(operation_name):
-        crud_reg_exp = r'^(get|add|edit|delete)(\w+?)(List)?$'
-        groups = re.match(crud_reg_exp, operation_name)
 
-        if operation_name.endswith(resource_name) or not groups:
-            return resource_name
+    # some container operations end with 'List', thus removing suffix to infer model name correctly
+    def remove_list_suffix(operation_name):
+        if resource_name.endswith('List'):
+            return operation_name.replace('ListList', 'List')
         else:
+            return operation_name.replace('List', '')
+
+    def infer_model_name(operation_name):
+        groups = re.match(r'^(get|add|edit|delete)(\w+)$', remove_list_suffix(operation_name))
+        if groups:
             return groups[2]
+        else:
+            return resource_name
 
     model_operations = defaultdict(dict)
     for operation_name in dir(resource):

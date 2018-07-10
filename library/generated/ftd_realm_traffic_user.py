@@ -76,6 +76,20 @@ class RealmTrafficUserResource(object):
     
     @staticmethod
     @retry_on_token_expiration
+    def getRealmTrafficUser(params):
+        path_params = dict_subset(params, ['parentId', 'objId'])
+
+        url = construct_url(params['hostname'], '/object/realms/{parentId}/trafficusers/{objId}', path_params=path_params)
+        request_params = dict(
+            headers=base_headers(params['access_token']),
+            method='GET',
+        )
+
+        response = open_url(url, **request_params).read()
+        return json.loads(response) if response else response
+
+    @staticmethod
+    @retry_on_token_expiration
     def getRealmTrafficUserList(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
@@ -104,11 +118,12 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(type='str', choices=['getRealmTrafficUserList', 'getRealmTrafficUserByName'], required=True),
+        operation=dict(type='str', choices=['getRealmTrafficUser', 'getRealmTrafficUserList', 'getRealmTrafficUserByName'], required=True),
         register_as=dict(type='str'),
 
         filter=dict(type='str'),
         limit=dict(type='int'),
+        objId=dict(type='str'),
         offset=dict(type='int'),
         parentId=dict(type='str'),
         sort=dict(type='str'),
