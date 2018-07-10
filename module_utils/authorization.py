@@ -39,11 +39,11 @@ def refresh_token(hostname, refresh_token):
     return json.loads(response) if response else response
 
 
-def revoke_token(hostname, token):
+def revoke_token(hostname, access_token, refresh_token):
     logout_payload = {
         'grant_type': 'revoke_token',
-        'access_token': token,
-        'token_to_revoke': token
+        'access_token': access_token,
+        'token_to_revoke': refresh_token
     }
     url = construct_url(hostname, AUTH_PREFIX)
     open_url(url, method='POST', data=json.dumps(logout_payload), headers=AUTH_HEADERS).read()

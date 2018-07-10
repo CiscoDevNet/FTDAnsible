@@ -50,6 +50,7 @@ EXAMPLES = """
   ftd_oauth_token:
     device_url: "https://localhost:8585"
     access_token: 'ACCESS_TOKEN'
+    refresh_token: 'REFRESH_TOKEN'
     operation: 'revoke'
 """
 
@@ -66,7 +67,8 @@ def main():
         device_url=dict(type='str', required=True),
         username=dict(type='str'),
         password=dict(type='str', no_log=True),
-        access_token=dict(type='str', no_log=True)
+        access_token=dict(type='str', no_log=True),
+        refresh_token=dict(type='str', no_log=True)
     )
 
     module = AnsibleModule(argument_spec=fields)
@@ -79,7 +81,7 @@ def main():
                 'refresh_token': result['refresh_token']
             })
         else:
-            revoke_token(module.params['device_url'], module.params['access_token'])
+            revoke_token(module.params['device_url'], module.params['access_token'], module.params['refresh_token'])
             module.exit_json(changed=True)
     except HTTPError as e:
         err_msg = e.read()

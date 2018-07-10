@@ -93,4 +93,5 @@
           ftd_oauth_token:
             device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
             access_token: '{{ access_token }}'
+            refresh_token: '{{ refresh_token }}'
             operation: 'revoke'

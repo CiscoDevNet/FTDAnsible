@@ -48,10 +48,10 @@ def construct_swagger_clients(hostname, token):
 
 
 def generate_modules():
-    access_token = request_token(args.hostname, args.username, args.password)['access_token']
+    token_info = request_token(args.hostname, args.username, args.password)
     try:
         template_env = init_template_env()
-        swagger_specs, swagger_docs = construct_swagger_clients(args.hostname, access_token)
+        swagger_specs, swagger_docs = construct_swagger_clients(args.hostname, token_info['access_token'])
         param_adapter = SwaggerParamAdapter(swagger_docs)
 
         for resource_name in dir(swagger_specs):
@@ -60,7 +60,7 @@ def generate_modules():
                 resource = getattr(swagger_specs, resource_name)
                 generate_modules_for_resource(resource_name, resource, template, param_adapter)
     finally:
-        revoke_token(args.hostname, access_token)
+        revoke_token(args.hostname, token_info['access_token'], token_info['refresh_token'])
 
 
 def generate_modules_for_resource(resource_name, resource, template, param_adapter):
