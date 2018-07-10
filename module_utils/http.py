@@ -2,7 +2,7 @@ import time
 from ansible.module_utils.facts.timeout import TimeoutError
 from ansible.module_utils.six.moves.urllib.parse import urlencode
 
-API_PREFIX = "/api/fdm/v1"
+API_PREFIX = "/api/fdm/v2"
 
 DEFAULT_PAGE_SIZE = 10
 DEFAULT_TIMEOUT = 60 * 10  # 10 minutes
