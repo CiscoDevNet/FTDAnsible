@@ -1,0 +1,16 @@
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: install ftd
+    install_ftd:
+      UUT_IP: '192.168.0.156'
+      UUT_NETMASK: '255.255.255.0'
+      UUT_GATEWAY: '192.168.0.254'
+      UUT_HOSTNAME: 'firepower'
+      UUT_USERNAME: 'admin'
+      UUT_PASSWORD: 'Admin123'
+      CONSOLE_PORT: '2004'
+      TFTP_SERVER_IP: '10.88.90.130'
+      DNS_SERVERS: '171.70.168.183'
+      ROMMON_FILE: 'netboot/ims/Development/6.3.0-10691/installers/ftd-boot-101.5.1.25.cdisk'
+      FTD_FILE: 'http://10.88.90.130/netboot/ims/Development/6.3.0-10691/installers/ftd-6.3.0-10691.pkg'
