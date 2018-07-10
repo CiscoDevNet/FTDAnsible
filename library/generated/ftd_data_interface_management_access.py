@@ -223,7 +223,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addDataInterfaceManagementAccess', 'deleteDataInterfaceManagementAccess', 'editDataInterfaceManagementAccess', 'getDataInterfaceManagementAccess', 'getDataInterfaceManagementAccessList', 'getDataInterfaceManagementAccessByName', 'upsertDataInterfaceManagementAccess', 'editDataInterfaceManagementAccessByName', 'deleteDataInterfaceManagementAccessByName'], required=True),
+        operation=dict(type='str', default='upsertDataInterfaceManagementAccess', choices=['addDataInterfaceManagementAccess', 'deleteDataInterfaceManagementAccess', 'editDataInterfaceManagementAccess', 'getDataInterfaceManagementAccess', 'getDataInterfaceManagementAccessList', 'getDataInterfaceManagementAccessByName', 'upsertDataInterfaceManagementAccess', 'editDataInterfaceManagementAccessByName', 'deleteDataInterfaceManagementAccessByName']),
         register_as=dict(type='str'),
 
         filter=dict(type='str'),

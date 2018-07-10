@@ -270,7 +270,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addObjectNatRule', 'deleteObjectNatRule', 'editObjectNatRule', 'getObjectNatRule', 'getObjectNatRuleList', 'getObjectNatRuleByName', 'upsertObjectNatRule', 'editObjectNatRuleByName', 'deleteObjectNatRuleByName'], required=True),
+        operation=dict(type='str', default='upsertObjectNatRule', choices=['addObjectNatRule', 'deleteObjectNatRule', 'editObjectNatRule', 'getObjectNatRule', 'getObjectNatRuleList', 'getObjectNatRuleByName', 'upsertObjectNatRule', 'editObjectNatRuleByName', 'deleteObjectNatRuleByName']),
         register_as=dict(type='str'),
 
         at=dict(type='int'),

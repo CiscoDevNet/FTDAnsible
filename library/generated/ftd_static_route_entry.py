@@ -236,7 +236,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addStaticRouteEntry', 'deleteStaticRouteEntry', 'editStaticRouteEntry', 'getStaticRouteEntry', 'getStaticRouteEntryList', 'getStaticRouteEntryByName', 'upsertStaticRouteEntry', 'editStaticRouteEntryByName', 'deleteStaticRouteEntryByName'], required=True),
+        operation=dict(type='str', default='upsertStaticRouteEntry', choices=['addStaticRouteEntry', 'deleteStaticRouteEntry', 'editStaticRouteEntry', 'getStaticRouteEntry', 'getStaticRouteEntryList', 'getStaticRouteEntryByName', 'upsertStaticRouteEntry', 'editStaticRouteEntryByName', 'deleteStaticRouteEntryByName']),
         register_as=dict(type='str'),
 
         at=dict(type='int'),

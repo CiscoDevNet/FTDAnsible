@@ -221,7 +221,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addExpandedCommunityList', 'deleteExpandedCommunityList', 'editExpandedCommunityList', 'getExpandedCommunityList', 'getExpandedCommunityListList', 'getExpandedCommunityListByName', 'upsertExpandedCommunityList', 'editExpandedCommunityListByName', 'deleteExpandedCommunityListByName'], required=True),
+        operation=dict(type='str', default='upsertExpandedCommunityList', choices=['addExpandedCommunityList', 'deleteExpandedCommunityList', 'editExpandedCommunityList', 'getExpandedCommunityList', 'getExpandedCommunityListList', 'getExpandedCommunityListByName', 'upsertExpandedCommunityList', 'editExpandedCommunityListByName', 'deleteExpandedCommunityListByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

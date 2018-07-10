@@ -224,7 +224,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addSecurityZone', 'deleteSecurityZone', 'editSecurityZone', 'getSecurityZone', 'getSecurityZoneList', 'getSecurityZoneByName', 'upsertSecurityZone', 'editSecurityZoneByName', 'deleteSecurityZoneByName'], required=True),
+        operation=dict(type='str', default='upsertSecurityZone', choices=['addSecurityZone', 'deleteSecurityZone', 'editSecurityZone', 'getSecurityZone', 'getSecurityZoneList', 'getSecurityZoneByName', 'upsertSecurityZone', 'editSecurityZoneByName', 'deleteSecurityZoneByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

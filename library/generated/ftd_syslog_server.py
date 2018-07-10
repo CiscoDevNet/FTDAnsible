@@ -223,7 +223,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addSyslogServer', 'deleteSyslogServer', 'editSyslogServer', 'getSyslogServer', 'getSyslogServerList', 'getSyslogServerByName', 'upsertSyslogServer', 'editSyslogServerByName', 'deleteSyslogServerByName'], required=True),
+        operation=dict(type='str', default='upsertSyslogServer', choices=['addSyslogServer', 'deleteSyslogServer', 'editSyslogServer', 'getSyslogServer', 'getSyslogServerList', 'getSyslogServerByName', 'upsertSyslogServer', 'editSyslogServerByName', 'deleteSyslogServerByName']),
         register_as=dict(type='str'),
 
         deviceInterface=dict(type='dict'),

@@ -221,7 +221,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addIPV6PrefixList', 'deleteIPV6PrefixList', 'editIPV6PrefixList', 'getIPV6PrefixList', 'getIPV6PrefixListList', 'getIPV6PrefixListByName', 'upsertIPV6PrefixList', 'editIPV6PrefixListByName', 'deleteIPV6PrefixListByName'], required=True),
+        operation=dict(type='str', default='upsertIPV6PrefixList', choices=['addIPV6PrefixList', 'deleteIPV6PrefixList', 'editIPV6PrefixList', 'getIPV6PrefixList', 'getIPV6PrefixListList', 'getIPV6PrefixListByName', 'upsertIPV6PrefixList', 'editIPV6PrefixListByName', 'deleteIPV6PrefixListByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

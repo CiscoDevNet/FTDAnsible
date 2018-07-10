@@ -173,7 +173,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['editDHCPServerContainer', 'getDHCPServerContainer', 'getDHCPServerContainerList', 'getDHCPServerContainerByName', 'editDHCPServerContainerByName'], required=True),
+        operation=dict(type='str', choices=['editDHCPServerContainer', 'getDHCPServerContainer', 'getDHCPServerContainerList', 'getDHCPServerContainerByName', 'editDHCPServerContainerByName'], required=True),
         register_as=dict(type='str'),
 
         autoConfig=dict(type='bool'),

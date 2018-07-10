@@ -216,7 +216,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addSmartAgentConnection', 'deleteSmartAgentConnection', 'editSmartAgentConnection', 'getSmartAgentConnection', 'getSmartAgentConnectionList', 'getSmartAgentConnectionByName', 'upsertSmartAgentConnection', 'editSmartAgentConnectionByName', 'deleteSmartAgentConnectionByName'], required=True),
+        operation=dict(type='str', default='upsertSmartAgentConnection', choices=['addSmartAgentConnection', 'deleteSmartAgentConnection', 'editSmartAgentConnection', 'getSmartAgentConnection', 'getSmartAgentConnectionList', 'getSmartAgentConnectionByName', 'upsertSmartAgentConnection', 'editSmartAgentConnectionByName', 'deleteSmartAgentConnectionByName']),
         register_as=dict(type='str'),
 
         connectionType=dict(type='str'),

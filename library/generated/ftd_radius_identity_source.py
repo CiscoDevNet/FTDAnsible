@@ -233,7 +233,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addRadiusIdentitySource', 'deleteRadiusIdentitySource', 'editRadiusIdentitySource', 'getRadiusIdentitySource', 'getRadiusIdentitySourceList', 'getRadiusIdentitySourceByName', 'upsertRadiusIdentitySource', 'editRadiusIdentitySourceByName', 'deleteRadiusIdentitySourceByName'], required=True),
+        operation=dict(type='str', default='upsertRadiusIdentitySource', choices=['addRadiusIdentitySource', 'deleteRadiusIdentitySource', 'editRadiusIdentitySource', 'getRadiusIdentitySource', 'getRadiusIdentitySourceList', 'getRadiusIdentitySourceByName', 'upsertRadiusIdentitySource', 'editRadiusIdentitySourceByName', 'deleteRadiusIdentitySourceByName']),
         register_as=dict(type='str'),
 
         capabilities=dict(type='list'),

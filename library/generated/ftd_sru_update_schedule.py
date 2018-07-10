@@ -239,7 +239,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addSRUUpdateSchedule', 'deleteSRUUpdateSchedule', 'editSRUUpdateSchedule', 'getSRUUpdateSchedule', 'getSRUUpdateScheduleList', 'getSRUUpdateScheduleByName', 'upsertSRUUpdateSchedule', 'editSRUUpdateScheduleByName', 'deleteSRUUpdateScheduleByName'], required=True),
+        operation=dict(type='str', default='upsertSRUUpdateSchedule', choices=['addSRUUpdateSchedule', 'deleteSRUUpdateSchedule', 'editSRUUpdateSchedule', 'getSRUUpdateSchedule', 'getSRUUpdateScheduleList', 'getSRUUpdateScheduleByName', 'upsertSRUUpdateSchedule', 'editSRUUpdateScheduleByName', 'deleteSRUUpdateScheduleByName']),
         register_as=dict(type='str'),
 
         deployAfterUpdate=dict(type='bool'),

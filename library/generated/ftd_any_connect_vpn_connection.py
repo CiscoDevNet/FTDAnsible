@@ -219,7 +219,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addAnyConnectVpnConnection', 'deleteAnyConnectVpnConnection', 'editAnyConnectVpnConnection', 'getAnyConnectVpnConnection', 'getAnyConnectVpnConnectionList', 'getAnyConnectVpnConnectionByName', 'upsertAnyConnectVpnConnection', 'editAnyConnectVpnConnectionByName', 'deleteAnyConnectVpnConnectionByName'], required=True),
+        operation=dict(type='str', default='upsertAnyConnectVpnConnection', choices=['addAnyConnectVpnConnection', 'deleteAnyConnectVpnConnection', 'editAnyConnectVpnConnection', 'getAnyConnectVpnConnection', 'getAnyConnectVpnConnectionList', 'getAnyConnectVpnConnectionByName', 'upsertAnyConnectVpnConnection', 'editAnyConnectVpnConnectionByName', 'deleteAnyConnectVpnConnectionByName']),
         register_as=dict(type='str'),
 
         clientPackages=dict(type='str'),

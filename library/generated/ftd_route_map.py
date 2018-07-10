@@ -221,7 +221,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addRouteMap', 'deleteRouteMap', 'editRouteMap', 'getRouteMap', 'getRouteMapList', 'getRouteMapByName', 'upsertRouteMap', 'editRouteMapByName', 'deleteRouteMapByName'], required=True),
+        operation=dict(type='str', default='upsertRouteMap', choices=['addRouteMap', 'deleteRouteMap', 'editRouteMap', 'getRouteMap', 'getRouteMapList', 'getRouteMapByName', 'upsertRouteMap', 'editRouteMapByName', 'deleteRouteMapByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

@@ -155,7 +155,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['editCloudCommunicationSettings', 'getCloudCommunicationSettings', 'getCloudCommunicationSettingsList', 'getCloudCommunicationSettingsByName', 'editCloudCommunicationSettingsByName'], required=True),
+        operation=dict(type='str', choices=['editCloudCommunicationSettings', 'getCloudCommunicationSettings', 'getCloudCommunicationSettingsList', 'getCloudCommunicationSettingsByName', 'editCloudCommunicationSettingsByName'], required=True),
         register_as=dict(type='str'),
 
         defenseOrchestratorEnabled=dict(type='bool'),

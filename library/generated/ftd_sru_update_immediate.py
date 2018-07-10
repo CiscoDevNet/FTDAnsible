@@ -245,7 +245,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addSRUUpdateImmediate', 'deleteSRUUpdateImmediate', 'editSRUUpdateImmediate', 'getSRUUpdateImmediate', 'getSRUUpdateImmediateList', 'getSRUUpdateImmediateByName', 'upsertSRUUpdateImmediate', 'editSRUUpdateImmediateByName', 'deleteSRUUpdateImmediateByName'], required=True),
+        operation=dict(type='str', default='upsertSRUUpdateImmediate', choices=['addSRUUpdateImmediate', 'deleteSRUUpdateImmediate', 'editSRUUpdateImmediate', 'getSRUUpdateImmediate', 'getSRUUpdateImmediateList', 'getSRUUpdateImmediateByName', 'upsertSRUUpdateImmediate', 'editSRUUpdateImmediateByName', 'deleteSRUUpdateImmediateByName']),
         register_as=dict(type='str'),
 
         deployAfterUpdate=dict(type='bool'),

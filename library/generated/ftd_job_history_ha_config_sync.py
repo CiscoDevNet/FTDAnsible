@@ -138,7 +138,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['deleteJobHistoryHaConfigSync', 'getJobHistoryHaConfigSync', 'getJobHistoryHaConfigSyncList', 'getJobHistoryHaConfigSyncByName', 'deleteJobHistoryHaConfigSyncByName'], required=True),
+        operation=dict(type='str', choices=['deleteJobHistoryHaConfigSync', 'getJobHistoryHaConfigSync', 'getJobHistoryHaConfigSyncList', 'getJobHistoryHaConfigSyncByName', 'deleteJobHistoryHaConfigSyncByName'], required=True),
         register_as=dict(type='str'),
 
         filter=dict(type='str'),

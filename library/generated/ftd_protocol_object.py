@@ -224,7 +224,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addProtocolObject', 'deleteProtocolObject', 'editProtocolObject', 'getProtocolObject', 'getProtocolObjectList', 'getProtocolObjectByName', 'upsertProtocolObject', 'editProtocolObjectByName', 'deleteProtocolObjectByName'], required=True),
+        operation=dict(type='str', default='upsertProtocolObject', choices=['addProtocolObject', 'deleteProtocolObject', 'editProtocolObject', 'getProtocolObject', 'getProtocolObjectList', 'getProtocolObjectByName', 'upsertProtocolObject', 'editProtocolObjectByName', 'deleteProtocolObjectByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

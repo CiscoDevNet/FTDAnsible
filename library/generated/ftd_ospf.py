@@ -242,7 +242,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addOSPF', 'deleteOSPF', 'editOSPF', 'getOSPF', 'getOSPFList', 'getOSPFByName', 'upsertOSPF', 'editOSPFByName', 'deleteOSPFByName'], required=True),
+        operation=dict(type='str', default='upsertOSPF', choices=['addOSPF', 'deleteOSPF', 'editOSPF', 'getOSPF', 'getOSPFList', 'getOSPFByName', 'upsertOSPF', 'editOSPFByName', 'deleteOSPFByName']),
         register_as=dict(type='str'),
 
         areas=dict(type='list'),

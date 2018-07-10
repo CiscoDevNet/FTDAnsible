@@ -221,7 +221,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addSecret', 'deleteSecret', 'editSecret', 'getSecret', 'getSecretList', 'getSecretByName', 'upsertSecret', 'editSecretByName', 'deleteSecretByName'], required=True),
+        operation=dict(type='str', default='upsertSecret', choices=['addSecret', 'deleteSecret', 'editSecret', 'getSecret', 'getSecretList', 'getSecretByName', 'upsertSecret', 'editSecretByName', 'deleteSecretByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

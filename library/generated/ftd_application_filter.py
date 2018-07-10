@@ -223,7 +223,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addApplicationFilter', 'deleteApplicationFilter', 'editApplicationFilter', 'getApplicationFilter', 'getApplicationFilterList', 'getApplicationFilterByName', 'upsertApplicationFilter', 'editApplicationFilterByName', 'deleteApplicationFilterByName'], required=True),
+        operation=dict(type='str', default='upsertApplicationFilter', choices=['addApplicationFilter', 'deleteApplicationFilter', 'editApplicationFilter', 'getApplicationFilter', 'getApplicationFilterList', 'getApplicationFilterByName', 'upsertApplicationFilter', 'editApplicationFilterByName', 'deleteApplicationFilterByName']),
         register_as=dict(type='str'),
 
         applications=dict(type='list'),

@@ -234,7 +234,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addRestoreImmediate', 'deleteRestoreImmediate', 'editRestoreImmediate', 'getRestoreImmediate', 'getRestoreImmediateList', 'getRestoreImmediateByName', 'upsertRestoreImmediate', 'editRestoreImmediateByName', 'deleteRestoreImmediateByName'], required=True),
+        operation=dict(type='str', default='upsertRestoreImmediate', choices=['addRestoreImmediate', 'deleteRestoreImmediate', 'editRestoreImmediate', 'getRestoreImmediate', 'getRestoreImmediateList', 'getRestoreImmediateByName', 'upsertRestoreImmediate', 'editRestoreImmediateByName', 'deleteRestoreImmediateByName']),
         register_as=dict(type='str'),
 
         archiveName=dict(type='str'),

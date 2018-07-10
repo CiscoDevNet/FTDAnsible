@@ -227,7 +227,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addAnyConnectPackageFile', 'deleteAnyConnectPackageFile', 'editAnyConnectPackageFile', 'getAnyConnectPackageFile', 'getAnyConnectPackageFileList', 'getAnyConnectPackageFileByName', 'upsertAnyConnectPackageFile', 'editAnyConnectPackageFileByName', 'deleteAnyConnectPackageFileByName'], required=True),
+        operation=dict(type='str', default='upsertAnyConnectPackageFile', choices=['addAnyConnectPackageFile', 'deleteAnyConnectPackageFile', 'editAnyConnectPackageFile', 'getAnyConnectPackageFile', 'getAnyConnectPackageFileList', 'getAnyConnectPackageFileByName', 'upsertAnyConnectPackageFile', 'editAnyConnectPackageFileByName', 'deleteAnyConnectPackageFileByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

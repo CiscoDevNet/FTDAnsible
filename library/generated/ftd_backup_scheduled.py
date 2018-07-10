@@ -236,7 +236,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addBackupScheduled', 'deleteBackupScheduled', 'editBackupScheduled', 'getBackupScheduled', 'getBackupScheduledList', 'getBackupScheduledByName', 'upsertBackupScheduled', 'editBackupScheduledByName', 'deleteBackupScheduledByName'], required=True),
+        operation=dict(type='str', default='upsertBackupScheduled', choices=['addBackupScheduled', 'deleteBackupScheduled', 'editBackupScheduled', 'getBackupScheduled', 'getBackupScheduledList', 'getBackupScheduledByName', 'upsertBackupScheduled', 'editBackupScheduledByName', 'deleteBackupScheduledByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

@@ -394,7 +394,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addExternalCACertificate', 'addExternalCertificate', 'addInternalCACertificate', 'addInternalCertificate', 'deleteExternalCACertificate', 'deleteExternalCertificate', 'deleteInternalCACertificate', 'deleteInternalCertificate', 'editExternalCACertificate', 'editExternalCertificate', 'editInternalCACertificate', 'editInternalCertificate', 'getExternalCACertificate', 'getExternalCertificate', 'getInternalCACertificate', 'getInternalCertificate'], required=True),
+        operation=dict(type='str', choices=['addExternalCACertificate', 'addExternalCertificate', 'addInternalCACertificate', 'addInternalCertificate', 'deleteExternalCACertificate', 'deleteExternalCertificate', 'deleteInternalCACertificate', 'deleteInternalCertificate', 'editExternalCACertificate', 'editExternalCertificate', 'editInternalCACertificate', 'editInternalCertificate', 'getExternalCACertificate', 'getExternalCertificate', 'getInternalCACertificate', 'getInternalCertificate'], required=True),
         register_as=dict(type='str'),
 
         cert=dict(type='str'),

@@ -141,7 +141,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['deleteActiveUserSessions', 'getActiveUserSessions', 'getActiveUserSessionsList', 'getActiveUserSessionsByName', 'deleteActiveUserSessionsByName'], required=True),
+        operation=dict(type='str', choices=['deleteActiveUserSessions', 'getActiveUserSessions', 'getActiveUserSessionsList', 'getActiveUserSessionsByName', 'deleteActiveUserSessionsByName'], required=True),
         register_as=dict(type='str'),
 
         filter=dict(type='str'),

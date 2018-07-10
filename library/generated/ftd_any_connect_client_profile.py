@@ -224,7 +224,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addAnyConnectClientProfile', 'deleteAnyConnectClientProfile', 'editAnyConnectClientProfile', 'getAnyConnectClientProfile', 'getAnyConnectClientProfileList', 'getAnyConnectClientProfileByName', 'upsertAnyConnectClientProfile', 'editAnyConnectClientProfileByName', 'deleteAnyConnectClientProfileByName'], required=True),
+        operation=dict(type='str', default='upsertAnyConnectClientProfile', choices=['addAnyConnectClientProfile', 'deleteAnyConnectClientProfile', 'editAnyConnectClientProfile', 'getAnyConnectClientProfile', 'getAnyConnectClientProfileList', 'getAnyConnectClientProfileByName', 'upsertAnyConnectClientProfile', 'editAnyConnectClientProfileByName', 'deleteAnyConnectClientProfileByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

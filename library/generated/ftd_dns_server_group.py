@@ -229,7 +229,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addDNSServerGroup', 'deleteDNSServerGroup', 'editDNSServerGroup', 'getDNSServerGroup', 'getDNSServerGroupList', 'getDNSServerGroupByName', 'upsertDNSServerGroup', 'editDNSServerGroupByName', 'deleteDNSServerGroupByName'], required=True),
+        operation=dict(type='str', default='upsertDNSServerGroup', choices=['addDNSServerGroup', 'deleteDNSServerGroup', 'editDNSServerGroup', 'getDNSServerGroup', 'getDNSServerGroupList', 'getDNSServerGroupByName', 'upsertDNSServerGroup', 'editDNSServerGroupByName', 'deleteDNSServerGroupByName']),
         register_as=dict(type='str'),
 
         dnsServers=dict(type='list'),

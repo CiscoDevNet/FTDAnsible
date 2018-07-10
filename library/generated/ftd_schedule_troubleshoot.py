@@ -228,7 +228,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addScheduleTroubleshoot', 'deleteScheduleTroubleshoot', 'editScheduleTroubleshoot', 'getScheduleTroubleshoot', 'getScheduleTroubleshootList', 'getScheduleTroubleshootByName', 'upsertScheduleTroubleshoot', 'editScheduleTroubleshootByName', 'deleteScheduleTroubleshootByName'], required=True),
+        operation=dict(type='str', default='upsertScheduleTroubleshoot', choices=['addScheduleTroubleshoot', 'deleteScheduleTroubleshoot', 'editScheduleTroubleshoot', 'getScheduleTroubleshoot', 'getScheduleTroubleshootList', 'getScheduleTroubleshootByName', 'upsertScheduleTroubleshoot', 'editScheduleTroubleshootByName', 'deleteScheduleTroubleshootByName']),
         register_as=dict(type='str'),
 
         filter=dict(type='str'),

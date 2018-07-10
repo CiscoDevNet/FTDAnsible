@@ -244,7 +244,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addIkevTwoPolicy', 'deleteIkevTwoPolicy', 'editIkevTwoPolicy', 'getIkevTwoPolicy', 'getIkevTwoPolicyList', 'getIkevTwoPolicyByName', 'upsertIkevTwoPolicy', 'editIkevTwoPolicyByName', 'deleteIkevTwoPolicyByName'], required=True),
+        operation=dict(type='str', default='upsertIkevTwoPolicy', choices=['addIkevTwoPolicy', 'deleteIkevTwoPolicy', 'editIkevTwoPolicy', 'getIkevTwoPolicy', 'getIkevTwoPolicyList', 'getIkevTwoPolicyByName', 'upsertIkevTwoPolicy', 'editIkevTwoPolicyByName', 'deleteIkevTwoPolicyByName']),
         register_as=dict(type='str'),
 
         cryptoRestricted=dict(type='bool'),

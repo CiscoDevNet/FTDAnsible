@@ -180,7 +180,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addLicense', 'deleteLicense', 'getLicense', 'getLicenseList', 'getLicenseByName', 'deleteLicenseByName'], required=True),
+        operation=dict(type='str', choices=['addLicense', 'deleteLicense', 'getLicense', 'getLicenseList', 'getLicenseByName', 'deleteLicenseByName'], required=True),
         register_as=dict(type='str'),
 
         compliant=dict(type='bool'),

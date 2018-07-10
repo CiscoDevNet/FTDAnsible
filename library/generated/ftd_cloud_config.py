@@ -155,7 +155,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['editCloudConfig', 'getCloudConfig', 'getCloudConfigList', 'getCloudConfigByName', 'editCloudConfigByName'], required=True),
+        operation=dict(type='str', choices=['editCloudConfig', 'getCloudConfig', 'getCloudConfigList', 'getCloudConfigByName', 'editCloudConfigByName'], required=True),
         register_as=dict(type='str'),
 
         enableAutomaticUpdates=dict(type='bool'),

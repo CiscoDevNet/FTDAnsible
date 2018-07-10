@@ -106,7 +106,11 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=[{{ operations | map('quote') | join(', ') }}{% if extra_operations %}, {{ extra_operations | map('quote') | join(', ') }}{% endif %}], required=True),
+{% if eligible_for_upsert %}
+        operation=dict(type='str', default='upsert{{ model_name }}', choices=[{{ operations | map('quote') | join(', ') }}{% if extra_operations %}, {{ extra_operations | map('quote') | join(', ') }}{% endif %}]),
+{% else %}
+        operation=dict(type='str', choices=[{{ operations | map('quote') | join(', ') }}{% if extra_operations %}, {{ extra_operations | map('quote') | join(', ') }}{% endif %}], required=True),
+{% endif %}
         register_as=dict(type='str'),
 
 {% for param in params %}

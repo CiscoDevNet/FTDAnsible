@@ -228,7 +228,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addSecurityIntelligenceUpdateFeedsImmediate', 'deleteSecurityIntelligenceUpdateFeedsImmediate', 'editSecurityIntelligenceUpdateFeedsImmediate', 'getSecurityIntelligenceUpdateFeedsImmediate', 'getSecurityIntelligenceUpdateFeedsImmediateList', 'getSecurityIntelligenceUpdateFeedsImmediateByName', 'upsertSecurityIntelligenceUpdateFeedsImmediate', 'editSecurityIntelligenceUpdateFeedsImmediateByName', 'deleteSecurityIntelligenceUpdateFeedsImmediateByName'], required=True),
+        operation=dict(type='str', default='upsertSecurityIntelligenceUpdateFeedsImmediate', choices=['addSecurityIntelligenceUpdateFeedsImmediate', 'deleteSecurityIntelligenceUpdateFeedsImmediate', 'editSecurityIntelligenceUpdateFeedsImmediate', 'getSecurityIntelligenceUpdateFeedsImmediate', 'getSecurityIntelligenceUpdateFeedsImmediateList', 'getSecurityIntelligenceUpdateFeedsImmediateByName', 'upsertSecurityIntelligenceUpdateFeedsImmediate', 'editSecurityIntelligenceUpdateFeedsImmediateByName', 'deleteSecurityIntelligenceUpdateFeedsImmediateByName']),
         register_as=dict(type='str'),
 
         filter=dict(type='str'),

@@ -158,7 +158,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['editSecurityIntelligenceNetworkPolicy', 'getSecurityIntelligenceNetworkPolicy', 'getSecurityIntelligenceNetworkPolicyList', 'getSecurityIntelligenceNetworkPolicyByName', 'editSecurityIntelligenceNetworkPolicyByName'], required=True),
+        operation=dict(type='str', choices=['editSecurityIntelligenceNetworkPolicy', 'getSecurityIntelligenceNetworkPolicy', 'getSecurityIntelligenceNetworkPolicyList', 'getSecurityIntelligenceNetworkPolicyByName', 'editSecurityIntelligenceNetworkPolicyByName'], required=True),
         register_as=dict(type='str'),
 
         blacklistForBlock=dict(type='list'),

@@ -288,7 +288,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addManualNatRule', 'deleteManualNatRule', 'editManualNatRule', 'getManualNatRule', 'getManualNatRuleList', 'getManualNatRuleByName', 'upsertManualNatRule', 'editManualNatRuleByName', 'deleteManualNatRuleByName'], required=True),
+        operation=dict(type='str', default='upsertManualNatRule', choices=['addManualNatRule', 'deleteManualNatRule', 'editManualNatRule', 'getManualNatRule', 'getManualNatRuleList', 'getManualNatRuleByName', 'upsertManualNatRule', 'editManualNatRuleByName', 'deleteManualNatRuleByName']),
         register_as=dict(type='str'),
 
         at=dict(type='int'),

@@ -239,7 +239,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addVDBUpdateSchedule', 'deleteVDBUpdateSchedule', 'editVDBUpdateSchedule', 'getVDBUpdateSchedule', 'getVDBUpdateScheduleList', 'getVDBUpdateScheduleByName', 'upsertVDBUpdateSchedule', 'editVDBUpdateScheduleByName', 'deleteVDBUpdateScheduleByName'], required=True),
+        operation=dict(type='str', default='upsertVDBUpdateSchedule', choices=['addVDBUpdateSchedule', 'deleteVDBUpdateSchedule', 'editVDBUpdateSchedule', 'getVDBUpdateSchedule', 'getVDBUpdateScheduleList', 'getVDBUpdateScheduleByName', 'upsertVDBUpdateSchedule', 'editVDBUpdateScheduleByName', 'deleteVDBUpdateScheduleByName']),
         register_as=dict(type='str'),
 
         deployAfterUpdate=dict(type='bool'),

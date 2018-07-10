@@ -217,7 +217,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addFlexConfigPolicy', 'deleteFlexConfigPolicy', 'editFlexConfigPolicy', 'getFlexConfigPolicy', 'getFlexConfigPolicyList', 'getFlexConfigPolicyByName', 'upsertFlexConfigPolicy', 'editFlexConfigPolicyByName', 'deleteFlexConfigPolicyByName'], required=True),
+        operation=dict(type='str', default='upsertFlexConfigPolicy', choices=['addFlexConfigPolicy', 'deleteFlexConfigPolicy', 'editFlexConfigPolicy', 'getFlexConfigPolicy', 'getFlexConfigPolicyList', 'getFlexConfigPolicyByName', 'upsertFlexConfigPolicy', 'editFlexConfigPolicyByName', 'deleteFlexConfigPolicyByName']),
         register_as=dict(type='str'),
 
         filter=dict(type='str'),

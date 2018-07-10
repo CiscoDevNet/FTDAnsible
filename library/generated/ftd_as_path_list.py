@@ -221,7 +221,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addASPathList', 'deleteASPathList', 'editASPathList', 'getASPathList', 'getASPathListList', 'getASPathListByName', 'upsertASPathList', 'editASPathListByName', 'deleteASPathListByName'], required=True),
+        operation=dict(type='str', default='upsertASPathList', choices=['addASPathList', 'deleteASPathList', 'editASPathList', 'getASPathList', 'getASPathListList', 'getASPathListByName', 'upsertASPathList', 'editASPathListByName', 'deleteASPathListByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

@@ -224,7 +224,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addOSPFInterfaceSettings', 'deleteOSPFInterfaceSettings', 'editOSPFInterfaceSettings', 'getOSPFInterfaceSettings', 'getOSPFInterfaceSettingsList', 'getOSPFInterfaceSettingsByName', 'upsertOSPFInterfaceSettings', 'editOSPFInterfaceSettingsByName', 'deleteOSPFInterfaceSettingsByName'], required=True),
+        operation=dict(type='str', default='upsertOSPFInterfaceSettings', choices=['addOSPFInterfaceSettings', 'deleteOSPFInterfaceSettings', 'editOSPFInterfaceSettings', 'getOSPFInterfaceSettings', 'getOSPFInterfaceSettingsList', 'getOSPFInterfaceSettingsByName', 'upsertOSPFInterfaceSettings', 'editOSPFInterfaceSettingsByName', 'deleteOSPFInterfaceSettingsByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

@@ -236,7 +236,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addBackupImmediate', 'deleteBackupImmediate', 'editBackupImmediate', 'getBackupImmediate', 'getBackupImmediateList', 'getBackupImmediateByName', 'upsertBackupImmediate', 'editBackupImmediateByName', 'deleteBackupImmediateByName'], required=True),
+        operation=dict(type='str', default='upsertBackupImmediate', choices=['addBackupImmediate', 'deleteBackupImmediate', 'editBackupImmediate', 'getBackupImmediate', 'getBackupImmediateList', 'getBackupImmediateByName', 'upsertBackupImmediate', 'editBackupImmediateByName', 'deleteBackupImmediateByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

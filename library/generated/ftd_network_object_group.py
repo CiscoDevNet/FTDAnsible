@@ -225,7 +225,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addNetworkObjectGroup', 'deleteNetworkObjectGroup', 'editNetworkObjectGroup', 'getNetworkObjectGroup', 'getNetworkObjectGroupList', 'getNetworkObjectGroupByName', 'upsertNetworkObjectGroup', 'editNetworkObjectGroupByName', 'deleteNetworkObjectGroupByName'], required=True),
+        operation=dict(type='str', default='upsertNetworkObjectGroup', choices=['addNetworkObjectGroup', 'deleteNetworkObjectGroup', 'editNetworkObjectGroup', 'getNetworkObjectGroup', 'getNetworkObjectGroupList', 'getNetworkObjectGroupByName', 'upsertNetworkObjectGroup', 'editNetworkObjectGroupByName', 'deleteNetworkObjectGroupByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

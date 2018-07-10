@@ -75,7 +75,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['startUpgrade'], required=True),
+        operation=dict(type='str', choices=['startUpgrade'], required=True),
         register_as=dict(type='str'),
 
     )

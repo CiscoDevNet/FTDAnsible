@@ -83,7 +83,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['getTrendingReport'], required=True),
+        operation=dict(type='str', choices=['getTrendingReport'], required=True),
         register_as=dict(type='str'),
 
         objId=dict(type='str'),

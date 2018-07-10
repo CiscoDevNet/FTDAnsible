@@ -117,7 +117,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['getAuditEvent', 'getAuditEventList', 'getAuditEventByName'], required=True),
+        operation=dict(type='str', choices=['getAuditEvent', 'getAuditEventList', 'getAuditEventByName'], required=True),
         register_as=dict(type='str'),
 
         filter=dict(type='str'),

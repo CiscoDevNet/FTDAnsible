@@ -194,7 +194,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['editHAConfiguration', 'getHAConfiguration', 'getHAConfigurationList', 'getHAConfigurationByName', 'editHAConfigurationByName'], required=True),
+        operation=dict(type='str', choices=['editHAConfiguration', 'getHAConfiguration', 'getHAConfigurationList', 'getHAConfigurationByName', 'editHAConfigurationByName'], required=True),
         register_as=dict(type='str'),
 
         failoverInterface=dict(type='dict'),

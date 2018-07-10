@@ -331,7 +331,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addICMPv4PortObject', 'addICMPv6PortObject', 'addTCPPortObject', 'addUDPPortObject', 'deleteICMPv4PortObject', 'deleteICMPv6PortObject', 'deleteTCPPortObject', 'deleteUDPPortObject', 'editICMPv4PortObject', 'editICMPv6PortObject', 'editTCPPortObject', 'editUDPPortObject', 'getICMPv4PortObject', 'getICMPv6PortObject', 'getTCPPortObject', 'getUDPPortObject'], required=True),
+        operation=dict(type='str', choices=['addICMPv4PortObject', 'addICMPv6PortObject', 'addTCPPortObject', 'addUDPPortObject', 'deleteICMPv4PortObject', 'deleteICMPv6PortObject', 'deleteTCPPortObject', 'deleteUDPPortObject', 'editICMPv4PortObject', 'editICMPv6PortObject', 'editTCPPortObject', 'editUDPPortObject', 'getICMPv4PortObject', 'getICMPv6PortObject', 'getTCPPortObject', 'getUDPPortObject'], required=True),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

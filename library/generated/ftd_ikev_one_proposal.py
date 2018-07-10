@@ -235,7 +235,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addIkevOneProposal', 'deleteIkevOneProposal', 'editIkevOneProposal', 'getIkevOneProposal', 'getIkevOneProposalList', 'getIkevOneProposalByName', 'upsertIkevOneProposal', 'editIkevOneProposalByName', 'deleteIkevOneProposalByName'], required=True),
+        operation=dict(type='str', default='upsertIkevOneProposal', choices=['addIkevOneProposal', 'deleteIkevOneProposal', 'editIkevOneProposal', 'getIkevOneProposal', 'getIkevOneProposalList', 'getIkevOneProposalByName', 'upsertIkevOneProposal', 'editIkevOneProposalByName', 'deleteIkevOneProposalByName']),
         register_as=dict(type='str'),
 
         authenticationMethod=dict(type='str'),

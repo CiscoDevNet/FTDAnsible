@@ -239,7 +239,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addIdentityServicesEngine', 'deleteIdentityServicesEngine', 'editIdentityServicesEngine', 'getIdentityServicesEngine', 'getIdentityServicesEngineList', 'getIdentityServicesEngineByName', 'upsertIdentityServicesEngine', 'editIdentityServicesEngineByName', 'deleteIdentityServicesEngineByName'], required=True),
+        operation=dict(type='str', default='upsertIdentityServicesEngine', choices=['addIdentityServicesEngine', 'deleteIdentityServicesEngine', 'editIdentityServicesEngine', 'getIdentityServicesEngine', 'getIdentityServicesEngineList', 'getIdentityServicesEngineByName', 'upsertIdentityServicesEngine', 'editIdentityServicesEngineByName', 'deleteIdentityServicesEngineByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

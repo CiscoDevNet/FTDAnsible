@@ -16,7 +16,6 @@
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
 
-            operation: 'upsertNetworkObject'
             name: "Ansible-network-host"
             description: "From Ansible with love"
             subType: "HOST"
@@ -42,7 +41,6 @@
             access_token: '{{ access_token }}'
             refresh_token: '{{ refresh_token }}'
 
-            operation: 'upsertAccessRule'
             name: "Ansible-accessrule"
             type: "accessrule"
             parentId: "{{ accessPolicies[0]['id'] }}"

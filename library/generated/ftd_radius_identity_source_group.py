@@ -227,7 +227,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addRadiusIdentitySourceGroup', 'deleteRadiusIdentitySourceGroup', 'editRadiusIdentitySourceGroup', 'getRadiusIdentitySourceGroup', 'getRadiusIdentitySourceGroupList', 'getRadiusIdentitySourceGroupByName', 'upsertRadiusIdentitySourceGroup', 'editRadiusIdentitySourceGroupByName', 'deleteRadiusIdentitySourceGroupByName'], required=True),
+        operation=dict(type='str', default='upsertRadiusIdentitySourceGroup', choices=['addRadiusIdentitySourceGroup', 'deleteRadiusIdentitySourceGroup', 'editRadiusIdentitySourceGroup', 'getRadiusIdentitySourceGroup', 'getRadiusIdentitySourceGroupList', 'getRadiusIdentitySourceGroupByName', 'upsertRadiusIdentitySourceGroup', 'editRadiusIdentitySourceGroupByName', 'deleteRadiusIdentitySourceGroupByName']),
         register_as=dict(type='str'),
 
         deadTime=dict(type='int'),

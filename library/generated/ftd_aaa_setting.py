@@ -164,7 +164,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['editAAASetting', 'getAAASetting', 'getAAASettingList', 'getAAASettingByName', 'editAAASettingByName'], required=True),
+        operation=dict(type='str', choices=['editAAASetting', 'getAAASetting', 'getAAASettingList', 'getAAASettingByName', 'editAAASettingByName'], required=True),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

@@ -158,7 +158,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['editNTP', 'getNTP', 'getNTPList', 'getNTPByName', 'editNTPByName'], required=True),
+        operation=dict(type='str', choices=['editNTP', 'getNTP', 'getNTPList', 'getNTPByName', 'editNTPByName'], required=True),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

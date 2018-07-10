@@ -253,7 +253,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addSToSConnectionProfile', 'deleteSToSConnectionProfile', 'editSToSConnectionProfile', 'getSToSConnectionProfile', 'getSToSConnectionProfileList', 'getSToSConnectionProfileByName', 'upsertSToSConnectionProfile', 'editSToSConnectionProfileByName', 'deleteSToSConnectionProfileByName'], required=True),
+        operation=dict(type='str', default='upsertSToSConnectionProfile', choices=['addSToSConnectionProfile', 'deleteSToSConnectionProfile', 'editSToSConnectionProfile', 'getSToSConnectionProfile', 'getSToSConnectionProfileList', 'getSToSConnectionProfileByName', 'upsertSToSConnectionProfile', 'editSToSConnectionProfileByName', 'deleteSToSConnectionProfileByName']),
         register_as=dict(type='str'),
 
         diffieHellmanGroup=dict(type='str'),

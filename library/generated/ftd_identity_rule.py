@@ -257,7 +257,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addIdentityRule', 'deleteIdentityRule', 'editIdentityRule', 'getIdentityRule', 'getIdentityRuleList', 'getIdentityRuleByName', 'upsertIdentityRule', 'editIdentityRuleByName', 'deleteIdentityRuleByName'], required=True),
+        operation=dict(type='str', default='upsertIdentityRule', choices=['addIdentityRule', 'deleteIdentityRule', 'editIdentityRule', 'getIdentityRule', 'getIdentityRuleList', 'getIdentityRuleByName', 'upsertIdentityRule', 'editIdentityRuleByName', 'deleteIdentityRuleByName']),
         register_as=dict(type='str'),
 
         action=dict(type='str'),

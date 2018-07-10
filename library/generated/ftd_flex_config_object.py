@@ -227,7 +227,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addFlexConfigObject', 'deleteFlexConfigObject', 'editFlexConfigObject', 'getFlexConfigObject', 'getFlexConfigObjectList', 'getFlexConfigObjectByName', 'upsertFlexConfigObject', 'editFlexConfigObjectByName', 'deleteFlexConfigObjectByName'], required=True),
+        operation=dict(type='str', default='upsertFlexConfigObject', choices=['addFlexConfigObject', 'deleteFlexConfigObject', 'editFlexConfigObject', 'getFlexConfigObject', 'getFlexConfigObjectList', 'getFlexConfigObjectByName', 'upsertFlexConfigObject', 'editFlexConfigObjectByName', 'deleteFlexConfigObjectByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

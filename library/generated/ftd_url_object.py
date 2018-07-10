@@ -221,7 +221,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addURLObject', 'deleteURLObject', 'editURLObject', 'getURLObject', 'getURLObjectList', 'getURLObjectByName', 'upsertURLObject', 'editURLObjectByName', 'deleteURLObjectByName'], required=True),
+        operation=dict(type='str', default='upsertURLObject', choices=['addURLObject', 'deleteURLObject', 'editURLObject', 'getURLObject', 'getURLObjectList', 'getURLObjectByName', 'upsertURLObject', 'editURLObjectByName', 'deleteURLObjectByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

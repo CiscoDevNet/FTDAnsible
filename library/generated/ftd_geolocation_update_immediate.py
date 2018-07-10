@@ -236,7 +236,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addGeolocationUpdateImmediate', 'deleteGeolocationUpdateImmediate', 'editGeolocationUpdateImmediate', 'getGeolocationUpdateImmediate', 'getGeolocationUpdateImmediateList', 'getGeolocationUpdateImmediateByName', 'upsertGeolocationUpdateImmediate', 'editGeolocationUpdateImmediateByName', 'deleteGeolocationUpdateImmediateByName'], required=True),
+        operation=dict(type='str', default='upsertGeolocationUpdateImmediate', choices=['addGeolocationUpdateImmediate', 'deleteGeolocationUpdateImmediate', 'editGeolocationUpdateImmediate', 'getGeolocationUpdateImmediate', 'getGeolocationUpdateImmediateList', 'getGeolocationUpdateImmediateByName', 'upsertGeolocationUpdateImmediate', 'editGeolocationUpdateImmediateByName', 'deleteGeolocationUpdateImmediateByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

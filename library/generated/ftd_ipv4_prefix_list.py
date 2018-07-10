@@ -221,7 +221,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addIPV4PrefixList', 'deleteIPV4PrefixList', 'editIPV4PrefixList', 'getIPV4PrefixList', 'getIPV4PrefixListList', 'getIPV4PrefixListByName', 'upsertIPV4PrefixList', 'editIPV4PrefixListByName', 'deleteIPV4PrefixListByName'], required=True),
+        operation=dict(type='str', default='upsertIPV4PrefixList', choices=['addIPV4PrefixList', 'deleteIPV4PrefixList', 'editIPV4PrefixList', 'getIPV4PrefixList', 'getIPV4PrefixListList', 'getIPV4PrefixListByName', 'upsertIPV4PrefixList', 'editIPV4PrefixListByName', 'deleteIPV4PrefixListByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),

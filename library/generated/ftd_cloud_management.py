@@ -234,7 +234,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addCloudManagement', 'deleteCloudManagement', 'editCloudManagement', 'getCloudManagement', 'getCloudManagementList', 'getCloudManagementByName', 'upsertCloudManagement', 'editCloudManagementByName', 'deleteCloudManagementByName'], required=True),
+        operation=dict(type='str', default='upsertCloudManagement', choices=['addCloudManagement', 'deleteCloudManagement', 'editCloudManagement', 'getCloudManagement', 'getCloudManagementList', 'getCloudManagementByName', 'upsertCloudManagement', 'editCloudManagementByName', 'deleteCloudManagementByName']),
         register_as=dict(type='str'),
 
         action=dict(type='str'),

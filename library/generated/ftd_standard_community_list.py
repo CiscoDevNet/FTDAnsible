@@ -221,7 +221,7 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(choices=['addStandardCommunityList', 'deleteStandardCommunityList', 'editStandardCommunityList', 'getStandardCommunityList', 'getStandardCommunityListList', 'getStandardCommunityListByName', 'upsertStandardCommunityList', 'editStandardCommunityListByName', 'deleteStandardCommunityListByName'], required=True),
+        operation=dict(type='str', default='upsertStandardCommunityList', choices=['addStandardCommunityList', 'deleteStandardCommunityList', 'editStandardCommunityList', 'getStandardCommunityList', 'getStandardCommunityListList', 'getStandardCommunityListByName', 'upsertStandardCommunityList', 'editStandardCommunityListByName', 'deleteStandardCommunityListByName']),
         register_as=dict(type='str'),
 
         description=dict(type='str'),
