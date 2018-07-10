@@ -29,7 +29,7 @@ _The previous version of Network/AccessPolicy modules were moved to `deprecated`
 
 1. Run the playbook:
     ```
-    $ ansible-playbook test_network_object.yml  --module-path=./library/generated
+    $ ansible-playbook test_network_object.yml
     ```
 
 
