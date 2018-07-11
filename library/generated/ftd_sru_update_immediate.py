@@ -96,8 +96,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addSRUUpdateImmediate'
 
-    name: "Ansible SRUUpdateImmediate"
     description: "From Ansible with love"
+    name: "Ansible SRUUpdateImmediate"
     type: "sruupdateimmediate"
 """
 
@@ -130,7 +130,7 @@ class SRUUpdateImmediateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addSRUUpdateImmediate(params):
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'ipAddress', 'name', 'description', 'sruImmediateJobType', 'forceUpdate', 'deployAfterUpdate', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['deployAfterUpdate', 'description', 'forceOperation', 'forceUpdate', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'sruImmediateJobType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/updatesru')
         request_params = dict(
@@ -160,7 +160,7 @@ class SRUUpdateImmediateResource(object):
     @retry_on_token_expiration
     def editSRUUpdateImmediate(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'ipAddress', 'name', 'description', 'sruImmediateJobType', 'forceUpdate', 'deployAfterUpdate', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['deployAfterUpdate', 'description', 'forceOperation', 'forceUpdate', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'sruImmediateJobType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/updatesru/{objId}', path_params=path_params)
         request_params = dict(
@@ -189,7 +189,7 @@ class SRUUpdateImmediateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getSRUUpdateImmediateList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/action/updatesru', query_params=query_params)
         request_params = dict(

@@ -72,8 +72,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addExpandedCommunityList'
 
-    name: "Ansible ExpandedCommunityList"
     description: "From Ansible with love"
+    name: "Ansible ExpandedCommunityList"
     type: "expandedcommunitylist"
 """
 
@@ -106,7 +106,7 @@ class ExpandedCommunityListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addExpandedCommunityList(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/expandedcommunitylists')
         request_params = dict(
@@ -136,7 +136,7 @@ class ExpandedCommunityListResource(object):
     @retry_on_token_expiration
     def editExpandedCommunityList(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/expandedcommunitylists/{objId}', path_params=path_params)
         request_params = dict(
@@ -165,7 +165,7 @@ class ExpandedCommunityListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getExpandedCommunityListList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/expandedcommunitylists', query_params=query_params)
         request_params = dict(

@@ -72,8 +72,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addASPathList'
 
-    name: "Ansible ASPathList"
     description: "From Ansible with love"
+    name: "Ansible ASPathList"
     type: "aspathlist"
 """
 
@@ -106,7 +106,7 @@ class ASPathListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addASPathList(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/aspathlists')
         request_params = dict(
@@ -136,7 +136,7 @@ class ASPathListResource(object):
     @retry_on_token_expiration
     def editASPathList(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/aspathlists/{objId}', path_params=path_params)
         request_params = dict(
@@ -165,7 +165,7 @@ class ASPathListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getASPathListList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/aspathlists', query_params=query_params)
         request_params = dict(

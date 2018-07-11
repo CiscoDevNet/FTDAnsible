@@ -129,7 +129,7 @@ class IkevOnePolicyResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addIkevOnePolicy(params):
-        body_params = dict_subset(params, ['version', 'name', 'enabled', 'lifeTime', 'priority', 'authenticationType', 'encryptionType', 'hashType', 'groupType', 'summaryLabel', 'cryptoRestricted', 'id', 'isSystemDefined', 'type'])
+        body_params = dict_subset(params, ['authenticationType', 'cryptoRestricted', 'enabled', 'encryptionType', 'groupType', 'hashType', 'id', 'isSystemDefined', 'lifeTime', 'name', 'priority', 'summaryLabel', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/ikev1policies')
         request_params = dict(
@@ -159,7 +159,7 @@ class IkevOnePolicyResource(object):
     @retry_on_token_expiration
     def editIkevOnePolicy(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'enabled', 'lifeTime', 'priority', 'authenticationType', 'encryptionType', 'hashType', 'groupType', 'summaryLabel', 'cryptoRestricted', 'id', 'isSystemDefined', 'type'])
+        body_params = dict_subset(params, ['authenticationType', 'cryptoRestricted', 'enabled', 'encryptionType', 'groupType', 'hashType', 'id', 'isSystemDefined', 'lifeTime', 'name', 'priority', 'summaryLabel', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/ikev1policies/{objId}', path_params=path_params)
         request_params = dict(
@@ -188,7 +188,7 @@ class IkevOnePolicyResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getIkevOnePolicyList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/ikev1policies', query_params=query_params)
         request_params = dict(

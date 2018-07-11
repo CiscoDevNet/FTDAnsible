@@ -138,7 +138,7 @@ class SToSConnectionProfileResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addSToSConnectionProfile(params):
-        body_params = dict_subset(params, ['version', 'name', 'outsideInterfaces', 'localNetworks', 'remotePeerIpAddress', 'remoteNetworks', 'ikev1Enabled', 'ikev2Enabled', 'ikev1PreSharedKey', 'diffieHellmanGroup', 'ikev2LocalPreSharedKey', 'ikev2RemotePeerPreSharedKey', 'ikev1Proposals', 'ikev2Proposals', 'interfaceForNatExempt', 'id', 'type'])
+        body_params = dict_subset(params, ['diffieHellmanGroup', 'id', 'ikev1Enabled', 'ikev1PreSharedKey', 'ikev1Proposals', 'ikev2Enabled', 'ikev2LocalPreSharedKey', 'ikev2Proposals', 'ikev2RemotePeerPreSharedKey', 'interfaceForNatExempt', 'localNetworks', 'name', 'outsideInterfaces', 'remoteNetworks', 'remotePeerIpAddress', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/s2sconnectionprofiles')
         request_params = dict(
@@ -168,7 +168,7 @@ class SToSConnectionProfileResource(object):
     @retry_on_token_expiration
     def editSToSConnectionProfile(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'outsideInterfaces', 'localNetworks', 'remotePeerIpAddress', 'remoteNetworks', 'ikev1Enabled', 'ikev2Enabled', 'ikev1PreSharedKey', 'diffieHellmanGroup', 'ikev2LocalPreSharedKey', 'ikev2RemotePeerPreSharedKey', 'ikev1Proposals', 'ikev2Proposals', 'interfaceForNatExempt', 'id', 'type'])
+        body_params = dict_subset(params, ['diffieHellmanGroup', 'id', 'ikev1Enabled', 'ikev1PreSharedKey', 'ikev1Proposals', 'ikev2Enabled', 'ikev2LocalPreSharedKey', 'ikev2Proposals', 'ikev2RemotePeerPreSharedKey', 'interfaceForNatExempt', 'localNetworks', 'name', 'outsideInterfaces', 'remoteNetworks', 'remotePeerIpAddress', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/s2sconnectionprofiles/{objId}', path_params=path_params)
         request_params = dict(
@@ -197,7 +197,7 @@ class SToSConnectionProfileResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getSToSConnectionProfileList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/s2sconnectionprofiles', query_params=query_params)
         request_params = dict(

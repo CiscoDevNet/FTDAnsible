@@ -87,8 +87,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addSecurityIntelligenceUpdateFeedsSchedule'
 
-    name: "Ansible SecurityIntelligenceUpdateFeedsSchedule"
     description: "From Ansible with love"
+    name: "Ansible SecurityIntelligenceUpdateFeedsSchedule"
     type: "securityintelligenceupdatefeedsschedule"
 """
 
@@ -121,7 +121,7 @@ class SecurityIntelligenceUpdateFeedsScheduleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addSecurityIntelligenceUpdateFeedsSchedule(params):
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'runTimes', 'name', 'description', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'forceOperation', 'id', 'jobHistoryUuid', 'jobName', 'name', 'runTimes', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/managedentity/securityintelligencefeedsupdateschedules')
         request_params = dict(
@@ -151,7 +151,7 @@ class SecurityIntelligenceUpdateFeedsScheduleResource(object):
     @retry_on_token_expiration
     def editSecurityIntelligenceUpdateFeedsSchedule(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'runTimes', 'name', 'description', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'forceOperation', 'id', 'jobHistoryUuid', 'jobName', 'name', 'runTimes', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/managedentity/securityintelligencefeedsupdateschedules/{objId}', path_params=path_params)
         request_params = dict(
@@ -180,7 +180,7 @@ class SecurityIntelligenceUpdateFeedsScheduleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getSecurityIntelligenceUpdateFeedsScheduleList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/managedentity/securityintelligencefeedsupdateschedules', query_params=query_params)
         request_params = dict(

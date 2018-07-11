@@ -129,7 +129,7 @@ class IkevTwoPolicyResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addIkevTwoPolicy(params):
-        body_params = dict_subset(params, ['version', 'name', 'enabled', 'lifeTime', 'priority', 'encryptionTypes', 'groupTypes', 'integrityTypes', 'prfTypes', 'summaryLabel', 'cryptoRestricted', 'id', 'isSystemDefined', 'type'])
+        body_params = dict_subset(params, ['cryptoRestricted', 'enabled', 'encryptionTypes', 'groupTypes', 'id', 'integrityTypes', 'isSystemDefined', 'lifeTime', 'name', 'prfTypes', 'priority', 'summaryLabel', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/ikev2policies')
         request_params = dict(
@@ -159,7 +159,7 @@ class IkevTwoPolicyResource(object):
     @retry_on_token_expiration
     def editIkevTwoPolicy(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'enabled', 'lifeTime', 'priority', 'encryptionTypes', 'groupTypes', 'integrityTypes', 'prfTypes', 'summaryLabel', 'cryptoRestricted', 'id', 'isSystemDefined', 'type'])
+        body_params = dict_subset(params, ['cryptoRestricted', 'enabled', 'encryptionTypes', 'groupTypes', 'id', 'integrityTypes', 'isSystemDefined', 'lifeTime', 'name', 'prfTypes', 'priority', 'summaryLabel', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/ikev2policies/{objId}', path_params=path_params)
         request_params = dict(
@@ -188,7 +188,7 @@ class IkevTwoPolicyResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getIkevTwoPolicyList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/ikev2policies', query_params=query_params)
         request_params = dict(

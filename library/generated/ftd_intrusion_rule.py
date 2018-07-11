@@ -77,7 +77,7 @@ class IntrusionRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getIntrusionRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/intrusionpolicies/{parentId}/intrusionrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -92,7 +92,7 @@ class IntrusionRuleResource(object):
     @retry_on_token_expiration
     def getIntrusionRuleList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/policy/intrusionpolicies/{parentId}/intrusionrules', path_params=path_params, query_params=query_params)
         request_params = dict(

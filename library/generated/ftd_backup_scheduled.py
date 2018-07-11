@@ -87,8 +87,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addBackupScheduled'
 
-    name: "Ansible BackupScheduled"
     description: "From Ansible with love"
+    name: "Ansible BackupScheduled"
     type: "backupscheduled"
 """
 
@@ -121,7 +121,7 @@ class BackupScheduledResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addBackupScheduled(params):
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'runTimes', 'name', 'description', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'forceOperation', 'id', 'jobHistoryUuid', 'jobName', 'name', 'runTimes', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/scheduledbackup')
         request_params = dict(
@@ -151,7 +151,7 @@ class BackupScheduledResource(object):
     @retry_on_token_expiration
     def editBackupScheduled(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'runTimes', 'name', 'description', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'forceOperation', 'id', 'jobHistoryUuid', 'jobName', 'name', 'runTimes', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/scheduledbackup/{objId}', path_params=path_params)
         request_params = dict(
@@ -180,7 +180,7 @@ class BackupScheduledResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getBackupScheduledList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/action/scheduledbackup', query_params=query_params)
         request_params = dict(

@@ -90,8 +90,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addIdentityServicesEngine'
 
-    name: "Ansible IdentityServicesEngine"
     description: "From Ansible with love"
+    name: "Ansible IdentityServicesEngine"
     type: "identityservicesengine"
 """
 
@@ -124,7 +124,7 @@ class IdentityServicesEngineResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addIdentityServicesEngine(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'ftdCertificate', 'pxGridCertificate', 'mntCertificate', 'iseNetworkFilters', 'enabled', 'primaryIseServer', 'secondaryIseServer', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'enabled', 'ftdCertificate', 'id', 'iseNetworkFilters', 'mntCertificate', 'name', 'primaryIseServer', 'pxGridCertificate', 'secondaryIseServer', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/integration/identityservicesengine')
         request_params = dict(
@@ -154,7 +154,7 @@ class IdentityServicesEngineResource(object):
     @retry_on_token_expiration
     def editIdentityServicesEngine(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'ftdCertificate', 'pxGridCertificate', 'mntCertificate', 'iseNetworkFilters', 'enabled', 'primaryIseServer', 'secondaryIseServer', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'enabled', 'ftdCertificate', 'id', 'iseNetworkFilters', 'mntCertificate', 'name', 'primaryIseServer', 'pxGridCertificate', 'secondaryIseServer', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/integration/identityservicesengine/{objId}', path_params=path_params)
         request_params = dict(
@@ -183,7 +183,7 @@ class IdentityServicesEngineResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getIdentityServicesEngineList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/integration/identityservicesengine', query_params=query_params)
         request_params = dict(

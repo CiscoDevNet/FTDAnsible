@@ -93,7 +93,7 @@ class IntrusionSettingsResource(object):
     @retry_on_token_expiration
     def editIntrusionSettings(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'syslogServer', 'id', 'type'])
+        body_params = dict_subset(params, ['id', 'name', 'syslogServer', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/intrusionsettings/{objId}', path_params=path_params)
         request_params = dict(
@@ -122,7 +122,7 @@ class IntrusionSettingsResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getIntrusionSettingsList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/intrusionsettings', query_params=query_params)
         request_params = dict(

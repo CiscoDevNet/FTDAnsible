@@ -104,7 +104,7 @@ class LicenseResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addLicense(params):
-        body_params = dict_subset(params, ['version', 'count', 'compliant', 'id', 'licenseType', 'type'])
+        body_params = dict_subset(params, ['compliant', 'count', 'id', 'licenseType', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/license/smartlicenses')
         request_params = dict(
@@ -147,7 +147,7 @@ class LicenseResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getLicenseList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/license/smartlicenses', query_params=query_params)
         request_params = dict(

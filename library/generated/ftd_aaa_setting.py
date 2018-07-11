@@ -102,7 +102,7 @@ class AAASettingResource(object):
     @retry_on_token_expiration
     def editAAASetting(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'identitySourceGroup', 'description', 'protocolType', 'useLocal', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'identitySourceGroup', 'name', 'protocolType', 'type', 'useLocal', 'version'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/aaasettings/{objId}', path_params=path_params)
         request_params = dict(
@@ -131,7 +131,7 @@ class AAASettingResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getAAASettingList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/aaasettings', query_params=query_params)
         request_params = dict(

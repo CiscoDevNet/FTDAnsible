@@ -103,7 +103,7 @@ class TestIdentityServicesEngineConnectivityResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addTestIdentityServicesEngineConnectivity(params):
-        body_params = dict_subset(params, ['ftdCertificateUUID', 'pxGridCertificateUUID', 'mntCertificateUUID', 'statusCode', 'statusMessage', 'iseLogMessage', 'secondaryStatusCode', 'secondaryStatusMessage', 'primaryIseServer', 'secondaryIseServer', 'id', 'type'])
+        body_params = dict_subset(params, ['ftdCertificateUUID', 'id', 'iseLogMessage', 'mntCertificateUUID', 'primaryIseServer', 'pxGridCertificateUUID', 'secondaryIseServer', 'secondaryStatusCode', 'secondaryStatusMessage', 'statusCode', 'statusMessage', 'type'])
 
         url = construct_url(params['hostname'], '/action/testidentityservicesengineconnectivity')
         request_params = dict(

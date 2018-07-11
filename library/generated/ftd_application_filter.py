@@ -108,7 +108,7 @@ class ApplicationFilterResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addApplicationFilter(params):
-        body_params = dict_subset(params, ['version', 'name', 'applications', 'isSystemDefined', 'id', 'conditions', 'type'])
+        body_params = dict_subset(params, ['applications', 'conditions', 'id', 'isSystemDefined', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/applicationfilters')
         request_params = dict(
@@ -138,7 +138,7 @@ class ApplicationFilterResource(object):
     @retry_on_token_expiration
     def editApplicationFilter(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'applications', 'isSystemDefined', 'id', 'conditions', 'type'])
+        body_params = dict_subset(params, ['applications', 'conditions', 'id', 'isSystemDefined', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/applicationfilters/{objId}', path_params=path_params)
         request_params = dict(
@@ -167,7 +167,7 @@ class ApplicationFilterResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getApplicationFilterList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/applicationfilters', query_params=query_params)
         request_params = dict(

@@ -117,8 +117,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addObjectNatRule'
 
-    name: "Ansible ObjectNatRule"
     description: "From Ansible with love"
+    name: "Ansible ObjectNatRule"
     type: "objectnatrule"
 """
 
@@ -153,7 +153,7 @@ class ObjectNatRuleResource(object):
     def addObjectNatRule(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'sourceInterface', 'destinationInterface', 'natType', 'patOptions', 'netToNet', 'noProxyArp', 'dns', 'interfaceIPv6', 'routeLookup', 'enabled', 'originalNetwork', 'translatedNetwork', 'originalPort', 'translatedPort', 'interfaceInTranslatedNetwork', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'destinationInterface', 'dns', 'enabled', 'id', 'interfaceInTranslatedNetwork', 'interfaceIPv6', 'name', 'natType', 'netToNet', 'noProxyArp', 'originalNetwork', 'originalPort', 'patOptions', 'routeLookup', 'sourceInterface', 'translatedNetwork', 'translatedPort', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -168,7 +168,7 @@ class ObjectNatRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def deleteObjectNatRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -182,9 +182,9 @@ class ObjectNatRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def editObjectNatRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'sourceInterface', 'destinationInterface', 'natType', 'patOptions', 'netToNet', 'noProxyArp', 'dns', 'interfaceIPv6', 'routeLookup', 'enabled', 'originalNetwork', 'translatedNetwork', 'originalPort', 'translatedPort', 'interfaceInTranslatedNetwork', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'destinationInterface', 'dns', 'enabled', 'id', 'interfaceInTranslatedNetwork', 'interfaceIPv6', 'name', 'natType', 'netToNet', 'noProxyArp', 'originalNetwork', 'originalPort', 'patOptions', 'routeLookup', 'sourceInterface', 'translatedNetwork', 'translatedPort', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -199,7 +199,7 @@ class ObjectNatRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getObjectNatRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -214,7 +214,7 @@ class ObjectNatRuleResource(object):
     @retry_on_token_expiration
     def getObjectNatRuleList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/policy/objectnatpolicies/{parentId}/objectnatrules', path_params=path_params, query_params=query_params)
         request_params = dict(

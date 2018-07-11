@@ -105,7 +105,7 @@ class JobHistoryHaConfigSyncResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getJobHistoryHaConfigSyncList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/jobs/haconfigsync', query_params=query_params)
         request_params = dict(

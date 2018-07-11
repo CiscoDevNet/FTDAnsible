@@ -105,7 +105,7 @@ class AnyConnectProfileResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getAnyConnectProfileList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/anyconnectprofiles', query_params=query_params)
         request_params = dict(

@@ -72,8 +72,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addIPV6PrefixList'
 
-    name: "Ansible IPV6PrefixList"
     description: "From Ansible with love"
+    name: "Ansible IPV6PrefixList"
     type: "ipv6prefixlist"
 """
 
@@ -106,7 +106,7 @@ class IPV6PrefixListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addIPV6PrefixList(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/ipv6prefixlists')
         request_params = dict(
@@ -136,7 +136,7 @@ class IPV6PrefixListResource(object):
     @retry_on_token_expiration
     def editIPV6PrefixList(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/ipv6prefixlists/{objId}', path_params=path_params)
         request_params = dict(
@@ -165,7 +165,7 @@ class IPV6PrefixListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getIPV6PrefixListList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/ipv6prefixlists', query_params=query_params)
         request_params = dict(

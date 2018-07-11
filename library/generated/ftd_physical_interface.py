@@ -141,7 +141,7 @@ class PhysicalInterfaceResource(object):
     @retry_on_token_expiration
     def editPhysicalInterface(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'hardwareName', 'monitorInterface', 'ipv4', 'ipv6', 'managementOnly', 'linkState', 'mtu', 'enabled', 'macAddress', 'standbyMacAddress', 'speedType', 'duplexType', 'mode', 'managementInterface', 'tenGigabitInterface', 'gigabitInterface', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'duplexType', 'enabled', 'gigabitInterface', 'hardwareName', 'id', 'ipv4', 'ipv6', 'linkState', 'macAddress', 'managementInterface', 'managementOnly', 'mode', 'monitorInterface', 'mtu', 'name', 'speedType', 'standbyMacAddress', 'tenGigabitInterface', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/interfaces/{objId}', path_params=path_params)
         request_params = dict(
@@ -170,7 +170,7 @@ class PhysicalInterfaceResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getPhysicalInterfaceList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/interfaces', query_params=query_params)
         request_params = dict(

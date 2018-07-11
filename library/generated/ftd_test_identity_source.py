@@ -88,7 +88,7 @@ class TestIdentitySourceResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addTestIdentitySource(params):
-        body_params = dict_subset(params, ['identitySource', 'username', 'password', 'statusCode', 'statusMessage', 'id', 'type'])
+        body_params = dict_subset(params, ['id', 'identitySource', 'password', 'statusCode', 'statusMessage', 'type', 'username'])
 
         url = construct_url(params['hostname'], '/action/testidentitysource')
         request_params = dict(

@@ -123,7 +123,7 @@ class ManagementIPResource(object):
     @retry_on_token_expiration
     def editManagementIP(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'ipv4Mode', 'ipv4Address', 'ipv4NetMask', 'ipv4Gateway', 'ipv6Mode', 'ipv6Address', 'ipv6Prefix', 'ipv6Gateway', 'dhcpServerEnabled', 'dhcpServerAddressPool', 'linkState', 'routeInternally', 'id', 'type'])
+        body_params = dict_subset(params, ['dhcpServerAddressPool', 'dhcpServerEnabled', 'id', 'ipv4Address', 'ipv4Gateway', 'ipv4Mode', 'ipv4NetMask', 'ipv6Address', 'ipv6Gateway', 'ipv6Mode', 'ipv6Prefix', 'linkState', 'routeInternally', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/managementips/{objId}', path_params=path_params)
         request_params = dict(
@@ -152,7 +152,7 @@ class ManagementIPResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getManagementIPList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/managementips', query_params=query_params)
         request_params = dict(

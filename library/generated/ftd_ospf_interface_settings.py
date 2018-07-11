@@ -75,8 +75,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addOSPFInterfaceSettings'
 
-    name: "Ansible OSPFInterfaceSettings"
     description: "From Ansible with love"
+    name: "Ansible OSPFInterfaceSettings"
     type: "ospfinterfacesettings"
 """
 
@@ -109,7 +109,7 @@ class OSPFInterfaceSettingsResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addOSPFInterfaceSettings(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'deviceInterface', 'ospfProtocolConfiguration', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'deviceInterface', 'id', 'name', 'ospfProtocolConfiguration', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/virtualrouters/default/ospfinterfacesettings')
         request_params = dict(
@@ -139,7 +139,7 @@ class OSPFInterfaceSettingsResource(object):
     @retry_on_token_expiration
     def editOSPFInterfaceSettings(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'deviceInterface', 'ospfProtocolConfiguration', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'deviceInterface', 'id', 'name', 'ospfProtocolConfiguration', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/virtualrouters/default/ospfinterfacesettings/{objId}', path_params=path_params)
         request_params = dict(
@@ -168,7 +168,7 @@ class OSPFInterfaceSettingsResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getOSPFInterfaceSettingsList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/virtualrouters/default/ospfinterfacesettings', query_params=query_params)
         request_params = dict(

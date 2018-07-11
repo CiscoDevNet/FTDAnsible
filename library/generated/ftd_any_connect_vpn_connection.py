@@ -104,7 +104,7 @@ class AnyConnectVpnConnectionResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addAnyConnectVpnConnection(params):
-        body_params = dict_subset(params, ['version', 'connectionProfile', 'groupPolicy', 'clientPackages', 'id', 'type'])
+        body_params = dict_subset(params, ['clientPackages', 'connectionProfile', 'groupPolicy', 'id', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/anyconnectvpnconnections')
         request_params = dict(
@@ -134,7 +134,7 @@ class AnyConnectVpnConnectionResource(object):
     @retry_on_token_expiration
     def editAnyConnectVpnConnection(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'connectionProfile', 'groupPolicy', 'clientPackages', 'id', 'type'])
+        body_params = dict_subset(params, ['clientPackages', 'connectionProfile', 'groupPolicy', 'id', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/anyconnectvpnconnections/{objId}', path_params=path_params)
         request_params = dict(
@@ -163,7 +163,7 @@ class AnyConnectVpnConnectionResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getAnyConnectVpnConnectionList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/anyconnectvpnconnections', query_params=query_params)
         request_params = dict(

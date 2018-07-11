@@ -156,7 +156,7 @@ class ExternalCACertificateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addExternalCACertificate(params):
-        body_params = dict_subset(params, ['version', 'name', 'cert', 'privateKey', 'passPhrase', 'issuerCommonName', 'issuerCountry', 'issuerLocality', 'issuerOrganization', 'issuerOrganizationUnit', 'issuerState', 'subjectCommonName', 'subjectCountry', 'subjectDistinguishedName', 'subjectLocality', 'subjectOrganization', 'subjectOrganizationUnit', 'subjectState', 'validityStartDate', 'validityEndDate', 'isSystemDefined', 'id', 'type'])
+        body_params = dict_subset(params, ['cert', 'id', 'issuerCommonName', 'issuerCountry', 'issuerLocality', 'issuerOrganization', 'issuerOrganizationUnit', 'issuerState', 'isSystemDefined', 'name', 'passPhrase', 'privateKey', 'subjectCommonName', 'subjectCountry', 'subjectDistinguishedName', 'subjectLocality', 'subjectOrganization', 'subjectOrganizationUnit', 'subjectState', 'type', 'validityEndDate', 'validityStartDate', 'version'])
 
         url = construct_url(params['hostname'], '/object/externalcacertificates')
         request_params = dict(
@@ -186,7 +186,7 @@ class ExternalCACertificateResource(object):
     @retry_on_token_expiration
     def editExternalCACertificate(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'cert', 'privateKey', 'passPhrase', 'issuerCommonName', 'issuerCountry', 'issuerLocality', 'issuerOrganization', 'issuerOrganizationUnit', 'issuerState', 'subjectCommonName', 'subjectCountry', 'subjectDistinguishedName', 'subjectLocality', 'subjectOrganization', 'subjectOrganizationUnit', 'subjectState', 'validityStartDate', 'validityEndDate', 'isSystemDefined', 'id', 'type'])
+        body_params = dict_subset(params, ['cert', 'id', 'issuerCommonName', 'issuerCountry', 'issuerLocality', 'issuerOrganization', 'issuerOrganizationUnit', 'issuerState', 'isSystemDefined', 'name', 'passPhrase', 'privateKey', 'subjectCommonName', 'subjectCountry', 'subjectDistinguishedName', 'subjectLocality', 'subjectOrganization', 'subjectOrganizationUnit', 'subjectState', 'type', 'validityEndDate', 'validityStartDate', 'version'])
 
         url = construct_url(params['hostname'], '/object/externalcacertificates/{objId}', path_params=path_params)
         request_params = dict(
@@ -215,7 +215,7 @@ class ExternalCACertificateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getExternalCACertificateList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/externalcacertificates', query_params=query_params)
         request_params = dict(

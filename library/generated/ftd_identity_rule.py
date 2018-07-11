@@ -140,7 +140,7 @@ class IdentityRuleResource(object):
     def addIdentityRule(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'realm', 'guestAccessFallback', 'authType', 'action', 'enabled', 'id', 'type'])
+        body_params = dict_subset(params, ['action', 'authType', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'enabled', 'guestAccessFallback', 'id', 'name', 'realm', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -155,7 +155,7 @@ class IdentityRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def deleteIdentityRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -169,9 +169,9 @@ class IdentityRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def editIdentityRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'realm', 'guestAccessFallback', 'authType', 'action', 'enabled', 'id', 'type'])
+        body_params = dict_subset(params, ['action', 'authType', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'enabled', 'guestAccessFallback', 'id', 'name', 'realm', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -186,7 +186,7 @@ class IdentityRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getIdentityRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -201,7 +201,7 @@ class IdentityRuleResource(object):
     @retry_on_token_expiration
     def getIdentityRuleList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules', path_params=path_params, query_params=query_params)
         request_params = dict(

@@ -75,8 +75,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addNetworkObjectGroup'
 
-    name: "Ansible NetworkObjectGroup"
     description: "From Ansible with love"
+    name: "Ansible NetworkObjectGroup"
     objects: ["{{ networkObject }}"]
     type: "networkobjectgroup"
 """
@@ -110,7 +110,7 @@ class NetworkObjectGroupResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addNetworkObjectGroup(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'id', 'objects', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'objects', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/networkgroups')
         request_params = dict(
@@ -140,7 +140,7 @@ class NetworkObjectGroupResource(object):
     @retry_on_token_expiration
     def editNetworkObjectGroup(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'id', 'objects', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'objects', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/networkgroups/{objId}', path_params=path_params)
         request_params = dict(
@@ -169,7 +169,7 @@ class NetworkObjectGroupResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getNetworkObjectGroupList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/networkgroups', query_params=query_params)
         request_params = dict(

@@ -81,12 +81,12 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addNetworkObject'
 
-    name: "Ansible NetworkObject"
     description: "From Ansible with love"
-    subType: "NETWORK"
-    value: "192.168.2.0/24"
     dnsResolution: "IPV4_AND_IPV6"
+    name: "Ansible NetworkObject"
+    subType: "NETWORK"
     type: "networkobject"
+    value: "192.168.2.0/24"
 """
 
 RETURN = """
@@ -118,7 +118,7 @@ class NetworkObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addNetworkObject(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'subType', 'value', 'isSystemDefined', 'dnsResolution', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'dnsResolution', 'id', 'isSystemDefined', 'name', 'subType', 'type', 'value', 'version'])
 
         url = construct_url(params['hostname'], '/object/networks')
         request_params = dict(
@@ -148,7 +148,7 @@ class NetworkObjectResource(object):
     @retry_on_token_expiration
     def editNetworkObject(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'subType', 'value', 'isSystemDefined', 'dnsResolution', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'dnsResolution', 'id', 'isSystemDefined', 'name', 'subType', 'type', 'value', 'version'])
 
         url = construct_url(params['hostname'], '/object/networks/{objId}', path_params=path_params)
         request_params = dict(
@@ -177,7 +177,7 @@ class NetworkObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getNetworkObjectList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/networks', query_params=query_params)
         request_params = dict(

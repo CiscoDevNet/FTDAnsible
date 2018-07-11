@@ -87,8 +87,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addBridgeGroupInterface'
 
-    name: "Ansible BridgeGroupInterface"
     description: "From Ansible with love"
+    name: "Ansible BridgeGroupInterface"
     type: "bridgegroupinterface"
 """
 
@@ -121,7 +121,7 @@ class BridgeGroupInterfaceResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addBridgeGroupInterface(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'hardwareName', 'monitorInterface', 'ipv4', 'ipv6', 'selectedInterfaces', 'bridgeGroupId', 'id', 'type'])
+        body_params = dict_subset(params, ['bridgeGroupId', 'description', 'hardwareName', 'id', 'ipv4', 'ipv6', 'monitorInterface', 'name', 'selectedInterfaces', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/bridgegroupinterfaces')
         request_params = dict(
@@ -151,7 +151,7 @@ class BridgeGroupInterfaceResource(object):
     @retry_on_token_expiration
     def editBridgeGroupInterface(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'hardwareName', 'monitorInterface', 'ipv4', 'ipv6', 'selectedInterfaces', 'bridgeGroupId', 'id', 'type'])
+        body_params = dict_subset(params, ['bridgeGroupId', 'description', 'hardwareName', 'id', 'ipv4', 'ipv6', 'monitorInterface', 'name', 'selectedInterfaces', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/bridgegroupinterfaces/{objId}', path_params=path_params)
         request_params = dict(
@@ -180,7 +180,7 @@ class BridgeGroupInterfaceResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getBridgeGroupInterfaceList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/bridgegroupinterfaces', query_params=query_params)
         request_params = dict(

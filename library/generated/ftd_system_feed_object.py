@@ -96,7 +96,7 @@ class SystemFeedObjectResource(object):
     @retry_on_token_expiration
     def editSystemFeedObject(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'lastUpdate', 'updateFrequency', 'id', 'type'])
+        body_params = dict_subset(params, ['id', 'lastUpdate', 'name', 'type', 'updateFrequency', 'version'])
 
         url = construct_url(params['hostname'], '/object/systemfeedobjects/{objId}', path_params=path_params)
         request_params = dict(
@@ -125,7 +125,7 @@ class SystemFeedObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getSystemFeedObjectList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/systemfeedobjects', query_params=query_params)
         request_params = dict(

@@ -102,7 +102,7 @@ class FlexConfigPolicyResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addFlexConfigPolicy(params):
-        body_params = dict_subset(params, ['version', 'name', 'flexConfigObjects', 'id', 'type'])
+        body_params = dict_subset(params, ['flexConfigObjects', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/flexconfigpolicies')
         request_params = dict(
@@ -132,7 +132,7 @@ class FlexConfigPolicyResource(object):
     @retry_on_token_expiration
     def editFlexConfigPolicy(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'flexConfigObjects', 'id', 'type'])
+        body_params = dict_subset(params, ['flexConfigObjects', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/flexconfigpolicies/{objId}', path_params=path_params)
         request_params = dict(
@@ -161,7 +161,7 @@ class FlexConfigPolicyResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getFlexConfigPolicyList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/flexconfigpolicies', query_params=query_params)
         request_params = dict(

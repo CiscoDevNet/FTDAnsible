@@ -108,8 +108,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addPolicyList'
 
-    name: "Ansible PolicyList"
     description: "From Ansible with love"
+    name: "Ansible PolicyList"
     type: "policylist"
 """
 
@@ -142,7 +142,7 @@ class PolicyListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addPolicyList(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'action', 'interfaces', 'standardAccessListAddresses', 'ipv4PrefixListAddresses', 'standardAccessListNextHops', 'ipv4PrefixListNextHops', 'standardAccessListRouteSources', 'ipv4PrefixListRouteSources', 'asPathLists', 'communityLists', 'matchCommunityExactly', 'metric', 'tag', 'id', 'type'])
+        body_params = dict_subset(params, ['action', 'asPathLists', 'communityLists', 'description', 'id', 'interfaces', 'ipv4PrefixListAddresses', 'ipv4PrefixListNextHops', 'ipv4PrefixListRouteSources', 'matchCommunityExactly', 'metric', 'name', 'standardAccessListAddresses', 'standardAccessListNextHops', 'standardAccessListRouteSources', 'tag', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/policylists')
         request_params = dict(
@@ -172,7 +172,7 @@ class PolicyListResource(object):
     @retry_on_token_expiration
     def editPolicyList(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'action', 'interfaces', 'standardAccessListAddresses', 'ipv4PrefixListAddresses', 'standardAccessListNextHops', 'ipv4PrefixListNextHops', 'standardAccessListRouteSources', 'ipv4PrefixListRouteSources', 'asPathLists', 'communityLists', 'matchCommunityExactly', 'metric', 'tag', 'id', 'type'])
+        body_params = dict_subset(params, ['action', 'asPathLists', 'communityLists', 'description', 'id', 'interfaces', 'ipv4PrefixListAddresses', 'ipv4PrefixListNextHops', 'ipv4PrefixListRouteSources', 'matchCommunityExactly', 'metric', 'name', 'standardAccessListAddresses', 'standardAccessListNextHops', 'standardAccessListRouteSources', 'tag', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/policylists/{objId}', path_params=path_params)
         request_params = dict(
@@ -201,7 +201,7 @@ class PolicyListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getPolicyListList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/policylists', query_params=query_params)
         request_params = dict(

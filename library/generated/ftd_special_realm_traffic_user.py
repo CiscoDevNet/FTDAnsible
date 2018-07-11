@@ -77,7 +77,7 @@ class SpecialRealmTrafficUserResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getSpecialRealmTrafficUser(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/object/specialrealms/{parentId}/trafficusers/{objId}', path_params=path_params)
         request_params = dict(
@@ -92,7 +92,7 @@ class SpecialRealmTrafficUserResource(object):
     @retry_on_token_expiration
     def getSpecialRealmTrafficUserList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/specialrealms/{parentId}/trafficusers', path_params=path_params, query_params=query_params)
         request_params = dict(

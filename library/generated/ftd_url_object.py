@@ -72,8 +72,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addURLObject'
 
-    name: "Ansible URLObject"
     description: "From Ansible with love"
+    name: "Ansible URLObject"
     type: "urlobject"
 """
 
@@ -106,7 +106,7 @@ class URLObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addURLObject(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'url', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'name', 'type', 'url', 'version'])
 
         url = construct_url(params['hostname'], '/object/urls')
         request_params = dict(
@@ -136,7 +136,7 @@ class URLObjectResource(object):
     @retry_on_token_expiration
     def editURLObject(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'url', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'name', 'type', 'url', 'version'])
 
         url = construct_url(params['hostname'], '/object/urls/{objId}', path_params=path_params)
         request_params = dict(
@@ -165,7 +165,7 @@ class URLObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getURLObjectList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/urls', query_params=query_params)
         request_params = dict(

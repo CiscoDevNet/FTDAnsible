@@ -93,8 +93,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addOSPF'
 
-    name: "Ansible OSPF"
     description: "From Ansible with love"
+    name: "Ansible OSPF"
     type: "ospf"
 """
 
@@ -127,7 +127,7 @@ class OSPFResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addOSPF(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'processId', 'logAdjacencyChanges', 'processConfiguration', 'areas', 'neighbors', 'summaryAddresses', 'filterRules', 'redistributeProtocols', 'id', 'type'])
+        body_params = dict_subset(params, ['areas', 'description', 'filterRules', 'id', 'logAdjacencyChanges', 'name', 'neighbors', 'processConfiguration', 'processId', 'redistributeProtocols', 'summaryAddresses', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/virtualrouters/default/ospf')
         request_params = dict(
@@ -157,7 +157,7 @@ class OSPFResource(object):
     @retry_on_token_expiration
     def editOSPF(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'processId', 'logAdjacencyChanges', 'processConfiguration', 'areas', 'neighbors', 'summaryAddresses', 'filterRules', 'redistributeProtocols', 'id', 'type'])
+        body_params = dict_subset(params, ['areas', 'description', 'filterRules', 'id', 'logAdjacencyChanges', 'name', 'neighbors', 'processConfiguration', 'processId', 'redistributeProtocols', 'summaryAddresses', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/virtualrouters/default/ospf/{objId}', path_params=path_params)
         request_params = dict(
@@ -186,7 +186,7 @@ class OSPFResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getOSPFList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/virtualrouters/default/ospf', query_params=query_params)
         request_params = dict(

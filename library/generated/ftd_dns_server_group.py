@@ -114,7 +114,7 @@ class DNSServerGroupResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addDNSServerGroup(params):
-        body_params = dict_subset(params, ['version', 'name', 'dnsServers', 'timeout', 'retries', 'searchDomain', 'systemDefined', 'id', 'type'])
+        body_params = dict_subset(params, ['dnsServers', 'id', 'name', 'retries', 'searchDomain', 'systemDefined', 'timeout', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/dnsservergroups')
         request_params = dict(
@@ -144,7 +144,7 @@ class DNSServerGroupResource(object):
     @retry_on_token_expiration
     def editDNSServerGroup(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'dnsServers', 'timeout', 'retries', 'searchDomain', 'systemDefined', 'id', 'type'])
+        body_params = dict_subset(params, ['dnsServers', 'id', 'name', 'retries', 'searchDomain', 'systemDefined', 'timeout', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/dnsservergroups/{objId}', path_params=path_params)
         request_params = dict(
@@ -173,7 +173,7 @@ class DNSServerGroupResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getDNSServerGroupList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/dnsservergroups', query_params=query_params)
         request_params = dict(

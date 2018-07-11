@@ -75,8 +75,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addProtocolObject'
 
-    name: "Ansible ProtocolObject"
     description: "From Ansible with love"
+    name: "Ansible ProtocolObject"
     type: "protocolobject"
 """
 
@@ -109,7 +109,7 @@ class ProtocolObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addProtocolObject(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'protocol', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'protocol', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/protocols')
         request_params = dict(
@@ -139,7 +139,7 @@ class ProtocolObjectResource(object):
     @retry_on_token_expiration
     def editProtocolObject(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'protocol', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'protocol', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/protocols/{objId}', path_params=path_params)
         request_params = dict(
@@ -168,7 +168,7 @@ class ProtocolObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getProtocolObjectList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/protocols', query_params=query_params)
         request_params = dict(

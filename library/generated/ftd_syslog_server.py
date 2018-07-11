@@ -108,7 +108,7 @@ class SyslogServerResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addSyslogServer(params):
-        body_params = dict_subset(params, ['version', 'name', 'deviceInterface', 'id', 'host', 'port', 'type'])
+        body_params = dict_subset(params, ['deviceInterface', 'host', 'id', 'name', 'port', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/syslogalerts')
         request_params = dict(
@@ -138,7 +138,7 @@ class SyslogServerResource(object):
     @retry_on_token_expiration
     def editSyslogServer(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'deviceInterface', 'id', 'host', 'port', 'type'])
+        body_params = dict_subset(params, ['deviceInterface', 'host', 'id', 'name', 'port', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/syslogalerts/{objId}', path_params=path_params)
         request_params = dict(
@@ -167,7 +167,7 @@ class SyslogServerResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getSyslogServerList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/syslogalerts', query_params=query_params)
         request_params = dict(

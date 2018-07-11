@@ -117,8 +117,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addSubInterface'
 
-    name: "Ansible SubInterface"
     description: "From Ansible with love"
+    name: "Ansible SubInterface"
     type: "subinterface"
 """
 
@@ -153,7 +153,7 @@ class SubInterfaceResource(object):
     def addSubInterface(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'hardwareName', 'monitorInterface', 'ipv4', 'ipv6', 'managementOnly', 'linkState', 'mtu', 'enabled', 'macAddress', 'standbyMacAddress', 'managementInterface', 'tenGigabitInterface', 'gigabitInterface', 'id', 'subIntfId', 'vlanId', 'type'])
+        body_params = dict_subset(params, ['description', 'enabled', 'gigabitInterface', 'hardwareName', 'id', 'ipv4', 'ipv6', 'linkState', 'macAddress', 'managementInterface', 'managementOnly', 'monitorInterface', 'mtu', 'name', 'standbyMacAddress', 'subIntfId', 'tenGigabitInterface', 'type', 'version', 'vlanId'])
 
         url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -168,7 +168,7 @@ class SubInterfaceResource(object):
     @staticmethod
     @retry_on_token_expiration
     def deleteSubInterface(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces/{objId}', path_params=path_params)
         request_params = dict(
@@ -182,9 +182,9 @@ class SubInterfaceResource(object):
     @staticmethod
     @retry_on_token_expiration
     def editSubInterface(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'hardwareName', 'monitorInterface', 'ipv4', 'ipv6', 'managementOnly', 'linkState', 'mtu', 'enabled', 'macAddress', 'standbyMacAddress', 'managementInterface', 'tenGigabitInterface', 'gigabitInterface', 'id', 'subIntfId', 'vlanId', 'type'])
+        body_params = dict_subset(params, ['description', 'enabled', 'gigabitInterface', 'hardwareName', 'id', 'ipv4', 'ipv6', 'linkState', 'macAddress', 'managementInterface', 'managementOnly', 'monitorInterface', 'mtu', 'name', 'standbyMacAddress', 'subIntfId', 'tenGigabitInterface', 'type', 'version', 'vlanId'])
 
         url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -199,7 +199,7 @@ class SubInterfaceResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getSubInterface(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces/{objId}', path_params=path_params)
         request_params = dict(
@@ -214,7 +214,7 @@ class SubInterfaceResource(object):
     @retry_on_token_expiration
     def getSubInterfaceList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces', path_params=path_params, query_params=query_params)
         request_params = dict(

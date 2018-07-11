@@ -72,8 +72,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addStandardCommunityList'
 
-    name: "Ansible StandardCommunityList"
     description: "From Ansible with love"
+    name: "Ansible StandardCommunityList"
     type: "standardcommunitylist"
 """
 
@@ -106,7 +106,7 @@ class StandardCommunityListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addStandardCommunityList(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/standardcommunitylists')
         request_params = dict(
@@ -136,7 +136,7 @@ class StandardCommunityListResource(object):
     @retry_on_token_expiration
     def editStandardCommunityList(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'entries', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/standardcommunitylists/{objId}', path_params=path_params)
         request_params = dict(
@@ -165,7 +165,7 @@ class StandardCommunityListResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getStandardCommunityListList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/standardcommunitylists', query_params=query_params)
         request_params = dict(

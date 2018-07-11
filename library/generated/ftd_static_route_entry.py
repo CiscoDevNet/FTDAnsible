@@ -119,7 +119,7 @@ class StaticRouteEntryResource(object):
     def addStaticRouteEntry(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'iface', 'networks', 'gateway', 'metricValue', 'ipType', 'id', 'type'])
+        body_params = dict_subset(params, ['gateway', 'id', 'iface', 'ipType', 'metricValue', 'name', 'networks', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/{parentId}/staticrouteentries', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -134,7 +134,7 @@ class StaticRouteEntryResource(object):
     @staticmethod
     @retry_on_token_expiration
     def deleteStaticRouteEntry(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/{parentId}/staticrouteentries/{objId}', path_params=path_params)
         request_params = dict(
@@ -148,9 +148,9 @@ class StaticRouteEntryResource(object):
     @staticmethod
     @retry_on_token_expiration
     def editStaticRouteEntry(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'iface', 'networks', 'gateway', 'metricValue', 'ipType', 'id', 'type'])
+        body_params = dict_subset(params, ['gateway', 'id', 'iface', 'ipType', 'metricValue', 'name', 'networks', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/{parentId}/staticrouteentries/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -165,7 +165,7 @@ class StaticRouteEntryResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getStaticRouteEntry(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/{parentId}/staticrouteentries/{objId}', path_params=path_params)
         request_params = dict(
@@ -180,7 +180,7 @@ class StaticRouteEntryResource(object):
     @retry_on_token_expiration
     def getStaticRouteEntryList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/routing/{parentId}/staticrouteentries', path_params=path_params, query_params=query_params)
         request_params = dict(

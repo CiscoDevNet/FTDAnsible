@@ -111,7 +111,7 @@ class DHCPServerContainerResource(object):
     @retry_on_token_expiration
     def editDHCPServerContainer(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'autoConfig', 'primaryDNS', 'secondaryDNS', 'primaryWINS', 'secondaryWINS', 'servers', 'id', 'interface', 'type'])
+        body_params = dict_subset(params, ['autoConfig', 'id', 'interface', 'name', 'primaryDNS', 'primaryWINS', 'secondaryDNS', 'secondaryWINS', 'servers', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/dhcpservercontainers/{objId}', path_params=path_params)
         request_params = dict(
@@ -140,7 +140,7 @@ class DHCPServerContainerResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getDHCPServerContainerList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/dhcpservercontainers', query_params=query_params)
         request_params = dict(

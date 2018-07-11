@@ -164,7 +164,7 @@ class SSLRuleResource(object):
     def addSSLRule(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'ruleAction', 'eventLogAction', 'users', 'embeddedAppFilter', 'urlCategories', 'subjectDNs', 'issuerDNs', 'certificateStatus', 'syslogServer', 'sslv3', 'tls10', 'tls11', 'tls12', 'id', 'type'])
+        body_params = dict_subset(params, ['certificateStatus', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'id', 'issuerDNs', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'sslv3', 'subjectDNs', 'syslogServer', 'tls10', 'tls11', 'tls12', 'type', 'urlCategories', 'users', 'version'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -179,7 +179,7 @@ class SSLRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def deleteSSLRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -193,9 +193,9 @@ class SSLRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def editSSLRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'ruleAction', 'eventLogAction', 'users', 'embeddedAppFilter', 'urlCategories', 'subjectDNs', 'issuerDNs', 'certificateStatus', 'syslogServer', 'sslv3', 'tls10', 'tls11', 'tls12', 'id', 'type'])
+        body_params = dict_subset(params, ['certificateStatus', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'id', 'issuerDNs', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'sslv3', 'subjectDNs', 'syslogServer', 'tls10', 'tls11', 'tls12', 'type', 'urlCategories', 'users', 'version'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -210,7 +210,7 @@ class SSLRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getSSLRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -225,7 +225,7 @@ class SSLRuleResource(object):
     @retry_on_token_expiration
     def getSSLRuleList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules', path_params=path_params, query_params=query_params)
         request_params = dict(

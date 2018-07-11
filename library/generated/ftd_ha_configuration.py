@@ -132,7 +132,7 @@ class HAConfigurationResource(object):
     @retry_on_token_expiration
     def editHAConfiguration(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'nodeRole', 'failoverInterface', 'failoverName', 'primaryFailoverIPv4', 'secondaryFailoverIPv4', 'primaryFailoverIPv6', 'secondaryFailoverIPv6', 'statefulFailoverInterface', 'statefulFailoverName', 'primaryStatefulFailoverIPv4', 'secondaryStatefulFailoverIPv4', 'primaryStatefulFailoverIPv6', 'secondaryStatefulFailoverIPv6', 'sharedKey', 'id', 'type'])
+        body_params = dict_subset(params, ['failoverInterface', 'failoverName', 'id', 'name', 'nodeRole', 'primaryFailoverIPv4', 'primaryFailoverIPv6', 'primaryStatefulFailoverIPv4', 'primaryStatefulFailoverIPv6', 'secondaryFailoverIPv4', 'secondaryFailoverIPv6', 'secondaryStatefulFailoverIPv4', 'secondaryStatefulFailoverIPv6', 'sharedKey', 'statefulFailoverInterface', 'statefulFailoverName', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devices/default/ha/configurations/{objId}', path_params=path_params)
         request_params = dict(
@@ -161,7 +161,7 @@ class HAConfigurationResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getHAConfigurationList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devices/default/ha/configurations', query_params=query_params)
         request_params = dict(

@@ -82,7 +82,7 @@ class CommandResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addCommand(params):
-        body_params = dict_subset(params, ['commandInput', 'commandOutput', 'timeOut', 'id', 'type'])
+        body_params = dict_subset(params, ['commandInput', 'commandOutput', 'id', 'timeOut', 'type'])
 
         url = construct_url(params['hostname'], '/action/command')
         request_params = dict(

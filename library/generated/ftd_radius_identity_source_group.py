@@ -78,8 +78,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addRadiusIdentitySourceGroup'
 
-    name: "Ansible RadiusIdentitySourceGroup"
     description: "From Ansible with love"
+    name: "Ansible RadiusIdentitySourceGroup"
     type: "radiusidentitysourcegroup"
 """
 
@@ -112,7 +112,7 @@ class RadiusIdentitySourceGroupResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addRadiusIdentitySourceGroup(params):
-        body_params = dict_subset(params, ['version', 'name', 'maxFailedAttempts', 'deadTime', 'description', 'radiusIdentitySources', 'id', 'type'])
+        body_params = dict_subset(params, ['deadTime', 'description', 'id', 'maxFailedAttempts', 'name', 'radiusIdentitySources', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/radiusidentitysourcegroups')
         request_params = dict(
@@ -142,7 +142,7 @@ class RadiusIdentitySourceGroupResource(object):
     @retry_on_token_expiration
     def editRadiusIdentitySourceGroup(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'maxFailedAttempts', 'deadTime', 'description', 'radiusIdentitySources', 'id', 'type'])
+        body_params = dict_subset(params, ['deadTime', 'description', 'id', 'maxFailedAttempts', 'name', 'radiusIdentitySources', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/radiusidentitysourcegroups/{objId}', path_params=path_params)
         request_params = dict(
@@ -171,7 +171,7 @@ class RadiusIdentitySourceGroupResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getRadiusIdentitySourceGroupList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/radiusidentitysourcegroups', query_params=query_params)
         request_params = dict(

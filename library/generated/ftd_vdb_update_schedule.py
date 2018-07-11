@@ -90,8 +90,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addVDBUpdateSchedule'
 
-    name: "Ansible VDBUpdateSchedule"
     description: "From Ansible with love"
+    name: "Ansible VDBUpdateSchedule"
     type: "vdbupdateschedule"
 """
 
@@ -124,7 +124,7 @@ class VDBUpdateScheduleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addVDBUpdateSchedule(params):
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'runTimes', 'name', 'description', 'deployAfterUpdate', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['deployAfterUpdate', 'description', 'forceOperation', 'id', 'jobHistoryUuid', 'jobName', 'name', 'runTimes', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/managedentity/vdbupdateschedules')
         request_params = dict(
@@ -154,7 +154,7 @@ class VDBUpdateScheduleResource(object):
     @retry_on_token_expiration
     def editVDBUpdateSchedule(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'runTimes', 'name', 'description', 'deployAfterUpdate', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['deployAfterUpdate', 'description', 'forceOperation', 'id', 'jobHistoryUuid', 'jobName', 'name', 'runTimes', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/managedentity/vdbupdateschedules/{objId}', path_params=path_params)
         request_params = dict(
@@ -183,7 +183,7 @@ class VDBUpdateScheduleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getVDBUpdateScheduleList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/managedentity/vdbupdateschedules', query_params=query_params)
         request_params = dict(

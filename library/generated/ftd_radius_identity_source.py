@@ -84,8 +84,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addRadiusIdentitySource'
 
-    name: "Ansible RadiusIdentitySource"
     description: "From Ansible with love"
+    name: "Ansible RadiusIdentitySource"
     type: "radiusidentitysource"
 """
 
@@ -118,7 +118,7 @@ class RadiusIdentitySourceResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addRadiusIdentitySource(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'host', 'timeout', 'serverAuthenticationPort', 'serverSecretKey', 'capabilities', 'id', 'type'])
+        body_params = dict_subset(params, ['capabilities', 'description', 'host', 'id', 'name', 'serverAuthenticationPort', 'serverSecretKey', 'timeout', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/radiusidentitysources')
         request_params = dict(
@@ -148,7 +148,7 @@ class RadiusIdentitySourceResource(object):
     @retry_on_token_expiration
     def editRadiusIdentitySource(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'host', 'timeout', 'serverAuthenticationPort', 'serverSecretKey', 'capabilities', 'id', 'type'])
+        body_params = dict_subset(params, ['capabilities', 'description', 'host', 'id', 'name', 'serverAuthenticationPort', 'serverSecretKey', 'timeout', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/radiusidentitysources/{objId}', path_params=path_params)
         request_params = dict(
@@ -177,7 +177,7 @@ class RadiusIdentitySourceResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getRadiusIdentitySourceList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/radiusidentitysources', query_params=query_params)
         request_params = dict(

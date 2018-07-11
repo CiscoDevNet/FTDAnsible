@@ -27,13 +27,13 @@ class {{ class_name }}(object):
     @retry_on_token_expiration
     def {{ operation_name }}(params):
 {% if operation_spec.path_params %}
-        path_params = dict_subset(params, [{{ operation_spec.path_params.keys() | map('quote') | join(', ') }}])
+        path_params = dict_subset(params, [{{ operation_spec.path_params.keys() | sort | map('quote') | join(', ') }}])
 {% endif %}
 {% if operation_spec.query_params %}
-        query_params = dict_subset(params, [{{ operation_spec.query_params.keys() | map('quote') | join(', ') }}])
+        query_params = dict_subset(params, [{{ operation_spec.query_params.keys() | sort | map('quote') | join(', ') }}])
 {% endif %}
 {% if operation_spec.body_params %}
-        body_params = dict_subset(params, [{{ operation_spec.body_params.keys() | map('quote') | join(', ') }}])
+        body_params = dict_subset(params, [{{ operation_spec.body_params.keys() | sort | map('quote') | join(', ') }}])
 {% endif %}
 
         url = construct_url(params['hostname'], {{ operation_spec.url_path | quote }}{% if operation_spec.path_params %}, path_params=path_params{% endif %}{% if operation_spec.query_params %}, query_params=query_params{% endif %})

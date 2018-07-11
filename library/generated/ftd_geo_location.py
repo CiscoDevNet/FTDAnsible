@@ -72,8 +72,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addGeoLocation'
 
-    name: "Ansible GeoLocation"
     description: "From Ansible with love"
+    name: "Ansible GeoLocation"
     type: "geolocation"
 """
 
@@ -106,7 +106,7 @@ class GeoLocationResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addGeoLocation(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'locations', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'locations', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/geolocations')
         request_params = dict(
@@ -136,7 +136,7 @@ class GeoLocationResource(object):
     @retry_on_token_expiration
     def editGeoLocation(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'locations', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'locations', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/geolocations/{objId}', path_params=path_params)
         request_params = dict(
@@ -165,7 +165,7 @@ class GeoLocationResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getGeoLocationList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/geolocations', query_params=query_params)
         request_params = dict(

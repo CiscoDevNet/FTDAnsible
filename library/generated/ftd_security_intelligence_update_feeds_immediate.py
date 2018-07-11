@@ -113,7 +113,7 @@ class SecurityIntelligenceUpdateFeedsImmediateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addSecurityIntelligenceUpdateFeedsImmediate(params):
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'ipAddress', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['forceOperation', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/securityintelligenceupdatefeeds')
         request_params = dict(
@@ -143,7 +143,7 @@ class SecurityIntelligenceUpdateFeedsImmediateResource(object):
     @retry_on_token_expiration
     def editSecurityIntelligenceUpdateFeedsImmediate(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'ipAddress', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['forceOperation', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/securityintelligenceupdatefeeds/{objId}', path_params=path_params)
         request_params = dict(
@@ -172,7 +172,7 @@ class SecurityIntelligenceUpdateFeedsImmediateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getSecurityIntelligenceUpdateFeedsImmediateList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/action/securityintelligenceupdatefeeds', query_params=query_params)
         request_params = dict(

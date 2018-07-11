@@ -135,8 +135,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addManualNatRule'
 
-    name: "Ansible ManualNatRule"
     description: "From Ansible with love"
+    name: "Ansible ManualNatRule"
     type: "manualnatrule"
 """
 
@@ -171,7 +171,7 @@ class ManualNatRuleResource(object):
     def addManualNatRule(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'sourceInterface', 'destinationInterface', 'natType', 'patOptions', 'netToNet', 'noProxyArp', 'dns', 'interfaceIPv6', 'routeLookup', 'enabled', 'interfaceInOriginalDestination', 'interfaceInTranslatedSource', 'originalSource', 'originalDestination', 'originalSourcePort', 'originalDestinationPort', 'translatedSource', 'translatedDestination', 'translatedSourcePort', 'translatedDestinationPort', 'unidirectional', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'destinationInterface', 'dns', 'enabled', 'id', 'interfaceInOriginalDestination', 'interfaceInTranslatedSource', 'interfaceIPv6', 'name', 'natType', 'netToNet', 'noProxyArp', 'originalDestination', 'originalDestinationPort', 'originalSource', 'originalSourcePort', 'patOptions', 'routeLookup', 'sourceInterface', 'translatedDestination', 'translatedDestinationPort', 'translatedSource', 'translatedSourcePort', 'type', 'unidirectional', 'version'])
 
         url = construct_url(params['hostname'], '/policy/manualnatpolicies/{parentId}/manualnatrules', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -186,7 +186,7 @@ class ManualNatRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def deleteManualNatRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/manualnatpolicies/{parentId}/manualnatrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -200,9 +200,9 @@ class ManualNatRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def editManualNatRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'sourceInterface', 'destinationInterface', 'natType', 'patOptions', 'netToNet', 'noProxyArp', 'dns', 'interfaceIPv6', 'routeLookup', 'enabled', 'interfaceInOriginalDestination', 'interfaceInTranslatedSource', 'originalSource', 'originalDestination', 'originalSourcePort', 'originalDestinationPort', 'translatedSource', 'translatedDestination', 'translatedSourcePort', 'translatedDestinationPort', 'unidirectional', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'destinationInterface', 'dns', 'enabled', 'id', 'interfaceInOriginalDestination', 'interfaceInTranslatedSource', 'interfaceIPv6', 'name', 'natType', 'netToNet', 'noProxyArp', 'originalDestination', 'originalDestinationPort', 'originalSource', 'originalSourcePort', 'patOptions', 'routeLookup', 'sourceInterface', 'translatedDestination', 'translatedDestinationPort', 'translatedSource', 'translatedSourcePort', 'type', 'unidirectional', 'version'])
 
         url = construct_url(params['hostname'], '/policy/manualnatpolicies/{parentId}/manualnatrules/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -217,7 +217,7 @@ class ManualNatRuleResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getManualNatRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/manualnatpolicies/{parentId}/manualnatrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -232,7 +232,7 @@ class ManualNatRuleResource(object):
     @retry_on_token_expiration
     def getManualNatRuleList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/policy/manualnatpolicies/{parentId}/manualnatrules', path_params=path_params, query_params=query_params)
         request_params = dict(

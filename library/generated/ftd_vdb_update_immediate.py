@@ -90,8 +90,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addVDBUpdateImmediate'
 
-    name: "Ansible VDBUpdateImmediate"
     description: "From Ansible with love"
+    name: "Ansible VDBUpdateImmediate"
     type: "vdbupdateimmediate"
 """
 
@@ -124,7 +124,7 @@ class VDBUpdateImmediateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addVDBUpdateImmediate(params):
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'ipAddress', 'name', 'description', 'deployAfterUpdate', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['deployAfterUpdate', 'description', 'forceOperation', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/updatevdb')
         request_params = dict(
@@ -154,7 +154,7 @@ class VDBUpdateImmediateResource(object):
     @retry_on_token_expiration
     def editVDBUpdateImmediate(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'ipAddress', 'name', 'description', 'deployAfterUpdate', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['deployAfterUpdate', 'description', 'forceOperation', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/updatevdb/{objId}', path_params=path_params)
         request_params = dict(
@@ -183,7 +183,7 @@ class VDBUpdateImmediateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getVDBUpdateImmediateList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/action/updatevdb', query_params=query_params)
         request_params = dict(

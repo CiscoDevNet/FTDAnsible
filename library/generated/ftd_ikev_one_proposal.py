@@ -120,7 +120,7 @@ class IkevOneProposalResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addIkevOneProposal(params):
-        body_params = dict_subset(params, ['version', 'name', 'encryptionMethod', 'authenticationMethod', 'mode', 'summaryLabel', 'cryptoRestricted', 'defaultAssignable', 'id', 'isSystemDefined', 'type'])
+        body_params = dict_subset(params, ['authenticationMethod', 'cryptoRestricted', 'defaultAssignable', 'encryptionMethod', 'id', 'isSystemDefined', 'mode', 'name', 'summaryLabel', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/ikev1proposals')
         request_params = dict(
@@ -150,7 +150,7 @@ class IkevOneProposalResource(object):
     @retry_on_token_expiration
     def editIkevOneProposal(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'encryptionMethod', 'authenticationMethod', 'mode', 'summaryLabel', 'cryptoRestricted', 'defaultAssignable', 'id', 'isSystemDefined', 'type'])
+        body_params = dict_subset(params, ['authenticationMethod', 'cryptoRestricted', 'defaultAssignable', 'encryptionMethod', 'id', 'isSystemDefined', 'mode', 'name', 'summaryLabel', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/ikev1proposals/{objId}', path_params=path_params)
         request_params = dict(
@@ -179,7 +179,7 @@ class IkevOneProposalResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getIkevOneProposalList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/ikev1proposals', query_params=query_params)
         request_params = dict(

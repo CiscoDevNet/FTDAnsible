@@ -78,8 +78,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addICMPv6PortObject'
 
-    name: "Ansible ICMPv6PortObject"
     description: "From Ansible with love"
+    name: "Ansible ICMPv6PortObject"
     type: "icmpv6portobject"
 """
 
@@ -112,7 +112,7 @@ class ICMPv6PortObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addICMPv6PortObject(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'icmpv6Type', 'icmpv6Code', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'icmpv6Code', 'icmpv6Type', 'id', 'isSystemDefined', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/icmpv6ports')
         request_params = dict(
@@ -142,7 +142,7 @@ class ICMPv6PortObjectResource(object):
     @retry_on_token_expiration
     def editICMPv6PortObject(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'icmpv6Type', 'icmpv6Code', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'icmpv6Code', 'icmpv6Type', 'id', 'isSystemDefined', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/icmpv6ports/{objId}', path_params=path_params)
         request_params = dict(
@@ -171,7 +171,7 @@ class ICMPv6PortObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getICMPv6PortObjectList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/icmpv6ports', query_params=query_params)
         request_params = dict(

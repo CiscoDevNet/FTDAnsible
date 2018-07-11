@@ -112,7 +112,7 @@ class TestDirectoryResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addTestDirectory(params):
-        body_params = dict_subset(params, ['realmUUID', 'hostname', 'directoryUsername', 'directoryPassword', 'port', 'protocol', 'sslCertUUID', 'sslCertString', 'baseDN', 'statusCode', 'statusMessage', 'linaStatusMessage', 'linaStatusCode', 'id', 'type'])
+        body_params = dict_subset(params, ['baseDN', 'directoryPassword', 'directoryUsername', 'hostname', 'id', 'linaStatusCode', 'linaStatusMessage', 'port', 'protocol', 'realmUUID', 'sslCertString', 'sslCertUUID', 'statusCode', 'statusMessage', 'type'])
 
         url = construct_url(params['hostname'], '/action/testrealm')
         request_params = dict(

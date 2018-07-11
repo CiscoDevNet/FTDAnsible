@@ -87,8 +87,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addGeolocationUpdateImmediate'
 
-    name: "Ansible GeolocationUpdateImmediate"
     description: "From Ansible with love"
+    name: "Ansible GeolocationUpdateImmediate"
     type: "geolocationupdateimmediate"
 """
 
@@ -121,7 +121,7 @@ class GeolocationUpdateImmediateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addGeolocationUpdateImmediate(params):
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'ipAddress', 'name', 'description', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'forceOperation', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/updategeolocation')
         request_params = dict(
@@ -151,7 +151,7 @@ class GeolocationUpdateImmediateResource(object):
     @retry_on_token_expiration
     def editGeolocationUpdateImmediate(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'scheduleType', 'user', 'forceOperation', 'jobHistoryUuid', 'ipAddress', 'name', 'description', 'jobName', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'forceOperation', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'type', 'user', 'version'])
 
         url = construct_url(params['hostname'], '/action/updategeolocation/{objId}', path_params=path_params)
         request_params = dict(
@@ -180,7 +180,7 @@ class GeolocationUpdateImmediateResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getGeolocationUpdateImmediateList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/action/updategeolocation', query_params=query_params)
         request_params = dict(

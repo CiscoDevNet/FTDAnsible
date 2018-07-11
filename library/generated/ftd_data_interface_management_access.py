@@ -108,7 +108,7 @@ class DataInterfaceManagementAccessResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addDataInterfaceManagementAccess(params):
-        body_params = dict_subset(params, ['version', 'name', 'networkObjects', 'networkInterface', 'protocols', 'id', 'type'])
+        body_params = dict_subset(params, ['id', 'name', 'networkInterface', 'networkObjects', 'protocols', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/managementaccess')
         request_params = dict(
@@ -138,7 +138,7 @@ class DataInterfaceManagementAccessResource(object):
     @retry_on_token_expiration
     def editDataInterfaceManagementAccess(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'networkObjects', 'networkInterface', 'protocols', 'id', 'type'])
+        body_params = dict_subset(params, ['id', 'name', 'networkInterface', 'networkObjects', 'protocols', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/managementaccess/{objId}', path_params=path_params)
         request_params = dict(
@@ -167,7 +167,7 @@ class DataInterfaceManagementAccessResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getDataInterfaceManagementAccessList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/managementaccess', query_params=query_params)
         request_params = dict(

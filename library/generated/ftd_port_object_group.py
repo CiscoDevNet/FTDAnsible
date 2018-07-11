@@ -75,8 +75,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addPortObjectGroup'
 
-    name: "Ansible PortObjectGroup"
     description: "From Ansible with love"
+    name: "Ansible PortObjectGroup"
     type: "portobjectgroup"
 """
 
@@ -109,7 +109,7 @@ class PortObjectGroupResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addPortObjectGroup(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'id', 'objects', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'objects', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/portgroups')
         request_params = dict(
@@ -139,7 +139,7 @@ class PortObjectGroupResource(object):
     @retry_on_token_expiration
     def editPortObjectGroup(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'isSystemDefined', 'id', 'objects', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'objects', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/portgroups/{objId}', path_params=path_params)
         request_params = dict(
@@ -168,7 +168,7 @@ class PortObjectGroupResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getPortObjectGroupList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/portgroups', query_params=query_params)
         request_params = dict(

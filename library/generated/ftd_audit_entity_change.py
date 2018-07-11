@@ -78,7 +78,7 @@ class AuditEntityChangeResource(object):
     @retry_on_token_expiration
     def getAuditEntityChangeList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/operational/auditevents/{parentId}/changes', path_params=path_params, query_params=query_params)
         request_params = dict(

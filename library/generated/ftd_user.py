@@ -114,7 +114,7 @@ class UserResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addUser(params):
-        body_params = dict_subset(params, ['version', 'name', 'password', 'newPassword', 'userPreferences', 'identitySourceId', 'userServiceTypes', 'id', 'type'])
+        body_params = dict_subset(params, ['id', 'identitySourceId', 'name', 'newPassword', 'password', 'type', 'userPreferences', 'userServiceTypes', 'version'])
 
         url = construct_url(params['hostname'], '/object/users')
         request_params = dict(
@@ -144,7 +144,7 @@ class UserResource(object):
     @retry_on_token_expiration
     def editUser(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'password', 'newPassword', 'userPreferences', 'identitySourceId', 'userServiceTypes', 'id', 'type'])
+        body_params = dict_subset(params, ['id', 'identitySourceId', 'name', 'newPassword', 'password', 'type', 'userPreferences', 'userServiceTypes', 'version'])
 
         url = construct_url(params['hostname'], '/object/users/{objId}', path_params=path_params)
         request_params = dict(
@@ -173,7 +173,7 @@ class UserResource(object):
     @staticmethod
     @retry_on_token_expiration
     def getUserList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/users', query_params=query_params)
         request_params = dict(
