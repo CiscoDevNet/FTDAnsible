@@ -58,6 +58,7 @@ RETURN = """
 """
 from ansible.module_utils.authorization import request_token, revoke_token
 from ansible.module_utils.basic import *
+from ansible.module_utils.http import DEFAULT_CHARSET
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 
@@ -84,7 +85,7 @@ def main():
             revoke_token(module.params['device_url'], module.params['access_token'], module.params['refresh_token'])
             module.exit_json(changed=True)
     except HTTPError as e:
-        err_msg = e.read()
+        err_msg = e.read().decode(e.headers.get_content_charset(DEFAULT_CHARSET))
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
 
 

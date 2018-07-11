@@ -54,7 +54,7 @@ import json
 from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.facts.timeout import TimeoutError
-from ansible.module_utils.http import construct_url, base_headers, wait_for_job_completion, DEFAULT_TIMEOUT
+from ansible.module_utils.http import construct_url, base_headers, wait_for_job_completion, DEFAULT_TIMEOUT, DEFAULT_CHARSET
 from ansible.module_utils.misc import dict_subset
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
@@ -67,15 +67,17 @@ class BreakHAStatusResource(object):
     def start_job(params):
         query_params = dict_subset(params, ['clearIntfs'])
         url = construct_url(params['hostname'], '/devices/default/action/ha/break', query_params=query_params)
-        response = open_url(url, method='POST', headers=base_headers(params['access_token'])).read()
-        return json.loads(response)['id']
+        response = open_url(url, method='POST', headers=base_headers(params['access_token']))
+        content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
+        return json.loads(content)['id']
 
     @staticmethod
     @retry_on_token_expiration
     def fetch_job_status(params, job_id):
         url = construct_url(params['hostname'], '/devices/default/action/ha/break/{objId}', path_params={'objId': job_id})
-        response = open_url(url, method='GET', headers=base_headers(params['access_token'])).read()
-        return json.loads(response)
+        response = open_url(url, method='GET', headers=base_headers(params['access_token']))
+        content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
+        return json.loads(content)
 
 
 def main():
@@ -100,7 +102,8 @@ def main():
     except TimeoutError:
         module.fail_json(changed=False, msg="BreakHAStatus Timeout. The job was not completed within the given time limits.")
     except HTTPError as e:
-        module.fail_json(changed=False, msg=json.loads(e.read()), error_code=e.code)
+        err_msg = e.read().decode(e.headers.get_content_charset(DEFAULT_CHARSET))
+        module.fail_json(changed=False, msg=json.loads(err_msg), error_code=e.code)
 
 
 if __name__ == '__main__':

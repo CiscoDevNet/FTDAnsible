@@ -7,6 +7,8 @@ API_PREFIX = "/api/fdm/v2"
 DEFAULT_PAGE_SIZE = 10
 DEFAULT_TIMEOUT = 60 * 10  # 10 minutes
 
+DEFAULT_CHARSET = 'utf-8'
+
 
 def base_headers(token):
     return {

@@ -1,7 +1,7 @@
 import argparse
 import os
 import re
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 import yaml
 from bravado.client import SwaggerClient
@@ -88,11 +88,11 @@ def group_operations_by_model(resource_name, resource, param_adapter):
     def infer_model_name(operation_name):
         groups = re.match(r'^(get|add|edit|delete)(\w+)$', remove_list_suffix(operation_name))
         if groups:
-            return groups[2]
+            return groups.group(2)
         else:
             return resource_name
 
-    model_operations = defaultdict(dict)
+    model_operations = defaultdict(OrderedDict)
     for operation_name in dir(resource):
         operation_spec = get_operation_spec(resource, operation_name, param_adapter)
         model_name = infer_model_name(operation_name)

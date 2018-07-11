@@ -1,7 +1,7 @@
 # FTD Ansible Modules
 
 ## Common environment setup
-1. Create a virtual environment:
+1. Create a virtual environment using Python 3.5.2 or 3.6.5:
 `python3 -m venv venv`
 
 1. Activate the virtual environment:

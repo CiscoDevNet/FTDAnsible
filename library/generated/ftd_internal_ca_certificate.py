@@ -148,7 +148,7 @@ import json
 
 from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource, DEFAULT_CHARSET
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
@@ -168,8 +168,9 @@ class InternalCACertificateResource(object):
             data=json.dumps(body_params)
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        response = open_url(url, **request_params)
+        content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
+        return json.loads(content) if content else content
 
     @staticmethod
     @retry_on_token_expiration
@@ -182,8 +183,9 @@ class InternalCACertificateResource(object):
             method='DELETE',
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        response = open_url(url, **request_params)
+        content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
+        return json.loads(content) if content else content
 
     @staticmethod
     @retry_on_token_expiration
@@ -198,8 +200,9 @@ class InternalCACertificateResource(object):
             data=json.dumps(body_params)
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        response = open_url(url, **request_params)
+        content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
+        return json.loads(content) if content else content
 
     @staticmethod
     @retry_on_token_expiration
@@ -212,8 +215,9 @@ class InternalCACertificateResource(object):
             method='GET',
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        response = open_url(url, **request_params)
+        content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
+        return json.loads(content) if content else content
 
     @staticmethod
     @retry_on_token_expiration
@@ -226,8 +230,9 @@ class InternalCACertificateResource(object):
             method='GET',
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        response = open_url(url, **request_params)
+        content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
+        return json.loads(content) if content else content
 
     @staticmethod
     @retry_on_token_expiration
@@ -241,7 +246,8 @@ class InternalCACertificateResource(object):
     @retry_on_token_expiration
     def upsertInternalCACertificate(params):
         def is_duplicate_name_error(err):
-            return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
+            err_msg = err.read().decode(err.headers.get_content_charset(DEFAULT_CHARSET))
+            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
             return InternalCACertificateResource.addInternalCACertificate(params)
@@ -317,7 +323,7 @@ def main():
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:
-        err_msg = e.read()
+        err_msg = e.read().decode(e.headers.get_content_charset(DEFAULT_CHARSET))
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
     except Exception as e:
         module.fail_json(changed=False, msg=str(e))
