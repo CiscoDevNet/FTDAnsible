@@ -8,8 +8,6 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'network'}
 
-
-
 from ansible.module_utils.basic import AnsibleModule
 from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
 
@@ -23,11 +21,11 @@ def main():
         UUT_HOSTNAME=dict(type='str'),
         UUT_USERNAME=dict(type='str'),
         UUT_PASSWORD=dict(type='str'),
-        CONSOLE_PORT=dict(type='str', required=True),
+        CONSOLE_PORT=dict(type='int', required=True),
         TFTP_SERVER_IP=dict(type='str', required=True),
         DNS_SERVERS=dict(type='str', required=True),
         ROMMON_FILE=dict(type='str', required=True),
-        FTD_FILE=dict(type='str', required=True)
+        FTD_FILE=dict(type='path', required=True)
     )
 
     module = AnsibleModule(argument_spec=fields)
