@@ -9,7 +9,7 @@ def camel_to_snake(text):
 
 
 def dict_subset(dictionary, keys):
-    return {k: dictionary[k] for k in keys if dictionary[k]}
+    return dict((k, dictionary[k]) for k in keys if dictionary[k])
 
 
 def construct_module_result(response, params):
