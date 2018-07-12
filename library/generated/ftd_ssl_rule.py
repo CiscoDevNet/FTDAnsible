@@ -150,7 +150,7 @@ msg:
 import json
 
 from ansible.module_utils.authorization import retry_on_token_expiration
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, to_text
 from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
@@ -164,7 +164,7 @@ class SSLRuleResource(object):
     def addSSLRule(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'ruleAction', 'eventLogAction', 'users', 'embeddedAppFilter', 'urlCategories', 'subjectDNs', 'issuerDNs', 'certificateStatus', 'syslogServer', 'sslv3', 'tls10', 'tls11', 'tls12', 'id', 'type'])
+        body_params = dict_subset(params, ['certificateStatus', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'id', 'issuerDNs', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'sslv3', 'subjectDNs', 'syslogServer', 'tls10', 'tls11', 'tls12', 'type', 'urlCategories', 'users', 'version'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -174,12 +174,12 @@ class SSLRuleResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
     def deleteSSLRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -188,14 +188,14 @@ class SSLRuleResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
     def editSSLRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['version', 'name', 'ruleId', 'sourceZones', 'destinationZones', 'sourceNetworks', 'destinationNetworks', 'sourcePorts', 'destinationPorts', 'ruleAction', 'eventLogAction', 'users', 'embeddedAppFilter', 'urlCategories', 'subjectDNs', 'issuerDNs', 'certificateStatus', 'syslogServer', 'sslv3', 'tls10', 'tls11', 'tls12', 'id', 'type'])
+        body_params = dict_subset(params, ['certificateStatus', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'id', 'issuerDNs', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'sslv3', 'subjectDNs', 'syslogServer', 'tls10', 'tls11', 'tls12', 'type', 'urlCategories', 'users', 'version'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -205,12 +205,12 @@ class SSLRuleResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
     def getSSLRule(params):
-        path_params = dict_subset(params, ['parentId', 'objId'])
+        path_params = dict_subset(params, ['objId', 'parentId'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules/{objId}', path_params=path_params)
         request_params = dict(
@@ -219,13 +219,13 @@ class SSLRuleResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
     def getSSLRuleList(params):
         path_params = dict_subset(params, ['parentId'])
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -234,7 +234,7 @@ class SSLRuleResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
@@ -248,7 +248,8 @@ class SSLRuleResource(object):
     @retry_on_token_expiration
     def upsertSSLRule(params):
         def is_duplicate_name_error(err):
-            return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
+            err_msg = to_text(err.read())
+            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
             return SSLRuleResource.addSSLRule(params)
@@ -326,7 +327,7 @@ def main():
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:
-        err_msg = e.read()
+        err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
     except Exception as e:
         module.fail_json(changed=False, msg=str(e))

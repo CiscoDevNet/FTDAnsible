@@ -13,7 +13,7 @@
 import json
 
 from ansible.module_utils.authorization import retry_on_token_expiration
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, to_text
 from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
@@ -27,13 +27,13 @@ class {{ class_name }}(object):
     @retry_on_token_expiration
     def {{ operation_name }}(params):
 {% if operation_spec.path_params %}
-        path_params = dict_subset(params, [{{ operation_spec.path_params.keys() | map('quote') | join(', ') }}])
+        path_params = dict_subset(params, [{{ operation_spec.path_params.keys() | sort | map('quote') | join(', ') }}])
 {% endif %}
 {% if operation_spec.query_params %}
-        query_params = dict_subset(params, [{{ operation_spec.query_params.keys() | map('quote') | join(', ') }}])
+        query_params = dict_subset(params, [{{ operation_spec.query_params.keys() | sort | map('quote') | join(', ') }}])
 {% endif %}
 {% if operation_spec.body_params %}
-        body_params = dict_subset(params, [{{ operation_spec.body_params.keys() | map('quote') | join(', ') }}])
+        body_params = dict_subset(params, [{{ operation_spec.body_params.keys() | sort | map('quote') | join(', ') }}])
 {% endif %}
 
         url = construct_url(params['hostname'], {{ operation_spec.url_path | quote }}{% if operation_spec.path_params %}, path_params=path_params{% endif %}{% if operation_spec.query_params %}, query_params=query_params{% endif %})
@@ -46,7 +46,7 @@ class {{ class_name }}(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 {% endfor %}
 {% if searchable_by_name %}
 {% do extra_operations.append( "get"+model_name+"ByName" ) %}
@@ -66,7 +66,8 @@ class {{ class_name }}(object):
     @retry_on_token_expiration
     def upsert{{ model_name }}(params):
         def is_duplicate_name_error(err):
-            return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
+            err_msg = to_text(err.read())
+            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
             return {{ class_name }}.add{{ model_name }}(params)
@@ -127,7 +128,7 @@ def main():
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:
-        err_msg = e.read()
+        err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
     except Exception as e:
         module.fail_json(changed=False, msg=str(e))

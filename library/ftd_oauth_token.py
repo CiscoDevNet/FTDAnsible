@@ -56,8 +56,10 @@ EXAMPLES = """
 
 RETURN = """
 """
+import json
+
 from ansible.module_utils.authorization import request_token, revoke_token
-from ansible.module_utils.basic import *
+from ansible.module_utils.basic import AnsibleModule, to_text
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 
@@ -84,7 +86,7 @@ def main():
             revoke_token(module.params['device_url'], module.params['access_token'], module.params['refresh_token'])
             module.exit_json(changed=True)
     except HTTPError as e:
-        err_msg = e.read()
+        err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
 
 

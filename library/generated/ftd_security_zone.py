@@ -75,8 +75,8 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'addSecurityZone'
 
-    name: "Ansible SecurityZone"
     description: "From Ansible with love"
+    name: "Ansible SecurityZone"
     type: "securityzone"
 """
 
@@ -97,7 +97,7 @@ msg:
 import json
 
 from ansible.module_utils.authorization import retry_on_token_expiration
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, to_text
 from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
@@ -109,7 +109,7 @@ class SecurityZoneResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addSecurityZone(params):
-        body_params = dict_subset(params, ['version', 'name', 'description', 'interfaces', 'mode', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'interfaces', 'mode', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/securityzones')
         request_params = dict(
@@ -119,7 +119,7 @@ class SecurityZoneResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
@@ -133,13 +133,13 @@ class SecurityZoneResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
     def editSecurityZone(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'name', 'description', 'interfaces', 'mode', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'id', 'interfaces', 'mode', 'name', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/securityzones/{objId}', path_params=path_params)
         request_params = dict(
@@ -149,7 +149,7 @@ class SecurityZoneResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
@@ -163,12 +163,12 @@ class SecurityZoneResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
     def getSecurityZoneList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/object/securityzones', query_params=query_params)
         request_params = dict(
@@ -177,7 +177,7 @@ class SecurityZoneResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
@@ -191,7 +191,8 @@ class SecurityZoneResource(object):
     @retry_on_token_expiration
     def upsertSecurityZone(params):
         def is_duplicate_name_error(err):
-            return err.code == 422 and "Validation failed due to a duplicate name" in str(err.read())
+            err_msg = to_text(err.read())
+            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
             return SecurityZoneResource.addSecurityZone(params)
@@ -250,7 +251,7 @@ def main():
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:
-        err_msg = e.read()
+        err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
     except Exception as e:
         module.fail_json(changed=False, msg=str(e))

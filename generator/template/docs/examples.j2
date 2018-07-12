@@ -18,12 +18,12 @@ EXAMPLES = """
     refresh_token: 'REFRESH_TOKEN'
     operation: 'add{{ model_name }}'
 
-{% for param in add_operation.body_params.values() %}
+{% for param in add_operation.body_params.values() | sort %}
 {% if param.name in example_properties.keys() %}
     {{ param.name }}: {{ example_properties.get(param.name) | tojson }}
 {% endif %}
 {% endfor %}
-{% for param in add_operation.path_params.values() %}
+{% for param in add_operation.path_params.values() | sort %}
 {% if param.name in example_properties.keys() %}
     {{ param.name }}: {{ example_properties.get(param.name) | tojson }}
 {% endif %}

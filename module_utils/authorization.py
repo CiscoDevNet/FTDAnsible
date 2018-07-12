@@ -8,6 +8,7 @@ else:
     from .http import construct_url
 from ansible.module_utils.urls import open_url
 from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.basic import to_text
 
 AUTH_HEADERS = {
     'Content-Type': 'application/json',
@@ -26,7 +27,7 @@ def request_token(hostname, username, password):
     }
     url = construct_url(hostname, AUTH_PREFIX)
     response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS).read()
-    return json.loads(response) if response else response
+    return json.loads(to_text(response))
 
 
 def refresh_token(hostname, refresh_token):
@@ -36,7 +37,7 @@ def refresh_token(hostname, refresh_token):
     }
     url = construct_url(hostname, AUTH_PREFIX)
     response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS).read()
-    return json.loads(response) if response else response
+    return json.loads(to_text(response))
 
 
 def revoke_token(hostname, access_token, refresh_token):
@@ -46,7 +47,7 @@ def revoke_token(hostname, access_token, refresh_token):
         'token_to_revoke': refresh_token
     }
     url = construct_url(hostname, AUTH_PREFIX)
-    open_url(url, method='POST', data=json.dumps(logout_payload), headers=AUTH_HEADERS).read()
+    open_url(url, method='POST', data=json.dumps(logout_payload), headers=AUTH_HEADERS)
 
 
 def retry_on_token_expiration(func):

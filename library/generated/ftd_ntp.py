@@ -83,7 +83,7 @@ msg:
 import json
 
 from ansible.module_utils.authorization import retry_on_token_expiration
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, to_text
 from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
@@ -96,7 +96,7 @@ class NTPResource(object):
     @retry_on_token_expiration
     def editNTP(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['version', 'enabled', 'description', 'ntpServers', 'id', 'type'])
+        body_params = dict_subset(params, ['description', 'enabled', 'id', 'ntpServers', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/ntp/{objId}', path_params=path_params)
         request_params = dict(
@@ -106,7 +106,7 @@ class NTPResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
@@ -120,12 +120,12 @@ class NTPResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
     def getNTPList(params):
-        query_params = dict_subset(params, ['offset', 'limit', 'sort', 'filter'])
+        query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/ntp', query_params=query_params)
         request_params = dict(
@@ -134,7 +134,7 @@ class NTPResource(object):
         )
 
         response = open_url(url, **request_params).read()
-        return json.loads(response) if response else response
+        return json.loads(to_text(response)) if response else response
 
     @staticmethod
     @retry_on_token_expiration
@@ -183,7 +183,7 @@ def main():
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:
-        err_msg = e.read()
+        err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
     except Exception as e:
         module.fail_json(changed=False, msg=str(e))
