@@ -52,9 +52,9 @@ msg:
 import json
 
 from ansible.module_utils.authorization import retry_on_token_expiration
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, to_text
 from ansible.module_utils.facts.timeout import TimeoutError
-from ansible.module_utils.http import construct_url, base_headers, wait_for_job_completion, DEFAULT_TIMEOUT, DEFAULT_CHARSET
+from ansible.module_utils.http import construct_url, base_headers, wait_for_job_completion, DEFAULT_TIMEOUT
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
@@ -66,16 +66,14 @@ class DeploymentResource(object):
     def start_job(params):
         url = construct_url(params['hostname'], '/operational/deploy')
         response = open_url(url, method='POST', headers=base_headers(params['access_token']))
-        content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
-        return json.loads(content)['id']
+        return json.loads(to_text(response.read()))['id']
 
     @staticmethod
     @retry_on_token_expiration
     def fetch_job_status(params, job_id):
         url = construct_url(params['hostname'], '/operational/deploy/{objId}', path_params={'objId': job_id})
         response = open_url(url, method='GET', headers=base_headers(params['access_token']))
-        content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
-        return json.loads(content)
+        return json.loads(to_text(response.read()))
 
 
 def main():
@@ -99,7 +97,7 @@ def main():
     except TimeoutError:
         module.fail_json(changed=False, msg="Deployment Timeout. The job was not completed within the given time limits.")
     except HTTPError as e:
-        err_msg = e.read().decode(e.headers.get_content_charset(DEFAULT_CHARSET))
+        err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg), error_code=e.code)
 
 

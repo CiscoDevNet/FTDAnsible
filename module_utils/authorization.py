@@ -3,11 +3,12 @@ from functools import wraps
 
 # When used by Ansible, it requires absolute imports from 'ansible.module_utils' package
 if "ansible.module_utils" in __name__:
-    from ansible.module_utils.http import construct_url, DEFAULT_CHARSET
+    from ansible.module_utils.http import construct_url
 else:
-    from .http import construct_url, DEFAULT_CHARSET
+    from .http import construct_url
 from ansible.module_utils.urls import open_url
 from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.basic import to_text
 
 AUTH_HEADERS = {
     'Content-Type': 'application/json',
@@ -25,9 +26,8 @@ def request_token(hostname, username, password):
         'password': password
     }
     url = construct_url(hostname, AUTH_PREFIX)
-    response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS)
-    content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
-    return json.loads(content)
+    response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS).read()
+    return json.loads(to_text(response))
 
 
 def refresh_token(hostname, refresh_token):
@@ -36,9 +36,8 @@ def refresh_token(hostname, refresh_token):
         'refresh_token': refresh_token
     }
     url = construct_url(hostname, AUTH_PREFIX)
-    response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS)
-    content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
-    return json.loads(content)
+    response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS).read()
+    return json.loads(to_text(response))
 
 
 def revoke_token(hostname, access_token, refresh_token):

@@ -57,8 +57,8 @@ response:
 import json
 
 from ansible.module_utils.authorization import retry_on_token_expiration
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.http import construct_url, DEFAULT_CHARSET
+from ansible.module_utils.basic import AnsibleModule, to_text
+from ansible.module_utils.http import construct_url
 from ansible.module_utils.misc import construct_module_result
 from ansible.module_utils.urls import fetch_url
 from urllib3 import encode_multipart_formdata
@@ -105,7 +105,7 @@ def main():
         if response_info['status'] != 200:
             module.fail_json(msg="Upload request failed", status_code=response_info['status'], response=response_info['body'])
         else:
-            content = response.read().decode(response.headers.get_content_charset(DEFAULT_CHARSET))
+            content = to_text(response.read())
             result = construct_module_result(json.loads(content), params)
             module.exit_json(**result)
 
