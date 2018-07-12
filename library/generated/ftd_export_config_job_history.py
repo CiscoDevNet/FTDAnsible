@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_smart_agent_sync_request
-short_description: Manages SmartAgentSyncRequest objects on Cisco FTD devices
+module: ftd_export_config_job_history
+short_description: Manages ExportConfigJobHistory objects on Cisco FTD devices
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -25,9 +25,6 @@ options:
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
-  id
-    description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -37,36 +34,18 @@ options:
   sort
     description:
       - The field used to sort the requested object list
-  sync
-    description:
-      - A mandatory boolean value, TRUE or FALSE (default value). The value TRUE enables the user to manually sync and get the most up to date status from the cloud as well as renew the auth and cert. The value FALSE disables the manual sync to the cloud.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
-  type
-    description:
-      - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
-  version
-    description:
-      - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
 
 extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
-- name: Fetch SmartAgentSyncRequest with a given name
-  ftd_smart_agent_sync_request:
+- name: Fetch ExportConfigJobHistory with a given name
+  ftd_export_config_job_history:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getSmartAgentSyncRequestByName"
-    name: "Ansible SmartAgentSyncRequest"
-
-- name: Create a SmartAgentSyncRequest
-  ftd_smart_agent_sync_request:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
-    operation: 'addSmartAgentSyncRequest'
-
-    type: "smartagentsyncrequest"
+    operation: "getExportConfigJobHistoryByName"
+    name: "Ansible ExportConfigJobHistory"
 """
 
 RETURN = """
@@ -93,43 +72,14 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class SmartAgentSyncRequestResource(object):
+class ExportConfigJobHistoryResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def addSmartAgentSyncRequest(params):
-        body_params = dict_subset(params, ['id', 'sync', 'type', 'version'])
-
-        url = construct_url(params['hostname'], '/license/smartagentsyncrequests')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
-        )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSmartAgentSyncRequest(params):
-        path_params = dict_subset(params, ['objId'])
-
-        url = construct_url(params['hostname'], '/license/smartagentsyncrequests/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
-        )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSmartAgentSyncRequestList(params):
+    def getExportConfigJobHistoryList(params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/license/smartagentsyncrequests', query_params=query_params)
+        url = construct_url(params['hostname'], '/jobs/exportconfigjob', query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -140,10 +90,10 @@ class SmartAgentSyncRequestResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getSmartAgentSyncRequestByName(params):
+    def getExportConfigJobHistoryByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(SmartAgentSyncRequestResource.getSmartAgentSyncRequestList, search_params)
+        item_generator = iterate_over_pageable_resource(ExportConfigJobHistoryResource.getExportConfigJobHistoryList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
 
@@ -153,25 +103,20 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(type='str', choices=['addSmartAgentSyncRequest', 'getSmartAgentSyncRequest', 'getSmartAgentSyncRequestList', 'getSmartAgentSyncRequestByName'], required=True),
+        operation=dict(type='str', choices=['getExportConfigJobHistoryList', 'getExportConfigJobHistoryByName'], required=True),
         register_as=dict(type='str'),
 
         filter=dict(type='str'),
-        id=dict(type='str'),
         limit=dict(type='int'),
-        objId=dict(type='str'),
         offset=dict(type='int'),
         sort=dict(type='str'),
-        sync=dict(type='bool'),
-        type=dict(type='str'),
-        version=dict(type='str'),
     )
 
     module = AnsibleModule(argument_spec=fields)
     params = module.params
 
     try:
-        method_to_call = getattr(SmartAgentSyncRequestResource, params['operation'])
+        method_to_call = getattr(ExportConfigJobHistoryResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

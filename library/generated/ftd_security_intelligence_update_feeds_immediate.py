@@ -30,13 +30,13 @@ options:
       - For Internal use.
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   ipAddress
     description:
-      - IP address of actor who initiated a job execution<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - IP address of actor who initiated a job execution<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   jobHistoryUuid
     description:
-      - For Internal use.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - For Internal use.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   jobName
     description:
       - See derived class.
@@ -57,7 +57,7 @@ options:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
   user
     description:
-      - System provided ID of the user who scheduled the job.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - System provided ID of the user who scheduled the job.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.

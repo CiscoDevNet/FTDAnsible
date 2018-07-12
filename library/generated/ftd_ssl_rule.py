@@ -48,7 +48,7 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   issuerDNs
     description:
       - A list of DistinguishedNameBase objects to filter on based on presented server certificate issuer DN field<br>Allowed types are: [DistinguishedName, DistinguishedNameGroup]
@@ -66,7 +66,7 @@ options:
       - An enum that specifies the SSL Rule action. Possible values are:<br>DECRYPT_RE_SIGN - Decrypt the traffic, then resign and re-encrypt the content using the configured decryption CA certificate in SSLPolicy.<br>DECRYPT_KNOWN_KEY - Decrypt the traffic going to a host using a known certificate and key. To use known key decryption, you must add the server's certificate and key to the list of known-key certificates in SSLPolicy.<br>DO_NOT_DECRYPT - Do not decrypt the traffic. Encrypted connections are subsequently evaluated by the access control policy, which determines the ultimate allow or block decision.<br>BLOCK - Drop the connection immediately. The connection is not passed on to the access control policy.
   ruleId
     description:
-      - A Long object which holds the rule ID number of the FTDRulebase object.
+      - A non editable Long object which holds the rule ID number of the FTDRulebase object. It is created by the system in the POST request, and the same value must be included in the PUT request.
   sort
     description:
       - The field used to sort the requested object list
@@ -105,7 +105,7 @@ options:
       - A list of URLCategoryMatcher objects for rule to filter on<br>Field level constraints: requires URL license. (Note: Additional constraints might exist)
   users
     description:
-      - An optional list of TrafficIdentity objects that define traffic matching criteria based on the user or user group that initiated the connection (the source). You must implement an identity policy to use this matching criteria.<br>Allowed types are: [LDAPRealm, ActiveDirectoryRealm, SpecialRealm, TrafficUser, TrafficUserGroup]
+      - An optional list of TrafficIdentity objects that define traffic matching criteria based on the user or user group that initiated the connection (the source). You must implement an identity policy to use this matching criteria.<br>Allowed types are: [LDAPRealm, ActiveDirectoryRealm, SpecialRealm, LocalIdentitySource, TrafficUser, TrafficUserGroup, User]
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.

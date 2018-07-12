@@ -24,7 +24,7 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   identitySource
     description:
       - The ID of a identity source object that defines the identity source to be tested with the specified credentials<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
@@ -42,7 +42,7 @@ options:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
   username
     description:
-      - The username (present on the identity source) to be used in issuing an authentication request to the specified identity source<br>Field level constraints: cannot be null, length must be between 0 and 128 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
+      - The username (present on the identity source) to be used in issuing an authentication request to the specified identity source<br>Field level constraints: cannot be null, length must be between 0 and 128 (inclusive). (Note: Additional constraints might exist)
 
 extends_documentation_fragment: ftd
 """

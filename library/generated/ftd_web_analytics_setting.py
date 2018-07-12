@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_device_hostname
-short_description: Manages DeviceHostname objects on Cisco FTD devices
+module: ftd_web_analytics_setting
+short_description: Manages WebAnalyticsSetting objects on Cisco FTD devices
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -22,21 +22,18 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
+  disabled
+    description:
+      - A Boolean value, TRUE or FALSE, that indicates whether Web Analytics is disabled. If FALSE, the feature is enabled.
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
-  hostname
-    description:
-      - A mandatory utf-8 string representing the host name of the device, maximum domain name length as 64. The string cannot contain HTML tags or invalid domain names.<br>Field level constraints: length must be between 0 and 64 (inclusive), must match pattern ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([a-zA-Z0-9]|[a-zA-Z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$. (Note: Additional constraints might exist)
   id
     description:
       - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
-  name
-    description:
-      - A string that represents the name of the object
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
@@ -45,22 +42,22 @@ options:
       - The field used to sort the requested object list
   type
     description:
-      - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
+      - webanalyticssetting
   version
     description:
-      - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
+      - Alphanumeric string to identify the version of the object
 
 extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
-- name: Fetch DeviceHostname with a given name
-  ftd_device_hostname:
+- name: Fetch WebAnalyticsSetting with a given name
+  ftd_web_analytics_setting:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getDeviceHostnameByName"
-    name: "Ansible DeviceHostname"
+    operation: "getWebAnalyticsSettingByName"
+    name: "Ansible WebAnalyticsSetting"
 """
 
 RETURN = """
@@ -87,15 +84,15 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class DeviceHostnameResource(object):
+class WebAnalyticsSettingResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def editDeviceHostname(params):
+    def editWebAnalyticsSetting(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['hostname', 'id', 'name', 'type', 'version'])
+        body_params = dict_subset(params, ['disabled', 'id', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/devicehostnames/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/devicesettings/default/webanalyticssettings/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='PUT',
@@ -107,10 +104,10 @@ class DeviceHostnameResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getDeviceHostname(params):
+    def getWebAnalyticsSetting(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/devicehostnames/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/devicesettings/default/webanalyticssettings/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -121,10 +118,10 @@ class DeviceHostnameResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getDeviceHostnameList(params):
+    def getWebAnalyticsSettingList(params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/devicehostnames', query_params=query_params)
+        url = construct_url(params['hostname'], '/devicesettings/default/webanalyticssettings', query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -135,18 +132,18 @@ class DeviceHostnameResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getDeviceHostnameByName(params):
+    def getWebAnalyticsSettingByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(DeviceHostnameResource.getDeviceHostnameList, search_params)
+        item_generator = iterate_over_pageable_resource(WebAnalyticsSettingResource.getWebAnalyticsSettingList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
     @staticmethod
     @retry_on_token_expiration
-    def editDeviceHostnameByName(params):
-        existing_object = DeviceHostnameResource.getDeviceHostnameByName(params)
+    def editWebAnalyticsSettingByName(params):
+        existing_object = WebAnalyticsSettingResource.getWebAnalyticsSettingByName(params)
         params = copy_identity_properties(existing_object, params)
-        return DeviceHostnameResource.editDeviceHostname(params)
+        return WebAnalyticsSettingResource.editWebAnalyticsSetting(params)
 
 
 def main():
@@ -155,14 +152,13 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(type='str', choices=['editDeviceHostname', 'getDeviceHostname', 'getDeviceHostnameList', 'getDeviceHostnameByName', 'editDeviceHostnameByName'], required=True),
+        operation=dict(type='str', choices=['editWebAnalyticsSetting', 'getWebAnalyticsSetting', 'getWebAnalyticsSettingList', 'getWebAnalyticsSettingByName', 'editWebAnalyticsSettingByName'], required=True),
         register_as=dict(type='str'),
 
+        disabled=dict(type='bool'),
         filter=dict(type='str'),
-        hostname=dict(type='str'),
         id=dict(type='str'),
         limit=dict(type='int'),
-        name=dict(type='str'),
         objId=dict(type='str'),
         offset=dict(type='int'),
         sort=dict(type='str'),
@@ -174,7 +170,7 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(DeviceHostnameResource, params['operation'])
+        method_to_call = getattr(WebAnalyticsSettingResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

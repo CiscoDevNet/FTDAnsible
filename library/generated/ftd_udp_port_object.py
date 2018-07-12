@@ -24,13 +24,13 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   description
     description:
-      - An optional unicode alphanumeric string containing a description of the Port Object, up to 200 characters. The string cannot include HTML tags<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
+      - An optional unicode alphanumeric string containing a description of the Port Object, up to 200 characters. The string cannot include HTML tags<br>Field level constraints: length must be between 0 and 200 (inclusive). (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   isSystemDefined
     description:
       - A Boolean value, TRUE or FALSE (the default). The TRUE value indicates that this object is a system defined object
@@ -45,7 +45,7 @@ options:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   port
     description:
-      - A mandatory string representing a port or a port range. Valid port numbers are 1 to 65535. To specify a port range, separate the numbers with a hyphen, for example, 22-45. The second port number must be larger than the first port number. The string can only include digits or the hyphen symbol.<br>Field level constraints: cannot be null, must be a valid port from 1 to 65535 or a valid port range, cannot have HTML. (Note: Additional constraints might exist)
+      - A mandatory string representing a port or a port range. Valid port numbers are 1 to 65535. To specify a port range, separate the numbers with a hyphen, for example, 22-45. The second port number must be larger than the first port number. The string can only include digits or the hyphen symbol.<br>Field level constraints: cannot be null, must be a valid port from 1 to 65535 or a valid port range. (Note: Additional constraints might exist)
   sort
     description:
       - The field used to sort the requested object list

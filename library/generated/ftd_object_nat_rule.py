@@ -27,7 +27,7 @@ options:
       - An integer representing where to add the new object in the ordered list. Use 0 to add it at the beginning of the list. If not specified, it will be added at the end of the list
   description
     description:
-      - An optional string that describes this NAT rule<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - An optional string that describes this NAT rule<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   destinationInterface
     description:
       - The interface through which traffic exits the device<br>Allowed types are: [PhysicalInterface, SubInterface]
@@ -42,7 +42,7 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   interfaceIPv6
     description:
       - A Boolean value, TRUE or FALSE (the default). This option is not supported, please always set this field to FALSE

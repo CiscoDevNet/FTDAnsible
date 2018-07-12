@@ -24,7 +24,7 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   description
     description:
-      - A small description of the Identity Service Engine configuration<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - A small description of the Identity Service Engine configuration<br>Field level constraints: length must be between 0 and 200 (inclusive), must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   enabled
     description:
       - A boolean that specifies whether the Identity Services Engine (ISE) configuration is enabled. Values are true(enabled) or false(disabled)<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
@@ -36,7 +36,7 @@ options:
       - The internal certificate that the system must provide to Identity Services Engine (ISE) when connecting to ISE or when performing bulk downloads<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)<br>Allowed types are: [InternalCertificate]
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   iseNetworkFilters
     description:
       - An optional list of network objects. If you define a network filter, Identity Services Engine (ISE) reports user activity on the specified networks only. The system receives no information from ISE for any other networks<br>Allowed types are: [NetworkObject, NetworkObjectGroup]

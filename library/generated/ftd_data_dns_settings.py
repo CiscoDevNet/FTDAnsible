@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_data_interface_management_access
-short_description: Manages DataInterfaceManagementAccess objects on Cisco FTD devices
+module: ftd_data_dns_settings
+short_description: Manages DataDNSSettings objects on Cisco FTD devices
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -22,30 +22,33 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
+  dnsServerGroup
+    description:
+      - DNS Server Group Object<br>Allowed types are: [DNSServerGroup]
+  expiryEntryTimer
+    description:
+      - Timer to remove the IP address of a resolved FQDN after its TTL expires. Valid values are from 1 to 65535,default 1 minute. Applicable only to active DNS<br>Field level constraints: must be between 1 and 65535 (inclusive). (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
       - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+  interfaces
+    description:
+      - Collection of named interfaces to lookup<br>Allowed types are: [BridgeGroupInterface, PhysicalInterface, SubInterface]
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
   name
     description:
-      - A string that represents the name of the object
-  networkInterface
-    description:
-      - A mandatory interface object representing the interface configured for data access.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)<br>Allowed types are: [BridgeGroupInterface, PhysicalInterface, SubInterface]
-  networkObjects
-    description:
-      - A mandatory set of network objects, representing one or more addresses or networks, whose data traffic is allowed via the given network interface.<br>Field level constraints: cannot be blank or empty. (Note: Additional constraints might exist)<br>Allowed types are: [NetworkObject]
+      - A unique name to identify this Data DNS Setting
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
-  protocols
+  pollTimer
     description:
-      - A mandatory set of protocol objects, representing one or more protocols, (e.g. HTTPS and SSH) that are allowed via the given network interface and addresses/networks.<br>Field level constraints: cannot be null, cannot be blank or empty. (Note: Additional constraints might exist)
+      - Specifies the timer during which the FTD queries the DNS server to resolve the FQDN. Specifies the timer in minutes. Valid values are from 1 to 65535 minutes, default 240 minutes has effect only when at least one network object group has been activated. Applicable only to active DNS<br>Field level constraints: must be between 1 and 65535 (inclusive). (Note: Additional constraints might exist)
   sort
     description:
       - The field used to sort the requested object list
@@ -60,23 +63,13 @@ extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
-- name: Fetch DataInterfaceManagementAccess with a given name
-  ftd_data_interface_management_access:
+- name: Fetch DataDNSSettings with a given name
+  ftd_data_dns_settings:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getDataInterfaceManagementAccessByName"
-    name: "Ansible DataInterfaceManagementAccess"
-
-- name: Create a DataInterfaceManagementAccess
-  ftd_data_interface_management_access:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
-    operation: 'addDataInterfaceManagementAccess'
-
-    name: "Ansible DataInterfaceManagementAccess"
-    type: "datainterfacemanagementaccess"
+    operation: "getDataDNSSettingsByName"
+    name: "Ansible DataDNSSettings"
 """
 
 RETURN = """
@@ -103,44 +96,15 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class DataInterfaceManagementAccessResource(object):
+class DataDNSSettingsResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def addDataInterfaceManagementAccess(params):
-        body_params = dict_subset(params, ['id', 'name', 'networkInterface', 'networkObjects', 'protocols', 'type', 'version'])
-
-        url = construct_url(params['hostname'], '/devicesettings/default/managementaccess')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
-        )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteDataInterfaceManagementAccess(params):
+    def editDataDNSSettings(params):
         path_params = dict_subset(params, ['objId'])
+        body_params = dict_subset(params, ['dnsServerGroup', 'expiryEntryTimer', 'id', 'interfaces', 'name', 'pollTimer', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/managementaccess/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
-        )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editDataInterfaceManagementAccess(params):
-        path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['id', 'name', 'networkInterface', 'networkObjects', 'protocols', 'type', 'version'])
-
-        url = construct_url(params['hostname'], '/devicesettings/default/managementaccess/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/devices/default/datadnssettings/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='PUT',
@@ -152,10 +116,10 @@ class DataInterfaceManagementAccessResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getDataInterfaceManagementAccess(params):
+    def getDataDNSSettings(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/managementaccess/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/devices/default/datadnssettings/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -166,10 +130,10 @@ class DataInterfaceManagementAccessResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getDataInterfaceManagementAccessList(params):
+    def getDataDNSSettingsList(params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/managementaccess', query_params=query_params)
+        url = construct_url(params['hostname'], '/devices/default/datadnssettings', query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -180,42 +144,18 @@ class DataInterfaceManagementAccessResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getDataInterfaceManagementAccessByName(params):
+    def getDataDNSSettingsByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(DataInterfaceManagementAccessResource.getDataInterfaceManagementAccessList, search_params)
+        item_generator = iterate_over_pageable_resource(DataDNSSettingsResource.getDataDNSSettingsList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
     @staticmethod
     @retry_on_token_expiration
-    def upsertDataInterfaceManagementAccess(params):
-        def is_duplicate_name_error(err):
-            err_msg = to_text(err.read())
-            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
-
-        try:
-            return DataInterfaceManagementAccessResource.addDataInterfaceManagementAccess(params)
-        except HTTPError as e:
-            if is_duplicate_name_error(e):
-                existing_object = DataInterfaceManagementAccessResource.getDataInterfaceManagementAccessByName(params)
-                params = copy_identity_properties(existing_object, params)
-                return DataInterfaceManagementAccessResource.editDataInterfaceManagementAccess(params)
-            else:
-                raise e
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editDataInterfaceManagementAccessByName(params):
-        existing_object = DataInterfaceManagementAccessResource.getDataInterfaceManagementAccessByName(params)
+    def editDataDNSSettingsByName(params):
+        existing_object = DataDNSSettingsResource.getDataDNSSettingsByName(params)
         params = copy_identity_properties(existing_object, params)
-        return DataInterfaceManagementAccessResource.editDataInterfaceManagementAccess(params)
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteDataInterfaceManagementAccessByName(params):
-        existing_object = DataInterfaceManagementAccessResource.getDataInterfaceManagementAccessByName(params)
-        params = copy_identity_properties(existing_object, params)
-        return DataInterfaceManagementAccessResource.deleteDataInterfaceManagementAccess(params)
+        return DataDNSSettingsResource.editDataDNSSettings(params)
 
 
 def main():
@@ -224,18 +164,19 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(type='str', default='upsertDataInterfaceManagementAccess', choices=['addDataInterfaceManagementAccess', 'deleteDataInterfaceManagementAccess', 'editDataInterfaceManagementAccess', 'getDataInterfaceManagementAccess', 'getDataInterfaceManagementAccessList', 'getDataInterfaceManagementAccessByName', 'upsertDataInterfaceManagementAccess', 'editDataInterfaceManagementAccessByName', 'deleteDataInterfaceManagementAccessByName']),
+        operation=dict(type='str', choices=['editDataDNSSettings', 'getDataDNSSettings', 'getDataDNSSettingsList', 'getDataDNSSettingsByName', 'editDataDNSSettingsByName'], required=True),
         register_as=dict(type='str'),
 
+        dnsServerGroup=dict(type='dict'),
+        expiryEntryTimer=dict(type='int'),
         filter=dict(type='str'),
         id=dict(type='str'),
+        interfaces=dict(type='list'),
         limit=dict(type='int'),
         name=dict(type='str'),
-        networkInterface=dict(type='dict'),
-        networkObjects=dict(type='list'),
         objId=dict(type='str'),
         offset=dict(type='int'),
-        protocols=dict(type='list'),
+        pollTimer=dict(type='int'),
         sort=dict(type='str'),
         type=dict(type='str'),
         version=dict(type='str'),
@@ -245,7 +186,7 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(DataInterfaceManagementAccessResource, params['operation'])
+        method_to_call = getattr(DataDNSSettingsResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

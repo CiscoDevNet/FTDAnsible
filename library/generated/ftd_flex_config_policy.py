@@ -30,7 +30,7 @@ options:
       - The list of FlexConfigObjects that should be deployed to the device. You must list the FlexConfigObjects in the right order to ensure that configuration commands that depend on other features having been configured come after those commands are issued.<br>Allowed types are: [FlexConfigObject]
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10

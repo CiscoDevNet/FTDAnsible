@@ -27,7 +27,7 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   interfaceFailureThreshold
     description:
       - <br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
@@ -36,10 +36,10 @@ options:
       - <br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   interfaceHoldTime
     description:
-      - <br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+      - The interface hold time, which is how long to wait before failure assessment when a hello packet is not replied back. Interface hold time can be between 25000 and 75000 milliseconds in multiples of 1000. (5 to 75 seconds). Interface HoldTime should minimum five times the unit Interface PollTime. The timeUnit can be only MILLISECONDS or SECONDS <br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   interfacePollTime
     description:
-      - <br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+      - The interface poll time, which is how often the hello packets are sent across interfaces. Interface poll time can be between 500 and 999 milliseconds. If higher should be in multiples of 1000 up to 15000 (1 second to 15 seconds). The timeUnit can be only MILLISECONDS or SECONDS<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -51,10 +51,10 @@ options:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   peerHoldTime
     description:
-      - The peer hold time, which is how long to wait before making a failover assessment after not receiving a reply to a peer poll packet. Peer hold time is between 800 and 999 milliseconds, or 1000 and 45000 in multiples of 1000. You must enter a value that is at least 3 times the peerPollTimeInMsecs value<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+      - The peer hold time, which is how long to wait before making a failover assessment after not receiving a reply to a peer poll packet. Peer hold time is between 800 and 999 milliseconds, or 1000 and 45000 in multiples of 1000. You must enter a value that is at least 3 times the peerPollTimeInMsecs value. The timeUnit can be only MILLISECONDS or SECONDS<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   peerPollTime
     description:
-      - The peer poll time, which is how often to send hello packets across the failover link. Peer poll time is between 200 and 999 milliseconds, or 1000 and 15000 in multiples of 1000<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+      - The peer poll time, which is how often to send hello packets across the failover link. Peer poll time is between 200 and 999 milliseconds, or 1000 and 15000 in multiples of 1000. The timeUnit can be only MILLISECONDS or SECONDS<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   sort
     description:
       - The field used to sort the requested object list

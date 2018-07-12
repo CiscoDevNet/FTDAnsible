@@ -24,7 +24,7 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   dhcpServerAddressPool
     description:
-      - A string which specifies the range of IP addresses that DHCP server can use to assign ip addresses.<br>Field level constraints: must be a valid IP address or IP address range, cannot have HTML. (Note: Additional constraints might exist)
+      - A string which specifies the range of IP addresses that DHCP server can use to assign ip addresses.<br>Field level constraints: must be a valid IP address or IP address range. (Note: Additional constraints might exist)
   dhcpServerEnabled
     description:
       - A boolean value, TRUE (the default) or FALSE. The value TRUE enables DHCP server on the Management Interface, so that directly connected clients can obtain their addresses from the DHCP pool. FALSE disables the DHCP server on Management Interface.
@@ -33,25 +33,25 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   ipv4Address
     description:
-      - A mandatory string, if IPv6 is not provided, has 48 characters, specifies the IPv4 address for the Management Interface. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+      - A mandatory string, if IPv6 is not provided, has 48 characters, specifies the IPv4 address for the Management Interface. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address. (Note: Additional constraints might exist)
   ipv4Gateway
     description:
-      - A mandatory string, if IPv4 address is provided, specifies the IPv4 gateway for the Management Interface. The gateway determines how the system can reach the internet to obtain smart licenses, database updates and to reach the management DNS and NTP servers. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+      - A mandatory string, if IPv4 address is provided, specifies the IPv4 gateway for the Management Interface. The gateway determines how the system can reach the internet to obtain smart licenses, database updates and to reach the management DNS and NTP servers. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address. (Note: Additional constraints might exist)
   ipv4Mode
     description:
       - An enum value for IPv4 that specifies whether to obtain address through DHCP or Static (default value). Values can be one of the following.<br> Static - Manually configure the ip address.<br> DHCP - Obtain the ip address from a DHCP server.
   ipv4NetMask
     description:
-      - A mandatory string, if IPv4 address is provided, specifies the IPv4 Netmask for Management Interface. This specifies the network part of the ipv4 address. The string cannot have HTML tags.<br>Field level constraints: must be a valid netmask, cannot have HTML. (Note: Additional constraints might exist)
+      - A mandatory string, if IPv4 address is provided, specifies the IPv4 Netmask for Management Interface. This specifies the network part of the ipv4 address. The string cannot have HTML tags.<br>Field level constraints: must be a valid netmask. (Note: Additional constraints might exist)
   ipv6Address
     description:
-      - An optional string, if IPv4 address is provided, up to 128 bits normally represented by groups of 16 bits, specifies the IPv6 address for the Management Interface. Another way of representing 128 bit address is to drop the first consecutive sequence of zero groups. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+      - An optional string, if IPv4 address is provided, up to 128 bits normally represented by groups of 16 bits, specifies the IPv6 address for the Management Interface. Another way of representing 128 bit address is to drop the first consecutive sequence of zero groups. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address. (Note: Additional constraints might exist)
   ipv6Gateway
     description:
-      - A mandatory string, if IPv6 address is provided, specifies the IPv6 gateway for the Management Interface. The gateway determines how the system can reach the internet to obtain smart licenses, database updates and to reach the management DNS and NTP servers. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+      - A mandatory string, if IPv6 address is provided, specifies the IPv6 gateway for the Management Interface. The gateway determines how the system can reach the internet to obtain smart licenses, database updates and to reach the management DNS and NTP servers. The string cannot have HTML tags.<br>Field level constraints: must be a valid IP address. (Note: Additional constraints might exist)
   ipv6Mode
     description:
       - A mandatory enum value, if IPv6 address is provided, specifies whether to obtain address through DHCP or Static (default value). Values can be one of the following.<br> Static - Manually configure the ip address.<br> DHCP - Obtain the ip address from a DHCP server.
@@ -69,7 +69,7 @@ options:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   routeInternally
     description:
-      - A mandatory boolean value, TRUE (the default) or FALSE. The value TRUE enables the management operations like system updates through data Interfaces. The value FALSE uses the management interface to get the updates and management activities on the Firepower device manager.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+      - A mandatory boolean value, TRUE (the default) or FALSE. The value TRUE enables the management operations like system updates through data Interfaces. The value FALSE uses the management interface to get the updates and management activities on the Firepower Device Manager.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   sort
     description:
       - The field used to sort the requested object list

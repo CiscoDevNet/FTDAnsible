@@ -27,10 +27,10 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   identitySourceId
     description:
-      - The ID of the IdentitySource the user is associated with.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - The ID of the IdentitySource the user is associated with.<br>Field level constraints: cannot be blank or empty, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -55,9 +55,12 @@ options:
   userPreferences
     description:
       - An Object representing the timezone, UI theme selected by user
+  userRole
+    description:
+      - The name of the UserRole object that defines the user role (permissions) for this user.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   userServiceTypes
     description:
-      - Configure the level of access using the service-type. This is an enum value and api consumer can choose from MGMT and RA_VPN
+      - Configure the level of access using the service-type. This is an enum value and api consumer can choose from MGMT and RA_VPN<br>Field level constraints: cannot be blank or empty. (Note: Additional constraints might exist)
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
@@ -114,7 +117,7 @@ class UserResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addUser(params):
-        body_params = dict_subset(params, ['id', 'identitySourceId', 'name', 'newPassword', 'password', 'type', 'userPreferences', 'userServiceTypes', 'version'])
+        body_params = dict_subset(params, ['id', 'identitySourceId', 'name', 'newPassword', 'password', 'type', 'userPreferences', 'userRole', 'userServiceTypes', 'version'])
 
         url = construct_url(params['hostname'], '/object/users')
         request_params = dict(
@@ -144,7 +147,7 @@ class UserResource(object):
     @retry_on_token_expiration
     def editUser(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['id', 'identitySourceId', 'name', 'newPassword', 'password', 'type', 'userPreferences', 'userServiceTypes', 'version'])
+        body_params = dict_subset(params, ['id', 'identitySourceId', 'name', 'newPassword', 'password', 'type', 'userPreferences', 'userRole', 'userServiceTypes', 'version'])
 
         url = construct_url(params['hostname'], '/object/users/{objId}', path_params=path_params)
         request_params = dict(
@@ -245,6 +248,7 @@ def main():
         sort=dict(type='str'),
         type=dict(type='str'),
         userPreferences=dict(type='str'),
+        userRole=dict(type='str'),
         userServiceTypes=dict(type='list'),
         version=dict(type='str'),
     )

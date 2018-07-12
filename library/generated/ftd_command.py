@@ -24,13 +24,13 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   commandInput
     description:
-      - A mandatory utf-8 string, maximum of 1024 characters, specifying the input command that needs to be executed on the device.<br>Field level constraints: cannot be blank or empty, cannot have HTML, length must be between 0 and 1024 (inclusive). (Note: Additional constraints might exist)
+      - A mandatory utf-8 string, maximum of 1024 characters, specifying the input command that needs to be executed on the device.<br>Field level constraints: cannot be blank or empty, length must be between 0 and 1024 (inclusive). (Note: Additional constraints might exist)
   commandOutput
     description:
       - A utf-8 string specifying the output of the command executed.
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   timeOut
     description:
       - An optional long numeric value specifying the time in milliseconds. It specifies the maximum time within which the command executes.

@@ -24,19 +24,19 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   baseDN
     description:
-      - A mandatory Unicode string containing the directory tree, common parent, for searching and querying user and group information. For example, cn=users,dc=example,dc=com<br>Field level constraints: cannot be null, cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - A mandatory Unicode string containing the directory tree, common parent, for searching and querying user and group information. For example, cn=users,dc=example,dc=com<br>Field level constraints: cannot be null, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   directoryPassword
     description:
       - A mandatory password for a user with appropriate rights to retrieve directory user and group information.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   directoryUsername
     description:
-      - A mandatory Unicode string containing the distinguished username for a user with appropriate rights to retrieve directory user and group information.<br>Field level constraints: cannot be null, cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - A mandatory Unicode string containing the distinguished username for a user with appropriate rights to retrieve directory user and group information.<br>Field level constraints: cannot be null, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   hostname
     description:
-      - A mandatory Unicode string containing the hostname or IP address of the directory server.<br>Field level constraints: cannot be null, must be a valid host (FQDN or IP) or a list of valid hosts, cannot have HTML. (Note: Additional constraints might exist)
+      - A mandatory Unicode string containing the hostname or IP address of the directory server.<br>Field level constraints: cannot be null, must be a valid host (FQDN or IP) or a list of valid hosts. (Note: Additional constraints might exist)
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   linaStatusCode
     description:
       - The authentication connection test error or success code returned by the configuration CLI.

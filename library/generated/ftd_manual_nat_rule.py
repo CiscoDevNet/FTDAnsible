@@ -27,25 +27,16 @@ options:
       - An integer representing where to add the new object in the ordered list. Use 0 to add it at the beginning of the list. If not specified, it will be added at the end of the list
   description
     description:
-      - An optional string that describes the rule<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - An optional string that describes the rule<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   destinationInterface
     description:
-      - An InterfaceBase object that is considered as the destination interface. Also known as the 'translated interface' or the 'mapped interface'<br>Allowed types are: [PhysicalInterface, SubInterface]
-  dns
-    description:
-      - A Boolean object that represents an advanced flag that is common to both Manual and Object NAT rules.
-  enabled
-    description:
-      - A Boolean object that represents if Manual or Object NAT rule is active(enabled) or not.
+      - <br>Allowed types are: [PhysicalInterface, SubInterface]
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
-  interfaceIPv6
-    description:
-      - A Boolean object that represents an advanced flag that is common to both Manual and Object NAT rules.
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   interfaceInOriginalDestination
     description:
       - A Boolean object which can be true if it's routed mode only, and translatedDestination must be null, and originalDestinationPort, translatedDestinationPort and sourceInterface fields must all not null.
@@ -60,13 +51,7 @@ options:
       - A string containing the name of the ManualNatRule object
   natType
     description:
-      - A NatType enum object. The possible values for this object are: <br>STATIC <br>DYNAMIC<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
-  netToNet
-    description:
-      - A Boolean object that represents an advanced flag that is common to both Manual and Object NAT rules.
-  noProxyArp
-    description:
-      - A Boolean object that represents an advanced flag that is common to both Manual and Object NAT rules.
+      - <br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
@@ -82,18 +67,12 @@ options:
   originalSourcePort
     description:
       - A reference to TCPPortObject or UDPPortObject that contains single port number. Use null for 'any' port. Note, if specified, all the four port fields should all be either UDP or TCP ports. Additionally, originalSourcePort and translatedSourcePort should be either both specified (not null), or both null.<br>Allowed types are: [ICMPv4PortObject, ICMPv6PortObject, ProtocolObject, TCPPortObject, UDPPortObject]
-  patOptions
-    description:
-      - A PatOptions object which is a nested entity for PAT-pool settings. This object must be null if natType is STATIC. For DYNAMIC NAT, null patOptions means no pat-pool option.
-  routeLookup
-    description:
-      - A Boolean object that represents an advanced flag that is common to both Manual and Object NAT rules.
   sort
     description:
       - The field used to sort the requested object list
   sourceInterface
     description:
-      - An InterfaceBase object that is considered as the source interface. Also known as the 'original interface' or the 'real interface'<br>Allowed types are: [PhysicalInterface, SubInterface]
+      - <br>Allowed types are: [PhysicalInterface, SubInterface]
   translatedDestination
     description:
       - A NetworkObject or NetworkObjectGroup reference, note only 'host' or 'IP range' are allowed in the object(s), no 'network' sub-type is allowed.<br>Allowed types are: [NetworkObject, NetworkObjectGroup]

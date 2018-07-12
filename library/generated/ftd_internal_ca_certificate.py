@@ -33,28 +33,28 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   isSystemDefined
     description:
       - A boolean value, TRUE and FALSE (the default). The TRUE value indicates that certificate is created by system and cannot be deleted. FALSE indicates that the certificate can be deleted.
   issuerCommonName
     description:
-      - Common Name, typically product name/brand, of the Authority (issuer) that signed and issued the certificate.  This is automatically extracted from the uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - Common Name, typically product name/brand, of the Authority (issuer) that signed and issued the certificate.  This is automatically extracted from the uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   issuerCountry
     description:
-      - An ISO3166 two character country code of the Authority (issuer) that signed and issued the certificate.  This is automatically extracted from the uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An ISO3166 two character country code of the Authority (issuer) that signed and issued the certificate.  This is automatically extracted from the uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   issuerLocality
     description:
-      - Locality, city name, of the Authority (issuer) that signed and issued the certificate. This is automatically extracted from the uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - Locality, city name, of the Authority (issuer) that signed and issued the certificate. This is automatically extracted from the uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   issuerOrganization
     description:
-      - Organization, company name, of the Authority (issuer) that signed and issued the certificate. This is automatically extracted from the uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - Organization, company name, of the Authority (issuer) that signed and issued the certificate. This is automatically extracted from the uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   issuerOrganizationUnit
     description:
-      - The Organization Unit, division or unit, of the Authority (issuer) that signed and issued the certificate. This is automatically extracted from the uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - The Organization Unit, division or unit, of the Authority (issuer) that signed and issued the certificate. This is automatically extracted from the uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   issuerState
     description:
-      - State or the province of the Authority (issuer) that signed and issued the certificate. This is automatically extracted from the uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - State or the province of the Authority (issuer) that signed and issued the certificate. This is automatically extracted from the uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -66,7 +66,7 @@ options:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   passPhrase
     description:
-      - Password used for encrypted private key. Encrypted keys are not supported yet.<br>Field level constraints: cannot have HTML. (Note: Additional constraints might exist)
+      - Password used for encrypted private key. Encrypted keys are not supported yet.
   privateKey
     description:
       - PEM formatted private key. Only unencrypted keys are supported.
@@ -75,34 +75,34 @@ options:
       - The field used to sort the requested object list
   subjectCommonName
     description:
-      - An Unicode alphanumeric string containing the Common Name, typically product name/brand, of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An Unicode alphanumeric string containing the Common Name, typically product name/brand, of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   subjectCountry
     description:
-      - An ISO3166 two character country code of the Authority (issuer) that signed and issued the certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An ISO3166 two character country code of the Authority (issuer) that signed and issued the certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   subjectDistinguishedName
     description:
-      - A DN (Distinguished Name) defining the entity (subject) being certified or authenticated in the given certificate. For a root certificate the issuer and subject will be the same DN.  This is automatically extracted from the uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - A DN (Distinguished Name) defining the entity (subject) being certified or authenticated in the given certificate. For a root certificate the issuer and subject will be the same DN.  This is automatically extracted from the uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   subjectLocality
     description:
-      - An Unicode alphanumeric string containing the locality, city name, of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An Unicode alphanumeric string containing the locality, city name, of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   subjectOrganization
     description:
-      - An Unicode alphanumeric string containing the organization, company name, of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An Unicode alphanumeric string containing the organization, company name, of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   subjectOrganizationUnit
     description:
-      - An Unicode alphanumeric string containing the Organization Unit, division or unit, of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An Unicode alphanumeric string containing the Organization Unit, division or unit, of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   subjectState
     description:
-      - An Unicode alphanumeric string containing the state or the province of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An Unicode alphanumeric string containing the state or the province of the entity (subject) being certified or authenticated in the given certificate. This is mandatory input value for Self-Signed certificate and extracted from an uploaded certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
   validityEndDate
     description:
-      - This is set to five years in UTC format from the current date for Self-Signed certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - This is set to five years in UTC format from the current date for Self-Signed certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   validityStartDate
     description:
-      - This is current date in UTC format for Self-Signed certificate.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - This is current date in UTC format for Self-Signed certificate.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.

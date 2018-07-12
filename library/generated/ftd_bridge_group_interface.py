@@ -27,22 +27,22 @@ options:
       - For Internal use.
   description
     description:
-      - An optional UTF-8 sting, from 0 to 200 characters. The string cannot include HTML tags, semi-colons(;), or carriage returns.<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An optional UTF-8 sting, from 0 to 200 characters. The string cannot include HTML tags, semi-colons(;), or carriage returns.<br>Field level constraints: length must be between 0 and 200 (inclusive), must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   hardwareName
     description:
-      - A mandatory UTF-8 string for the PhysicalInterfaces and SubInterfaces, which normally specifies the type of Interface along with the Interface number. The string cannot contain HTML tags.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A mandatory UTF-8 string for the PhysicalInterfaces and SubInterfaces, which normally specifies the type of Interface along with the Interface number. The string cannot contain HTML tags.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   ipv4
     description:
-      - An optional IPv4 object assigned to an interface in Firepower device manager. This object specifies Interface configuration for an IPv4 address.
+      - An optional IPv4 object assigned to an interface in Firepower Device Manager. This object specifies Interface configuration for an IPv4 address.
   ipv6
     description:
-      - An optional IPv6 object assigned to an interface in Firepower device manager. This object specifies Interface configuration for an IPv6 address.
+      - An optional IPv6 object assigned to an interface in Firepower Device Manager. This object specifies Interface configuration for an IPv6 address.
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10

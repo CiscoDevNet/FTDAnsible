@@ -24,7 +24,7 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   description
     description:
-      - An optional String value containing description about the Geolocaiton update activity.<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
+      - An optional String value containing description about the Geolocaiton update activity.<br>Field level constraints: length must be between 0 and 200 (inclusive). (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
@@ -33,13 +33,13 @@ options:
       - For Internal use.
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   ipAddress
     description:
-      - IP address of actor who initiated a job execution<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - IP address of actor who initiated a job execution<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   jobHistoryUuid
     description:
-      - For Internal use.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - For Internal use.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   jobName
     description:
       - See derived class.
@@ -48,7 +48,7 @@ options:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
   name
     description:
-      - A String containing the user provided identifier associated with a scheduled activity.<br>Field level constraints: length must be between 0 and 32 (inclusive), must match pattern ^[a-zA-Z0-9][a-zA-Z0-9_+-]*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A String containing the user provided identifier associated with a scheduled activity.<br>Field level constraints: length must be between 0 and 32 (inclusive), must match pattern ^[a-zA-Z0-9][a-zA-Z0-9_+-]*$. (Note: Additional constraints might exist)
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
@@ -63,7 +63,7 @@ options:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
   user
     description:
-      - System provided ID of the user who scheduled the job.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - System provided ID of the user who scheduled the job.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.

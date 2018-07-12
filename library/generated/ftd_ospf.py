@@ -27,7 +27,7 @@ options:
       - Represents the areas to be configured for this process
   description
     description:
-      - <br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
+      - <br>Field level constraints: length must be between 0 and 200 (inclusive). (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
@@ -36,7 +36,7 @@ options:
       - Represents the configuration of filtering incoming or outgoing routes using access control lists
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -54,10 +54,10 @@ options:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   processConfiguration
     description:
-      - Represents the advanced configuration for this process
+      - Represents the advanced configuration for this process<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   processId
     description:
-      - An identifier for the OSPF Process. Must be in the range 1 - 65535 inclusive.<br>Field level constraints: cannot be null, cannot have HTML, must match pattern \d|[1-9]\d+, must be between 1 and 65535 (inclusive). (Note: Additional constraints might exist)
+      - An identifier for the OSPF Process. Must be in the range 1 - 65535 inclusive.<br>Field level constraints: cannot be null, must match pattern \d|[1-9]\d+, must be between 1 and 65535 (inclusive). (Note: Additional constraints might exist)
   redistributeProtocols
     description:
       - Represents the configuration of a list of protocols whose routes are redistributed into this process

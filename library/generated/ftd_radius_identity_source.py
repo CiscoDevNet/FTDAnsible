@@ -27,16 +27,16 @@ options:
       - The capabilities that the identity source has.
   description
     description:
-      - An optional description of the RADIUS identity source<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - An optional description of the RADIUS identity source<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   host
     description:
-      - The name of the RADIUS Identity Source<br>Field level constraints: cannot be null, length must be between 0 and 128 (inclusive), cannot have HTML, must match pattern ([0-9a-zA-Z]([0-9a-zA-Z-]{0,62}\.)([0-9a-zA-Z-]{1,63}\.)*[0-9a-zA-Z]{1,63})|(([0-9a-fA-F]{0,4}:){0,6}(([0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4})|(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}))). (Note: Additional constraints might exist)
+      - The name of the RADIUS Identity Source<br>Field level constraints: cannot be null, length must be between 0 and 128 (inclusive), must match pattern ([0-9a-zA-Z]([0-9a-zA-Z-]{0,62}\.)([0-9a-zA-Z-]{1,63}\.)*[0-9a-zA-Z]{1,63})|(([0-9a-fA-F]{0,4}:){0,6}(([0-9a-fA-F]{0,4}:[0-9a-fA-F]{0,4})|(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}))). (Note: Additional constraints might exist)
   id
     description:
-      - The id of the RadiusIdentitySource<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - The id of the RadiusIdentitySource<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10

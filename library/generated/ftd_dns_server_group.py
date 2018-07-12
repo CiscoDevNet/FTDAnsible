@@ -24,13 +24,13 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   dnsServers
     description:
-      - A list of the names of DNSServer objects that belong to this group.<br>Field level constraints: cannot be null, size must be between 1 and 6 (inclusive), must be a valid IP address. (Note: Additional constraints might exist)
+      - A list of the names of DNSServer objects that belong to this group.<br>Field level constraints: cannot be null, size must be between 1 and 6 (inclusive). (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -45,7 +45,7 @@ options:
       - The number of times, from 0 to 10, to retry the list of DNS servers when the system does not receive a response. The default is 2 retries.<br>Field level constraints: must be between 1 and 10 (inclusive). (Note: Additional constraints might exist)
   searchDomain
     description:
-      - The search domain for this group.<br>Field level constraints: length must be between 0 and 255 (inclusive), cannot have HTML, must match pattern ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([a-zA-Z0-9]|[a-zA-Z0-9][A-Za-z0-9\-]*[A-Za-z0-9])|)$. (Note: Additional constraints might exist)
+      - The search domain for this group.<br>Field level constraints: length must be between 0 and 255 (inclusive), must match pattern ^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([a-zA-Z0-9]|[a-zA-Z0-9][A-Za-z0-9\-]*[A-Za-z0-9])|)$. (Note: Additional constraints might exist)
   sort
     description:
       - The field used to sort the requested object list
@@ -116,7 +116,7 @@ class DNSServerGroupResource(object):
     def addDNSServerGroup(params):
         body_params = dict_subset(params, ['dnsServers', 'id', 'name', 'retries', 'searchDomain', 'systemDefined', 'timeout', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/dnsservergroups')
+        url = construct_url(params['hostname'], '/object/dnsservergroups')
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='POST',
@@ -131,7 +131,7 @@ class DNSServerGroupResource(object):
     def deleteDNSServerGroup(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/dnsservergroups/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/object/dnsservergroups/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='DELETE',
@@ -146,7 +146,7 @@ class DNSServerGroupResource(object):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['dnsServers', 'id', 'name', 'retries', 'searchDomain', 'systemDefined', 'timeout', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/dnsservergroups/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/object/dnsservergroups/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='PUT',
@@ -161,7 +161,7 @@ class DNSServerGroupResource(object):
     def getDNSServerGroup(params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/dnsservergroups/{objId}', path_params=path_params)
+        url = construct_url(params['hostname'], '/object/dnsservergroups/{objId}', path_params=path_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -175,7 +175,7 @@ class DNSServerGroupResource(object):
     def getDNSServerGroupList(params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/dnsservergroups', query_params=query_params)
+        url = construct_url(params['hostname'], '/object/dnsservergroups', query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',

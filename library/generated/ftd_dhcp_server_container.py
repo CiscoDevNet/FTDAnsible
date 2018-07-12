@@ -30,7 +30,7 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   interface
     description:
       -  The interface to provide DHCP addresses when auto configuration is selected.<br>Allowed types are: [BridgeGroupInterface, PhysicalInterface, SubInterface]
@@ -45,16 +45,16 @@ options:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   primaryDNS
     description:
-      - The IP address of the primary Domain Name System (DNS) server clients should use for domain name resolution. Click Use OpenDNS if you want to configure the OpenDNS public DNS servers.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+      - The IP address of the primary Domain Name System (DNS) server clients should use for domain name resolution. Click Use OpenDNS if you want to configure the OpenDNS public DNS servers.<br>Field level constraints: must be a valid IP address. (Note: Additional constraints might exist)
   primaryWINS
     description:
-      - The IP address of the primary Windows Internet Name Service (WINS) server clients should use for NetBIOS name resolution.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+      - The IP address of the primary Windows Internet Name Service (WINS) server clients should use for NetBIOS name resolution.<br>Field level constraints: must be a valid IP address. (Note: Additional constraints might exist)
   secondaryDNS
     description:
-      - The IP address of the secondary Domain Name System (DNS) server clients should use for domain name resolution.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+      - The IP address of the secondary Domain Name System (DNS) server clients should use for domain name resolution.<br>Field level constraints: must be a valid IP address. (Note: Additional constraints might exist)
   secondaryWINS
     description:
-      - The IP address of the secondary Windows Internet Name Service (WINS) server clients should use for NetBIOS name resolution.<br>Field level constraints: must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+      - The IP address of the secondary Windows Internet Name Service (WINS) server clients should use for NetBIOS name resolution.<br>Field level constraints: must be a valid IP address. (Note: Additional constraints might exist)
   servers
     description:
       - A list of the names of DHCPServer objects, which define the DHCP servers configured on the device interfaces.

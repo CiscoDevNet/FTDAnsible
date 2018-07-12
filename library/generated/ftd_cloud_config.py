@@ -30,7 +30,7 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -46,6 +46,9 @@ options:
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
+  urlCacheReloadTTL
+    description:
+      - An enum value that specifies how long to cache the category and reputation lookup values for a given URL When the time to live expires, the next attempted access of the URL results in a fresh category/reputation lookup. Value can be one of the following: <br> NEVER (default) <br> TWO_HRS <br> FOUR_HRS <br> EIGHT_HRS <br> TWELVE_HRS <br> TWENTY_FOUR_HRS <br> FOURTY_EIGHT_HRS <br> ONE_WEEK
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
@@ -93,7 +96,7 @@ class CloudConfigResource(object):
     @retry_on_token_expiration
     def editCloudConfig(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['enableAutomaticUpdates', 'id', 'queryCloudUnknown', 'type', 'version'])
+        body_params = dict_subset(params, ['enableAutomaticUpdates', 'id', 'queryCloudUnknown', 'type', 'urlCacheReloadTTL', 'version'])
 
         url = construct_url(params['hostname'], '/devicesettings/default/cloudconfig/{objId}', path_params=path_params)
         request_params = dict(
@@ -167,6 +170,7 @@ def main():
         queryCloudUnknown=dict(type='bool'),
         sort=dict(type='str'),
         type=dict(type='str'),
+        urlCacheReloadTTL=dict(type='str'),
         version=dict(type='str'),
     )
 

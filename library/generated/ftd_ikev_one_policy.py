@@ -45,7 +45,7 @@ options:
       - An enum value that specifies the hash algorithm for creating a message digest, which is used to ensure message integrity. Possible values are:<br>MD5 - The Message Digest 5 algorithm, which produces a 128-bit digest.<br>SHA - The Secure Hash Algorithm, which produces a 160-bit digest.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   isSystemDefined
     description:
       - A Boolean value, TRUE or FALSE (the default). The TRUE value indicates that the system created the object. FALSE indicates that the object is user-defined.

@@ -24,16 +24,16 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   deviceInterface
     description:
-      - The interface by which the remote syslog server is reached.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)<br>Allowed types are: [BridgeGroupInterface, PhysicalInterface, SubInterface]
+      - The interface by which the remote syslog server is reached.<br>Allowed types are: [BridgeGroupInterface, PhysicalInterface, SubInterface]
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   host
     description:
-      - The IP address of the remote syslog server.<br>Field level constraints: cannot be null, cannot have HTML, must be a valid IP address. (Note: Additional constraints might exist)
+      - The IP address of the remote syslog server.<br>Field level constraints: cannot be null, must be a valid IP address. (Note: Additional constraints might exist)
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -45,13 +45,19 @@ options:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
   port
     description:
-      - The port of the remote syslog server.<br>Field level constraints: cannot have HTML, must be a valid port from 1 to 65535 or a valid port range. (Note: Additional constraints might exist)
+      - The port(TCP/UDP) of the remote syslog server.<br>Field level constraints: must be a valid port from 1 to 65535 or a valid port range. (Note: Additional constraints might exist)
+  protocol
+    description:
+      - Protocol type (UDP/TCP)<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   sort
     description:
       - The field used to sort the requested object list
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
+  useManagementInterface
+    description:
+      - Use management interface to reach syslog server
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
@@ -108,7 +114,7 @@ class SyslogServerResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addSyslogServer(params):
-        body_params = dict_subset(params, ['deviceInterface', 'host', 'id', 'name', 'port', 'type', 'version'])
+        body_params = dict_subset(params, ['deviceInterface', 'host', 'id', 'name', 'port', 'protocol', 'type', 'useManagementInterface', 'version'])
 
         url = construct_url(params['hostname'], '/object/syslogalerts')
         request_params = dict(
@@ -138,7 +144,7 @@ class SyslogServerResource(object):
     @retry_on_token_expiration
     def editSyslogServer(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['deviceInterface', 'host', 'id', 'name', 'port', 'type', 'version'])
+        body_params = dict_subset(params, ['deviceInterface', 'host', 'id', 'name', 'port', 'protocol', 'type', 'useManagementInterface', 'version'])
 
         url = construct_url(params['hostname'], '/object/syslogalerts/{objId}', path_params=path_params)
         request_params = dict(
@@ -236,8 +242,10 @@ def main():
         objId=dict(type='str'),
         offset=dict(type='int'),
         port=dict(type='str'),
+        protocol=dict(type='str'),
         sort=dict(type='str'),
         type=dict(type='str'),
+        useManagementInterface=dict(type='bool'),
         version=dict(type='str'),
     )
 

@@ -30,7 +30,7 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   ikev1Enabled
     description:
       - A mandatory Boolean value, TRUE (default) or FALSE. The TRUE value indicates that IKEv1 will be used by the VPN tunnel in connection attempts and negotiations. Note that if both IKEv1 and IKEv2 are enabled, IKEv2 will be used first.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
@@ -75,7 +75,7 @@ options:
       - A list of NetworkObject or NetworkObjectGroup objects of the destination of the traffic that is to be routed through the VPN tunnel. If no remote networks are provided, then traffic going to any destination may be forwarded through the tunnel.<br>Allowed types are: [NetworkObject, NetworkObjectGroup]
   remotePeerIpAddress
     description:
-      - A mandatory string that contains the IP address of the site-to-site VPN peer to connect to<br>Field level constraints: cannot be null, must be a valid IP address, cannot have HTML. (Note: Additional constraints might exist)
+      - A mandatory string that contains the IP address of the site-to-site VPN peer to connect to<br>Field level constraints: cannot be null, must be a valid IP address. (Note: Additional constraints might exist)
   sort
     description:
       - The field used to sort the requested object list

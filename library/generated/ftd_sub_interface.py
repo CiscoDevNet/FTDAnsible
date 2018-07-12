@@ -27,7 +27,7 @@ options:
       - An integer representing where to add the new object in the ordered list. Use 0 to add it at the beginning of the list. If not specified, it will be added at the end of the list
   description
     description:
-      - An optional UTF-8 sting, from 0 to 200 characters. The string cannot include HTML tags, semi-colons(;), or carriage returns.<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An optional UTF-8 sting, from 0 to 200 characters. The string cannot include HTML tags, semi-colons(;), or carriage returns.<br>Field level constraints: length must be between 0 and 200 (inclusive), must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   enabled
     description:
       - A mandatory Boolean value, TRUE or FALSE (the default), specifies the administrative status of the Interface. The TRUE value enables the administrative status on the device. The value FALSE disables the administrative status on the device.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
@@ -39,16 +39,16 @@ options:
       - An optional Boolean value, TRUE or FALSE (the default). The TRUE value indicates that the interface is a Gigabit Interface. The value FALSE indicates that the interface is not a Gigabit Interface.
   hardwareName
     description:
-      - A mandatory UTF-8 string for the PhysicalInterfaces and SubInterfaces, which normally specifies the type of Interface along with the Interface number. The string cannot contain HTML tags.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A string value which needs to be in the format of "{parent interface hardwareName}.{subIntfId}". If another value is specified, system will replace it with the desired value.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   ipv4
     description:
-      - An optional IPv4 object assigned to an interface in Firepower device manager. This object specifies Interface configuration for an IPv4 address.
+      - An optional IPv4 object assigned to an interface in Firepower Device Manager. This object specifies Interface configuration for an IPv4 address.
   ipv6
     description:
-      - An optional IPv6 object assigned to an interface in Firepower device manager. This object specifies Interface configuration for an IPv6 address.
+      - An optional IPv6 object assigned to an interface in Firepower Device Manager. This object specifies Interface configuration for an IPv6 address.
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -57,7 +57,7 @@ options:
       - An enum value that specifies whether the Physical Interface link state is UP or DOWN (the default). Link state of an interface is the operational status/running status of the interface. The values can be one of the following. <br> UP - Specifies whether the device is operationally UP. <br> DOWN - Specifies whether the device is operationally DOWN. 
   macAddress
     description:
-      - An optional String value, to specify a virtual MAC address. The MAC address must be in the format H.H.H where each H is a 16-bit hexadecimal number. For example, 000C.F142.4CDE<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An optional String value, to specify a virtual MAC address. The MAC address must be in the format H.H.H where each H is a 16-bit hexadecimal number. For example, 000C.F142.4CDE<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   managementInterface
     description:
       - An optional Boolean value, TRUE or FALSE (the default). The TRUE value indicates that the interface is a Management Interface. The value FALSE indicates that the interface is not a Management Interface.
@@ -81,7 +81,7 @@ options:
       - The field used to sort the requested object list
   standbyMacAddress
     description:
-      - An optional String value, to specify a virtual Standby MAC address. The MAC address must be in the format H.H.H where each H is a 16-bit hexadecimal number.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An optional String value, to specify a virtual Standby MAC address. The MAC address must be in the format H.H.H where each H is a 16-bit hexadecimal number.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   subIntfId
     description:
       - A mandatory numeric value specifying the sub interface id, from 1 to 4294967295. The number of subinterfaces allowed depends on your platform. You cannnot change the ID after you create the subinterface.<br>Field level constraints: cannot be null, must be between 1 and 4294967295 (inclusive). (Note: Additional constraints might exist)

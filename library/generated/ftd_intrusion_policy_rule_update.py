@@ -24,7 +24,7 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   id
     description:
-      - The UUID of the IntrusionPolicy to be updated.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - The UUID of the IntrusionPolicy to be updated.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   name
     description:
       - A string that represents the name of the object

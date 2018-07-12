@@ -27,13 +27,13 @@ options:
       - A dedicated link between two units used for syncing in case of failover. Must be a physical interface<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)<br>Allowed types are: [PhysicalInterface, SubInterface]
   failoverName
     description:
-      - A logical name for the failover interface<br>Field level constraints: cannot be null, must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A logical name for the failover interface<br>Field level constraints: cannot be null, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -81,7 +81,7 @@ options:
       - A dedicated interface used to pass the connection state information during a failover<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)<br>Allowed types are: [PhysicalInterface, SubInterface]
   statefulFailoverName
     description:
-      - A logical name for the statefulFailover interface<br>Field level constraints: cannot be null, must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A logical name for the statefulFailover interface<br>Field level constraints: cannot be null, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.

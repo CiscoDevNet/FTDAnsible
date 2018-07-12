@@ -24,13 +24,16 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   description
     description:
-      - An optional unicode alphanumeric string containing a description of the object, up to 200 characters. The string cannot include HTML tags<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML. (Note: Additional constraints might exist)
+      - An optional unicode alphanumeric string containing a description of the object, up to 200 characters. The string cannot include HTML tags<br>Field level constraints: length must be between 0 and 200 (inclusive). (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+  isBlacklisted
+    description:
+      - If true, indicates that the object contains one or more blacklisted commands. Default is false.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -112,7 +115,7 @@ class FlexConfigObjectResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addFlexConfigObject(params):
-        body_params = dict_subset(params, ['description', 'id', 'lines', 'name', 'negateLines', 'type', 'variables', 'version'])
+        body_params = dict_subset(params, ['description', 'id', 'isBlacklisted', 'lines', 'name', 'negateLines', 'type', 'variables', 'version'])
 
         url = construct_url(params['hostname'], '/object/flexconfigobjects')
         request_params = dict(
@@ -142,7 +145,7 @@ class FlexConfigObjectResource(object):
     @retry_on_token_expiration
     def editFlexConfigObject(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['description', 'id', 'lines', 'name', 'negateLines', 'type', 'variables', 'version'])
+        body_params = dict_subset(params, ['description', 'id', 'isBlacklisted', 'lines', 'name', 'negateLines', 'type', 'variables', 'version'])
 
         url = construct_url(params['hostname'], '/object/flexconfigobjects/{objId}', path_params=path_params)
         request_params = dict(
@@ -234,6 +237,7 @@ def main():
         description=dict(type='str'),
         filter=dict(type='str'),
         id=dict(type='str'),
+        isBlacklisted=dict(type='bool'),
         limit=dict(type='int'),
         lines=dict(type='list'),
         name=dict(type='str'),

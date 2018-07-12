@@ -22,18 +22,21 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
+  activeDirectoryRealm
+    description:
+      - The Active directory realm which will be used by the radius group for resolving identity<br>Allowed types are: [ActiveDirectoryRealm]
   deadTime
     description:
       - (Optional.) If a server in the group fails, the depletion reactivation mode reactivates failed servers only after all of the servers in the group are inactive. The dead time is the amount of time, between 0 and 1440 minutes, that elapses between the disabling of the last server in the group and the subsequent re-enabling of all servers. The default is 10 minutes.<br>Field level constraints: must be between 0 and 1440 (inclusive). (Note: Additional constraints might exist)
   description
     description:
-      - Description of the RADIUS Identity Source group object<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - Description of the RADIUS Identity Source group object<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - The ID of the RadiusIdentitySourceGroup<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - The ID of the RadiusIdentitySourceGroup<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -112,7 +115,7 @@ class RadiusIdentitySourceGroupResource(object):
     @staticmethod
     @retry_on_token_expiration
     def addRadiusIdentitySourceGroup(params):
-        body_params = dict_subset(params, ['deadTime', 'description', 'id', 'maxFailedAttempts', 'name', 'radiusIdentitySources', 'type', 'version'])
+        body_params = dict_subset(params, ['activeDirectoryRealm', 'deadTime', 'description', 'id', 'maxFailedAttempts', 'name', 'radiusIdentitySources', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/radiusidentitysourcegroups')
         request_params = dict(
@@ -142,7 +145,7 @@ class RadiusIdentitySourceGroupResource(object):
     @retry_on_token_expiration
     def editRadiusIdentitySourceGroup(params):
         path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['deadTime', 'description', 'id', 'maxFailedAttempts', 'name', 'radiusIdentitySources', 'type', 'version'])
+        body_params = dict_subset(params, ['activeDirectoryRealm', 'deadTime', 'description', 'id', 'maxFailedAttempts', 'name', 'radiusIdentitySources', 'type', 'version'])
 
         url = construct_url(params['hostname'], '/object/radiusidentitysourcegroups/{objId}', path_params=path_params)
         request_params = dict(
@@ -231,6 +234,7 @@ def main():
         operation=dict(type='str', default='upsertRadiusIdentitySourceGroup', choices=['addRadiusIdentitySourceGroup', 'deleteRadiusIdentitySourceGroup', 'editRadiusIdentitySourceGroup', 'getRadiusIdentitySourceGroup', 'getRadiusIdentitySourceGroupList', 'getRadiusIdentitySourceGroupByName', 'upsertRadiusIdentitySourceGroup', 'editRadiusIdentitySourceGroupByName', 'deleteRadiusIdentitySourceGroupByName']),
         register_as=dict(type='str'),
 
+        activeDirectoryRealm=dict(type='dict'),
         deadTime=dict(type='int'),
         description=dict(type='str'),
         filter=dict(type='str'),

@@ -48,7 +48,7 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   intrusionPolicy
     description:
       - An optional IntrusionPolicy object. Specify an IntrusionPolicy object if you would like the traffic passing through the rule be inspected by the IP object.<br>Field level constraints: requires threat license. (Note: Additional constraints might exist)<br>Allowed types are: [IntrusionPolicy]
@@ -69,7 +69,7 @@ options:
       - A mandatory AcRuleAction object that defines the Access Control Rule action. Possible values are:<br>PERMIT <br>TRUST <br>DENY
   ruleId
     description:
-      - A Long object which holds the rule ID number of the FTDRulebase object.
+      - A non editable Long object which holds the rule ID number of the FTDRulebase object. It is created by the system in the POST request, and the same value must be included in the PUT request.
   sort
     description:
       - The field used to sort the requested object list
@@ -93,13 +93,10 @@ options:
       - An optional EmbeddedURLFilter object. Providing an object will make the rule be applied only to traffic matching provided url filter's condition(s).
   users
     description:
-      - A Set object containing TrafficIdentity objects. A TrafficIdentity object represents a User/Group of an Active Directory(AD).<br>Allowed types are: [LDAPRealm, ActiveDirectoryRealm, SpecialRealm, TrafficUser, TrafficUserGroup]
+      - A Set object containing TrafficIdentity objects. A TrafficIdentity object represents a User/Group of an Active Directory(AD).<br>Allowed types are: [LDAPRealm, ActiveDirectoryRealm, SpecialRealm, LocalIdentitySource, TrafficUser, TrafficUserGroup, User]
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-  vlanTags
-    description:
-      - A Set object of VlanTags associated with the rule.<br>Allowed types are: [VlanTag, VlanTagGroup]
 
 extends_documentation_fragment: ftd
 """
@@ -157,7 +154,7 @@ class AccessRuleResource(object):
     def addAccessRule(params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version', 'vlanTags'])
+        body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version'])
 
         url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -188,7 +185,7 @@ class AccessRuleResource(object):
     def editAccessRule(params):
         path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
-        body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version', 'vlanTags'])
+        body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version'])
 
         url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params, query_params=query_params)
         request_params = dict(
@@ -305,7 +302,6 @@ def main():
         urlFilter=dict(type='str'),
         users=dict(type='list'),
         version=dict(type='str'),
-        vlanTags=dict(type='list'),
     )
 
     module = AnsibleModule(argument_spec=fields)

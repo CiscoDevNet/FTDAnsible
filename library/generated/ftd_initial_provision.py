@@ -10,8 +10,8 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_standard_community_list
-short_description: Manages StandardCommunityList objects on Cisco FTD devices
+module: ftd_initial_provision
+short_description: Manages InitialProvision objects on Cisco FTD devices
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
@@ -22,12 +22,15 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
-  description
+  acceptEULA
     description:
-      - <br>Field level constraints: length must be between 0 and 200 (inclusive). (Note: Additional constraints might exist)
-  entries
+      - A boolean value that indicates whether the End User License Agreement is accepted. Specify one of the following values: [true, false].
+  currentPassword
     description:
-      - An object holding list of standard community entries. A minimum of 1 entry is required for each standard community list object.<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
+      - The current password. It is only used when updating user password. If you need to change the admin password, the current password. You must also configure the new password.
+  eulaText
+    description:
+      - The text of End User License Agreement.
   filter
     description:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
@@ -37,9 +40,9 @@ options:
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
-  name
+  newPassword
     description:
-      - A string containing the name of the standard community list.
+      - The new password to use. It is only used when updating user password. If you need to change the admin password, the new password. You must also configure the current password.
   offset
     description:
       - An integer representing the index of the first requested object. Index starts from 0. If not specified, the returned objects will start from index 0
@@ -57,24 +60,22 @@ extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
-- name: Fetch StandardCommunityList with a given name
-  ftd_standard_community_list:
+- name: Fetch InitialProvision with a given name
+  ftd_initial_provision:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: "getStandardCommunityListByName"
-    name: "Ansible StandardCommunityList"
+    operation: "getInitialProvisionByName"
+    name: "Ansible InitialProvision"
 
-- name: Create a StandardCommunityList
-  ftd_standard_community_list:
+- name: Create a InitialProvision
+  ftd_initial_provision:
     hostname: "https://127.0.0.1:8585"
     access_token: 'ACCESS_TOKEN'
     refresh_token: 'REFRESH_TOKEN'
-    operation: 'addStandardCommunityList'
+    operation: 'addInitialProvision'
 
-    description: "From Ansible with love"
-    name: "Ansible StandardCommunityList"
-    type: "standardcommunitylist"
+    type: "initialprovision"
 """
 
 RETURN = """
@@ -101,14 +102,14 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
 
-class StandardCommunityListResource(object):
+class InitialProvisionResource(object):
     
     @staticmethod
     @retry_on_token_expiration
-    def addStandardCommunityList(params):
-        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
+    def addInitialProvision(params):
+        body_params = dict_subset(params, ['acceptEULA', 'currentPassword', 'eulaText', 'id', 'newPassword', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/standardcommunitylists')
+        url = construct_url(params['hostname'], '/devices/default/action/provision')
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='POST',
@@ -120,54 +121,10 @@ class StandardCommunityListResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def deleteStandardCommunityList(params):
-        path_params = dict_subset(params, ['objId'])
-
-        url = construct_url(params['hostname'], '/object/standardcommunitylists/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
-        )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editStandardCommunityList(params):
-        path_params = dict_subset(params, ['objId'])
-        body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
-
-        url = construct_url(params['hostname'], '/object/standardcommunitylists/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
-        )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getStandardCommunityList(params):
-        path_params = dict_subset(params, ['objId'])
-
-        url = construct_url(params['hostname'], '/object/standardcommunitylists/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
-        )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getStandardCommunityListList(params):
+    def getInitialProvisionList(params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/object/standardcommunitylists', query_params=query_params)
+        url = construct_url(params['hostname'], '/devices/default/action/provision', query_params=query_params)
         request_params = dict(
             headers=base_headers(params['access_token']),
             method='GET',
@@ -178,42 +135,11 @@ class StandardCommunityListResource(object):
 
     @staticmethod
     @retry_on_token_expiration
-    def getStandardCommunityListByName(params):
+    def getInitialProvisionByName(params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(StandardCommunityListResource.getStandardCommunityListList, search_params)
+        item_generator = iterate_over_pageable_resource(InitialProvisionResource.getInitialProvisionList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
-
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertStandardCommunityList(params):
-        def is_duplicate_name_error(err):
-            err_msg = to_text(err.read())
-            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
-
-        try:
-            return StandardCommunityListResource.addStandardCommunityList(params)
-        except HTTPError as e:
-            if is_duplicate_name_error(e):
-                existing_object = StandardCommunityListResource.getStandardCommunityListByName(params)
-                params = copy_identity_properties(existing_object, params)
-                return StandardCommunityListResource.editStandardCommunityList(params)
-            else:
-                raise e
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editStandardCommunityListByName(params):
-        existing_object = StandardCommunityListResource.getStandardCommunityListByName(params)
-        params = copy_identity_properties(existing_object, params)
-        return StandardCommunityListResource.editStandardCommunityList(params)
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteStandardCommunityListByName(params):
-        existing_object = StandardCommunityListResource.getStandardCommunityListByName(params)
-        params = copy_identity_properties(existing_object, params)
-        return StandardCommunityListResource.deleteStandardCommunityList(params)
 
 
 def main():
@@ -222,16 +148,16 @@ def main():
         access_token=dict(type='str', required=True),
         refresh_token=dict(type='str', required=True),
 
-        operation=dict(type='str', default='upsertStandardCommunityList', choices=['addStandardCommunityList', 'deleteStandardCommunityList', 'editStandardCommunityList', 'getStandardCommunityList', 'getStandardCommunityListList', 'getStandardCommunityListByName', 'upsertStandardCommunityList', 'editStandardCommunityListByName', 'deleteStandardCommunityListByName']),
+        operation=dict(type='str', choices=['addInitialProvision', 'getInitialProvisionList', 'getInitialProvisionByName'], required=True),
         register_as=dict(type='str'),
 
-        description=dict(type='str'),
-        entries=dict(type='list'),
+        acceptEULA=dict(type='bool'),
+        currentPassword=dict(type='str'),
+        eulaText=dict(type='str'),
         filter=dict(type='str'),
         id=dict(type='str'),
         limit=dict(type='int'),
-        name=dict(type='str'),
-        objId=dict(type='str'),
+        newPassword=dict(type='str'),
         offset=dict(type='int'),
         sort=dict(type='str'),
         type=dict(type='str'),
@@ -242,7 +168,7 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(StandardCommunityListResource, params['operation'])
+        method_to_call = getattr(InitialProvisionResource, params['operation'])
         response = method_to_call(params)
         result = construct_module_result(response, params)
         module.exit_json(**result)

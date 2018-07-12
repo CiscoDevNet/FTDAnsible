@@ -24,7 +24,7 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   description
     description:
-      - An optional UTF-8 sting, from 0 to 200 characters. The string cannot include HTML tags, semi-colons(;), or carriage returns.<br>Field level constraints: length must be between 0 and 200 (inclusive), cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An optional UTF-8 sting, from 0 to 200 characters. The string cannot include HTML tags, semi-colons(;), or carriage returns.<br>Field level constraints: length must be between 0 and 200 (inclusive), must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   duplexType
     description:
       - An enum value that specifies the Interface Duplex Type, where AUTO is the default. Values can be one of the following . <br> AUTO - Automatically selects either FULL or HALF duplex. <br> HALF - Selects HALF duplex which enables only one way communication. <br> FULL - Selects FULL duplex setting which enables both way communication at the same time. <br> IGNORE - No duplex configuration needed.
@@ -39,16 +39,16 @@ options:
       - An optional Boolean value, TRUE or FALSE (the default). The TRUE value indicates that the interface is a Gigabit Interface. The value FALSE indicates that the interface is not a Gigabit Interface.
   hardwareName
     description:
-      - A mandatory UTF-8 string for the PhysicalInterfaces and SubInterfaces, which normally specifies the type of Interface along with the Interface number. The string cannot contain HTML tags.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A mandatory UTF-8 string for the PhysicalInterfaces and SubInterfaces, which normally specifies the type of Interface along with the Interface number. The string cannot contain HTML tags.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   ipv4
     description:
-      - An optional IPv4 object assigned to an interface in Firepower device manager. This object specifies Interface configuration for an IPv4 address.
+      - An optional IPv4 object assigned to an interface in Firepower Device Manager. This object specifies Interface configuration for an IPv4 address.
   ipv6
     description:
-      - An optional IPv6 object assigned to an interface in Firepower device manager. This object specifies Interface configuration for an IPv6 address.
+      - An optional IPv6 object assigned to an interface in Firepower Device Manager. This object specifies Interface configuration for an IPv6 address.
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
@@ -57,7 +57,7 @@ options:
       - An enum value that specifies whether the Physical Interface link state is UP or DOWN (the default). Link state of an interface is the operational status/running status of the interface. The values can be one of the following. <br> UP - Specifies whether the device is operationally UP. <br> DOWN - Specifies whether the device is operationally DOWN. 
   macAddress
     description:
-      - An optional String value, to specify a virtual MAC address. The MAC address must be in the format H.H.H where each H is a 16-bit hexadecimal number. For example, 000C.F142.4CDE<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An optional String value, to specify a virtual MAC address. The MAC address must be in the format H.H.H where each H is a 16-bit hexadecimal number. For example, 000C.F142.4CDE<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   managementInterface
     description:
       - An optional Boolean value, TRUE or FALSE (the default). The TRUE value indicates that the interface is a Management Interface. The value FALSE indicates that the interface is not a Management Interface.
@@ -87,7 +87,7 @@ options:
       - An enum value that specifies the Interface Speed Type, where AUTO is the default .Values can be one of the following. <br> AUTO - Enable auto-negotiation for this interface. <br> TEN - Force 10 Mbps. <br> HUNDRED - Force 100 Mbps. <br> THOUSAND - Force 1 Gbps. <br> TEN_THOUSAND - Force 10 Gbps. <br> NO_NEGOTIATE - Do not negotiate speed. <br> IGNORE - Do not configure Interface speed.
   standbyMacAddress
     description:
-      - An optional String value, to specify a virtual Standby MAC address. The MAC address must be in the format H.H.H where each H is a 16-bit hexadecimal number.<br>Field level constraints: cannot have HTML, must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
+      - An optional String value, to specify a virtual Standby MAC address. The MAC address must be in the format H.H.H where each H is a 16-bit hexadecimal number.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   tenGigabitInterface
     description:
       - An optional Boolean value, TRUE or FALSE (the default). The TRUE value indicates that the interface is a Ten Gigabit Interface. The value FALSE indicates that the interface is not a Ten Gigabit Interface.

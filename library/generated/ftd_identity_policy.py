@@ -24,7 +24,7 @@ options:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
   activeAuthCertificate
     description:
-      - A mandatory internal certificate forwarded to the user browser during active authentication.<br>Allowed types are: [ExternalCertificate, ExternalCACertificate, InternalCACertificate, InternalCertificate]
+      - A mandatory internal certificate forwarded to the user browser during active authentication.<br>Allowed types are: [InternalCertificate]
   activeAuthPort
     description:
       - The captive portal port. The default is 885 (TCP). If configured to a different value, it must be in the range 1025-65535<br>Field level constraints: cannot be null. (Note: Additional constraints might exist)
@@ -36,7 +36,7 @@ options:
       - The criteria used to filter the models you are requesting. It should have the following format: {field}{operator}{value}[;{field}{operator}{value}]. Supported operators are: "!"(not equals), ":"(equals), "<"(null), "~"(similar), ">"(null). Supported fields are: "name".
   id
     description:
-      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$, cannot have HTML. (Note: Additional constraints might exist)
+      - A unique string identifier assigned by the system when the object is created. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete (or reference) an existing object.<br>Field level constraints: must match pattern ^((?!;).)*$. (Note: Additional constraints might exist)
   limit
     description:
       - An integer representing the maximum amount of objects to return. If not specified, the maximum amount is 10
