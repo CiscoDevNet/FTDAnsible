@@ -1,0 +1,51 @@
+- name: testing upsert functionality
+  block:
+    - name: addNetworkObject should create a new network
+      ftd_network_object:
+        hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+        access_token: '{{ access_token }}'
+        refresh_token: '{{ refresh_token }}'
+        operation: 'addNetworkObject'
+        name: "ansible-test-network"
+        description: "Ansible Integration tests in action"
+        subType: "HOST"
+        value: "192.22.22.24"
+        type: "networkobject"
+        register_as: "newNetworkObj"
+      register: result
+
+    - assert:
+        that:
+          - result.changed == true
+          - newNetworkObj['name'] == "ansible-test-network"
+          - newNetworkObj['subType'] == "HOST"
+
+    - name: upsertNetworkObject should update already existing network
+      ftd_network_object:
+        hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+        access_token: '{{ access_token }}'
+        refresh_token: '{{ refresh_token }}'
+        operation: 'upsertNetworkObject'
+        name: "ansible-test-network"
+        description: "Ansible Integration tests in action"
+        subType: "NETWORK"
+        value: "192.23.23.0/24"
+        type: "networkobject"
+        register_as: "upsertedNetworkObj"
+      register: result
+
+    - assert:
+        that:
+          - result.changed == true
+          - upsertedNetworkObj['id'] == newNetworkObj['id']
+          - upsertedNetworkObj['subType'] == "NETWORK"
+          - upsertedNetworkObj['value'] == "192.23.23.0/24"
+
+  always:
+    - name: delete created test network
+      ftd_network_object:
+        hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+        access_token: '{{ access_token }}'
+        refresh_token: '{{ refresh_token }}'
+        operation: 'deleteNetworkObjectByName'
+        name: "ansible-test-network"

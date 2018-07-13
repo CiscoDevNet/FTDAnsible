@@ -1,0 +1,32 @@
+EXAMPLES = """
+{% if searchable_by_name %}
+- name: Fetch {{ model_name }} with a given name
+  ftd_{{ model_name | camel_to_snake }}:
+    hostname: "https://127.0.0.1:8585"
+    access_token: 'ACCESS_TOKEN'
+    refresh_token: 'REFRESH_TOKEN'
+    operation: "get{{ model_name }}ByName"
+    name: {{ example_properties['name'] | tojson }}
+{% endif %}
+{% if 'add%s' % model_name in operations.keys() %}
+{% set add_operation = operations['add%s' % model_name] %}
+
+- name: Create a {{ model_name }}
+  ftd_{{ model_name | camel_to_snake }}:
+    hostname: "https://127.0.0.1:8585"
+    access_token: 'ACCESS_TOKEN'
+    refresh_token: 'REFRESH_TOKEN'
+    operation: 'add{{ model_name }}'
+
+{% for param in add_operation.body_params.values() | sort %}
+{% if param.name in example_properties.keys() %}
+    {{ param.name }}: {{ example_properties.get(param.name) | tojson }}
+{% endif %}
+{% endfor %}
+{% for param in add_operation.path_params.values() | sort %}
+{% if param.name in example_properties.keys() %}
+    {{ param.name }}: {{ example_properties.get(param.name) | tojson }}
+{% endif %}
+{% endfor %}
+{% endif %}
+"""

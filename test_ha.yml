@@ -1,0 +1,58 @@
+- hosts: vftd
+  connection: local
+  tasks:
+    - name: Obtain access token
+      ftd_oauth_token:
+        device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+        username: '{{ username }}'
+        password: '{{ password }}'
+        operation: 'request'
+
+    - name: Configuring HA
+      block:
+
+        - name: Check HA status
+          ftd_ha_status:
+            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+            access_token: '{{ access_token }}'
+            refresh_token: '{{ refresh_token }}'
+
+            operation: 'getHAStatus'
+            objId: "default"
+            register_as: "ha_status"
+
+        - debug:
+            msg: "{{ ha_status }}"
+
+        - name: Check HA configuration
+          ftd_ha_configuration:
+            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+            access_token: '{{ access_token }}'
+            refresh_token: '{{ refresh_token }}'
+
+            operation: 'getHAConfigurationByName'
+            name: 'HA'
+            register_as: "ha_config"
+
+        - debug:
+            msg: "{{ ha_config }}"
+
+        - name: Join HA configuration
+          ftd_join_ha_status:
+            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+            access_token: '{{ access_token }}'
+            refresh_token: '{{ refresh_token }}'
+
+        - name: Break HA configuration
+          ftd_break_ha_status:
+            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+            access_token: '{{ access_token }}'
+            refresh_token: '{{ refresh_token }}'
+
+      always:
+        - name: Revoke access token
+          ftd_oauth_token:
+            device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
+            access_token: '{{ access_token }}'
+            refresh_token: '{{ refresh_token }}'
+            operation: 'revoke'
