@@ -4,8 +4,8 @@
     - name: Obtain access token
       ftd_oauth_token:
         device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-        username: 'admin'
-        password: '123qwe'
+        username: '{{ username }}'
+        password: '{{ password }}'
         operation: 'request'
 
     - name: Managing configuration objects
@@ -19,7 +19,7 @@
             name: "Ansible-network-host"
             description: "From Ansible with love"
             subType: "HOST"
-            value: "192.22.22.24"
+            value: "{{ access_rule_source_ip }}"
             type: "networkobject"
 
             register_as: "networkObj1"

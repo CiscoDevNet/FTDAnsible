@@ -1,0 +1,4 @@
+host_ip: 174.192.188.102
+network_ip: 192.23.23.0/24
+access_rule_source_ip: 128.123.129.108
+disk_file: /tmp/test.txt
