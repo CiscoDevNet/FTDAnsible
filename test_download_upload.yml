@@ -27,7 +27,7 @@
             refresh_token: '{{ refresh_token }}'
 
             object_type: 'diskFile'
-            src: /tmp/test.txt
+            src: '{{ disk_file }}'
             register_as: diskFile
 
         - name: Download disk file
