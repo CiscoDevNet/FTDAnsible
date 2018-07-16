@@ -8,6 +8,68 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'network'}
 
+DOCUMENTATION = """
+---
+module: install_ftd
+short_description: Configure FTD devices
+version_added: "2.7"
+author: "Cisco Systems, Inc."
+options:
+  ip:
+    description:
+      - Device IP Address to access TFTP Server
+    required: true
+  netmask:
+    description:
+      - Device Netmask
+    required: true
+  gateway:
+    description:
+      - Device Gateway
+    required: true
+  hostname:
+    description:
+      - Hostname to be set
+  password:
+    description:
+      - Password to login   
+  console_port:
+    description:
+      - Port of device on terminal server   
+    required: true 
+  tftp_server_ip:
+    description:
+      - TFTP Server IP Address
+    required: true
+  dns_servers:
+    description:
+      - DNS server
+    required: true
+  rommon_file:
+    description:
+      - Boot image to be transferred via TFTP
+    required: true
+  ftd_file:
+    description:
+      - FTD image to be transferred via HTTP
+    required: true
+"""
+
+EXAMPLES = """
+- name: install ftd
+  install_ftd:
+    ip: '192.168.0.156'
+    netmask: '255.255.255.0'
+    gateway: '192.168.0.254'
+    hostname: 'firepower'
+    password: 'Admin123'
+    console_port: '2004'
+    tftp_server_ip: '10.88.90.130'
+    dns_servers: '171.70.168.183'
+    rommon_file: 'netboot/ims/Development/6.3.0-10691/installers/ftd-boot-101.5.1.25.cdisk'
+    ftd_file: 'http://10.88.90.130/netboot/ims/Development/6.3.0-10691/installers/ftd-6.3.0-10691.pkg'
+"""
+
 from ansible.module_utils.basic import AnsibleModule
 from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
 
@@ -15,32 +77,29 @@ from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
 def main():
 
     fields = dict(
-        UUT_IP=dict(type='str', required=True),
-        UUT_NETMASK=dict(type='str', required=True),
-        UUT_GATEWAY=dict(type='str', required=True),
-        UUT_HOSTNAME=dict(type='str'),
-        UUT_USERNAME=dict(type='str'),
-        UUT_PASSWORD=dict(type='str'),
-        CONSOLE_PORT=dict(type='int', required=True),
-        TFTP_SERVER_IP=dict(type='str', required=True),
-        DNS_SERVERS=dict(type='str', required=True),
-        ROMMON_FILE=dict(type='str', required=True),
-        FTD_FILE=dict(type='path', required=True)
+        ip=dict(type='str', required=True),
+        netmask=dict(type='str', required=True),
+        hostname=dict(type='str'),
+        password=dict(type='str'),
+        console_port=dict(type='int', required=True),
+        tftp_server_ip=dict(type='str', required=True),
+        dns_servers=dict(type='str', required=True),
+        rommon_file=dict(type='str', required=True),
+        ftd_file=dict(type='path', required=True)
     )
 
     module = AnsibleModule(argument_spec=fields)
 
-    ip = module.params["UUT_IP"]
-    netmask = module.params["UUT_NETMASK"]
-    gateway = module.params["UUT_GATEWAY"]
-    hostname = module.params["UUT_HOSTNAME"]
-    username = module.params["UUT_USERNAME"]
-    password = module.params["UUT_PASSWORD"]
-    port = module.params["CONSOLE_PORT"]
-    tftpServerIp = module.params["TFTP_SERVER_IP"]
-    dnsServers = module.params["DNS_SERVERS"]
-    rommonFile = module.params["ROMMON_FILE"]
-    ftdFile = module.params["FTD_FILE"]
+    ip = module.params["ip"]
+    netmask = module.params["netmask"]
+    gateway = module.params["gateway"]
+    hostname = module.params["hostname"]
+    password = module.params["password"]
+    port = module.params["console_port"]
+    tftpServerIp = module.params["tftp_server_ip"]
+    dnsServers = module.params["dns_servers"]
+    rommonFile = module.params["rommon_file"]
+    ftdFile = module.params["ftd_file"]
 
     ftd = Ftd5500x(hostname=hostname, login_password=password, sudo_password=password)
 
@@ -54,7 +113,6 @@ def main():
                             uut_gateway=gateway,
                             dns_server=dnsServers,
                             hostname=hostname,
-                            is_device_kenton=True,
                             power_cycle_flag=False
                             )
 
