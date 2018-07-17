@@ -66,8 +66,8 @@ EXAMPLES = """
     console_port: '2004'
     tftp_server_ip: '10.88.90.130'
     dns_servers: '171.70.168.183'
-    rommon_file: 'netboot/ims/Development/6.3.0-10691/installers/ftd-boot-101.5.1.25.cdisk'
-    ftd_file: 'http://10.88.90.130/netboot/ims/Development/6.3.0-10691/installers/ftd-6.3.0-10691.pkg'
+    rommon_file: 'xyz/ftd-boot.cdisk'
+    ftd_file: 'http://10.88.90.130/xyz/ftd-6.3.0-xxx.pkg'
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -79,6 +79,7 @@ def main():
     fields = dict(
         ip=dict(type='str', required=True),
         netmask=dict(type='str', required=True),
+        gateway=dict(type='str', required=True),
         hostname=dict(type='str'),
         password=dict(type='str'),
         console_port=dict(type='int', required=True),
