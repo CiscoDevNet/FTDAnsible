@@ -9,6 +9,7 @@ import json
 
 from ansible.module_utils._text import to_text
 from ansible.plugins.httpapi import HttpApiBase
+from ansible.module_utils.six.moves.urllib.parse import urlencode
 
 try:
     from __main__ import display
@@ -41,11 +42,22 @@ class HttpApi(HttpApiBase):
         self.refresh_token = content['refresh_token']
         self.access_token = content['access_token']
 
-    def send_request(self, **message_kwargs):
-        return self.connection.send(message_kwargs['url'], message_kwargs['data'], method=message_kwargs['http_method'],
-                                    headers=self._authorized_headers()).read()
+    def send_request(self, url_path, **message_kwargs):
+        url = construct_url_path(url_path, message_kwargs.get('path_params'), message_kwargs.get('query_params'))
+        data = json.dumps(message_kwargs['body_params']) if 'body_params' in message_kwargs else None
+        response = self.connection.send(url, data, method=message_kwargs.get('http_method'), headers=self._authorized_headers()).read()
+        return json.loads(to_text(response)) if response else response
 
     def _authorized_headers(self):
         headers = dict(BASE_HEADERS)
         headers['Authorization'] = 'Bearer %s' % self.access_token
         return headers
+
+
+def construct_url_path(path, path_params=None, query_params=None):
+    url = API_PREFIX + path
+    if path_params:
+        url = url.format(**path_params)
+    if query_params:
+        url += "?" + urlencode(query_params)
+    return url
