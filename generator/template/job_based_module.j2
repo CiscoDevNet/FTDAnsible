@@ -11,45 +11,49 @@
 
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
+from ansible.module_utils.connection import Connection
 from ansible.module_utils.facts.timeout import TimeoutError
-from ansible.module_utils.http import construct_url, base_headers, wait_for_job_completion, DEFAULT_TIMEOUT
+from ansible.module_utils.http import wait_for_job_completion, DEFAULT_TIMEOUT
 {% if add_resource.body_params or add_resource.query_params %}
 from ansible.module_utils.misc import dict_subset
 {% endif %}
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
 
 
 class {{ class_name }}(object):
 
-    @staticmethod
-    @retry_on_token_expiration
-    def start_job(params):
+    def __init__(self, conn):
+        self._conn = conn
+
+    def start_job(self):
 {% if add_resource.query_params %}
         query_params = dict_subset(params, [{{ add_resource.query_params.keys() | map('quote') | join(', ') }}])
 {% endif %}
 {% if add_resource.body_params %}
         body_params = dict_subset(params, [{{ add_resource.body_params.keys() | map('quote') | join(', ') }}])
 {% endif %}
-        url = construct_url(params['hostname'], {{ add_resource.url_path | quote }}{% if add_resource.query_params %}, query_params=query_params{% endif %})
-        response = open_url(url, method={{ add_resource.http_method | upper | quote }}, headers=base_headers(params['access_token']){% if add_resource.body_params %}, data=json.dumps(body_params){% endif %})
-        return json.loads(to_text(response.read()))['id']
+        return self._conn.send_request(
+            url_path={{ add_resource.url_path | quote }},
+            http_method={{ add_resource.http_method | upper | quote }},
+{% if add_resource.query_params %}
+            query_params=query_params,
+{% endif %}
+{% if add_resource.body_params %}
+            body_params=body_params,
+{% endif %}
+        )['id']
 
-    @staticmethod
-    @retry_on_token_expiration
-    def fetch_job_status(params, job_id):
-        url = construct_url(params['hostname'], {{ get_resource.url_path | quote }}, path_params={'objId': job_id})
-        response = open_url(url, method={{ get_resource.http_method | upper | quote }}, headers=base_headers(params['access_token']))
-        return json.loads(to_text(response.read()))
+    def fetch_job_status(self, job_id):
+        return self._conn.send_request(
+            url_path={{ get_resource.url_path | quote }},
+            http_method={{ get_resource.http_method | upper | quote }},
+            path_params={'objId': job_id}
+        )
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
         timeout=dict(type='int', default=DEFAULT_TIMEOUT),
 {% for param in add_resource.body_params.values() %}
         {{ param.name }}=dict(type={{ param.type | quote }}),
@@ -63,8 +67,12 @@ def main():
     params = module.params
 
     try:
-        job_id = {{ class_name }}.start_job(params)
-        job_status = wait_for_job_completion(lambda: {{ class_name }}.fetch_job_status(params, job_id), params['timeout'])
+        conn = Connection(module._socket_path)
+        resource = {{ class_name }}(conn)
+
+        job_id = resource.start_job()
+        job_status = wait_for_job_completion(lambda: resource.fetch_job_status(job_id), params['timeout'])
+
         if job_status['state'] == 'DEPLOYED':
             module.exit_json(changed=True, status=job_status)
         else:

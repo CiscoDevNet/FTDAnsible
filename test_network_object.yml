@@ -35,11 +35,8 @@
         subType: "HOST"
         type: "networkobject"
 
-#    - name: Deploy changes
-#      ftd_deployment:
-#        hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-#        access_token: '{{ access_token }}'
-#        refresh_token: '{{ refresh_token }}'
+    - name: Deploy changes
+      ftd_deployment:
 
     - name: Refresh a NETWORK network object
       ftd_network_object:
