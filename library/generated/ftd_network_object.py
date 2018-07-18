@@ -61,26 +61,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch NetworkObject with a given name
   ftd_network_object:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getNetworkObjectByName"
     name: "Ansible NetworkObject"
 
 - name: Create a NetworkObject
   ftd_network_object:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addNetworkObject'
-
     description: "From Ansible with love"
     dnsResolution: "IPV4_AND_IPV6"
     name: "Ansible NetworkObject"

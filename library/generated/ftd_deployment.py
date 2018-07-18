@@ -22,16 +22,11 @@ options:
     description:
       - Specifies the maximum time period in seconds for the job to finish. If the job is not completed, the task fails.
     default: 600
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Start Deployment job and wait for its completion
   ftd_deployment:
-    hostname: "https://localhost:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     timeout: 900
 """
 
