@@ -1,97 +1,41 @@
 - hosts: vftd
-  connection: local
+  connection: httpapi
   tasks:
-    - name: Obtain access token
-      ftd_oauth_token:
-        device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-        username: '{{ username }}'
-        password: '{{ password }}'
-        operation: 'request'
+    - name: Create a network object
+      ftd_network_object:
+        name: "Ansible-network-host"
+        description: "From Ansible with love"
+        subType: "HOST"
+        value: "{{ access_rule_source_ip }}"
+        type: "networkobject"
 
-    - name: Managing configuration objects
-      block:
-        - name: Create a network object
-          ftd_network_object:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
+    - name: Create an access rule
+      ftd_access_rule:
+        name: "Ansible-accessrule"
+        type: "accessrule"
+        parentId: "default"
+        sourceNetworks:
+          - "{{ networkobject_ansible_network_host }}"
 
-            name: "Ansible-network-host"
-            description: "From Ansible with love"
-            subType: "HOST"
-            value: "{{ access_rule_source_ip }}"
-            type: "networkobject"
+    - name: Update the access rule
+      ftd_access_rule:
+        operation: 'editAccessRuleByName'
+        name: "Ansible-accessrule"
+        type: "accessrule"
+        parentId: "default"
+        destinationNetworks:
+          - "{{ networkobject_ansible_network_host }}"
 
-            register_as: "networkObj1"
+    - name: Deploy changes
+      ftd_deployment:
 
-        - name: Fetch default Access Policy
-          ftd_access_policy:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            filter: "name:Default Access Policy"
-            limit: 1
+    - name: Delete an access rule
+      ftd_access_rule:
+        operation: 'deleteAccessRuleByName'
+        name: 'Ansible-accessrule'
+        parentId: "default"
 
-            operation: "getAccessPolicyList"
-            register_as: "accessPolicies"
-
-        - name: Create an access rule
-          ftd_access_rule:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-
-            name: "Ansible-accessrule"
-            type: "accessrule"
-            parentId: "{{ accessPolicies[0]['id'] }}"
-            sourceNetworks:
-              - "{{ networkObj1 }}"
-
-            register_as: "accessRule1"
-
-        - name: Update the access rule
-          ftd_access_rule:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-
-            operation: 'editAccessRuleByName'
-            name: "Ansible-accessrule"
-            type: "accessrule"
-            parentId: "{{ accessPolicies[0]['id'] }}"
-            destinationNetworks:
-              - "{{ networkObj1 }}"
-
-            register_as: "accessRule1"
-
-        - name: Deploy changes
-          ftd_deployment:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-
-        - name: Delete an access rule
-          ftd_access_rule:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-
-            operation: 'deleteAccessRuleByName'
-            name: 'Ansible-accessrule'
-            parentId: "{{ accessPolicies[0]['id'] }}"
-
-        - name: Delete a network object
-          ftd_network_object:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            operation: 'deleteNetworkObject'
-            objId: "{{ networkObj1['id'] }}"
-
-      always:
-        - name: Revoke access token
-          ftd_oauth_token:
-            device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            operation: 'revoke'
+    - name: Delete a network object
+      ftd_network_object:
+        operation: 'deleteNetworkObject'
+        objId: "{{ networkobject_ansible_network_host['id'] }}"

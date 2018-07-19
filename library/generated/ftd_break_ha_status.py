@@ -22,16 +22,11 @@ options:
     description:
       - Specifies the maximum time period in seconds for the job to finish. If the job is not completed, the task fails.
     default: 600
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Start BreakHAStatus job and wait for its completion
   ftd_break_ha_status:
-    hostname: "https://localhost:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     timeout: 900
 """
 
@@ -51,38 +46,37 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
+from ansible.module_utils.connection import Connection
 from ansible.module_utils.facts.timeout import TimeoutError
-from ansible.module_utils.http import construct_url, base_headers, wait_for_job_completion, DEFAULT_TIMEOUT
+from ansible.module_utils.http import wait_for_job_completion, DEFAULT_TIMEOUT
 from ansible.module_utils.misc import dict_subset
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
 
 
 class BreakHAStatusResource(object):
 
-    @staticmethod
-    @retry_on_token_expiration
-    def start_job(params):
-        query_params = dict_subset(params, ['clearIntfs'])
-        url = construct_url(params['hostname'], '/devices/default/action/ha/break', query_params=query_params)
-        response = open_url(url, method='POST', headers=base_headers(params['access_token']))
-        return json.loads(to_text(response.read()))['id']
+    def __init__(self, conn):
+        self._conn = conn
 
-    @staticmethod
-    @retry_on_token_expiration
-    def fetch_job_status(params, job_id):
-        url = construct_url(params['hostname'], '/devices/default/action/ha/break/{objId}', path_params={'objId': job_id})
-        response = open_url(url, method='GET', headers=base_headers(params['access_token']))
-        return json.loads(to_text(response.read()))
+    def start_job(self, params):
+        query_params = dict_subset(params, ['clearIntfs'])
+        return self._conn.send_request(
+            url_path='/devices/default/action/ha/break',
+            http_method='POST',
+            query_params=query_params,
+        )['id']
+
+    def fetch_job_status(self, job_id):
+        return self._conn.send_request(
+            url_path='/devices/default/action/ha/break/{objId}',
+            http_method='GET',
+            path_params={'objId': job_id}
+        )
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
         timeout=dict(type='int', default=DEFAULT_TIMEOUT),
         clearIntfs=dict(type='bool'),
     )
@@ -91,8 +85,12 @@ def main():
     params = module.params
 
     try:
-        job_id = BreakHAStatusResource.start_job(params)
-        job_status = wait_for_job_completion(lambda: BreakHAStatusResource.fetch_job_status(params, job_id), params['timeout'])
+        conn = Connection(module._socket_path)
+        resource = BreakHAStatusResource(conn)
+
+        job_id = resource.start_job(params)
+        job_status = wait_for_job_completion(lambda: resource.fetch_job_status(job_id), params['timeout'])
+
         if job_status['state'] == 'DEPLOYED':
             module.exit_json(changed=True, status=job_status)
         else:
