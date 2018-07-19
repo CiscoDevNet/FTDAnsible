@@ -3,20 +3,17 @@
 
 from __future__ import (absolute_import, division, print_function)
 
-__metaclass__ = type
-
 import json
+import os
+import re
+import shutil
 
 from ansible.module_utils._text import to_text
-from ansible.plugins.httpapi import HttpApiBase
-from ansible.module_utils.six.moves.urllib.parse import urlencode
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-
-try:
-    from __main__ import display
-except ImportError:
-    from ansible.utils.display import Display
-    display = Display()
+from ansible.module_utils.six.moves.urllib.parse import urlencode
+from ansible.plugins.httpapi import HttpApiBase
+from urllib3 import encode_multipart_formdata
+from urllib3.fields import RequestField
 
 BASE_HEADERS = {
     'Content-Type': 'application/json',
@@ -43,21 +40,45 @@ class HttpApi(HttpApiBase):
         response = self.connection.send(API_PREFIX + "/fdm/token", json.dumps(auth_payload), method='POST', headers=BASE_HEADERS)
         self._set_token_info(response)
 
-    def send_request(self, url_path, **message_kwargs):
-        url = construct_url_path(url_path, message_kwargs.get('path_params'), message_kwargs.get('query_params'))
-        data = json.dumps(message_kwargs['body_params']) if 'body_params' in message_kwargs else None
-        method = message_kwargs.get('http_method')
+    def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
+        url = construct_url_path(url_path, path_params, query_params)
+        data = json.dumps(body_params) if body_params else None
 
         try:
-            response = self.connection.send(url, data, method=method, headers=self._authorized_headers()).read()
+            response = self.connection.send(url, data, method=http_method, headers=self._authorized_headers()).read()
         except HTTPError as e:
             if e.code == TOKEN_EXPIRATION_STATUS_CODE or e.code == UNAUTHORIZED_STATUS_CODE:
                 self._refresh_token()
-                response = self.connection.send(url, data, method=method, headers=self._authorized_headers()).read()
+                response = self.connection.send(url, data, method=http_method, headers=self._authorized_headers()).read()
             else:
                 raise e
 
         return json.loads(to_text(response)) if response else response
+
+    def upload_file(self, from_path, to_url):
+        url = construct_url_path(to_url)
+        with open(from_path, 'rb') as src_file:
+            rf = RequestField('fileToUpload', src_file.read(), os.path.basename(src_file.name))
+            rf.make_multipart()
+            body, content_type = encode_multipart_formdata([rf])
+
+            headers = self._authorized_headers()
+            headers['Content-Type'] = content_type
+            headers['Content-Length'] = len(body)
+
+            response = self.connection.send(url, data=body, method='POST', headers=headers).read()
+        return json.loads(to_text(response))
+
+    def download_file(self, from_url, to_path):
+        url = construct_url_path(from_url)
+        response = self.connection.send(url, data=None, method='GET', headers=self._authorized_headers())
+
+        if os.path.isdir(to_path):
+            filename = extract_filename_from_headers(response.info())
+            to_path = os.path.join(to_path, filename)
+
+        with open(to_path, "wb") as output_file:
+            shutil.copyfileobj(response, output_file)
 
     def _authorized_headers(self):
         headers = dict(BASE_HEADERS)
@@ -85,3 +106,12 @@ def construct_url_path(path, path_params=None, query_params=None):
     if query_params:
         url += "?" + urlencode(query_params)
     return url
+
+
+def extract_filename_from_headers(response_info):
+    content_header_regex = r'attachment; ?filename="?([^"]+)'
+    match = re.match(content_header_regex, response_info.get('Content-Disposition'))
+    if match:
+        return match.group(1)
+    else:
+        raise ValueError("No appropriate Content-Disposition header is specified.")
