@@ -1,11 +1,6 @@
 import json
 from functools import wraps
 
-# When used by Ansible, it requires absolute imports from 'ansible.module_utils' package
-if "ansible.module_utils" in __name__:
-    from ansible.module_utils.http import construct_url
-else:
-    from .http import construct_url
 from ansible.module_utils.urls import open_url
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.basic import to_text
@@ -14,7 +9,7 @@ AUTH_HEADERS = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
 }
-AUTH_PREFIX = '/fdm/token'
+AUTH_PREFIX = '/api/fdm/v2/fdm/token'
 TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
 
@@ -25,7 +20,7 @@ def request_token(hostname, username, password):
         'username': username,
         'password': password
     }
-    url = construct_url(hostname, AUTH_PREFIX)
+    url = hostname + AUTH_PREFIX
     response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS).read()
     return json.loads(to_text(response))
 
@@ -35,7 +30,7 @@ def refresh_token(hostname, refresh_token):
         'grant_type': 'refresh_token',
         'refresh_token': refresh_token
     }
-    url = construct_url(hostname, AUTH_PREFIX)
+    url = hostname + AUTH_PREFIX
     response = open_url(url, method='POST', data=json.dumps(auth_payload), headers=AUTH_HEADERS).read()
     return json.loads(to_text(response))
 
@@ -46,7 +41,7 @@ def revoke_token(hostname, access_token, refresh_token):
         'access_token': access_token,
         'token_to_revoke': refresh_token
     }
-    url = construct_url(hostname, AUTH_PREFIX)
+    url = hostname + AUTH_PREFIX
     open_url(url, method='POST', data=json.dumps(logout_payload), headers=AUTH_HEADERS)
 
 
