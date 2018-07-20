@@ -29,7 +29,8 @@ JOB_BASED_MODULES = {'BreakHAStatus', 'JoinHAStatus', 'Deployment'}
 
 
 def init_template_env():
-    env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER), trim_blocks=True, extensions=['jinja2.ext.do'])
+    env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER), trim_blocks=True, lstrip_blocks=True,
+                      extensions=['jinja2.ext.do'])
     env.filters['quote'] = lambda a: "'%s'" % a
     env.filters['camel_to_snake'] = lambda a: camel_to_snake(a)
     return env

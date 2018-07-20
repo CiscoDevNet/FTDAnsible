@@ -94,7 +94,7 @@ class AccessPolicyResource(object):
 
     def __init__(self, conn):
         self._conn = conn
-    
+
     def editAccessPolicy(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['defaultAction', 'id', 'identityPolicySetting', 'name', 'securityIntelligence', 'sslPolicy', 'type', 'version'])

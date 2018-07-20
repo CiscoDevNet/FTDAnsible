@@ -141,7 +141,7 @@ class AccessRuleResource(object):
 
     def __init__(self, conn):
         self._conn = conn
-    
+
     def addAccessRule(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])

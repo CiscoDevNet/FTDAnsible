@@ -124,7 +124,7 @@ class HAConfigurationResource(object):
 
     def __init__(self, conn):
         self._conn = conn
-    
+
     def editHAConfiguration(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['failoverInterface', 'failoverName', 'id', 'name', 'nodeRole', 'primaryFailoverIPv4', 'primaryFailoverIPv6', 'primaryStatefulFailoverIPv4', 'primaryStatefulFailoverIPv6', 'secondaryFailoverIPv4', 'secondaryFailoverIPv6', 'secondaryStatefulFailoverIPv4', 'secondaryStatefulFailoverIPv6', 'sharedKey', 'statefulFailoverInterface', 'statefulFailoverName', 'type', 'version'])

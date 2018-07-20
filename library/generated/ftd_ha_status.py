@@ -57,7 +57,7 @@ class HAStatusResource(object):
 
     def __init__(self, conn):
         self._conn = conn
-    
+
     def getHAStatus(self, params):
         path_params = dict_subset(params, ['objId'])
 

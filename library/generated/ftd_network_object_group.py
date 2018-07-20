@@ -99,7 +99,7 @@ class NetworkObjectGroupResource(object):
 
     def __init__(self, conn):
         self._conn = conn
-    
+
     def addNetworkObjectGroup(self, params):
         body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'objects', 'type', 'version'])
 

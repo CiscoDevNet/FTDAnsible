@@ -23,31 +23,31 @@ class {{ class_name }}(object):
 
     def __init__(self, conn):
         self._conn = conn
-    {% for operation_name, operation_spec in operations.items() %}
+{% for operation_name, operation_spec in operations.items() %}
 
     def {{ operation_name }}(self, params):
-{% if operation_spec.path_params %}
+    {% if operation_spec.path_params %}
         path_params = dict_subset(params, [{{ operation_spec.path_params.keys() | sort | map('quote') | join(', ') }}])
-{% endif %}
-{% if operation_spec.query_params %}
+    {% endif %}
+    {% if operation_spec.query_params %}
         query_params = dict_subset(params, [{{ operation_spec.query_params.keys() | sort | map('quote') | join(', ') }}])
-{% endif %}
-{% if operation_spec.body_params %}
+    {% endif %}
+    {% if operation_spec.body_params %}
         body_params = dict_subset(params, [{{ operation_spec.body_params.keys() | sort | map('quote') | join(', ') }}])
-{% endif %}
+    {% endif %}
 
         return self._conn.send_request(
             url_path={{ operation_spec.url_path | quote }},
             http_method={{ operation_spec.http_method | upper | quote }},
-{% if operation_spec.body_params %}
+        {% if operation_spec.body_params %}
             body_params=body_params,
-{% endif %}
-{% if operation_spec.path_params %}
+        {% endif %}
+        {% if operation_spec.path_params %}
             path_params=path_params,
-{% endif %}
-{% if operation_spec.query_params %}
+        {% endif %}
+        {% if operation_spec.query_params %}
             query_params=query_params,
-{% endif %}
+        {% endif %}
         )
 {% endfor %}
 {% if searchable_by_name %}
@@ -97,16 +97,16 @@ class {{ class_name }}(object):
 
 def main():
     fields = dict(
-{% if eligible_for_upsert %}
+    {% if eligible_for_upsert %}
         operation=dict(type='str', default='upsert{{ model_name }}', choices=[{{ operations | map('quote') | join(', ') }}{% if extra_operations %}, {{ extra_operations | map('quote') | join(', ') }}{% endif %}]),
-{% else %}
+    {% else %}
         operation=dict(type='str', choices=[{{ operations | map('quote') | join(', ') }}{% if extra_operations %}, {{ extra_operations | map('quote') | join(', ') }}{% endif %}], required=True),
-{% endif %}
+    {% endif %}
         register_as=dict(type='str'),
 
-{% for param in params %}
+    {% for param in params %}
         {{ param.name }}=dict(type={{ param.type | quote }}),
-{% endfor %}
+    {% endfor %}
     )
 
     module = AnsibleModule(argument_spec=fields)

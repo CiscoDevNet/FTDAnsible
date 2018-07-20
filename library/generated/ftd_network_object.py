@@ -107,7 +107,7 @@ class NetworkObjectResource(object):
 
     def __init__(self, conn):
         self._conn = conn
-    
+
     def addNetworkObject(self, params):
         body_params = dict_subset(params, ['description', 'dnsResolution', 'id', 'isSystemDefined', 'name', 'subType', 'type', 'value', 'version'])
 

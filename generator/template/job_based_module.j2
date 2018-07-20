@@ -27,21 +27,21 @@ class {{ class_name }}(object):
         self._conn = conn
 
     def start_job(self{% if add_resource.query_params or add_resource.body_params %}, params{% endif %}):
-{% if add_resource.query_params %}
+    {% if add_resource.query_params %}
         query_params = dict_subset(params, [{{ add_resource.query_params.keys() | map('quote') | join(', ') }}])
-{% endif %}
-{% if add_resource.body_params %}
+    {% endif %}
+    {% if add_resource.body_params %}
         body_params = dict_subset(params, [{{ add_resource.body_params.keys() | map('quote') | join(', ') }}])
-{% endif %}
+    {% endif %}
         return self._conn.send_request(
             url_path={{ add_resource.url_path | quote }},
             http_method={{ add_resource.http_method | upper | quote }},
-{% if add_resource.query_params %}
+        {% if add_resource.query_params %}
             query_params=query_params,
-{% endif %}
-{% if add_resource.body_params %}
+        {% endif %}
+        {% if add_resource.body_params %}
             body_params=body_params,
-{% endif %}
+        {% endif %}
         )['id']
 
     def fetch_job_status(self, job_id):
@@ -55,12 +55,12 @@ class {{ class_name }}(object):
 def main():
     fields = dict(
         timeout=dict(type='int', default=DEFAULT_TIMEOUT),
-{% for param in add_resource.body_params.values() %}
+    {% for param in add_resource.body_params.values() %}
         {{ param.name }}=dict(type={{ param.type | quote }}),
-{% endfor %}
-{% for param in add_resource.query_params.values() %}
+    {% endfor %}
+    {% for param in add_resource.query_params.values() %}
         {{ param.name }}=dict(type={{ param.type | quote }}),
-{% endfor %}
+    {% endfor %}
     )
 
     module = AnsibleModule(argument_spec=fields)
