@@ -20,7 +20,7 @@ BASE_HEADERS = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
 }
-API_PREFIX = "/api/fdm/v1"
+API_PREFIX = "/api/fdm/v2"
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
