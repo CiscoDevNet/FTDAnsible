@@ -21,6 +21,7 @@ BASE_HEADERS = {
     'Accept': 'application/json'
 }
 API_PREFIX = "/api/fdm/v2"
+API_TOKEN_PATH = "/fdm/token"
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
@@ -53,7 +54,8 @@ class HttpApi(HttpApiBase):
             'username': username,
             'password': password
         }
-        response = self.connection.send(API_PREFIX + "/fdm/token", json.dumps(auth_payload), method='POST', headers=BASE_HEADERS)
+        response = self.connection.send(API_PREFIX + API_TOKEN_PATH, json.dumps(auth_payload), method='POST',
+                                        headers=BASE_HEADERS)
         self._set_token_info(response)
 
     @retry_on_token_expiration
@@ -100,7 +102,7 @@ class HttpApi(HttpApiBase):
             'grant_type': 'refresh_token',
             'refresh_token': self.refresh_token
         }
-        response = self.connection.send(API_PREFIX + "/fdm/token", json.dumps(payload), method='POST', headers=BASE_HEADERS)
+        response = self.connection.send(API_PREFIX + API_TOKEN_PATH, json.dumps(payload), method='POST', headers=BASE_HEADERS)
         self._set_token_info(response)
 
     def _set_token_info(self, token_response):
