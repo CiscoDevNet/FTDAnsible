@@ -23,6 +23,7 @@ class {{ class_name }}(object):
 
     def __init__(self, conn):
         self._conn = conn
+{# Method declarations for standard operations (CRUD) that are defined in Swagger documentation #}
 {% for operation_name, operation_spec in operations.items() %}
 
     def {{ operation_name }}(self, params):
@@ -50,6 +51,7 @@ class {{ class_name }}(object):
         {% endif %}
         )
 {% endfor %}
+{# Additional operation to search the object by name #}
 {% if searchable_by_name %}
 {% do extra_operations.append( "get"+model_name+"ByName" ) %}
 
@@ -59,6 +61,7 @@ class {{ class_name }}(object):
         item_generator = iterate_over_pageable_resource(self.get{{ model_name }}List, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 {% endif %}
+{# Additional operation to upsert the object (insert the new object or update if it already exists) #}
 {% if eligible_for_upsert %}
 {% do extra_operations.append( "upsert"+model_name ) %}
 
@@ -77,6 +80,7 @@ class {{ class_name }}(object):
             else:
                 raise e
 {% endif %}
+{# Additional operation to edit the object by name #}
 {% if searchable_by_name and 'edit%s' % model_name in operations.keys() %}
 {% do extra_operations.append( "edit"+model_name+"ByName" ) %}
 
@@ -85,6 +89,7 @@ class {{ class_name }}(object):
         params = copy_identity_properties(existing_object, params)
         return self.edit{{ model_name }}(params)
 {% endif %}
+{# Additional operation to delete the object by name #}
 {% if searchable_by_name and 'delete%s' % model_name in operations.keys() %}
 {% do extra_operations.append( "delete"+model_name+"ByName" ) %}
 
