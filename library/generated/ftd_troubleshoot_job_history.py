@@ -34,16 +34,11 @@ options:
   sort
     description:
       - The field used to sort the requested object list
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch TroubleshootJobHistory with a given name
   ftd_troubleshoot_job_history:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getTroubleshootJobHistoryByName"
     name: "Ansible TroubleshootJobHistory"
 """
@@ -64,45 +59,36 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class TroubleshootJobHistoryResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def getTroubleshootJobHistoryList(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def getTroubleshootJobHistoryList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/managedentity/jobs/troubleshootjob', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/managedentity/jobs/troubleshootjob',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getTroubleshootJobHistoryByName(params):
+    def getTroubleshootJobHistoryByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(TroubleshootJobHistoryResource.getTroubleshootJobHistoryList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getTroubleshootJobHistoryList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['getTroubleshootJobHistoryList', 'getTroubleshootJobHistoryByName'], required=True),
         register_as=dict(type='str'),
 
@@ -116,8 +102,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(TroubleshootJobHistoryResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = TroubleshootJobHistoryResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

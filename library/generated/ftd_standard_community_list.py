@@ -52,26 +52,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch StandardCommunityList with a given name
   ftd_standard_community_list:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getStandardCommunityListByName"
     name: "Ansible StandardCommunityList"
 
 - name: Create a StandardCommunityList
   ftd_standard_community_list:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addStandardCommunityList'
-
     description: "From Ansible with love"
     name: "Ansible StandardCommunityList"
     type: "standardcommunitylist"
@@ -93,135 +84,99 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class StandardCommunityListResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addStandardCommunityList(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addStandardCommunityList(self, params):
         body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/standardcommunitylists')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/standardcommunitylists',
+            http_method='POST',
+            body_params=body_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteStandardCommunityList(params):
+    def deleteStandardCommunityList(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/standardcommunitylists/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/object/standardcommunitylists/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editStandardCommunityList(params):
+    def editStandardCommunityList(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['description', 'entries', 'id', 'name', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/standardcommunitylists/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/standardcommunitylists/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getStandardCommunityList(params):
+    def getStandardCommunityList(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/standardcommunitylists/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/standardcommunitylists/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getStandardCommunityListList(params):
+    def getStandardCommunityListList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/object/standardcommunitylists', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/standardcommunitylists',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getStandardCommunityListByName(params):
+    def getStandardCommunityListByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(StandardCommunityListResource.getStandardCommunityListList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getStandardCommunityListList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertStandardCommunityList(params):
+    def upsertStandardCommunityList(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return StandardCommunityListResource.addStandardCommunityList(params)
+            return self.addStandardCommunityList(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = StandardCommunityListResource.getStandardCommunityListByName(params)
+                existing_object = self.getStandardCommunityListByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return StandardCommunityListResource.editStandardCommunityList(params)
+                return self.editStandardCommunityList(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editStandardCommunityListByName(params):
-        existing_object = StandardCommunityListResource.getStandardCommunityListByName(params)
+    def editStandardCommunityListByName(self, params):
+        existing_object = self.getStandardCommunityListByName(params)
         params = copy_identity_properties(existing_object, params)
-        return StandardCommunityListResource.editStandardCommunityList(params)
+        return self.editStandardCommunityList(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteStandardCommunityListByName(params):
-        existing_object = StandardCommunityListResource.getStandardCommunityListByName(params)
+    def deleteStandardCommunityListByName(self, params):
+        existing_object = self.getStandardCommunityListByName(params)
         params = copy_identity_properties(existing_object, params)
-        return StandardCommunityListResource.deleteStandardCommunityList(params)
+        return self.deleteStandardCommunityList(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertStandardCommunityList', choices=['addStandardCommunityList', 'deleteStandardCommunityList', 'editStandardCommunityList', 'getStandardCommunityList', 'getStandardCommunityListList', 'getStandardCommunityListByName', 'upsertStandardCommunityList', 'editStandardCommunityListByName', 'deleteStandardCommunityListByName']),
         register_as=dict(type='str'),
 
@@ -242,8 +197,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(StandardCommunityListResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = StandardCommunityListResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

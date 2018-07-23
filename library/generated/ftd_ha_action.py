@@ -22,8 +22,6 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
@@ -45,62 +43,42 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class HAActionResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def startHAFailover(params):
 
-        url = construct_url(params['hostname'], '/devices/default/action/ha/failover')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
+    def __init__(self, conn):
+        self._conn = conn
+
+    def startHAFailover(self, params):
+
+        return self._conn.send_request(
+            url_path='/devices/default/action/ha/failover',
+            http_method='POST',
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
+    def startHAResume(self, params):
 
-    @staticmethod
-    @retry_on_token_expiration
-    def startHAResume(params):
-
-        url = construct_url(params['hostname'], '/devices/default/action/ha/resume')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
+        return self._conn.send_request(
+            url_path='/devices/default/action/ha/resume',
+            http_method='POST',
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
+    def startHASuspend(self, params):
 
-    @staticmethod
-    @retry_on_token_expiration
-    def startHASuspend(params):
-
-        url = construct_url(params['hostname'], '/devices/default/action/ha/suspend')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
+        return self._conn.send_request(
+            url_path='/devices/default/action/ha/suspend',
+            http_method='POST',
         )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['startHAFailover', 'startHAResume', 'startHASuspend'], required=True),
         register_as=dict(type='str'),
 
@@ -110,8 +88,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(HAActionResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = HAActionResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

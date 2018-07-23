@@ -34,16 +34,11 @@ options:
   sort
     description:
       - The field used to sort the requested object list
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch JobHistoryEntity with a given name
   ftd_job_history_entity:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getJobHistoryEntityByName"
     name: "Ansible JobHistoryEntity"
 """
@@ -64,80 +59,59 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class JobHistoryEntityResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteJobHistoryEntity(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def deleteJobHistoryEntity(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/jobs/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/jobs/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getJobHistoryEntity(params):
+    def getJobHistoryEntity(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/jobs/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/jobs/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getJobHistoryEntityList(params):
+    def getJobHistoryEntityList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/jobs', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/jobs',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getJobHistoryEntityByName(params):
+    def getJobHistoryEntityByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(JobHistoryEntityResource.getJobHistoryEntityList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getJobHistoryEntityList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteJobHistoryEntityByName(params):
-        existing_object = JobHistoryEntityResource.getJobHistoryEntityByName(params)
+    def deleteJobHistoryEntityByName(self, params):
+        existing_object = self.getJobHistoryEntityByName(params)
         params = copy_identity_properties(existing_object, params)
-        return JobHistoryEntityResource.deleteJobHistoryEntity(params)
+        return self.deleteJobHistoryEntity(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['deleteJobHistoryEntity', 'getJobHistoryEntity', 'getJobHistoryEntityList', 'getJobHistoryEntityByName', 'deleteJobHistoryEntityByName'], required=True),
         register_as=dict(type='str'),
 
@@ -152,8 +126,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(JobHistoryEntityResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = JobHistoryEntityResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

@@ -34,16 +34,11 @@ options:
   sort
     description:
       - The field used to sort the requested object list
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch JobHistoryDeployment with a given name
   ftd_job_history_deployment:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getJobHistoryDeploymentByName"
     name: "Ansible JobHistoryDeployment"
 """
@@ -64,80 +59,59 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class JobHistoryDeploymentResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteJobHistoryDeployment(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def deleteJobHistoryDeployment(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/jobs/deployments/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/jobs/deployments/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getJobHistoryDeployment(params):
+    def getJobHistoryDeployment(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/jobs/deployments/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/jobs/deployments/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getJobHistoryDeploymentList(params):
+    def getJobHistoryDeploymentList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/jobs/deployments', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/jobs/deployments',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getJobHistoryDeploymentByName(params):
+    def getJobHistoryDeploymentByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(JobHistoryDeploymentResource.getJobHistoryDeploymentList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getJobHistoryDeploymentList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteJobHistoryDeploymentByName(params):
-        existing_object = JobHistoryDeploymentResource.getJobHistoryDeploymentByName(params)
+    def deleteJobHistoryDeploymentByName(self, params):
+        existing_object = self.getJobHistoryDeploymentByName(params)
         params = copy_identity_properties(existing_object, params)
-        return JobHistoryDeploymentResource.deleteJobHistoryDeployment(params)
+        return self.deleteJobHistoryDeployment(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['deleteJobHistoryDeployment', 'getJobHistoryDeployment', 'getJobHistoryDeploymentList', 'getJobHistoryDeploymentByName', 'deleteJobHistoryDeploymentByName'], required=True),
         register_as=dict(type='str'),
 
@@ -152,8 +126,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(JobHistoryDeploymentResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = JobHistoryDeploymentResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

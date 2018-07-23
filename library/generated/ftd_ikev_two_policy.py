@@ -76,26 +76,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch IkevTwoPolicy with a given name
   ftd_ikev_two_policy:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getIkevTwoPolicyByName"
     name: "Ansible IkevTwoPolicy"
 
 - name: Create a IkevTwoPolicy
   ftd_ikev_two_policy:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addIkevTwoPolicy'
-
     name: "Ansible IkevTwoPolicy"
     type: "ikevtwopolicy"
 """
@@ -116,135 +107,99 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class IkevTwoPolicyResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addIkevTwoPolicy(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addIkevTwoPolicy(self, params):
         body_params = dict_subset(params, ['cryptoRestricted', 'enabled', 'encryptionTypes', 'groupTypes', 'id', 'integrityTypes', 'isSystemDefined', 'lifeTime', 'name', 'prfTypes', 'priority', 'summaryLabel', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/ikev2policies')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/ikev2policies',
+            http_method='POST',
+            body_params=body_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteIkevTwoPolicy(params):
+    def deleteIkevTwoPolicy(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/ikev2policies/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/object/ikev2policies/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editIkevTwoPolicy(params):
+    def editIkevTwoPolicy(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['cryptoRestricted', 'enabled', 'encryptionTypes', 'groupTypes', 'id', 'integrityTypes', 'isSystemDefined', 'lifeTime', 'name', 'prfTypes', 'priority', 'summaryLabel', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/ikev2policies/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/ikev2policies/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getIkevTwoPolicy(params):
+    def getIkevTwoPolicy(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/ikev2policies/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/ikev2policies/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getIkevTwoPolicyList(params):
+    def getIkevTwoPolicyList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/object/ikev2policies', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/ikev2policies',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getIkevTwoPolicyByName(params):
+    def getIkevTwoPolicyByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(IkevTwoPolicyResource.getIkevTwoPolicyList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getIkevTwoPolicyList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertIkevTwoPolicy(params):
+    def upsertIkevTwoPolicy(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return IkevTwoPolicyResource.addIkevTwoPolicy(params)
+            return self.addIkevTwoPolicy(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = IkevTwoPolicyResource.getIkevTwoPolicyByName(params)
+                existing_object = self.getIkevTwoPolicyByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return IkevTwoPolicyResource.editIkevTwoPolicy(params)
+                return self.editIkevTwoPolicy(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editIkevTwoPolicyByName(params):
-        existing_object = IkevTwoPolicyResource.getIkevTwoPolicyByName(params)
+    def editIkevTwoPolicyByName(self, params):
+        existing_object = self.getIkevTwoPolicyByName(params)
         params = copy_identity_properties(existing_object, params)
-        return IkevTwoPolicyResource.editIkevTwoPolicy(params)
+        return self.editIkevTwoPolicy(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteIkevTwoPolicyByName(params):
-        existing_object = IkevTwoPolicyResource.getIkevTwoPolicyByName(params)
+    def deleteIkevTwoPolicyByName(self, params):
+        existing_object = self.getIkevTwoPolicyByName(params)
         params = copy_identity_properties(existing_object, params)
-        return IkevTwoPolicyResource.deleteIkevTwoPolicy(params)
+        return self.deleteIkevTwoPolicy(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertIkevTwoPolicy', choices=['addIkevTwoPolicy', 'deleteIkevTwoPolicy', 'editIkevTwoPolicy', 'getIkevTwoPolicy', 'getIkevTwoPolicyList', 'getIkevTwoPolicyByName', 'upsertIkevTwoPolicy', 'editIkevTwoPolicyByName', 'deleteIkevTwoPolicyByName']),
         register_as=dict(type='str'),
 
@@ -273,8 +228,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(IkevTwoPolicyResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = IkevTwoPolicyResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

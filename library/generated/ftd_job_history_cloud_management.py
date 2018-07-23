@@ -34,16 +34,11 @@ options:
   sort
     description:
       - The field used to sort the requested object list
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch JobHistoryCloudManagement with a given name
   ftd_job_history_cloud_management:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getJobHistoryCloudManagementByName"
     name: "Ansible JobHistoryCloudManagement"
 """
@@ -64,80 +59,59 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class JobHistoryCloudManagementResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteJobHistoryCloudManagement(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def deleteJobHistoryCloudManagement(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/jobs/cloudmanagementupdates/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/jobs/cloudmanagementupdates/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getJobHistoryCloudManagement(params):
+    def getJobHistoryCloudManagement(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/jobs/cloudmanagementupdates/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/jobs/cloudmanagementupdates/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getJobHistoryCloudManagementList(params):
+    def getJobHistoryCloudManagementList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/jobs/cloudmanagementupdates', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/jobs/cloudmanagementupdates',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getJobHistoryCloudManagementByName(params):
+    def getJobHistoryCloudManagementByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(JobHistoryCloudManagementResource.getJobHistoryCloudManagementList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getJobHistoryCloudManagementList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteJobHistoryCloudManagementByName(params):
-        existing_object = JobHistoryCloudManagementResource.getJobHistoryCloudManagementByName(params)
+    def deleteJobHistoryCloudManagementByName(self, params):
+        existing_object = self.getJobHistoryCloudManagementByName(params)
         params = copy_identity_properties(existing_object, params)
-        return JobHistoryCloudManagementResource.deleteJobHistoryCloudManagement(params)
+        return self.deleteJobHistoryCloudManagement(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['deleteJobHistoryCloudManagement', 'getJobHistoryCloudManagement', 'getJobHistoryCloudManagementList', 'getJobHistoryCloudManagementByName', 'deleteJobHistoryCloudManagementByName'], required=True),
         register_as=dict(type='str'),
 
@@ -152,8 +126,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(JobHistoryCloudManagementResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = JobHistoryCloudManagementResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:
