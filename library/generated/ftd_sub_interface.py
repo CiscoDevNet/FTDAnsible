@@ -97,26 +97,17 @@ options:
   vlanId
     description:
       - An optional numeric value specifying the vlan id of the sub-interface, from 1 to 4094. This is used to tag the packets on a subinterface.<br>Field level constraints: must be between 1 and 4094 (inclusive). (Note: Additional constraints might exist)
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch SubInterface with a given name
   ftd_sub_interface:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getSubInterfaceByName"
     name: "Ansible SubInterface"
 
 - name: Create a SubInterface
   ftd_sub_interface:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addSubInterface'
-
     description: "From Ansible with love"
     name: "Ansible SubInterface"
     type: "subinterface"
@@ -138,139 +129,107 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class SubInterfaceResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addSubInterface(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addSubInterface(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['description', 'enabled', 'gigabitInterface', 'hardwareName', 'id', 'ipv4', 'ipv6', 'linkState', 'macAddress', 'managementInterface', 'managementOnly', 'monitorInterface', 'mtu', 'name', 'standbyMacAddress', 'subIntfId', 'tenGigabitInterface', 'type', 'version', 'vlanId'])
 
-        url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/devices/default/interfaces/{parentId}/subinterfaces',
+            http_method='POST',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteSubInterface(params):
+    def deleteSubInterface(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/devices/default/interfaces/{parentId}/subinterfaces/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editSubInterface(params):
+    def editSubInterface(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['description', 'enabled', 'gigabitInterface', 'hardwareName', 'id', 'ipv4', 'ipv6', 'linkState', 'macAddress', 'managementInterface', 'managementOnly', 'monitorInterface', 'mtu', 'name', 'standbyMacAddress', 'subIntfId', 'tenGigabitInterface', 'type', 'version', 'vlanId'])
 
-        url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces/{objId}', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/devices/default/interfaces/{parentId}/subinterfaces/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSubInterface(params):
+    def getSubInterface(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devices/default/interfaces/{parentId}/subinterfaces/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSubInterfaceList(params):
+    def getSubInterfaceList(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/devices/default/interfaces/{parentId}/subinterfaces', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devices/default/interfaces/{parentId}/subinterfaces',
+            http_method='GET',
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSubInterfaceByName(params):
+    def getSubInterfaceByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(SubInterfaceResource.getSubInterfaceList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getSubInterfaceList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertSubInterface(params):
+    def upsertSubInterface(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return SubInterfaceResource.addSubInterface(params)
+            return self.addSubInterface(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = SubInterfaceResource.getSubInterfaceByName(params)
+                existing_object = self.getSubInterfaceByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return SubInterfaceResource.editSubInterface(params)
+                return self.editSubInterface(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editSubInterfaceByName(params):
-        existing_object = SubInterfaceResource.getSubInterfaceByName(params)
+    def editSubInterfaceByName(self, params):
+        existing_object = self.getSubInterfaceByName(params)
         params = copy_identity_properties(existing_object, params)
-        return SubInterfaceResource.editSubInterface(params)
+        return self.editSubInterface(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteSubInterfaceByName(params):
-        existing_object = SubInterfaceResource.getSubInterfaceByName(params)
+    def deleteSubInterfaceByName(self, params):
+        existing_object = self.getSubInterfaceByName(params)
         params = copy_identity_properties(existing_object, params)
-        return SubInterfaceResource.deleteSubInterface(params)
+        return self.deleteSubInterface(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertSubInterface', choices=['addSubInterface', 'deleteSubInterface', 'editSubInterface', 'getSubInterface', 'getSubInterfaceList', 'getSubInterfaceByName', 'upsertSubInterface', 'editSubInterfaceByName', 'deleteSubInterfaceByName']),
         register_as=dict(type='str'),
 
@@ -307,8 +266,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(SubInterfaceResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = SubInterfaceResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

@@ -67,26 +67,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch GeolocationUpdateImmediate with a given name
   ftd_geolocation_update_immediate:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getGeolocationUpdateImmediateByName"
     name: "Ansible GeolocationUpdateImmediate"
 
 - name: Create a GeolocationUpdateImmediate
   ftd_geolocation_update_immediate:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addGeolocationUpdateImmediate'
-
     description: "From Ansible with love"
     name: "Ansible GeolocationUpdateImmediate"
     type: "geolocationupdateimmediate"
@@ -108,135 +99,99 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class GeolocationUpdateImmediateResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addGeolocationUpdateImmediate(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addGeolocationUpdateImmediate(self, params):
         body_params = dict_subset(params, ['description', 'forceOperation', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'type', 'user', 'version'])
 
-        url = construct_url(params['hostname'], '/action/updategeolocation')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/action/updategeolocation',
+            http_method='POST',
+            body_params=body_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteGeolocationUpdateImmediate(params):
+    def deleteGeolocationUpdateImmediate(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/action/updategeolocation/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/action/updategeolocation/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editGeolocationUpdateImmediate(params):
+    def editGeolocationUpdateImmediate(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['description', 'forceOperation', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'type', 'user', 'version'])
 
-        url = construct_url(params['hostname'], '/action/updategeolocation/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/action/updategeolocation/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getGeolocationUpdateImmediate(params):
+    def getGeolocationUpdateImmediate(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/action/updategeolocation/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/action/updategeolocation/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getGeolocationUpdateImmediateList(params):
+    def getGeolocationUpdateImmediateList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/action/updategeolocation', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/action/updategeolocation',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getGeolocationUpdateImmediateByName(params):
+    def getGeolocationUpdateImmediateByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(GeolocationUpdateImmediateResource.getGeolocationUpdateImmediateList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getGeolocationUpdateImmediateList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertGeolocationUpdateImmediate(params):
+    def upsertGeolocationUpdateImmediate(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return GeolocationUpdateImmediateResource.addGeolocationUpdateImmediate(params)
+            return self.addGeolocationUpdateImmediate(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = GeolocationUpdateImmediateResource.getGeolocationUpdateImmediateByName(params)
+                existing_object = self.getGeolocationUpdateImmediateByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return GeolocationUpdateImmediateResource.editGeolocationUpdateImmediate(params)
+                return self.editGeolocationUpdateImmediate(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editGeolocationUpdateImmediateByName(params):
-        existing_object = GeolocationUpdateImmediateResource.getGeolocationUpdateImmediateByName(params)
+    def editGeolocationUpdateImmediateByName(self, params):
+        existing_object = self.getGeolocationUpdateImmediateByName(params)
         params = copy_identity_properties(existing_object, params)
-        return GeolocationUpdateImmediateResource.editGeolocationUpdateImmediate(params)
+        return self.editGeolocationUpdateImmediate(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteGeolocationUpdateImmediateByName(params):
-        existing_object = GeolocationUpdateImmediateResource.getGeolocationUpdateImmediateByName(params)
+    def deleteGeolocationUpdateImmediateByName(self, params):
+        existing_object = self.getGeolocationUpdateImmediateByName(params)
         params = copy_identity_properties(existing_object, params)
-        return GeolocationUpdateImmediateResource.deleteGeolocationUpdateImmediate(params)
+        return self.deleteGeolocationUpdateImmediate(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertGeolocationUpdateImmediate', choices=['addGeolocationUpdateImmediate', 'deleteGeolocationUpdateImmediate', 'editGeolocationUpdateImmediate', 'getGeolocationUpdateImmediate', 'getGeolocationUpdateImmediateList', 'getGeolocationUpdateImmediateByName', 'upsertGeolocationUpdateImmediate', 'editGeolocationUpdateImmediateByName', 'deleteGeolocationUpdateImmediateByName']),
         register_as=dict(type='str'),
 
@@ -262,8 +217,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(GeolocationUpdateImmediateResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = GeolocationUpdateImmediateResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

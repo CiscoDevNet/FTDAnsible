@@ -43,19 +43,13 @@ options:
   username
     description:
       - The username (present on the identity source) to be used in issuing an authentication request to the specified identity source<br>Field level constraints: cannot be null, length must be between 0 and 128 (inclusive). (Note: Additional constraints might exist)
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 
 - name: Create a TestIdentitySource
   ftd_test_identity_source:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addTestIdentitySource'
-
     type: "testidentitysource"
 """
 
@@ -75,38 +69,30 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class TestIdentitySourceResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addTestIdentitySource(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addTestIdentitySource(self, params):
         body_params = dict_subset(params, ['id', 'identitySource', 'password', 'statusCode', 'statusMessage', 'type', 'username'])
 
-        url = construct_url(params['hostname'], '/action/testidentitysource')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/action/testidentitysource',
+            http_method='POST',
+            body_params=body_params,
         )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['addTestIdentitySource'], required=True),
         register_as=dict(type='str'),
 
@@ -123,8 +109,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(TestIdentitySourceResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = TestIdentitySourceResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

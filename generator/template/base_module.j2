@@ -12,119 +12,118 @@
 
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class {{ class_name }}(object):
-    {% for operation_name, operation_spec in operations.items() %}
 
-    @staticmethod
-    @retry_on_token_expiration
-    def {{ operation_name }}(params):
-{% if operation_spec.path_params %}
+    def __init__(self, conn):
+        self._conn = conn
+{# Method declarations for standard operations (CRUD) that are defined in Swagger documentation #}
+{% for operation_name, operation_spec in operations.items() %}
+
+    def {{ operation_name }}(self, params):
+    {% if operation_spec.path_params %}
         path_params = dict_subset(params, [{{ operation_spec.path_params.keys() | sort | map('quote') | join(', ') }}])
-{% endif %}
-{% if operation_spec.query_params %}
+    {% endif %}
+    {% if operation_spec.query_params %}
         query_params = dict_subset(params, [{{ operation_spec.query_params.keys() | sort | map('quote') | join(', ') }}])
-{% endif %}
-{% if operation_spec.body_params %}
+    {% endif %}
+    {% if operation_spec.body_params %}
         body_params = dict_subset(params, [{{ operation_spec.body_params.keys() | sort | map('quote') | join(', ') }}])
-{% endif %}
+    {% endif %}
 
-        url = construct_url(params['hostname'], {{ operation_spec.url_path | quote }}{% if operation_spec.path_params %}, path_params=path_params{% endif %}{% if operation_spec.query_params %}, query_params=query_params{% endif %})
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method={{ operation_spec.http_method | upper | quote }},
-{% if operation_spec.body_params %}
-            data=json.dumps(body_params)
-{% endif %}
+        return self._conn.send_request(
+            url_path={{ operation_spec.url_path | quote }},
+            http_method={{ operation_spec.http_method | upper | quote }},
+        {% if operation_spec.body_params %}
+            body_params=body_params,
+        {% endif %}
+        {% if operation_spec.path_params %}
+            path_params=path_params,
+        {% endif %}
+        {% if operation_spec.query_params %}
+            query_params=query_params,
+        {% endif %}
         )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
 {% endfor %}
+{# Additional operation to search the object by name #}
 {% if searchable_by_name %}
 {% do extra_operations.append( "get"+model_name+"ByName" ) %}
 
-    @staticmethod
-    @retry_on_token_expiration
-    def get{{ model_name }}ByName(params):
+    def get{{ model_name }}ByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource({{ class_name }}.get{{ model_name }}List, search_params)
+        item_generator = iterate_over_pageable_resource(self.get{{ model_name }}List, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 {% endif %}
+{# Additional operation to upsert the object (insert the new object or update if it already exists) #}
 {% if eligible_for_upsert %}
 {% do extra_operations.append( "upsert"+model_name ) %}
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsert{{ model_name }}(params):
+    def upsert{{ model_name }}(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return {{ class_name }}.add{{ model_name }}(params)
+            return self.add{{ model_name }}(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = {{ class_name }}.get{{ model_name }}ByName(params)
+                existing_object = self.get{{ model_name }}ByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return {{ class_name }}.edit{{ model_name }}(params)
+                return self.edit{{ model_name }}(params)
             else:
                 raise e
 {% endif %}
+{# Additional operation to edit the object by name #}
 {% if searchable_by_name and 'edit%s' % model_name in operations.keys() %}
 {% do extra_operations.append( "edit"+model_name+"ByName" ) %}
 
-    @staticmethod
-    @retry_on_token_expiration
-    def edit{{ model_name }}ByName(params):
-        existing_object = {{ class_name }}.get{{ model_name }}ByName(params)
+    def edit{{ model_name }}ByName(self, params):
+        existing_object = self.get{{ model_name }}ByName(params)
         params = copy_identity_properties(existing_object, params)
-        return {{ class_name }}.edit{{ model_name }}(params)
+        return self.edit{{ model_name }}(params)
 {% endif %}
+{# Additional operation to delete the object by name #}
 {% if searchable_by_name and 'delete%s' % model_name in operations.keys() %}
 {% do extra_operations.append( "delete"+model_name+"ByName" ) %}
 
-    @staticmethod
-    @retry_on_token_expiration
-    def delete{{ model_name }}ByName(params):
-        existing_object = {{ class_name }}.get{{ model_name }}ByName(params)
+    def delete{{ model_name }}ByName(self, params):
+        existing_object = self.get{{ model_name }}ByName(params)
         params = copy_identity_properties(existing_object, params)
-        return {{ class_name }}.delete{{ model_name }}(params)
+        return self.delete{{ model_name }}(params)
 {% endif %}
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
-{% if eligible_for_upsert %}
+    {% if eligible_for_upsert %}
         operation=dict(type='str', default='upsert{{ model_name }}', choices=[{{ operations | map('quote') | join(', ') }}{% if extra_operations %}, {{ extra_operations | map('quote') | join(', ') }}{% endif %}]),
-{% else %}
+    {% else %}
         operation=dict(type='str', choices=[{{ operations | map('quote') | join(', ') }}{% if extra_operations %}, {{ extra_operations | map('quote') | join(', ') }}{% endif %}], required=True),
-{% endif %}
+    {% endif %}
         register_as=dict(type='str'),
 
-{% for param in params %}
+    {% for param in params %}
         {{ param.name }}=dict(type={{ param.type | quote }}),
-{% endfor %}
+    {% endfor %}
     )
 
     module = AnsibleModule(argument_spec=fields)
     params = module.params
 
     try:
-        method_to_call = getattr({{ class_name }}, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = {{ class_name }}(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

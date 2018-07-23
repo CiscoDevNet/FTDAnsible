@@ -34,16 +34,11 @@ options:
   sort
     description:
       - The field used to sort the requested object list
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch IntrusionRule with a given name
   ftd_intrusion_rule:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getIntrusionRuleByName"
     name: "Ansible IntrusionRule"
 """
@@ -64,60 +59,47 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class IntrusionRuleResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def getIntrusionRule(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def getIntrusionRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        url = construct_url(params['hostname'], '/policy/intrusionpolicies/{parentId}/intrusionrules/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/policy/intrusionpolicies/{parentId}/intrusionrules/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getIntrusionRuleList(params):
+    def getIntrusionRuleList(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/policy/intrusionpolicies/{parentId}/intrusionrules', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/policy/intrusionpolicies/{parentId}/intrusionrules',
+            http_method='GET',
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getIntrusionRuleByName(params):
+    def getIntrusionRuleByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(IntrusionRuleResource.getIntrusionRuleList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getIntrusionRuleList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['getIntrusionRule', 'getIntrusionRuleList', 'getIntrusionRuleByName'], required=True),
         register_as=dict(type='str'),
 
@@ -133,8 +115,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(IntrusionRuleResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = IntrusionRuleResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

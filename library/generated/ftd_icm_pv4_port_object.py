@@ -58,26 +58,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch ICMPv4PortObject with a given name
   ftd_icm_pv4_port_object:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getICMPv4PortObjectByName"
     name: "Ansible ICMPv4PortObject"
 
 - name: Create a ICMPv4PortObject
   ftd_icm_pv4_port_object:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addICMPv4PortObject'
-
     description: "From Ansible with love"
     name: "Ansible ICMPv4PortObject"
     type: "icmpv4portobject"
@@ -99,135 +90,99 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class ICMPv4PortObjectResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addICMPv4PortObject(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addICMPv4PortObject(self, params):
         body_params = dict_subset(params, ['description', 'icmpv4Code', 'icmpv4Type', 'id', 'isSystemDefined', 'name', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/icmpv4ports')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/icmpv4ports',
+            http_method='POST',
+            body_params=body_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteICMPv4PortObject(params):
+    def deleteICMPv4PortObject(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/icmpv4ports/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/object/icmpv4ports/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editICMPv4PortObject(params):
+    def editICMPv4PortObject(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['description', 'icmpv4Code', 'icmpv4Type', 'id', 'isSystemDefined', 'name', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/icmpv4ports/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/icmpv4ports/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getICMPv4PortObject(params):
+    def getICMPv4PortObject(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/icmpv4ports/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/icmpv4ports/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getICMPv4PortObjectList(params):
+    def getICMPv4PortObjectList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/object/icmpv4ports', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/icmpv4ports',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getICMPv4PortObjectByName(params):
+    def getICMPv4PortObjectByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(ICMPv4PortObjectResource.getICMPv4PortObjectList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getICMPv4PortObjectList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertICMPv4PortObject(params):
+    def upsertICMPv4PortObject(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return ICMPv4PortObjectResource.addICMPv4PortObject(params)
+            return self.addICMPv4PortObject(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = ICMPv4PortObjectResource.getICMPv4PortObjectByName(params)
+                existing_object = self.getICMPv4PortObjectByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return ICMPv4PortObjectResource.editICMPv4PortObject(params)
+                return self.editICMPv4PortObject(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editICMPv4PortObjectByName(params):
-        existing_object = ICMPv4PortObjectResource.getICMPv4PortObjectByName(params)
+    def editICMPv4PortObjectByName(self, params):
+        existing_object = self.getICMPv4PortObjectByName(params)
         params = copy_identity_properties(existing_object, params)
-        return ICMPv4PortObjectResource.editICMPv4PortObject(params)
+        return self.editICMPv4PortObject(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteICMPv4PortObjectByName(params):
-        existing_object = ICMPv4PortObjectResource.getICMPv4PortObjectByName(params)
+    def deleteICMPv4PortObjectByName(self, params):
+        existing_object = self.getICMPv4PortObjectByName(params)
         params = copy_identity_properties(existing_object, params)
-        return ICMPv4PortObjectResource.deleteICMPv4PortObject(params)
+        return self.deleteICMPv4PortObject(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertICMPv4PortObject', choices=['addICMPv4PortObject', 'deleteICMPv4PortObject', 'editICMPv4PortObject', 'getICMPv4PortObject', 'getICMPv4PortObjectList', 'getICMPv4PortObjectByName', 'upsertICMPv4PortObject', 'editICMPv4PortObjectByName', 'deleteICMPv4PortObjectByName']),
         register_as=dict(type='str'),
 
@@ -250,8 +205,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(ICMPv4PortObjectResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = ICMPv4PortObjectResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

@@ -64,26 +64,17 @@ options:
   version
     description:
       - The version of the RadiusIdentitySource
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch RadiusIdentitySource with a given name
   ftd_radius_identity_source:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getRadiusIdentitySourceByName"
     name: "Ansible RadiusIdentitySource"
 
 - name: Create a RadiusIdentitySource
   ftd_radius_identity_source:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addRadiusIdentitySource'
-
     description: "From Ansible with love"
     name: "Ansible RadiusIdentitySource"
     type: "radiusidentitysource"
@@ -105,135 +96,99 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class RadiusIdentitySourceResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addRadiusIdentitySource(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addRadiusIdentitySource(self, params):
         body_params = dict_subset(params, ['capabilities', 'description', 'host', 'id', 'name', 'serverAuthenticationPort', 'serverSecretKey', 'timeout', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/radiusidentitysources')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/radiusidentitysources',
+            http_method='POST',
+            body_params=body_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteRadiusIdentitySource(params):
+    def deleteRadiusIdentitySource(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/radiusidentitysources/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/object/radiusidentitysources/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editRadiusIdentitySource(params):
+    def editRadiusIdentitySource(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['capabilities', 'description', 'host', 'id', 'name', 'serverAuthenticationPort', 'serverSecretKey', 'timeout', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/radiusidentitysources/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/radiusidentitysources/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getRadiusIdentitySource(params):
+    def getRadiusIdentitySource(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/radiusidentitysources/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/radiusidentitysources/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getRadiusIdentitySourceList(params):
+    def getRadiusIdentitySourceList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/object/radiusidentitysources', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/radiusidentitysources',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getRadiusIdentitySourceByName(params):
+    def getRadiusIdentitySourceByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(RadiusIdentitySourceResource.getRadiusIdentitySourceList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getRadiusIdentitySourceList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertRadiusIdentitySource(params):
+    def upsertRadiusIdentitySource(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return RadiusIdentitySourceResource.addRadiusIdentitySource(params)
+            return self.addRadiusIdentitySource(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = RadiusIdentitySourceResource.getRadiusIdentitySourceByName(params)
+                existing_object = self.getRadiusIdentitySourceByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return RadiusIdentitySourceResource.editRadiusIdentitySource(params)
+                return self.editRadiusIdentitySource(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editRadiusIdentitySourceByName(params):
-        existing_object = RadiusIdentitySourceResource.getRadiusIdentitySourceByName(params)
+    def editRadiusIdentitySourceByName(self, params):
+        existing_object = self.getRadiusIdentitySourceByName(params)
         params = copy_identity_properties(existing_object, params)
-        return RadiusIdentitySourceResource.editRadiusIdentitySource(params)
+        return self.editRadiusIdentitySource(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteRadiusIdentitySourceByName(params):
-        existing_object = RadiusIdentitySourceResource.getRadiusIdentitySourceByName(params)
+    def deleteRadiusIdentitySourceByName(self, params):
+        existing_object = self.getRadiusIdentitySourceByName(params)
         params = copy_identity_properties(existing_object, params)
-        return RadiusIdentitySourceResource.deleteRadiusIdentitySource(params)
+        return self.deleteRadiusIdentitySource(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertRadiusIdentitySource', choices=['addRadiusIdentitySource', 'deleteRadiusIdentitySource', 'editRadiusIdentitySource', 'getRadiusIdentitySource', 'getRadiusIdentitySourceList', 'getRadiusIdentitySourceByName', 'upsertRadiusIdentitySource', 'editRadiusIdentitySourceByName', 'deleteRadiusIdentitySourceByName']),
         register_as=dict(type='str'),
 
@@ -258,8 +213,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(RadiusIdentitySourceResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = RadiusIdentitySourceResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

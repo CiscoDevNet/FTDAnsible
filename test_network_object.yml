@@ -1,115 +1,68 @@
 - hosts: vftd
-  connection: local
+  connection: httpapi
   tasks:
-    - name: Obtain access token
-      ftd_oauth_token:
-        device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-        username: '{{ username }}'
-        password: '{{ password }}'
-        operation: 'request'
+    - name: Create a HOST network object
+      ftd_network_object:
+        name: "Ansible-network-host"
+        description: "From Ansible with love"
+        subType: "HOST"
+        value: "{{ host_ip }}"
+        type: "networkobject"
 
-    - name: Managing configuration objects
-      block:
-        - name: Create a HOST network object
-          ftd_network_object:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            name: "Ansible-network-host"
-            description: "From Ansible with love"
-            subType: "HOST"
-            value: "{{ host_ip }}"
-            type: "networkobject"
+    - name: Create a NETWORK network object
+      ftd_network_object:
+        name: "Ansible-network-network"
+        description: "From Ansible with love"
+        subType: "NETWORK"
+        value: "{{ network_ip }}"
+        type: "networkobject"
 
-        - name: Create a NETWORK network object
-          ftd_network_object:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            name: "Ansible-network-network"
-            description: "From Ansible with love"
-            subType: "NETWORK"
-            value: "{{ network_ip }}"
-            type: "networkobject"
+    - name: Create a network group
+      ftd_network_object_group:
+        name: "Ansible-network-group"
+        description: "From Ansible with love"
+        type: "networkobjectgroup"
+        objects:
+          - "{{ networkobject_ansible_network_host }}"
+          - "{{ networkobject_ansible_network_network }}"
 
-        - name: Create a network group
-          ftd_network_object_group:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            name: "Ansible-network-group"
-            description: "From Ansible with love"
-            type: "networkobjectgroup"
-            objects:
-              - "{{ networkobject_ansible_network_host }}"
-              - "{{ networkobject_ansible_network_network }}"
+    - name: Update the HOST network object
+      ftd_network_object:
+        operation: 'editNetworkObjectByName'
+        name: "Ansible-network-host"
+        description: "From Ansible with love. Version2"
+        value: "192.22.22.25"
+        subType: "HOST"
+        type: "networkobject"
 
-        - name: Update the HOST network object
-          ftd_network_object:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            operation: 'editNetworkObjectByName'
-            name: "Ansible-network-host"
-            description: "From Ansible with love. Version2"
-            value: "192.22.22.25"
-            subType: "HOST"
-            type: "networkobject"
+    - name: Deploy changes
+      ftd_deployment:
 
-        - name: Deploy changes
-          ftd_deployment:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
+    - name: Refresh a NETWORK network object
+      ftd_network_object:
+        operation: 'getNetworkObjectByName'
+        name: "Ansible-network-network"
 
-        - name: Refresh a NETWORK network object
-          ftd_network_object:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            operation: 'getNetworkObjectByName'
-            name: "Ansible-network-network"
+    - name: Update the network group
+      ftd_network_object_group:
+        operation: 'editNetworkObjectGroupByName'
+        name: "Ansible-network-group"
+        description: "From Ansible with love. Version 2"
+        type: "networkobjectgroup"
+        objects:
+          - "{{ networkobject_ansible_network_network }}"
 
-        - name: Update the network group
-          ftd_network_object_group:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            operation: 'editNetworkObjectGroupByName'
-            name: "Ansible-network-group"
-            description: "From Ansible with love. Version 2"
-            type: "networkobjectgroup"
-            objects:
-              - "{{ networkobject_ansible_network_network }}"
+    - name: Delete a network group
+      ftd_network_object_group:
+        operation: 'deleteNetworkObjectGroup'
+        objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
 
-        - name: Delete a network group
-          ftd_network_object_group:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            operation: 'deleteNetworkObjectGroup'
-            objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
+    - name: Delete a HOST network object
+      ftd_network_object:
+        operation: 'deleteNetworkObject'
+        objId: "{{ networkobject_ansible_network_host['id'] }}"
 
-        - name: Delete a HOST network object
-          ftd_network_object:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            operation: 'deleteNetworkObject'
-            objId: "{{ networkobject_ansible_network_host['id'] }}"
-
-        - name: Delete a NETWORK network object
-          ftd_network_object:
-            hostname: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            operation: 'deleteNetworkObjectByName'
-            name: "Ansible-network-network"
-
-      always:
-        - name: Revoke access token
-          ftd_oauth_token:
-            device_url: "{{ protocol }}://{{ ip_address }}:{{ port }}"
-            access_token: '{{ access_token }}'
-            refresh_token: '{{ refresh_token }}'
-            operation: 'revoke'
+    - name: Delete a NETWORK network object
+      ftd_network_object:
+        operation: 'deleteNetworkObjectByName'
+        name: "Ansible-network-network"

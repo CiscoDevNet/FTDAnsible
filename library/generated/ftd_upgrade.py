@@ -22,8 +22,6 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
@@ -45,36 +43,28 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class UpgradeResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def startUpgrade(params):
 
-        url = construct_url(params['hostname'], '/action/upgrade')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
+    def __init__(self, conn):
+        self._conn = conn
+
+    def startUpgrade(self, params):
+
+        return self._conn.send_request(
+            url_path='/action/upgrade',
+            http_method='POST',
         )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['startUpgrade'], required=True),
         register_as=dict(type='str'),
 
@@ -84,8 +74,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(UpgradeResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = UpgradeResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

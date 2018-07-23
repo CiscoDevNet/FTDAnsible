@@ -34,16 +34,11 @@ options:
   sort
     description:
       - The field used to sort the requested object list
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch AnyConnectGroupPolicy with a given name
   ftd_any_connect_group_policy:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getAnyConnectGroupPolicyByName"
     name: "Ansible AnyConnectGroupPolicy"
 """
@@ -64,80 +59,59 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class AnyConnectGroupPolicyResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteAnyConnectGroupPolicy(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def deleteAnyConnectGroupPolicy(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/devices/default/anyconnectgrouppolicies/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/devices/default/anyconnectgrouppolicies/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getAnyConnectGroupPolicy(params):
+    def getAnyConnectGroupPolicy(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/devices/default/anyconnectgrouppolicies/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devices/default/anyconnectgrouppolicies/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getAnyConnectGroupPolicyList(params):
+    def getAnyConnectGroupPolicyList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/devices/default/anyconnectgrouppolicies', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devices/default/anyconnectgrouppolicies',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getAnyConnectGroupPolicyByName(params):
+    def getAnyConnectGroupPolicyByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(AnyConnectGroupPolicyResource.getAnyConnectGroupPolicyList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getAnyConnectGroupPolicyList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteAnyConnectGroupPolicyByName(params):
-        existing_object = AnyConnectGroupPolicyResource.getAnyConnectGroupPolicyByName(params)
+    def deleteAnyConnectGroupPolicyByName(self, params):
+        existing_object = self.getAnyConnectGroupPolicyByName(params)
         params = copy_identity_properties(existing_object, params)
-        return AnyConnectGroupPolicyResource.deleteAnyConnectGroupPolicy(params)
+        return self.deleteAnyConnectGroupPolicy(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['deleteAnyConnectGroupPolicy', 'getAnyConnectGroupPolicy', 'getAnyConnectGroupPolicyList', 'getAnyConnectGroupPolicyByName', 'deleteAnyConnectGroupPolicyByName'], required=True),
         register_as=dict(type='str'),
 
@@ -152,8 +126,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(AnyConnectGroupPolicyResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = AnyConnectGroupPolicyResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

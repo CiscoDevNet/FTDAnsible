@@ -70,26 +70,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch ActiveDirectoryRealm with a given name
   ftd_active_directory_realm:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getActiveDirectoryRealmByName"
     name: "Ansible ActiveDirectoryRealm"
 
 - name: Create a ActiveDirectoryRealm
   ftd_active_directory_realm:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addActiveDirectoryRealm'
-
     name: "Ansible ActiveDirectoryRealm"
     type: "activedirectoryrealm"
 """
@@ -110,114 +101,85 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class ActiveDirectoryRealmResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addActiveDirectoryRealm(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addActiveDirectoryRealm(self, params):
         body_params = dict_subset(params, ['adPrimaryDomain', 'baseDN', 'directoryConfigurations', 'dirPassword', 'dirUsername', 'enabled', 'id', 'name', 'realmId', 'systemDefined', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/realms')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/realms',
+            http_method='POST',
+            body_params=body_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editActiveDirectoryRealm(params):
+    def editActiveDirectoryRealm(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['adPrimaryDomain', 'baseDN', 'directoryConfigurations', 'dirPassword', 'dirUsername', 'enabled', 'id', 'name', 'realmId', 'systemDefined', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/object/realms/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/object/realms/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getActiveDirectoryRealm(params):
+    def getActiveDirectoryRealm(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/object/realms/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/realms/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getActiveDirectoryRealmList(params):
+    def getActiveDirectoryRealmList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/object/realms', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/object/realms',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getActiveDirectoryRealmByName(params):
+    def getActiveDirectoryRealmByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(ActiveDirectoryRealmResource.getActiveDirectoryRealmList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getActiveDirectoryRealmList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertActiveDirectoryRealm(params):
+    def upsertActiveDirectoryRealm(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return ActiveDirectoryRealmResource.addActiveDirectoryRealm(params)
+            return self.addActiveDirectoryRealm(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = ActiveDirectoryRealmResource.getActiveDirectoryRealmByName(params)
+                existing_object = self.getActiveDirectoryRealmByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return ActiveDirectoryRealmResource.editActiveDirectoryRealm(params)
+                return self.editActiveDirectoryRealm(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editActiveDirectoryRealmByName(params):
-        existing_object = ActiveDirectoryRealmResource.getActiveDirectoryRealmByName(params)
+    def editActiveDirectoryRealmByName(self, params):
+        existing_object = self.getActiveDirectoryRealmByName(params)
         params = copy_identity_properties(existing_object, params)
-        return ActiveDirectoryRealmResource.editActiveDirectoryRealm(params)
+        return self.editActiveDirectoryRealm(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertActiveDirectoryRealm', choices=['addActiveDirectoryRealm', 'editActiveDirectoryRealm', 'getActiveDirectoryRealm', 'getActiveDirectoryRealmList', 'getActiveDirectoryRealmByName', 'upsertActiveDirectoryRealm', 'editActiveDirectoryRealmByName']),
         register_as=dict(type='str'),
 
@@ -244,8 +206,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(ActiveDirectoryRealmResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = ActiveDirectoryRealmResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

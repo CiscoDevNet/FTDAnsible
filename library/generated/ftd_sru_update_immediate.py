@@ -76,26 +76,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch SRUUpdateImmediate with a given name
   ftd_sru_update_immediate:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getSRUUpdateImmediateByName"
     name: "Ansible SRUUpdateImmediate"
 
 - name: Create a SRUUpdateImmediate
   ftd_sru_update_immediate:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addSRUUpdateImmediate'
-
     description: "From Ansible with love"
     name: "Ansible SRUUpdateImmediate"
     type: "sruupdateimmediate"
@@ -117,135 +108,99 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class SRUUpdateImmediateResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addSRUUpdateImmediate(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addSRUUpdateImmediate(self, params):
         body_params = dict_subset(params, ['deployAfterUpdate', 'description', 'forceOperation', 'forceUpdate', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'sruImmediateJobType', 'type', 'user', 'version'])
 
-        url = construct_url(params['hostname'], '/action/updatesru')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/action/updatesru',
+            http_method='POST',
+            body_params=body_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteSRUUpdateImmediate(params):
+    def deleteSRUUpdateImmediate(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/action/updatesru/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/action/updatesru/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editSRUUpdateImmediate(params):
+    def editSRUUpdateImmediate(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['deployAfterUpdate', 'description', 'forceOperation', 'forceUpdate', 'id', 'ipAddress', 'jobHistoryUuid', 'jobName', 'name', 'scheduleType', 'sruImmediateJobType', 'type', 'user', 'version'])
 
-        url = construct_url(params['hostname'], '/action/updatesru/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/action/updatesru/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSRUUpdateImmediate(params):
+    def getSRUUpdateImmediate(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/action/updatesru/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/action/updatesru/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSRUUpdateImmediateList(params):
+    def getSRUUpdateImmediateList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/action/updatesru', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/action/updatesru',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSRUUpdateImmediateByName(params):
+    def getSRUUpdateImmediateByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(SRUUpdateImmediateResource.getSRUUpdateImmediateList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getSRUUpdateImmediateList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertSRUUpdateImmediate(params):
+    def upsertSRUUpdateImmediate(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return SRUUpdateImmediateResource.addSRUUpdateImmediate(params)
+            return self.addSRUUpdateImmediate(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = SRUUpdateImmediateResource.getSRUUpdateImmediateByName(params)
+                existing_object = self.getSRUUpdateImmediateByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return SRUUpdateImmediateResource.editSRUUpdateImmediate(params)
+                return self.editSRUUpdateImmediate(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editSRUUpdateImmediateByName(params):
-        existing_object = SRUUpdateImmediateResource.getSRUUpdateImmediateByName(params)
+    def editSRUUpdateImmediateByName(self, params):
+        existing_object = self.getSRUUpdateImmediateByName(params)
         params = copy_identity_properties(existing_object, params)
-        return SRUUpdateImmediateResource.editSRUUpdateImmediate(params)
+        return self.editSRUUpdateImmediate(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteSRUUpdateImmediateByName(params):
-        existing_object = SRUUpdateImmediateResource.getSRUUpdateImmediateByName(params)
+    def deleteSRUUpdateImmediateByName(self, params):
+        existing_object = self.getSRUUpdateImmediateByName(params)
         params = copy_identity_properties(existing_object, params)
-        return SRUUpdateImmediateResource.deleteSRUUpdateImmediate(params)
+        return self.deleteSRUUpdateImmediate(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertSRUUpdateImmediate', choices=['addSRUUpdateImmediate', 'deleteSRUUpdateImmediate', 'editSRUUpdateImmediate', 'getSRUUpdateImmediate', 'getSRUUpdateImmediateList', 'getSRUUpdateImmediateByName', 'upsertSRUUpdateImmediate', 'editSRUUpdateImmediateByName', 'deleteSRUUpdateImmediateByName']),
         register_as=dict(type='str'),
 
@@ -274,8 +229,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(SRUUpdateImmediateResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = SRUUpdateImmediateResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

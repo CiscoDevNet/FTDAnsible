@@ -46,16 +46,11 @@ options:
   version
     description:
       - Alphanumeric string to identify the version of the object
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch WebAnalyticsSetting with a given name
   ftd_web_analytics_setting:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getWebAnalyticsSettingByName"
     name: "Ansible WebAnalyticsSetting"
 """
@@ -76,82 +71,61 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class WebAnalyticsSettingResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def editWebAnalyticsSetting(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def editWebAnalyticsSetting(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['disabled', 'id', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/webanalyticssettings/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/devicesettings/default/webanalyticssettings/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getWebAnalyticsSetting(params):
+    def getWebAnalyticsSetting(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/webanalyticssettings/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devicesettings/default/webanalyticssettings/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getWebAnalyticsSettingList(params):
+    def getWebAnalyticsSettingList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/webanalyticssettings', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devicesettings/default/webanalyticssettings',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getWebAnalyticsSettingByName(params):
+    def getWebAnalyticsSettingByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(WebAnalyticsSettingResource.getWebAnalyticsSettingList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getWebAnalyticsSettingList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editWebAnalyticsSettingByName(params):
-        existing_object = WebAnalyticsSettingResource.getWebAnalyticsSettingByName(params)
+    def editWebAnalyticsSettingByName(self, params):
+        existing_object = self.getWebAnalyticsSettingByName(params)
         params = copy_identity_properties(existing_object, params)
-        return WebAnalyticsSettingResource.editWebAnalyticsSetting(params)
+        return self.editWebAnalyticsSetting(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['editWebAnalyticsSetting', 'getWebAnalyticsSetting', 'getWebAnalyticsSettingList', 'getWebAnalyticsSettingByName', 'editWebAnalyticsSettingByName'], required=True),
         register_as=dict(type='str'),
 
@@ -170,8 +144,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(WebAnalyticsSettingResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = WebAnalyticsSettingResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

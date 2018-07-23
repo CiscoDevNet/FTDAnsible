@@ -97,26 +97,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch AccessRule with a given name
   ftd_access_rule:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getAccessRuleByName"
     name: "Ansible AccessRule"
 
 - name: Create a AccessRule
   ftd_access_rule:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addAccessRule'
-
     name: "Ansible AccessRule"
     sourceNetworks: ["{{ networkObject }}"]
     type: "accessrule"
@@ -139,139 +130,107 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class AccessRuleResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addAccessRule(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addAccessRule(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/policy/accesspolicies/{parentId}/accessrules',
+            http_method='POST',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteAccessRule(params):
+    def deleteAccessRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/policy/accesspolicies/{parentId}/accessrules/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editAccessRule(params):
+    def editAccessRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/policy/accesspolicies/{parentId}/accessrules/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getAccessRule(params):
+    def getAccessRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/policy/accesspolicies/{parentId}/accessrules/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getAccessRuleList(params):
+    def getAccessRuleList(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/policy/accesspolicies/{parentId}/accessrules', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/policy/accesspolicies/{parentId}/accessrules',
+            http_method='GET',
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getAccessRuleByName(params):
+    def getAccessRuleByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(AccessRuleResource.getAccessRuleList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getAccessRuleList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertAccessRule(params):
+    def upsertAccessRule(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return AccessRuleResource.addAccessRule(params)
+            return self.addAccessRule(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = AccessRuleResource.getAccessRuleByName(params)
+                existing_object = self.getAccessRuleByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return AccessRuleResource.editAccessRule(params)
+                return self.editAccessRule(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editAccessRuleByName(params):
-        existing_object = AccessRuleResource.getAccessRuleByName(params)
+    def editAccessRuleByName(self, params):
+        existing_object = self.getAccessRuleByName(params)
         params = copy_identity_properties(existing_object, params)
-        return AccessRuleResource.editAccessRule(params)
+        return self.editAccessRule(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteAccessRuleByName(params):
-        existing_object = AccessRuleResource.getAccessRuleByName(params)
+    def deleteAccessRuleByName(self, params):
+        existing_object = self.getAccessRuleByName(params)
         params = copy_identity_properties(existing_object, params)
-        return AccessRuleResource.deleteAccessRule(params)
+        return self.deleteAccessRule(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertAccessRule', choices=['addAccessRule', 'deleteAccessRule', 'editAccessRule', 'getAccessRule', 'getAccessRuleList', 'getAccessRuleByName', 'upsertAccessRule', 'editAccessRuleByName', 'deleteAccessRuleByName']),
         register_as=dict(type='str'),
 
@@ -308,8 +267,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(AccessRuleResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = AccessRuleResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

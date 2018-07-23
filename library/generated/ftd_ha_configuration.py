@@ -88,16 +88,11 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch HAConfiguration with a given name
   ftd_ha_configuration:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getHAConfigurationByName"
     name: "Ansible HAConfiguration"
 """
@@ -118,82 +113,61 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class HAConfigurationResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def editHAConfiguration(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def editHAConfiguration(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['failoverInterface', 'failoverName', 'id', 'name', 'nodeRole', 'primaryFailoverIPv4', 'primaryFailoverIPv6', 'primaryStatefulFailoverIPv4', 'primaryStatefulFailoverIPv6', 'secondaryFailoverIPv4', 'secondaryFailoverIPv6', 'secondaryStatefulFailoverIPv4', 'secondaryStatefulFailoverIPv6', 'sharedKey', 'statefulFailoverInterface', 'statefulFailoverName', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/devices/default/ha/configurations/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/devices/default/ha/configurations/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getHAConfiguration(params):
+    def getHAConfiguration(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/devices/default/ha/configurations/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devices/default/ha/configurations/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getHAConfigurationList(params):
+    def getHAConfigurationList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/devices/default/ha/configurations', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devices/default/ha/configurations',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getHAConfigurationByName(params):
+    def getHAConfigurationByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(HAConfigurationResource.getHAConfigurationList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getHAConfigurationList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editHAConfigurationByName(params):
-        existing_object = HAConfigurationResource.getHAConfigurationByName(params)
+    def editHAConfigurationByName(self, params):
+        existing_object = self.getHAConfigurationByName(params)
         params = copy_identity_properties(existing_object, params)
-        return HAConfigurationResource.editHAConfiguration(params)
+        return self.editHAConfiguration(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['editHAConfiguration', 'getHAConfiguration', 'getHAConfigurationList', 'getHAConfigurationByName', 'editHAConfigurationByName'], required=True),
         register_as=dict(type='str'),
 
@@ -226,8 +200,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(HAConfigurationResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = HAConfigurationResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

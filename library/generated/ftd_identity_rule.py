@@ -85,26 +85,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch IdentityRule with a given name
   ftd_identity_rule:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getIdentityRuleByName"
     name: "Ansible IdentityRule"
 
 - name: Create a IdentityRule
   ftd_identity_rule:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addIdentityRule'
-
     name: "Ansible IdentityRule"
     type: "identityrule"
 """
@@ -125,139 +116,107 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class IdentityRuleResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addIdentityRule(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addIdentityRule(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['action', 'authType', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'enabled', 'guestAccessFallback', 'id', 'name', 'realm', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/policy/identitypolicies/{parentId}/identityrules',
+            http_method='POST',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteIdentityRule(params):
+    def deleteIdentityRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/policy/identitypolicies/{parentId}/identityrules/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editIdentityRule(params):
+    def editIdentityRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['action', 'authType', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'enabled', 'guestAccessFallback', 'id', 'name', 'realm', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules/{objId}', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/policy/identitypolicies/{parentId}/identityrules/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getIdentityRule(params):
+    def getIdentityRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/policy/identitypolicies/{parentId}/identityrules/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getIdentityRuleList(params):
+    def getIdentityRuleList(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/policy/identitypolicies/{parentId}/identityrules', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/policy/identitypolicies/{parentId}/identityrules',
+            http_method='GET',
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getIdentityRuleByName(params):
+    def getIdentityRuleByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(IdentityRuleResource.getIdentityRuleList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getIdentityRuleList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertIdentityRule(params):
+    def upsertIdentityRule(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return IdentityRuleResource.addIdentityRule(params)
+            return self.addIdentityRule(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = IdentityRuleResource.getIdentityRuleByName(params)
+                existing_object = self.getIdentityRuleByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return IdentityRuleResource.editIdentityRule(params)
+                return self.editIdentityRule(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editIdentityRuleByName(params):
-        existing_object = IdentityRuleResource.getIdentityRuleByName(params)
+    def editIdentityRuleByName(self, params):
+        existing_object = self.getIdentityRuleByName(params)
         params = copy_identity_properties(existing_object, params)
-        return IdentityRuleResource.editIdentityRule(params)
+        return self.editIdentityRule(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteIdentityRuleByName(params):
-        existing_object = IdentityRuleResource.getIdentityRuleByName(params)
+    def deleteIdentityRuleByName(self, params):
+        existing_object = self.getIdentityRuleByName(params)
         params = copy_identity_properties(existing_object, params)
-        return IdentityRuleResource.deleteIdentityRule(params)
+        return self.deleteIdentityRule(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertIdentityRule', choices=['addIdentityRule', 'deleteIdentityRule', 'editIdentityRule', 'getIdentityRule', 'getIdentityRuleList', 'getIdentityRuleByName', 'upsertIdentityRule', 'editIdentityRuleByName', 'deleteIdentityRuleByName']),
         register_as=dict(type='str'),
 
@@ -290,8 +249,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(IdentityRuleResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = IdentityRuleResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

@@ -58,19 +58,13 @@ options:
   type
     description:
       - A UTF8 string, all letters lower-case, that represents the class-type. This corresponds to the class name.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 
 - name: Create a TestIdentityServicesEngineConnectivity
   ftd_test_identity_services_engine_connectivity:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addTestIdentityServicesEngineConnectivity'
-
     type: "testidentityservicesengineconnectivity"
 """
 
@@ -90,38 +84,30 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class TestIdentityServicesEngineConnectivityResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addTestIdentityServicesEngineConnectivity(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addTestIdentityServicesEngineConnectivity(self, params):
         body_params = dict_subset(params, ['ftdCertificateUUID', 'id', 'iseLogMessage', 'mntCertificateUUID', 'primaryIseServer', 'pxGridCertificateUUID', 'secondaryIseServer', 'secondaryStatusCode', 'secondaryStatusMessage', 'statusCode', 'statusMessage', 'type'])
 
-        url = construct_url(params['hostname'], '/action/testidentityservicesengineconnectivity')
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/action/testidentityservicesengineconnectivity',
+            http_method='POST',
+            body_params=body_params,
         )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['addTestIdentityServicesEngineConnectivity'], required=True),
         register_as=dict(type='str'),
 
@@ -143,8 +129,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(TestIdentityServicesEngineConnectivityResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = TestIdentityServicesEngineConnectivityResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

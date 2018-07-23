@@ -109,26 +109,17 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch SSLRule with a given name
   ftd_ssl_rule:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getSSLRuleByName"
     name: "Ansible SSLRule"
 
 - name: Create a SSLRule
   ftd_ssl_rule:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: 'addSSLRule'
-
     name: "Ansible SSLRule"
     type: "sslrule"
 """
@@ -149,139 +140,107 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class SSLRuleResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def addSSLRule(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def addSSLRule(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['certificateStatus', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'id', 'issuerDNs', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'sslv3', 'subjectDNs', 'syslogServer', 'tls10', 'tls11', 'tls12', 'type', 'urlCategories', 'users', 'version'])
 
-        url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='POST',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/policy/sslpolicies/{parentId}/sslrules',
+            http_method='POST',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteSSLRule(params):
+    def deleteSSLRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='DELETE',
+        return self._conn.send_request(
+            url_path='/policy/sslpolicies/{parentId}/sslrules/{objId}',
+            http_method='DELETE',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def editSSLRule(params):
+    def editSSLRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['certificateStatus', 'destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'id', 'issuerDNs', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'sslv3', 'subjectDNs', 'syslogServer', 'tls10', 'tls11', 'tls12', 'type', 'urlCategories', 'users', 'version'])
 
-        url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules/{objId}', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/policy/sslpolicies/{parentId}/sslrules/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSSLRule(params):
+    def getSSLRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/policy/sslpolicies/{parentId}/sslrules/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSSLRuleList(params):
+    def getSSLRuleList(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/policy/sslpolicies/{parentId}/sslrules', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/policy/sslpolicies/{parentId}/sslrules',
+            http_method='GET',
+            path_params=path_params,
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getSSLRuleByName(params):
+    def getSSLRuleByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(SSLRuleResource.getSSLRuleList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getSSLRuleList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def upsertSSLRule(params):
+    def upsertSSLRule(self, params):
         def is_duplicate_name_error(err):
             err_msg = to_text(err.read())
             return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
 
         try:
-            return SSLRuleResource.addSSLRule(params)
+            return self.addSSLRule(params)
         except HTTPError as e:
             if is_duplicate_name_error(e):
-                existing_object = SSLRuleResource.getSSLRuleByName(params)
+                existing_object = self.getSSLRuleByName(params)
                 params = copy_identity_properties(existing_object, params)
-                return SSLRuleResource.editSSLRule(params)
+                return self.editSSLRule(params)
             else:
                 raise e
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editSSLRuleByName(params):
-        existing_object = SSLRuleResource.getSSLRuleByName(params)
+    def editSSLRuleByName(self, params):
+        existing_object = self.getSSLRuleByName(params)
         params = copy_identity_properties(existing_object, params)
-        return SSLRuleResource.editSSLRule(params)
+        return self.editSSLRule(params)
 
-    @staticmethod
-    @retry_on_token_expiration
-    def deleteSSLRuleByName(params):
-        existing_object = SSLRuleResource.getSSLRuleByName(params)
+    def deleteSSLRuleByName(self, params):
+        existing_object = self.getSSLRuleByName(params)
         params = copy_identity_properties(existing_object, params)
-        return SSLRuleResource.deleteSSLRule(params)
+        return self.deleteSSLRule(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', default='upsertSSLRule', choices=['addSSLRule', 'deleteSSLRule', 'editSSLRule', 'getSSLRule', 'getSSLRuleList', 'getSSLRuleByName', 'upsertSSLRule', 'editSSLRuleByName', 'deleteSSLRuleByName']),
         register_as=dict(type='str'),
 
@@ -322,8 +281,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(SSLRuleResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = SSLRuleResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

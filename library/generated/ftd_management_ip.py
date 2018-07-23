@@ -79,16 +79,11 @@ options:
   version
     description:
       - A unique string version assigned by the system when the object is created or modified. No assumption can be made on the format or content of this identifier. The identifier must be provided whenever attempting to modify/delete an existing object. As the version will change every time the object is modified, the value provided in this identifier must match exactly what is present in the system or the request will be rejected.
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
 - name: Fetch ManagementIP with a given name
   ftd_management_ip:
-    hostname: "https://127.0.0.1:8585"
-    access_token: 'ACCESS_TOKEN'
-    refresh_token: 'REFRESH_TOKEN'
     operation: "getManagementIPByName"
     name: "Ansible ManagementIP"
 """
@@ -109,82 +104,61 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class ManagementIPResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def editManagementIP(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def editManagementIP(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['dhcpServerAddressPool', 'dhcpServerEnabled', 'id', 'ipv4Address', 'ipv4Gateway', 'ipv4Mode', 'ipv4NetMask', 'ipv6Address', 'ipv6Gateway', 'ipv6Mode', 'ipv6Prefix', 'linkState', 'routeInternally', 'type', 'version'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/managementips/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='PUT',
-            data=json.dumps(body_params)
+        return self._conn.send_request(
+            url_path='/devicesettings/default/managementips/{objId}',
+            http_method='PUT',
+            body_params=body_params,
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getManagementIP(params):
+    def getManagementIP(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/managementips/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devicesettings/default/managementips/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getManagementIPList(params):
+    def getManagementIPList(self, params):
         query_params = dict_subset(params, ['filter', 'limit', 'offset', 'sort'])
 
-        url = construct_url(params['hostname'], '/devicesettings/default/managementips', query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/devicesettings/default/managementips',
+            http_method='GET',
+            query_params=query_params,
         )
 
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
-
-    @staticmethod
-    @retry_on_token_expiration
-    def getManagementIPByName(params):
+    def getManagementIPByName(self, params):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(ManagementIPResource.getManagementIPList, search_params)
+        item_generator = iterate_over_pageable_resource(self.getManagementIPList, search_params)
         return next(item for item in item_generator if item['name'] == params['name'])
 
-    @staticmethod
-    @retry_on_token_expiration
-    def editManagementIPByName(params):
-        existing_object = ManagementIPResource.getManagementIPByName(params)
+    def editManagementIPByName(self, params):
+        existing_object = self.getManagementIPByName(params)
         params = copy_identity_properties(existing_object, params)
-        return ManagementIPResource.editManagementIP(params)
+        return self.editManagementIP(params)
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['editManagementIP', 'getManagementIP', 'getManagementIPList', 'getManagementIPByName', 'editManagementIPByName'], required=True),
         register_as=dict(type='str'),
 
@@ -214,8 +188,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(ManagementIPResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = ManagementIPResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

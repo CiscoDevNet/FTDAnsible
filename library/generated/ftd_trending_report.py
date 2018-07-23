@@ -28,8 +28,6 @@ options:
   time_duration
     description:
       - An integer representing the relative query time duration in seconds. For example, 1800 means querying for last 30 minutes
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
@@ -51,38 +49,32 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class TrendingReportResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def getTrendingReport(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def getTrendingReport(self, params):
         path_params = dict_subset(params, ['objId'])
         query_params = dict_subset(params, ['time_duration'])
 
-        url = construct_url(params['hostname'], '/monitor/trendingreports/{objId}', path_params=path_params, query_params=query_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/monitor/trendingreports/{objId}',
+            http_method='GET',
+            path_params=path_params,
+            query_params=query_params,
         )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['getTrendingReport'], required=True),
         register_as=dict(type='str'),
 
@@ -94,8 +86,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(TrendingReportResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = TrendingReportResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:

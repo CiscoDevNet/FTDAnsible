@@ -25,8 +25,6 @@ options:
   objId
     description:
       - The object ID to fetch. Use "default"
-
-extends_documentation_fragment: ftd
 """
 
 EXAMPLES = """
@@ -48,37 +46,30 @@ msg:
 """
 import json
 
-from ansible.module_utils.authorization import retry_on_token_expiration
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import construct_url, base_headers, iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.connection import Connection
 
 
 class DeploymentDataResource(object):
-    
-    @staticmethod
-    @retry_on_token_expiration
-    def getDeploymentData(params):
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def getDeploymentData(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        url = construct_url(params['hostname'], '/operational/deploymentdata/{objId}', path_params=path_params)
-        request_params = dict(
-            headers=base_headers(params['access_token']),
-            method='GET',
+        return self._conn.send_request(
+            url_path='/operational/deploymentdata/{objId}',
+            http_method='GET',
+            path_params=path_params,
         )
-
-        response = open_url(url, **request_params).read()
-        return json.loads(to_text(response)) if response else response
 
 
 def main():
     fields = dict(
-        hostname=dict(type='str', required=True),
-        access_token=dict(type='str', required=True),
-        refresh_token=dict(type='str', required=True),
-
         operation=dict(type='str', choices=['getDeploymentData'], required=True),
         register_as=dict(type='str'),
 
@@ -89,8 +80,12 @@ def main():
     params = module.params
 
     try:
-        method_to_call = getattr(DeploymentDataResource, params['operation'])
-        response = method_to_call(params)
+        conn = Connection(module._socket_path)
+        resource = DeploymentDataResource(conn)
+
+        resource_method_to_call = getattr(resource, params['operation'])
+        response = resource_method_to_call(params)
+
         result = construct_module_result(response, params)
         module.exit_json(**result)
     except HTTPError as e:
