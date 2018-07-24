@@ -15,6 +15,13 @@ from ansible.plugins.httpapi import HttpApiBase
 from six import wraps
 from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
+from ansible.module_utils.connection import ConnectionError
+
+try:
+    from __main__ import display
+except ImportError:
+    from ansible.utils.display import Display
+    display = Display()
 
 BASE_HEADERS = {
     'Content-Type': 'application/json',
@@ -110,6 +117,23 @@ class HttpApi(HttpApiBase):
         self.refresh_token = token_info['refresh_token']
         self.access_token = token_info['access_token']
 
+    def logout(self):
+        # Revoke the tokens
+        auth_payload = {
+            'grant_type': 'revoke_token',
+            'access_token': self.access_token,
+            'token_to_revoke': self.refresh_token
+        }
+        response = self.connection.send(API_PREFIX + "/fdm/token", json.dumps(auth_payload), method='POST', headers=BASE_HEADERS)
+        logout_info = json.loads(to_text(response.read()))
+        q(logout_info['status_code'])
+        if logout_info['status_code'] != 200 :
+            raise ConnectionError(
+                'Could not revoke token. Error received {0}'
+                .format(logout_info['message'])
+            )
+        else:
+            display.vvvv("logged out successfully")
 
 def construct_url_path(path, path_params=None, query_params=None):
     url = API_PREFIX + path
