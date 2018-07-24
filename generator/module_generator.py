@@ -10,8 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from generator.docs_client import SwaggerDocsClient
 from generator.param_adapter import SwaggerParamAdapter
-from module_utils.authorization import revoke_token, request_token
-from module_utils.misc import camel_to_snake
+from generator.utils import camel_to_snake, request_token, revoke_token
 
 SWAGGER_SPECS_PREFIX = '/apispec/ngfw.json'
 SWAGGER_DOCS_PREFIX = '/apispec/en-us/doc.json'

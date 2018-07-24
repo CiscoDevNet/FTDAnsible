@@ -21,15 +21,13 @@ The project contains Ansible modules for managing Network, Network Group, Access
 
 Ansible modules are located in the `library` folder. Modules generated automatically from Swagger specification are located in `library/generated` folder. 
 
-_The previous version of Network/AccessPolicy modules were moved to `deprecated` folder._  
-
-`test_network_object.yml`, `test_access_policy.yml` playbooks contain examples of their usage. To run the playbook:
+Sample playbooks located in `samples` folder contain examples of their usage. To run the playbook:
  
 1. Complete "Common environment setup" section;
 
 1. Run the playbook:
     ```
-    $ ansible-playbook test_network_object.yml
+    $ ansible-playbook samples/network_object.yml
     ```
 
 

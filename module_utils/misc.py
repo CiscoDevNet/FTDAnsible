@@ -3,11 +3,6 @@ import re
 INVALID_IDENTIFIER_SYMBOLS = r'[^a-zA-Z0-9_]'
 
 
-def camel_to_snake(text):
-    test_with_underscores = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', test_with_underscores).lower()
-
-
 def dict_subset(dictionary, keys):
     return dict((k, dictionary[k]) for k in keys if dictionary[k])
 
