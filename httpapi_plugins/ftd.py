@@ -126,7 +126,6 @@ class HttpApi(HttpApiBase):
         }
         response = self.connection.send(API_PREFIX + "/fdm/token", json.dumps(auth_payload), method='POST', headers=BASE_HEADERS)
         logout_info = json.loads(to_text(response.read()))
-        q(logout_info['status_code'])
         if logout_info['status_code'] != 200 :
             raise ConnectionError(
                 'Could not revoke token. Error received {0}'
