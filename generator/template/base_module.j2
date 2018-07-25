@@ -59,7 +59,7 @@ class {{ class_name }}(object):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
         item_generator = iterate_over_pageable_resource(self.get{{ model_name }}List, search_params)
-        return next(item for item in item_generator if item['name'] == params['name'])
+        return next((item for item in item_generator if item['name'] == params['name']), None)
 {% endif %}
 {# Additional operation to upsert the object (insert the new object or update if it already exists) #}
 {% if eligible_for_upsert %}
