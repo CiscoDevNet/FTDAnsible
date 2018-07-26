@@ -90,7 +90,6 @@ class HttpApi(HttpApiBase):
             shutil.copyfileobj(response, output_file)
 
     def update_auth(self, response):
-        for keys in response.info():
         token_info = json.loads(to_text(response.read()))
         if 'refresh_token' in token_info:
             self.refresh_token = token_info['refresh_token']
