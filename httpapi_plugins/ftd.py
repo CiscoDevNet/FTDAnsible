@@ -63,7 +63,22 @@ class HttpApi(HttpApiBase):
         url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
         response = self.connection.send(url, data, method=http_method, headers=self._authorized_headers()).read()
-        return json.loads(to_text(response)) if response else response
+        return json.loads(to_text(response)) if response else ''
+
+    @retry_on_token_expiration
+    def delete_object(self, url_path, path_params):
+        def is_invalid_uuid_error(err):
+            err_msg = to_text(err.read())
+            return err.code == 422 and "Validation failed due to an invalid UUID" in err_msg
+
+        try:
+            resp = self.send_request(url_path=url_path, http_method='DELETE', path_params=path_params)
+            return {'changed': True, 'response': resp}
+        except HTTPError as e:
+            if is_invalid_uuid_error(e):
+                return {'changed': False, 'response': 'Referenced object does not exist'}
+            else:
+                raise e
 
     @retry_on_token_expiration
     def upload_file(self, from_path, to_url):
