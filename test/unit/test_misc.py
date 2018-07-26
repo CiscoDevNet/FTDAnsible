@@ -55,3 +55,10 @@ def test_equal_dicts_return_true_with_equal_nested_dicts():
         {'foo': {'bar': 1, 'buz': 2}},
         {'foo': {'buz': 2, 'bar': 1}}
     )
+
+
+def test_equal_dicts_return_true_with_ignored_fields():
+    assert equal_dicts(
+        {'foo': 1, 'version': '123', 'id': '123123'},
+        {'foo': 1}
+    )
