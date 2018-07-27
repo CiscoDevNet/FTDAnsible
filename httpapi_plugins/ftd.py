@@ -16,6 +16,8 @@ from six import wraps
 from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 
+from httpapi_plugins.helper import equal_objects
+
 BASE_HEADERS = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -79,6 +81,18 @@ class HttpApi(HttpApiBase):
                 return {'changed': False, 'response': 'Referenced object does not exist'}
             else:
                 raise e
+
+    @retry_on_token_expiration
+    def update_object(self, url_path, body_params, path_params):
+        existing_object = self.send_request(url_path=url_path, http_method='GET', path_params=path_params)
+
+        if not existing_object:
+            raise ValueError('Referenced object does not exist')
+        elif equal_objects(existing_object, body_params):
+            return {'changed': False, 'response': 'Referenced object is already updated'}
+        else:
+            resp = self.send_request(url_path=url_path, http_method='PUT', body_params=body_params, path_params=path_params)
+            return {'changed': True, 'response': resp}
 
     @retry_on_token_expiration
     def upload_file(self, from_path, to_url):
