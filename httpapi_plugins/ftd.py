@@ -92,15 +92,17 @@ class HttpApi(HttpApiBase):
             to_path = os.path.join(to_path, filename)
 
         with open(to_path, "wb") as output_file:
-            shutil.copy(response_text, output_file)
+            output_file.write(response_text)
 
     def update_auth(self, response, response_text):
-        token_info = json.loads(response_text)
-        if 'refresh_token' in token_info:
-            self.refresh_token = token_info['refresh_token']
-        if 'access_token' in token_info:
-            self.access_token = token_info['access_token']
-            return {'Authorization': 'Bearer %s' % token_info['access_token']}
+        q(response_text)
+        if response_text:
+            token_info = json.loads(to_text(response_text))
+            if 'refresh_token' in token_info:
+                self.refresh_token = token_info['refresh_token']
+            if 'access_token' in token_info:
+                self.access_token = token_info['access_token']
+                return {'Authorization': 'Bearer %s' % token_info['access_token']}
         return None
 
     def logout(self):
