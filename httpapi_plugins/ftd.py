@@ -16,6 +16,7 @@ from six import wraps
 from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 from ansible.module_utils.connection import ConnectionError
+import q
 
 try:
     from __main__ import display
@@ -32,6 +33,7 @@ API_TOKEN_PATH = "/fdm/token"
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
+
 
 class HttpApi(HttpApiBase):
     def __init__(self, connection):
@@ -51,7 +53,7 @@ class HttpApi(HttpApiBase):
                 'username': username,
                 'password': password
             }
-        response = self.connection.send(
+        self.connection.send(
             API_PREFIX + API_TOKEN_PATH,
             json.dumps(payload), method='POST', headers=BASE_HEADERS
         )
@@ -59,11 +61,11 @@ class HttpApi(HttpApiBase):
     def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
-        response = self.connection.send(
+        response, response_text = self.connection.send(
             url, data, method=http_method,
             headers=BASE_HEADERS
-        ).read()
-        ret = json.loads(to_text(response)) if response else response
+        )
+        ret = json.loads(response_text) if response_text else response_text
         return ret
 
     def upload_file(self, from_path, to_url):
@@ -72,30 +74,33 @@ class HttpApi(HttpApiBase):
             rf = RequestField('fileToUpload', src_file.read(), os.path.basename(src_file.name))
             rf.make_multipart()
             body, content_type = encode_multipart_formdata([rf])
+            headers = BASE_HEADERS
             headers['Content-Type'] = content_type
             headers['Content-Length'] = len(body)
-            response = self.connection.send(url, data=body, method='POST', headers=headers).read()
-        return json.loads(to_text(response))
+            response, response_text = self.connection.send(url, data=body, method='POST', headers=headers)
+        return json.loads(response_text)
 
     def download_file(self, from_url, to_path):
         url = construct_url_path(from_url)
-        response = self.connection.send(url, data=None, method='GET',
-                                        headers=BASE_HEADERS)
-
+        q(url)
+        response, response_text = self.connection.send(
+            url, data=None, method='GET',
+            headers=BASE_HEADERS
+        )
         if os.path.isdir(to_path):
             filename = extract_filename_from_headers(response.info())
             to_path = os.path.join(to_path, filename)
 
         with open(to_path, "wb") as output_file:
-            shutil.copyfileobj(response, output_file)
+            shutil.copy(response_text, output_file)
 
-    def update_auth(self, response):
-        token_info = json.loads(to_text(response.read()))
+    def update_auth(self, response, response_text):
+        token_info = json.loads(response_text)
         if 'refresh_token' in token_info:
             self.refresh_token = token_info['refresh_token']
         if 'access_token' in token_info:
             self.access_token = token_info['access_token']
-            return {'Authorization' : 'Bearer %s' % token_info['access_token']}
+            return {'Authorization': 'Bearer %s' % token_info['access_token']}
         return None
 
     def logout(self):
@@ -105,17 +110,16 @@ class HttpApi(HttpApiBase):
             'access_token': self.access_token,
             'token_to_revoke': self.refresh_token
         }
-        response = self.connection.send(API_PREFIX + "/fdm/token", json.dumps(auth_payload), method='POST', headers=BASE_HEADERS)
-        logout_info = json.loads(to_text(response.read()))
-        if logout_info['status_code'] != 200 :
-            raise ConnectionError(
-                'Could not revoke token. Error received {0}'
-                .format(logout_info['message'])
-            )
-        else:
-            self.refresh_token = False
-            self.access_token = False
-            display.vvvv("logged out successfully")
+        self.connection.send(
+            API_PREFIX + API_TOKEN_PATH + 'junk', json.dumps(auth_payload),
+            method='POST', headers=BASE_HEADERS
+        )
+        # HTTP error would cause exception Connection failure in connection
+        # plugin
+        self.refresh_token = False
+        self.access_token = False
+        display.vvvv("logged out successfully")
+
 
 def construct_url_path(path, path_params=None, query_params=None):
     url = API_PREFIX + path
