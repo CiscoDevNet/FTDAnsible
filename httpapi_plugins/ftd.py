@@ -16,7 +16,6 @@ from six import wraps
 from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 from ansible.module_utils.connection import ConnectionError
-import q
 
 try:
     from __main__ import display
@@ -74,7 +73,7 @@ class HttpApi(HttpApiBase):
             rf = RequestField('fileToUpload', src_file.read(), os.path.basename(src_file.name))
             rf.make_multipart()
             body, content_type = encode_multipart_formdata([rf])
-            headers = BASE_HEADERS
+            headers = dict(BASE_HEADERS)
             headers['Content-Type'] = content_type
             headers['Content-Length'] = len(body)
             response, response_text = self.connection.send(url, data=body, method='POST', headers=headers)
@@ -82,7 +81,6 @@ class HttpApi(HttpApiBase):
 
     def download_file(self, from_url, to_path):
         url = construct_url_path(from_url)
-        q(url)
         response, response_text = self.connection.send(
             url, data=None, method='GET',
             headers=BASE_HEADERS
@@ -95,7 +93,6 @@ class HttpApi(HttpApiBase):
             output_file.write(response_text)
 
     def update_auth(self, response, response_text):
-        q(response_text)
         if response_text:
             token_info = json.loads(to_text(response_text))
             if 'refresh_token' in token_info:
