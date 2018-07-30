@@ -3,66 +3,109 @@
   tasks:
     - name: Create a HOST network object
       ftd_network_object:
+        operation: "addNetworkObject"
         name: "Ansible-network-host"
         description: "From Ansible with love"
         subType: "HOST"
         value: "{{ host_ip }}"
         type: "networkobject"
 
-    - name: Create a NETWORK network object
+    - name: Create a HOST network object
       ftd_network_object:
-        name: "Ansible-network-network"
+        operation: "addNetworkObject"
+        name: "Ansible-network-host"
         description: "From Ansible with love"
-        subType: "NETWORK"
-        value: "{{ network_ip }}"
+        subType: "HOST"
+        value: "{{ host_ip }}"
         type: "networkobject"
-
-    - name: Create a network group
-      ftd_network_object_group:
-        name: "Ansible-network-group"
-        description: "From Ansible with love"
-        type: "networkobjectgroup"
-        objects:
-          - "{{ networkobject_ansible_network_host }}"
-          - "{{ networkobject_ansible_network_network }}"
 
     - name: Update the HOST network object
       ftd_network_object:
-        operation: 'editNetworkObjectByName'
+        operation: 'editNetworkObject'
+        objId: "{{ networkobject_ansible_network_host['id'] }}"
+        version: "{{ networkobject_ansible_network_host['version'] }}"
         name: "Ansible-network-host"
         description: "From Ansible with love. Version2"
         value: "192.22.22.25"
         subType: "HOST"
         type: "networkobject"
 
-    - name: Deploy changes
-      ftd_deployment:
-
-    - name: Refresh a NETWORK network object
+    - name: Update the HOST network object
       ftd_network_object:
-        operation: 'getNetworkObjectByName'
-        name: "Ansible-network-network"
-
-    - name: Update the network group
-      ftd_network_object_group:
-        operation: 'editNetworkObjectGroupByName'
-        name: "Ansible-network-group"
-        description: "From Ansible with love. Version 2"
-        type: "networkobjectgroup"
-        objects:
-          - "{{ networkobject_ansible_network_network }}"
-
-    - name: Delete a network group
-      ftd_network_object_group:
-        operation: 'deleteNetworkObjectGroup'
-        objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
+        operation: 'editNetworkObject'
+        objId: "{{ networkobject_ansible_network_host['id'] }}"
+        version: "{{ networkobject_ansible_network_host['version'] }}"
+        name: "Ansible-network-host"
+        description: "From Ansible with love. Version2"
+        value: "192.22.22.25"
+        subType: "HOST"
+        type: "networkobject"
 
     - name: Delete a HOST network object
       ftd_network_object:
         operation: 'deleteNetworkObject'
         objId: "{{ networkobject_ansible_network_host['id'] }}"
 
-    - name: Delete a NETWORK network object
+
+    - name: Delete a HOST network object
       ftd_network_object:
-        operation: 'deleteNetworkObjectByName'
-        name: "Ansible-network-network"
+        operation: 'deleteNetworkObject'
+        objId: "{{ networkobject_ansible_network_host['id'] }}"
+
+#    - name: Create a NETWORK network object
+#      ftd_network_object:
+#        name: "Ansible-network-network"
+#        description: "From Ansible with love"
+#        subType: "NETWORK"
+#        value: "{{ network_ip }}"
+#        type: "networkobject"
+#
+#    - name: Create a network group
+#      ftd_network_object_group:
+#        name: "Ansible-network-group"
+#        description: "From Ansible with love"
+#        type: "networkobjectgroup"
+#        objects:
+#          - "{{ networkobject_ansible_network_host }}"
+#          - "{{ networkobject_ansible_network_network }}"
+#
+#    - name: Update the HOST network object
+#      ftd_network_object:
+#        operation: 'editNetworkObjectByName'
+#        name: "Ansible-network-host"
+#        description: "From Ansible with love. Version2"
+#        value: "192.22.22.25"
+#        subType: "HOST"
+#        type: "networkobject"
+#
+#    - name: Deploy changes
+#      ftd_deployment:
+#
+#    - name: Refresh a NETWORK network object
+#      ftd_network_object:
+#        operation: 'getNetworkObjectByName'
+#        name: "Ansible-network-network"
+#
+#    - name: Update the network group
+#      ftd_network_object_group:
+#        operation: 'editNetworkObjectGroupByName'
+#        name: "Ansible-network-group"
+#        description: "From Ansible with love. Version 2"
+#        type: "networkobjectgroup"
+#        objects:
+#          - "{{ networkobject_ansible_network_network }}"
+#
+#    - name: Delete a network group
+#      ftd_network_object_group:
+#        operation: 'deleteNetworkObjectGroup'
+#        objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
+#
+#    - name: Delete a HOST network object
+#      ftd_network_object:
+#        operation: 'deleteNetworkObject'
+#        objId: "{{ networkobject_ansible_network_host['id'] }}"
+#
+#    - name: Delete a NETWORK network object
+#      ftd_network_object:
+#        operation: 'deleteNetworkObjectByName'
+#        name: "Ansible-network-network"

@@ -95,6 +95,27 @@ class HttpApi(HttpApiBase):
             return {'changed': True, 'response': resp}
 
     @retry_on_token_expiration
+    def add_object(self, url_path, body_params, path_params=None, query_params=None):
+        def find_existing_object():
+            object_name = body_params['name']
+            if not object_name:
+                raise Exception('New object cannot be added without name. The name field is mandatory for new objects.')
+
+            result = self.send_request(url_path=url_path, http_method='GET', path_params=path_params,
+                                       query_params={'filter': 'name:%s' % object_name})
+            return next((i for i in result['items'] if i['name'] == object_name), None)
+
+        existing_obj = find_existing_object()
+        if not existing_obj:
+            resp = self.send_request(url_path=url_path, http_method='POST', body_params=body_params,
+                                     path_params=path_params, query_params=query_params)
+            return {'changed': True, 'response': resp}
+        elif equal_objects(existing_obj, body_params):
+            return {'changed': False, 'response': existing_obj}
+        else:
+            raise Exception('Cannot add new object. An object with the same name but different parameters already exists.')
+
+    @retry_on_token_expiration
     def upload_file(self, from_path, to_url):
         url = construct_url_path(to_url)
         with open(from_path, 'rb') as src_file:
