@@ -89,7 +89,7 @@ class HttpApi(HttpApiBase):
         if not existing_object:
             raise ValueError('Referenced object does not exist')
         elif equal_objects(existing_object, body_params):
-            return {'changed': False, 'response': 'Referenced object is already updated'}
+            return {'changed': False, 'response': existing_object}
         else:
             resp = self.send_request(url_path=url_path, http_method='PUT', body_params=body_params, path_params=path_params)
             return {'changed': True, 'response': resp}
