@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Cisco Systems, Inc.
+# Copyright Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import (absolute_import, division, print_function)
@@ -16,6 +16,7 @@ from six import wraps
 from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 from ansible.module_utils.connection import ConnectionError
+from ansible.errors import AnsibleConnectionFailure
 
 try:
     from __main__ import display
@@ -40,18 +41,24 @@ class HttpApi(HttpApiBase):
         self.access_token = False
         self.refresh_token = False
 
-    def login(self, username, password):
+    def login(self, username=None, password=None):
         if self.refresh_token:
             payload = {
                 'grant_type': 'refresh_token',
                 'refresh_token': self.refresh_token
             }
         else:
-            payload = {
-                'grant_type': 'password',
-                'username': username,
-                'password': password
-            }
+            if username and password:
+                payload = {
+                    'grant_type': 'password',
+                    'username': username,
+                    'password': password
+                }
+            else:
+                raise AnsibleConnectionFailure(
+                    'username and password are required for login'
+                    'in absence of refresh token'
+                )
         self.connection.send(
             API_PREFIX + API_TOKEN_PATH,
             json.dumps(payload), method='POST', headers=BASE_HEADERS
@@ -60,11 +67,24 @@ class HttpApi(HttpApiBase):
     def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
-        response, response_text = self.connection.send(
-            url, data, method=http_method,
-            headers=BASE_HEADERS
-        )
-        ret = json.loads(response_text) if response_text else response_text
+        try:
+            response, response_data = self.connection.send(
+                url, data, method=http_method,
+                headers=BASE_HEADERS
+            )
+        except HTTPError as exc:
+            if exc.code == TOKEN_EXPIRATION_STATUS_CODE and self.refresh_token:
+                self.login()
+            else:
+                raise AnsibleConnectionFailure(
+                    'Could not connent to {0}: {1}'
+                    .format(self.connection._url + url, exc.reason)
+                )
+        try:
+            ret = json.loads(response_data.getvalue())
+        except:
+            raise ConnectionError('Response was not valid JSON, got {0}'
+                                  .format(response_data.getvalue()))
         return ret
 
     def upload_file(self, from_path, to_url):
@@ -76,25 +96,53 @@ class HttpApi(HttpApiBase):
             headers = dict(BASE_HEADERS)
             headers['Content-Type'] = content_type
             headers['Content-Length'] = len(body)
-            response, response_text = self.connection.send(url, data=body, method='POST', headers=headers)
-        return json.loads(response_text)
+            try:
+                response, response_data = self.connection.send(
+                    url, data=body, method='POST', headers=headers
+                )
+            except HTTPError as exc:
+                if exc.code == TOKEN_EXPIRATION_STATUS_CODE and self.refresh_token:
+                    self.login()
+                else:
+                    raise AnsibleConnectionFailure(
+                        'Could not connent to {0}: {1}'
+                        .format(self.connection._url + url, exc.reason)
+                    )
+            try:
+                ret = json.loads(response_data.getvalue())
+            except:
+                raise ConnectionError('Response was not valid JSON, got {0}'
+                                      .format(response_data.getvalue()))
+            return ret
 
     def download_file(self, from_url, to_path):
         url = construct_url_path(from_url)
-        response, response_text = self.connection.send(
-            url, data=None, method='GET',
-            headers=BASE_HEADERS
-        )
+        try:
+            response, response_data = self.connection.send(
+                url, data=None, method='GET',
+                headers=BASE_HEADERS
+            )
+        except HTTPError as exc:
+            if exc.code == TOKEN_EXPIRATION_STATUS_CODE and self.refresh_token:
+                self.login()
+            else:
+                raise AnsibleConnectionFailure(
+                    'Could not connent to {0}: {1}'
+                    .format(self.connection._url + url, exc.reason)
+                )
         if os.path.isdir(to_path):
             filename = extract_filename_from_headers(response.info())
             to_path = os.path.join(to_path, filename)
 
         with open(to_path, "wb") as output_file:
-            output_file.write(response_text)
+            output_file.write(response_data.getvalue())
 
-    def update_auth(self, response, response_text):
-        if response_text:
-            token_info = json.loads(to_text(response_text))
+    def update_auth(self, response, response_data):
+        if response_data:
+            try:
+                token_info = json.loads(response_data.getvalue())
+            except ValueError:
+                return None
             if 'refresh_token' in token_info:
                 self.refresh_token = token_info['refresh_token']
             if 'access_token' in token_info:
@@ -110,7 +158,7 @@ class HttpApi(HttpApiBase):
             'token_to_revoke': self.refresh_token
         }
         self.connection.send(
-            API_PREFIX + API_TOKEN_PATH + 'junk', json.dumps(auth_payload),
+            API_PREFIX + API_TOKEN_PATH, json.dumps(auth_payload),
             method='POST', headers=BASE_HEADERS
         )
         # HTTP error would cause exception Connection failure in connection
