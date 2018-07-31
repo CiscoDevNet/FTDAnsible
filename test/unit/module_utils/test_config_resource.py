@@ -1,6 +1,6 @@
 import pytest
 
-from httpapi_plugins.helper import equal_objects
+from module_utils.config_resource import equal_objects
 
 
 def test_equal_objects_raise_error_with_wrong_args():

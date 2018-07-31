@@ -16,8 +16,6 @@ from six import wraps
 from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 
-from httpapi_plugins.helper import equal_objects
-
 BASE_HEADERS = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -66,54 +64,6 @@ class HttpApi(HttpApiBase):
         data = json.dumps(body_params) if body_params else None
         response = self.connection.send(url, data, method=http_method, headers=self._authorized_headers()).read()
         return json.loads(to_text(response)) if response else ''
-
-    @retry_on_token_expiration
-    def delete_object(self, url_path, path_params):
-        def is_invalid_uuid_error(err):
-            err_msg = to_text(err.read())
-            return err.code == 422 and "Validation failed due to an invalid UUID" in err_msg
-
-        try:
-            resp = self.send_request(url_path=url_path, http_method='DELETE', path_params=path_params)
-            return {'changed': True, 'response': resp}
-        except HTTPError as e:
-            if is_invalid_uuid_error(e):
-                return {'changed': False, 'response': 'Referenced object does not exist'}
-            else:
-                raise e
-
-    @retry_on_token_expiration
-    def update_object(self, url_path, body_params, path_params):
-        existing_object = self.send_request(url_path=url_path, http_method='GET', path_params=path_params)
-
-        if not existing_object:
-            raise ValueError('Referenced object does not exist')
-        elif equal_objects(existing_object, body_params):
-            return {'changed': False, 'response': existing_object}
-        else:
-            resp = self.send_request(url_path=url_path, http_method='PUT', body_params=body_params, path_params=path_params)
-            return {'changed': True, 'response': resp}
-
-    @retry_on_token_expiration
-    def add_object(self, url_path, body_params, path_params=None, query_params=None):
-        def find_existing_object():
-            object_name = body_params['name']
-            if not object_name:
-                raise Exception('New object cannot be added without name. The name field is mandatory for new objects.')
-
-            result = self.send_request(url_path=url_path, http_method='GET', path_params=path_params,
-                                       query_params={'filter': 'name:%s' % object_name})
-            return next((i for i in result['items'] if i['name'] == object_name), None)
-
-        existing_obj = find_existing_object()
-        if not existing_obj:
-            resp = self.send_request(url_path=url_path, http_method='POST', body_params=body_params,
-                                     path_params=path_params, query_params=query_params)
-            return {'changed': True, 'response': resp}
-        elif equal_objects(existing_obj, body_params):
-            return {'changed': False, 'response': existing_obj}
-        else:
-            raise Exception('Cannot add new object. An object with the same name but different parameters already exists.')
 
     @retry_on_token_expiration
     def upload_file(self, from_path, to_url):
