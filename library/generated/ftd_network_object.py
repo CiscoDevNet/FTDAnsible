@@ -97,32 +97,27 @@ msg:
 import json
 
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import iterate_over_pageable_resource
-from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
-from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.config_resource import BaseConfigObjectResource
 from ansible.module_utils.connection import Connection
+from ansible.module_utils.misc import dict_subset, construct_ansible_facts, copy_identity_properties
+from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 
-class NetworkObjectResource(object):
-
-    def __init__(self, conn):
-        self._conn = conn
+class NetworkObjectResource(BaseConfigObjectResource):
 
     def addNetworkObject(self, params):
         body_params = dict_subset(params, ['description', 'dnsResolution', 'id', 'isSystemDefined', 'name', 'subType', 'type', 'value', 'version'])
 
-        return self._conn.send_request(
+        return self.add_object(
             url_path='/object/networks',
-            http_method='POST',
             body_params=body_params,
         )
 
     def deleteNetworkObject(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        return self._conn.send_request(
+        return self.delete_object(
             url_path='/object/networks/{objId}',
-            http_method='DELETE',
             path_params=path_params,
         )
 
@@ -130,9 +125,8 @@ class NetworkObjectResource(object):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['description', 'dnsResolution', 'id', 'isSystemDefined', 'name', 'subType', 'type', 'value', 'version'])
 
-        return self._conn.send_request(
+        return self.update_object(
             url_path='/object/networks/{objId}',
-            http_method='PUT',
             body_params=body_params,
             path_params=path_params,
         )
@@ -156,25 +150,18 @@ class NetworkObjectResource(object):
         )
 
     def getNetworkObjectByName(self, params):
-        search_params = params.copy()
-        search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(self.getNetworkObjectList, search_params)
-        return next(item for item in item_generator if item['name'] == params['name'])
+        return self.get_object_by_name(
+            url_path='/object/networks',
+            name=params['name']
+        )
 
     def upsertNetworkObject(self, params):
-        def is_duplicate_name_error(err):
-            err_msg = to_text(err.read())
-            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
-
         try:
             return self.addNetworkObject(params)
-        except HTTPError as e:
-            if is_duplicate_name_error(e):
-                existing_object = self.getNetworkObjectByName(params)
-                params = copy_identity_properties(existing_object, params)
-                return self.editNetworkObject(params)
-            else:
-                raise e
+        except ValueError:
+            existing_object = self.getNetworkObjectByName(params)
+            params = copy_identity_properties(existing_object, params)
+            return self.editNetworkObject(params)
 
     def editNetworkObjectByName(self, params):
         existing_object = self.getNetworkObjectByName(params)
@@ -217,9 +204,8 @@ def main():
 
         resource_method_to_call = getattr(resource, params['operation'])
         response = resource_method_to_call(params)
-
-        result = construct_module_result(response, params)
-        module.exit_json(**result)
+        module.exit_json(changed=resource.config_changed, response=response,
+                         ansible_facts=construct_ansible_facts(response, params))
     except HTTPError as e:
         err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)

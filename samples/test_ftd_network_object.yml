@@ -53,6 +53,24 @@
           - "'An object with the same name but different parameters already exists' in result.msg"
 
 
+    - name: upsertNetworkObject should update the existing network when it exists
+      ftd_network_object:
+        operation: 'upsertNetworkObject'
+        name: "ansible-test-network"
+        description: "Ansible Integration tests in action"
+        subType: "NETWORK"
+        value: "192.23.23.0/24"
+        type: "networkobject"
+        register_as: "upsertedTestObj"
+      register: result
+    - assert:
+        that:
+          - result.changed == true
+          - upsertedTestObj['id'] == testObj['id']
+          - upsertedTestObj['subType'] == "NETWORK"
+          - upsertedTestObj['value'] == "192.23.23.0/24"
+
+
     - name: editNetworkObject should update the existing network
       ftd_network_object:
         operation: 'editNetworkObject'

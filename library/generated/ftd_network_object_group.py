@@ -90,7 +90,7 @@ import json
 
 from ansible.module_utils.basic import AnsibleModule, to_text
 from ansible.module_utils.http import iterate_over_pageable_resource
-from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
+from ansible.module_utils.misc import dict_subset, construct_ansible_facts, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.connection import Connection
 
@@ -151,7 +151,7 @@ class NetworkObjectGroupResource(object):
         search_params = params.copy()
         search_params['filter'] = 'name:%s' % params['name']
         item_generator = iterate_over_pageable_resource(self.getNetworkObjectGroupList, search_params)
-        return next(item for item in item_generator if item['name'] == params['name'])
+        return next((item for item in item_generator if item['name'] == params['name']), None)
 
     def upsertNetworkObjectGroup(self, params):
         def is_duplicate_name_error(err):
@@ -207,9 +207,7 @@ def main():
 
         resource_method_to_call = getattr(resource, params['operation'])
         response = resource_method_to_call(params)
-
-        result = construct_module_result(response, params)
-        module.exit_json(**result)
+        module.exit_json(changed=True, response=response, ansible_facts=construct_ansible_facts(response, params))
     except HTTPError as e:
         err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
