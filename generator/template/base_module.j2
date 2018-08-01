@@ -13,16 +13,13 @@
 import json
 
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import iterate_over_pageable_resource
+from ansible.module_utils.config_resource import BaseConfigObjectResource
+from ansible.module_utils.connection import Connection
 from ansible.module_utils.misc import dict_subset, construct_ansible_facts, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.connection import Connection
 
 
-class {{ class_name }}(object):
-
-    def __init__(self, conn):
-        self._conn = conn
+class {{ class_name }}(BaseConfigObjectResource):
 {# Method declarations for standard operations (CRUD) that are defined in Swagger documentation #}
 {% for operation_name, operation_spec in operations.items() %}
 
@@ -37,6 +34,36 @@ class {{ class_name }}(object):
         body_params = dict_subset(params, [{{ operation_spec.body_params.keys() | sort | map('quote') | join(', ') }}])
     {% endif %}
 
+    {% if operation_name == 'add%s' % model_name %}
+        return self.add_object(
+            url_path={{ operation_spec.url_path | quote }},
+            body_params=body_params,
+        {% if operation_spec.path_params %}
+            path_params=path_params,
+        {% endif %}
+        {% if operation_spec.query_params %}
+            query_params=query_params,
+        {% endif %}
+        )
+    {% elif operation_name == 'delete%s' % model_name %}
+        return self.delete_object(
+            url_path={{ operation_spec.url_path | quote }},
+        {% if operation_spec.path_params %}
+            path_params=path_params,
+        {% endif %}
+        )
+    {% elif operation_name == 'edit%s' % model_name %}
+        return self.edit_object(
+            url_path={{ operation_spec.url_path | quote }},
+            body_params=body_params,
+        {% if operation_spec.path_params %}
+            path_params=path_params,
+        {% endif %}
+        {% if operation_spec.query_params %}
+            query_params=query_params,
+        {% endif %}
+        )
+    {% else %}
         return self._conn.send_request(
             url_path={{ operation_spec.url_path | quote }},
             http_method={{ operation_spec.http_method | upper | quote }},
@@ -50,35 +77,32 @@ class {{ class_name }}(object):
             query_params=query_params,
         {% endif %}
         )
+    {% endif %}
 {% endfor %}
 {# Additional operation to search the object by name #}
 {% if searchable_by_name %}
 {% do extra_operations.append( "get"+model_name+"ByName" ) %}
 
     def get{{ model_name }}ByName(self, params):
-        search_params = params.copy()
-        search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(self.get{{ model_name }}List, search_params)
-        return next((item for item in item_generator if item['name'] == params['name']), None)
+        return self.get_object_by_name(
+            url_path={{ operations['get%sList' % model_name].url_path | quote }},
+        {% if operations['get%sList' % model_name].path_params %}
+            path_params=dict_subset(params, [{{ operations['get%sList' % model_name].path_params.keys() | sort | map('quote') | join(', ') }}]),
+        {% endif %}
+            name=params['name']
+        )
 {% endif %}
 {# Additional operation to upsert the object (insert the new object or update if it already exists) #}
 {% if eligible_for_upsert %}
 {% do extra_operations.append( "upsert"+model_name ) %}
 
     def upsert{{ model_name }}(self, params):
-        def is_duplicate_name_error(err):
-            err_msg = to_text(err.read())
-            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
-
         try:
             return self.add{{ model_name }}(params)
-        except HTTPError as e:
-            if is_duplicate_name_error(e):
-                existing_object = self.get{{ model_name }}ByName(params)
-                params = copy_identity_properties(existing_object, params)
-                return self.edit{{ model_name }}(params)
-            else:
-                raise e
+        except ValueError:
+            existing_object = self.get{{ model_name }}ByName(params)
+            params = copy_identity_properties(existing_object, params)
+            return self.edit{{ model_name }}(params)
 {% endif %}
 {# Additional operation to edit the object by name #}
 {% if searchable_by_name and 'edit%s' % model_name in operations.keys() %}
@@ -123,7 +147,8 @@ def main():
 
         resource_method_to_call = getattr(resource, params['operation'])
         response = resource_method_to_call(params)
-        module.exit_json(changed=True, response=response, ansible_facts=construct_ansible_facts(response, params))
+        module.exit_json(changed=resource.config_changed, response=response,
+                         ansible_facts=construct_ansible_facts(response, params))
     except HTTPError as e:
         err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)
