@@ -125,7 +125,7 @@ class NetworkObjectResource(BaseConfigObjectResource):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['description', 'dnsResolution', 'id', 'isSystemDefined', 'name', 'subType', 'type', 'value', 'version'])
 
-        return self.update_object(
+        return self.edit_object(
             url_path='/object/networks/{objId}',
             body_params=body_params,
             path_params=path_params,

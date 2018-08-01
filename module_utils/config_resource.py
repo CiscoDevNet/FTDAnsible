@@ -46,7 +46,7 @@ class BaseConfigObjectResource(object):
             else:
                 raise e
 
-    def update_object(self, url_path, body_params, path_params):
+    def edit_object(self, url_path, body_params, path_params=None, query_params=None):
         existing_object = self._conn.send_request(url_path=url_path, http_method='GET', path_params=path_params)
 
         if not existing_object:
@@ -55,7 +55,7 @@ class BaseConfigObjectResource(object):
             return existing_object
         else:
             return self._send_modifying_request(url_path=url_path, http_method='PUT', body_params=body_params,
-                                                path_params=path_params)
+                                                path_params=path_params, query_params=query_params)
 
     def _send_modifying_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         response = self._conn.send_request(url_path=url_path, http_method=http_method, body_params=body_params,
