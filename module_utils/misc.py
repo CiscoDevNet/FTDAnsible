@@ -32,9 +32,6 @@ def copy_identity_properties(source_obj, dest_obj):
 
 
 def is_object_ref(d):
-    if type(d) is not dict:
-        return False
-
     has_id = 'id' in d.keys() and d['id']
     has_type = 'type' in d.keys() and d['type']
     return has_id and has_type
@@ -46,55 +43,49 @@ def equal_object_refs(d1, d2):
     return have_equal_ids and have_equal_types
 
 
-def equal_objects(dict1, dict2):
-    def _equal_lists(l1, l2):
-        import json
-        with open('/tmp/test1', 'wt') as f1:
-            f1.write(json.dumps(l1))
-        with open('/tmp/test2', 'wt') as f2:
-            f2.write(json.dumps(l2))
-
-        if len(l1) != len(l2):
-            return False
-
-        for v1, v2 in zip(l1, l2):
-            if type(v1) != type(v2):
-                return False
-
-            if is_object_ref(v1) and is_object_ref(v2):
-                equal_vs = equal_object_refs(v1, v2)
-            else:
-                equal_vs = v1 == v2
-
-            if not equal_vs:
-                return False
-
-        return True
-
-    if type(dict1) is not dict or type(dict2) is not dict:
-        raise ValueError("Arguments must be dictionaries")
-
-    dict1 = dict((k, dict1[k]) for k in dict1.keys() if k not in IGNORED_FIELDS and dict1[k])
-    dict2 = dict((k, dict2[k]) for k in dict2.keys() if k not in IGNORED_FIELDS and dict2[k])
-
-    if len(dict1) != len(dict2):
+def equal_lists(l1, l2):
+    if len(l1) != len(l2):
         return False
 
-    for key, value1 in dict1.items():
-        if key not in dict2:
+    for v1, v2 in zip(l1, l2):
+        if type(v1) != type(v2):
             return False
+        value_type = type(v1)
 
-        value2 = dict2[key]
-
-        if type(value1) != type(value2):
-            return False
-
-        if type(value1) == list:
-            equal_values = _equal_lists(value1, value2)
-        elif is_object_ref(value1) and is_object_ref(value2):
-            equal_values = equal_object_refs(value1, value2)
+        if value_type == dict and is_object_ref(v1) and is_object_ref(v2):
+            equal_values = equal_object_refs(v1, v2)
         else:
-            equal_values = value1 == value2
+            equal_values = v1 == v2
+
+        if not equal_values:
+            return False
+
+    return True
+
+
+def equal_objects(d1, d2):
+    d1 = dict((k, d1[k]) for k in d1.keys() if k not in IGNORED_FIELDS and d1[k])
+    d2 = dict((k, d2[k]) for k in d2.keys() if k not in IGNORED_FIELDS and d2[k])
+
+    if len(d1) != len(d2):
+        return False
+
+    for key, v1 in d1.items():
+        if key not in d2:
+            return False
+
+        v2 = d2[key]
+
+        if type(v1) != type(v2):
+            return False
+        value_type = type(v1)
+
+        if value_type == list:
+            equal_values = equal_lists(v1, v2)
+        elif value_type == dict and is_object_ref(v1) and is_object_ref(v2):
+            equal_values = equal_object_refs(v1, v2)
+        else:
+            equal_values = v1 == v2
 
         if not equal_values:
             return False

@@ -1,14 +1,7 @@
-import pytest
-
 from module_utils.misc import equal_objects
 
 
 # simple objects
-
-def test_equal_objects_raise_error_with_wrong_args():
-    with pytest.raises(ValueError, match='Arguments must be dictionaries'):
-        equal_objects({}, 'a')
-
 
 def test_equal_objects_return_false_with_different_length():
     assert not equal_objects(
