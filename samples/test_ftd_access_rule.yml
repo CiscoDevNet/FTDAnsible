@@ -1,0 +1,58 @@
+- hosts: vftd
+  connection: httpapi
+  tasks:
+    - name: create auxilary network object
+      ftd_network_object:
+        operation: 'addNetworkObject'
+        name: "ansible-test-network"
+        description: "Ansible Integration tests in action"
+        subType: "HOST"
+        value: "192.22.22.24"
+        type: "networkobject"
+        register_as: "testNetworkObj"
+
+    - name: addAccessRule should create a new access rule
+      ftd_access_rule:
+        operation: 'addAccessRule'
+        name: "ansible-test-accessrule"
+        type: "accessrule"
+        parentId: "default"
+        sourceNetworks:
+          - "{{ testNetworkObj }}"
+        register_as: "testRuleObj"
+      register: result
+    - assert:
+        that:
+          - result.changed == true
+          - testRuleObj['name'] == "ansible-test-accessrule"
+
+    - name: addNetworkObject should NOT create an access rule when the rule with the same name exists
+      ftd_access_rule:
+        operation: 'addAccessRule'
+        name: "ansible-test-accessrule"
+        type: "accessrule"
+        parentId: "default"
+        sourceNetworks:
+          - "{{ testNetworkObj }}"
+        register_as: "sameRuleObj"
+      register: result
+    - assert:
+        that:
+          - result.changed == false
+          - testRuleObj['id'] == sameRuleObj['id']
+          - testRuleObj['name'] == sameRuleObj['name']
+
+    - name: deleteAccessRule should delete the rule
+      ftd_access_rule:
+        operation: 'deleteAccessRule'
+        objId: "{{ testRuleObj['id'] }}"
+        parentId: "default"
+      register: result
+    - assert:
+        that:
+          - result.changed == true
+
+    - name: delete auxilary network object
+      ftd_network_object:
+        operation: 'deleteNetworkObject'
+        objId: "{{ testNetworkObj['id'] }}"
