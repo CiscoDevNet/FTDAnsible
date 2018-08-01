@@ -17,6 +17,7 @@ from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 from ansible.module_utils.connection import ConnectionError
 from ansible.errors import AnsibleConnectionFailure
+import q
 
 try:
     from __main__ import display
@@ -67,21 +68,12 @@ class HttpApi(HttpApiBase):
     def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
+        response, response_data = self.connection.send(
+            url, data, method=http_method,
+            headers=BASE_HEADERS
+        )
         try:
-            response, response_data = self.connection.send(
-                url, data, method=http_method,
-                headers=BASE_HEADERS
-            )
-        except HTTPError as exc:
-            if exc.code == TOKEN_EXPIRATION_STATUS_CODE and self.refresh_token:
-                self.login()
-            else:
-                raise AnsibleConnectionFailure(
-                    'Could not connent to {0}: {1}'
-                    .format(self.connection._url + url, exc.reason)
-                )
-        try:
-            ret = json.loads(response_data.getvalue())
+            ret = json.loads(to_text(response_data.getvalue()))
         except:
             raise ConnectionError('Response was not valid JSON, got {0}'
                                   .format(response_data.getvalue()))
@@ -96,20 +88,11 @@ class HttpApi(HttpApiBase):
             headers = dict(BASE_HEADERS)
             headers['Content-Type'] = content_type
             headers['Content-Length'] = len(body)
+            response, response_data = self.connection.send(
+                url, data=body, method='POST', headers=headers
+            )
             try:
-                response, response_data = self.connection.send(
-                    url, data=body, method='POST', headers=headers
-                )
-            except HTTPError as exc:
-                if exc.code == TOKEN_EXPIRATION_STATUS_CODE and self.refresh_token:
-                    self.login()
-                else:
-                    raise AnsibleConnectionFailure(
-                        'Could not connent to {0}: {1}'
-                        .format(self.connection._url + url, exc.reason)
-                    )
-            try:
-                ret = json.loads(response_data.getvalue())
+                ret = json.loads(to_text(response_data.getvalue()))
             except:
                 raise ConnectionError('Response was not valid JSON, got {0}'
                                       .format(response_data.getvalue()))
@@ -117,30 +100,21 @@ class HttpApi(HttpApiBase):
 
     def download_file(self, from_url, to_path):
         url = construct_url_path(from_url)
-        try:
-            response, response_data = self.connection.send(
-                url, data=None, method='GET',
-                headers=BASE_HEADERS
-            )
-        except HTTPError as exc:
-            if exc.code == TOKEN_EXPIRATION_STATUS_CODE and self.refresh_token:
-                self.login()
-            else:
-                raise AnsibleConnectionFailure(
-                    'Could not connent to {0}: {1}'
-                    .format(self.connection._url + url, exc.reason)
-                )
+        response, response_data = self.connection.send(
+            url, data=None, method='GET',
+            headers=BASE_HEADERS
+        )
         if os.path.isdir(to_path):
             filename = extract_filename_from_headers(response.info())
             to_path = os.path.join(to_path, filename)
 
         with open(to_path, "wb") as output_file:
-            output_file.write(response_data.getvalue())
+            output_file.write(to_text(response_data.getvalue()))
 
     def update_auth(self, response, response_data):
         if response_data:
             try:
-                token_info = json.loads(response_data.getvalue())
+                token_info = json.loads(to_text(response_data.getvalue()))
             except ValueError:
                 return None
             if 'refresh_token' in token_info:
@@ -149,6 +123,19 @@ class HttpApi(HttpApiBase):
                 self.access_token = token_info['access_token']
                 return {'Authorization': 'Bearer %s' % token_info['access_token']}
         return None
+
+    def handle_httperror(self, exc):
+        # Called by connection plugin when it gets HTTP Error for a request.
+        # Connection plugin will resend this request if we return true here.
+        if (exc.code == TOKEN_EXPIRATION_STATUS_CODE or
+           exc.code == UNAUTHORIZED_STATUS_CODE) and self.connection._auth:
+            # Stored auth appears to be invalid, clear and retry
+            self.connection._auth = None
+            self.login(self.connection.get_option('remote_user'),
+                       self.connection.get_option('password'))
+            return True
+
+        return False
 
     def logout(self):
         # Revoke the tokens
