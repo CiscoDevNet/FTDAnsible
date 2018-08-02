@@ -32,18 +32,39 @@ def copy_identity_properties(source_obj, dest_obj):
 
 
 def is_object_ref(d):
+    """
+    Checks if a dictionary is a reference object. The dictionary is considered to be a
+    reference object when it contains non-empty 'id' and 'type' fields.
+
+    :type d: dict
+    :return: True if passed dictionary is a reference object, otherwise False
+    """
     has_id = 'id' in d.keys() and d['id']
     has_type = 'type' in d.keys() and d['type']
     return has_id and has_type
 
 
 def equal_object_refs(d1, d2):
+    """
+    Checks whether two references point to the same object.
+
+    :type d1: dict
+    :type d2: dict
+    :return: True if passed references point to the same object, otherwise False
+    """
     have_equal_ids = d1['id'] == d2['id']
     have_equal_types = d1['type'] == d2['type']
     return have_equal_ids and have_equal_types
 
 
 def equal_lists(l1, l2):
+    """
+    Checks whether two lists are equal. The order of elements in the arrays is important.
+
+    :type l1: list
+    :type l2: list
+    :return: True if passed lists, their elements and order of elements are equal. Otherwise, returns False.
+    """
     if len(l1) != len(l2):
         return False
 
@@ -64,6 +85,15 @@ def equal_lists(l1, l2):
 
 
 def equal_objects(d1, d2):
+    """
+    Checks whether two objects are equal. Ignores special object properties (e.g. 'id', 'version') and
+    properties with None and empty values. In case properties contains a reference to the other object,
+    only object identities (ids and types) are checked.
+
+    :type d1: dict
+    :type d2: dict
+    :return: True if passed objects and their properties are equal. Otherwise, returns False.
+    """
     d1 = dict((k, d1[k]) for k in d1.keys() if k not in IGNORED_FIELDS and d1[k])
     d2 = dict((k, d2[k]) for k in d2.keys() if k not in IGNORED_FIELDS and d2[k])
 
