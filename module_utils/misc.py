@@ -1,7 +1,7 @@
 import re
 
 INVALID_IDENTIFIER_SYMBOLS = r'[^a-zA-Z0-9_]'
-IGNORED_FIELDS = ['id', 'version', 'isSystemDefined', 'links', 'eventLogAction', 'ruleAction', 'ruleId']
+IGNORED_FIELDS = ['id', 'version', 'isSystemDefined', 'links', 'ruleId']
 
 
 def dict_subset(dictionary, keys):
