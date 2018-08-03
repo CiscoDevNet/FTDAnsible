@@ -1,7 +1,9 @@
 import re
 
 INVALID_IDENTIFIER_SYMBOLS = r'[^a-zA-Z0-9_]'
-IGNORED_FIELDS = ['id', 'version', 'isSystemDefined', 'links', 'ruleId']
+
+IDENTITY_PROPERTIES = ['id', 'version', 'ruleId']
+NON_COMPARABLE_PROPERTIES = IDENTITY_PROPERTIES + ['isSystemDefined', 'links']
 
 
 def dict_subset(dictionary, keys):
@@ -22,12 +24,9 @@ def construct_ansible_facts(response, params):
 
 
 def copy_identity_properties(source_obj, dest_obj):
-    dest_obj['objId'] = source_obj['id']
-    dest_obj['id'] = source_obj['id']
-    if 'version' in source_obj:
-        dest_obj['version'] = source_obj['version']
-    if 'ruleId' in source_obj:
-        dest_obj['ruleId'] = source_obj['ruleId']
+    for property_name in IDENTITY_PROPERTIES:
+        if property_name in source_obj:
+            dest_obj[property_name] = source_obj[property_name]
     return dest_obj
 
 
@@ -94,8 +93,8 @@ def equal_objects(d1, d2):
     :type d2: dict
     :return: True if passed objects and their properties are equal. Otherwise, returns False.
     """
-    d1 = dict((k, d1[k]) for k in d1.keys() if k not in IGNORED_FIELDS and d1[k])
-    d2 = dict((k, d2[k]) for k in d2.keys() if k not in IGNORED_FIELDS and d2[k])
+    d1 = dict((k, d1[k]) for k in d1.keys() if k not in NON_COMPARABLE_PROPERTIES and d1[k])
+    d2 = dict((k, d2[k]) for k in d2.keys() if k not in NON_COMPARABLE_PROPERTIES and d2[k])
 
     if len(d1) != len(d2):
         return False

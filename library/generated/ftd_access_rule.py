@@ -199,21 +199,28 @@ class AccessRuleResource(BaseConfigObjectResource):
         )
 
     def upsertAccessRule(self, params):
-        try:
-            return self.addAccessRule(params)
-        except ValueError:
-            existing_object = self.getAccessRuleByName(params)
-            params = copy_identity_properties(existing_object, params)
-            return self.editAccessRule(params)
+        path_params = dict_subset(params, ['parentId'])
+        query_params = dict_subset(params, ['at'])
+        body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version'])
+
+        return self.add_object(
+            url_path='/policy/accesspolicies/{parentId}/accessrules',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
+            update_if_exists=True
+        )
 
     def editAccessRuleByName(self, params):
         existing_object = self.getAccessRuleByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.editAccessRule(params)
 
     def deleteAccessRuleByName(self, params):
         existing_object = self.getAccessRuleByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.deleteAccessRule(params)
 
 

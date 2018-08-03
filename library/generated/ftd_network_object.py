@@ -156,21 +156,24 @@ class NetworkObjectResource(BaseConfigObjectResource):
         )
 
     def upsertNetworkObject(self, params):
-        try:
-            return self.addNetworkObject(params)
-        except ValueError:
-            existing_object = self.getNetworkObjectByName(params)
-            params = copy_identity_properties(existing_object, params)
-            return self.editNetworkObject(params)
+        body_params = dict_subset(params, ['description', 'dnsResolution', 'id', 'isSystemDefined', 'name', 'subType', 'type', 'value', 'version'])
+
+        return self.add_object(
+            url_path='/object/networks',
+            body_params=body_params,
+            update_if_exists=True
+        )
 
     def editNetworkObjectByName(self, params):
         existing_object = self.getNetworkObjectByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.editNetworkObject(params)
 
     def deleteNetworkObjectByName(self, params):
         existing_object = self.getNetworkObjectByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.deleteNetworkObject(params)
 
 

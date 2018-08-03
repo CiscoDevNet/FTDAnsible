@@ -97,12 +97,27 @@ class {{ class_name }}(BaseConfigObjectResource):
 {% do extra_operations.append( "upsert"+model_name ) %}
 
     def upsert{{ model_name }}(self, params):
-        try:
-            return self.add{{ model_name }}(params)
-        except ValueError:
-            existing_object = self.get{{ model_name }}ByName(params)
-            params = copy_identity_properties(existing_object, params)
-            return self.edit{{ model_name }}(params)
+    {% if operations['add%s' % model_name].path_params %}
+        path_params = dict_subset(params, [{{ operations['add%s' % model_name].path_params.keys() | sort | map('quote') | join(', ') }}])
+    {% endif %}
+    {% if operations['add%s' % model_name].query_params %}
+        query_params = dict_subset(params, [{{ operations['add%s' % model_name].query_params.keys() | sort | map('quote') | join(', ') }}])
+    {% endif %}
+    {% if operations['add%s' % model_name].body_params %}
+        body_params = dict_subset(params, [{{ operations['add%s' % model_name].body_params.keys() | sort | map('quote') | join(', ') }}])
+    {% endif %}
+
+        return self.add_object(
+            url_path={{ operations['add%s' % model_name].url_path | quote }},
+            body_params=body_params,
+        {% if operations['add%s' % model_name].path_params %}
+            path_params=path_params,
+        {% endif %}
+        {% if operations['add%s' % model_name].query_params %}
+            query_params=query_params,
+        {% endif %}
+            update_if_exists=True
+        )
 {% endif %}
 {# Additional operation to edit the object by name #}
 {% if searchable_by_name and 'edit%s' % model_name in operations.keys() %}
@@ -111,6 +126,7 @@ class {{ class_name }}(BaseConfigObjectResource):
     def edit{{ model_name }}ByName(self, params):
         existing_object = self.get{{ model_name }}ByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.edit{{ model_name }}(params)
 {% endif %}
 {# Additional operation to delete the object by name #}
@@ -120,6 +136,7 @@ class {{ class_name }}(BaseConfigObjectResource):
     def delete{{ model_name }}ByName(self, params):
         existing_object = self.get{{ model_name }}ByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.delete{{ model_name }}(params)
 {% endif %}
 

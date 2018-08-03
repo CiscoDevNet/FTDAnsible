@@ -148,21 +148,24 @@ class NetworkObjectGroupResource(BaseConfigObjectResource):
         )
 
     def upsertNetworkObjectGroup(self, params):
-        try:
-            return self.addNetworkObjectGroup(params)
-        except ValueError:
-            existing_object = self.getNetworkObjectGroupByName(params)
-            params = copy_identity_properties(existing_object, params)
-            return self.editNetworkObjectGroup(params)
+        body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'objects', 'type', 'version'])
+
+        return self.add_object(
+            url_path='/object/networkgroups',
+            body_params=body_params,
+            update_if_exists=True
+        )
 
     def editNetworkObjectGroupByName(self, params):
         existing_object = self.getNetworkObjectGroupByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.editNetworkObjectGroup(params)
 
     def deleteNetworkObjectGroupByName(self, params):
         existing_object = self.getNetworkObjectGroupByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.deleteNetworkObjectGroup(params)
 
 

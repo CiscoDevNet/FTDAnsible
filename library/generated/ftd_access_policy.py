@@ -129,6 +129,7 @@ class AccessPolicyResource(BaseConfigObjectResource):
     def editAccessPolicyByName(self, params):
         existing_object = self.getAccessPolicyByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.editAccessPolicy(params)
 
 
