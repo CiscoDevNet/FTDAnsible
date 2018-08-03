@@ -6,6 +6,9 @@ from ansible.module_utils.http import iterate_over_pageable_resource
 from ansible.module_utils.misc import equal_objects
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
+UNPROCESSABLE_ENTITY_STATUS = 422
+INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
+
 
 class HTTPMethod(Enum):
     GET = 'GET'
@@ -45,7 +48,7 @@ class BaseConfigObjectResource(object):
     def delete_object(self, url_path, path_params):
         def is_invalid_uuid_error(err):
             err_msg = to_text(err.read())
-            return err.code == 422 and "Validation failed due to an invalid UUID" in err_msg
+            return err.code == UNPROCESSABLE_ENTITY_STATUS and INVALID_UUID_ERROR_MESSAGE in err_msg
 
         try:
             return self._send_request(url_path=url_path, http_method=HTTPMethod.DELETE, path_params=path_params)
