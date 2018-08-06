@@ -84,24 +84,20 @@ msg:
 import json
 
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import iterate_over_pageable_resource
-from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
-from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.config_resource import BaseConfigObjectResource
 from ansible.module_utils.connection import Connection
+from ansible.module_utils.misc import dict_subset, construct_ansible_facts, copy_identity_properties
+from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 
-class AccessPolicyResource(object):
-
-    def __init__(self, conn):
-        self._conn = conn
+class AccessPolicyResource(BaseConfigObjectResource):
 
     def editAccessPolicy(self, params):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['defaultAction', 'id', 'identityPolicySetting', 'name', 'securityIntelligence', 'sslPolicy', 'type', 'version'])
 
-        return self._conn.send_request(
+        return self.edit_object(
             url_path='/policy/accesspolicies/{objId}',
-            http_method='PUT',
             body_params=body_params,
             path_params=path_params,
         )
@@ -125,14 +121,15 @@ class AccessPolicyResource(object):
         )
 
     def getAccessPolicyByName(self, params):
-        search_params = params.copy()
-        search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(self.getAccessPolicyList, search_params)
-        return next(item for item in item_generator if item['name'] == params['name'])
+        return self.get_object_by_name(
+            url_path='/policy/accesspolicies',
+            name=params['name']
+        )
 
     def editAccessPolicyByName(self, params):
         existing_object = self.getAccessPolicyByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.editAccessPolicy(params)
 
 
@@ -165,9 +162,8 @@ def main():
 
         resource_method_to_call = getattr(resource, params['operation'])
         response = resource_method_to_call(params)
-
-        result = construct_module_result(response, params)
-        module.exit_json(**result)
+        module.exit_json(changed=resource.config_changed, response=response,
+                         ansible_facts=construct_ansible_facts(response, params))
     except HTTPError as e:
         err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)

@@ -89,32 +89,27 @@ msg:
 import json
 
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import iterate_over_pageable_resource
-from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
-from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.config_resource import BaseConfigObjectResource
 from ansible.module_utils.connection import Connection
+from ansible.module_utils.misc import dict_subset, construct_ansible_facts, copy_identity_properties
+from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 
-class NetworkObjectGroupResource(object):
-
-    def __init__(self, conn):
-        self._conn = conn
+class NetworkObjectGroupResource(BaseConfigObjectResource):
 
     def addNetworkObjectGroup(self, params):
         body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'objects', 'type', 'version'])
 
-        return self._conn.send_request(
+        return self.add_object(
             url_path='/object/networkgroups',
-            http_method='POST',
             body_params=body_params,
         )
 
     def deleteNetworkObjectGroup(self, params):
         path_params = dict_subset(params, ['objId'])
 
-        return self._conn.send_request(
+        return self.delete_object(
             url_path='/object/networkgroups/{objId}',
-            http_method='DELETE',
             path_params=path_params,
         )
 
@@ -122,9 +117,8 @@ class NetworkObjectGroupResource(object):
         path_params = dict_subset(params, ['objId'])
         body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'objects', 'type', 'version'])
 
-        return self._conn.send_request(
+        return self.edit_object(
             url_path='/object/networkgroups/{objId}',
-            http_method='PUT',
             body_params=body_params,
             path_params=path_params,
         )
@@ -148,34 +142,30 @@ class NetworkObjectGroupResource(object):
         )
 
     def getNetworkObjectGroupByName(self, params):
-        search_params = params.copy()
-        search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(self.getNetworkObjectGroupList, search_params)
-        return next(item for item in item_generator if item['name'] == params['name'])
+        return self.get_object_by_name(
+            url_path='/object/networkgroups',
+            name=params['name']
+        )
 
     def upsertNetworkObjectGroup(self, params):
-        def is_duplicate_name_error(err):
-            err_msg = to_text(err.read())
-            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
+        body_params = dict_subset(params, ['description', 'id', 'isSystemDefined', 'name', 'objects', 'type', 'version'])
 
-        try:
-            return self.addNetworkObjectGroup(params)
-        except HTTPError as e:
-            if is_duplicate_name_error(e):
-                existing_object = self.getNetworkObjectGroupByName(params)
-                params = copy_identity_properties(existing_object, params)
-                return self.editNetworkObjectGroup(params)
-            else:
-                raise e
+        return self.add_object(
+            url_path='/object/networkgroups',
+            body_params=body_params,
+            update_if_exists=True
+        )
 
     def editNetworkObjectGroupByName(self, params):
         existing_object = self.getNetworkObjectGroupByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.editNetworkObjectGroup(params)
 
     def deleteNetworkObjectGroupByName(self, params):
         existing_object = self.getNetworkObjectGroupByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.deleteNetworkObjectGroup(params)
 
 
@@ -207,9 +197,8 @@ def main():
 
         resource_method_to_call = getattr(resource, params['operation'])
         response = resource_method_to_call(params)
-
-        result = construct_module_result(response, params)
-        module.exit_json(**result)
+        module.exit_json(changed=resource.config_changed, response=response,
+                         ansible_facts=construct_ansible_facts(response, params))
     except HTTPError as e:
         err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)

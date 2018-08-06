@@ -131,25 +131,21 @@ msg:
 import json
 
 from ansible.module_utils.basic import AnsibleModule, to_text
-from ansible.module_utils.http import iterate_over_pageable_resource
-from ansible.module_utils.misc import dict_subset, construct_module_result, copy_identity_properties
-from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.config_resource import BaseConfigObjectResource
 from ansible.module_utils.connection import Connection
+from ansible.module_utils.misc import dict_subset, construct_ansible_facts, copy_identity_properties
+from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 
-class AccessRuleResource(object):
-
-    def __init__(self, conn):
-        self._conn = conn
+class AccessRuleResource(BaseConfigObjectResource):
 
     def addAccessRule(self, params):
         path_params = dict_subset(params, ['parentId'])
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version'])
 
-        return self._conn.send_request(
+        return self.add_object(
             url_path='/policy/accesspolicies/{parentId}/accessrules',
-            http_method='POST',
             body_params=body_params,
             path_params=path_params,
             query_params=query_params,
@@ -158,9 +154,8 @@ class AccessRuleResource(object):
     def deleteAccessRule(self, params):
         path_params = dict_subset(params, ['objId', 'parentId'])
 
-        return self._conn.send_request(
+        return self.delete_object(
             url_path='/policy/accesspolicies/{parentId}/accessrules/{objId}',
-            http_method='DELETE',
             path_params=path_params,
         )
 
@@ -169,9 +164,8 @@ class AccessRuleResource(object):
         query_params = dict_subset(params, ['at'])
         body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version'])
 
-        return self._conn.send_request(
+        return self.edit_object(
             url_path='/policy/accesspolicies/{parentId}/accessrules/{objId}',
-            http_method='PUT',
             body_params=body_params,
             path_params=path_params,
             query_params=query_params,
@@ -198,34 +192,35 @@ class AccessRuleResource(object):
         )
 
     def getAccessRuleByName(self, params):
-        search_params = params.copy()
-        search_params['filter'] = 'name:%s' % params['name']
-        item_generator = iterate_over_pageable_resource(self.getAccessRuleList, search_params)
-        return next(item for item in item_generator if item['name'] == params['name'])
+        return self.get_object_by_name(
+            url_path='/policy/accesspolicies/{parentId}/accessrules',
+            path_params=dict_subset(params, ['parentId']),
+            name=params['name']
+        )
 
     def upsertAccessRule(self, params):
-        def is_duplicate_name_error(err):
-            err_msg = to_text(err.read())
-            return err.code == 422 and "Validation failed due to a duplicate name" in err_msg
+        path_params = dict_subset(params, ['parentId'])
+        query_params = dict_subset(params, ['at'])
+        body_params = dict_subset(params, ['destinationNetworks', 'destinationPorts', 'destinationZones', 'embeddedAppFilter', 'eventLogAction', 'filePolicy', 'id', 'intrusionPolicy', 'logFiles', 'name', 'ruleAction', 'ruleId', 'sourceNetworks', 'sourcePorts', 'sourceZones', 'syslogServer', 'type', 'urlFilter', 'users', 'version'])
 
-        try:
-            return self.addAccessRule(params)
-        except HTTPError as e:
-            if is_duplicate_name_error(e):
-                existing_object = self.getAccessRuleByName(params)
-                params = copy_identity_properties(existing_object, params)
-                return self.editAccessRule(params)
-            else:
-                raise e
+        return self.add_object(
+            url_path='/policy/accesspolicies/{parentId}/accessrules',
+            body_params=body_params,
+            path_params=path_params,
+            query_params=query_params,
+            update_if_exists=True
+        )
 
     def editAccessRuleByName(self, params):
         existing_object = self.getAccessRuleByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.editAccessRule(params)
 
     def deleteAccessRuleByName(self, params):
         existing_object = self.getAccessRuleByName(params)
         params = copy_identity_properties(existing_object, params)
+        params['objId'] = existing_object['id']
         return self.deleteAccessRule(params)
 
 
@@ -272,9 +267,8 @@ def main():
 
         resource_method_to_call = getattr(resource, params['operation'])
         response = resource_method_to_call(params)
-
-        result = construct_module_result(response, params)
-        module.exit_json(**result)
+        module.exit_json(changed=resource.config_changed, response=response,
+                         ansible_facts=construct_ansible_facts(response, params))
     except HTTPError as e:
         err_msg = to_text(e.read())
         module.fail_json(changed=False, msg=json.loads(err_msg) if err_msg else {}, error_code=e.code)

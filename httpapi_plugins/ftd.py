@@ -63,7 +63,7 @@ class HttpApi(HttpApiBase):
         url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
         response = self.connection.send(url, data, method=http_method, headers=self._authorized_headers()).read()
-        return json.loads(to_text(response)) if response else response
+        return json.loads(to_text(response)) if response else ''
 
     @retry_on_token_expiration
     def upload_file(self, from_path, to_url):
