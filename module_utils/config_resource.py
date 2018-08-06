@@ -1,20 +1,12 @@
-from enum import Enum
 from functools import partial
 
 from ansible.module_utils.basic import to_text
-from ansible.module_utils.http import iterate_over_pageable_resource
+from ansible.module_utils.http import iterate_over_pageable_resource, HTTPMethod
 from ansible.module_utils.misc import equal_objects, copy_identity_properties
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 UNPROCESSABLE_ENTITY_STATUS = 422
 INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
-
-
-class HTTPMethod(Enum):
-    GET = 'GET'
-    POST = 'POST'
-    PUT = 'PUT'
-    DELETE = 'DELETE'
 
 
 class BaseConfigObjectResource(object):
