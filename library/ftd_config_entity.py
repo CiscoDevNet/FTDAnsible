@@ -10,28 +10,28 @@ def get_operation_spec(operation_name):
     operations = [
         dict(
             id='addNetworkObject',
-            http_method=HTTPMethod.POST,
-            url_path='/object/networks'
+            method=HTTPMethod.POST,
+            url='/object/networks'
         ),
         dict(
             id='deleteNetworkObject',
-            http_method=HTTPMethod.DELETE,
-            url_path='/object/networks/{objId}'
+            method=HTTPMethod.DELETE,
+            url='/object/networks/{objId}'
         )
     ]
     return next((op for op in operations if op['id'] == operation_name), None)
 
 
 def is_add_operation(operation_spec):
-    return operation_spec['id'].startswith('add') and operation_spec['http_method'] == HTTPMethod.POST
+    return operation_spec['id'].startswith('add') and operation_spec['method'] == HTTPMethod.POST
 
 
 def is_edit_operation(operation_spec):
-    return operation_spec['id'].startswith('edit') and operation_spec['http_method'] == HTTPMethod.PUT
+    return operation_spec['id'].startswith('edit') and operation_spec['method'] == HTTPMethod.PUT
 
 
 def is_delete_operation(operation_spec):
-    return operation_spec['id'].startswith('delete') and operation_spec['http_method'] == HTTPMethod.DELETE
+    return operation_spec['id'].startswith('delete') and operation_spec['method'] == HTTPMethod.DELETE
 
 
 def main():
@@ -43,26 +43,25 @@ def main():
         register_as=dict(type='str')
     )
     module = AnsibleModule(argument_spec=fields)
-    data = module.params['data']
-    query_params = module.params['query_params']
-    path_params = module.params['path_params']
+    params = module.params
 
-    operation_spec = get_operation_spec(module.params['operation'])
-    if operation_spec is None:
-        module.fail_json(msg='Invalid operation name provided: %s' % module.params['operation'])
+    op_spec = get_operation_spec(params['operation'])
+    if op_spec is None:
+        module.fail_json(msg='Invalid operation name provided: %s' % params['operation'])
 
-    connection = Connection(module._socket_path)
-    resource = BaseConfigObjectResource(connection)
+    data, query_params, path_params = params['data'], params['query_params'], params['path_params']
+    # TODO: implement validation for input parameters
 
-    url_path = operation_spec['url_path']
-    if is_add_operation(operation_spec):
-        resp = resource.add_object(url_path, data, path_params, query_params)
-    elif is_edit_operation(operation_spec):
-        resp = resource.edit_object(url_path, data, path_params, query_params)
-    elif is_delete_operation(operation_spec):
-        resp = resource.delete_object(url_path, path_params)
+    resource = BaseConfigObjectResource(Connection(module._socket_path))
+
+    if is_add_operation(op_spec):
+        resp = resource.add_object(op_spec['url'], data, path_params, query_params)
+    elif is_edit_operation(op_spec):
+        resp = resource.edit_object(op_spec['url'], data, path_params, query_params)
+    elif is_delete_operation(op_spec):
+        resp = resource.delete_object(op_spec['url'], path_params)
     else:
-        resp = resource._send_request(url_path, operation_spec['http_method'], data, path_params, query_params)
+        resp = resource._send_request(op_spec['url'], op_spec['method'], data, path_params, query_params)
 
     module.exit_json(changed=resource.config_changed, response=resp,
                      ansible_facts=construct_ansible_facts(resp, module.params))
