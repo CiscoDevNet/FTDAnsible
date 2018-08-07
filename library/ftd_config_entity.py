@@ -77,31 +77,29 @@ except (ImportError, ModuleNotFoundError):
 
 def get_operation_spec(operation_name):
     # TODO: replace with real data from the 'ngfw.json' file, stub data for now
-    operations = [
-        dict(
-            id='addNetworkObject',
+    operations = {
+        'addNetworkObject': dict(
             method=HTTPMethod.POST,
             url='/object/networks'
         ),
-        dict(
-            id='deleteNetworkObject',
+        'deleteNetworkObject': dict(
             method=HTTPMethod.DELETE,
             url='/object/networks/{objId}'
         )
-    ]
-    return next((op for op in operations if op['id'] == operation_name), None)
+    }
+    return operations.get(operation_name)
 
 
-def is_add_operation(operation_spec):
-    return operation_spec['id'].startswith('add') and operation_spec['method'] == HTTPMethod.POST
+def is_add_operation(operation_name, operation_spec):
+    return operation_name.startswith('add') and operation_spec['method'] == HTTPMethod.POST
 
 
-def is_edit_operation(operation_spec):
-    return operation_spec['id'].startswith('edit') and operation_spec['method'] == HTTPMethod.PUT
+def is_edit_operation(operation_name, operation_spec):
+    return operation_name.startswith('edit') and operation_spec['method'] == HTTPMethod.PUT
 
 
-def is_delete_operation(operation_spec):
-    return operation_spec['id'].startswith('delete') and operation_spec['method'] == HTTPMethod.DELETE
+def is_delete_operation(operation_name, operation_spec):
+    return operation_name.startswith('delete') and operation_spec['method'] == HTTPMethod.DELETE
 
 
 def main():
@@ -115,20 +113,21 @@ def main():
     module = AnsibleModule(argument_spec=fields)
     params = module.params
 
-    op_spec = get_operation_spec(params['operation'])
+    op_name = params['operation']
+    op_spec = get_operation_spec(op_name)
     if op_spec is None:
-        module.fail_json(msg='Invalid operation name provided: %s' % params['operation'])
+        module.fail_json(msg='Invalid operation name provided: %s' % op_name)
 
     data, query_params, path_params = params['data'], params['query_params'], params['path_params']
     # TODO: implement validation for input parameters
 
     resource = BaseConfigObjectResource(Connection(module._socket_path))
 
-    if is_add_operation(op_spec):
+    if is_add_operation(op_name, op_spec):
         resp = resource.add_object(op_spec['url'], data, path_params, query_params)
-    elif is_edit_operation(op_spec):
+    elif is_edit_operation(op_name, op_spec):
         resp = resource.edit_object(op_spec['url'], data, path_params, query_params)
-    elif is_delete_operation(op_spec):
+    elif is_delete_operation(op_name, op_spec):
         resp = resource.delete_object(op_spec['url'], path_params)
     else:
         resp = resource.send_request(op_spec['url'], op_spec['method'], data, path_params, query_params)

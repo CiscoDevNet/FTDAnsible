@@ -52,7 +52,6 @@ class TestFtdConfigEntity(object):
 
     def test_module_should_add_object_when_add_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'id': 'addObject',
             'method': HTTPMethod.POST,
             'url': '/object'
         }
@@ -64,11 +63,10 @@ class TestFtdConfigEntity(object):
         result = self._run_module(params)
 
         assert ADD_RESPONSE == result['response']
-        resource_mock.add_object.assert_called_with('/object', params['data'], None, None)
+        resource_mock.add_object.assert_called_with(operation_mock.return_value['url'], params['data'], None, None)
 
     def test_module_should_edit_object_when_edit_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'id': 'editObject',
             'method': HTTPMethod.PUT,
             'url': '/object/{objId}'
         }
@@ -81,11 +79,11 @@ class TestFtdConfigEntity(object):
         result = self._run_module(params)
 
         assert EDIT_RESPONSE == result['response']
-        resource_mock.edit_object.assert_called_with('/object/{objId}', params['data'], params['path_params'], None)
+        resource_mock.edit_object.assert_called_with(operation_mock.return_value['url'], params['data'],
+                                                     params['path_params'], None)
 
     def test_module_should_delete_object_when_delete_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'id': 'deleteObject',
             'method': HTTPMethod.DELETE,
             'url': '/object/{objId}'
         }
@@ -97,11 +95,10 @@ class TestFtdConfigEntity(object):
         result = self._run_module(params)
 
         assert DELETE_RESPONSE == result['response']
-        resource_mock.delete_object.assert_called_with('/object/{objId}', params['path_params'])
+        resource_mock.delete_object.assert_called_with(operation_mock.return_value['url'], params['path_params'])
 
     def test_module_should_send_request_when_arbitrary_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'id': 'checkStatus',
             'method': HTTPMethod.GET,
             'url': '/object/status/{objId}'
         }
@@ -113,7 +110,7 @@ class TestFtdConfigEntity(object):
         result = self._run_module(params)
 
         assert ARBITRARY_RESPONSE == result['response']
-        resource_mock.send_request.assert_called_with('/object/status/{objId}', HTTPMethod.GET, None,
+        resource_mock.send_request.assert_called_with(operation_mock.return_value['url'], HTTPMethod.GET, None,
                                                       params['path_params'], None)
 
     def _run_module(self, module_args):
