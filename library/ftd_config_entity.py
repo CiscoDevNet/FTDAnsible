@@ -1,8 +1,15 @@
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.config_resource import BaseConfigObjectResource
 from ansible.module_utils.connection import Connection
-from ansible.module_utils.http import HTTPMethod
-from ansible.module_utils.misc import construct_ansible_facts
+
+# TODO: remove import workarounds when module_utils are moved to the Ansible core
+try:
+    from ansible.module_utils.config_resource import BaseConfigObjectResource
+    from ansible.module_utils.http import HTTPMethod
+    from ansible.module_utils.misc import construct_ansible_facts
+except (ImportError, ModuleNotFoundError):
+    from module_utils.config_resource import BaseConfigObjectResource
+    from module_utils.http import HTTPMethod
+    from module_utils.misc import construct_ansible_facts
 
 
 def get_operation_spec(operation_name):
@@ -61,7 +68,7 @@ def main():
     elif is_delete_operation(op_spec):
         resp = resource.delete_object(op_spec['url'], path_params)
     else:
-        resp = resource._send_request(op_spec['url'], op_spec['method'], data, path_params, query_params)
+        resp = resource.send_request(op_spec['url'], op_spec['method'], data, path_params, query_params)
 
     module.exit_json(changed=resource.config_changed, response=resp,
                      ansible_facts=construct_ansible_facts(resp, module.params))
