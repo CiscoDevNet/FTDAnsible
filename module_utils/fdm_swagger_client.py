@@ -1,5 +1,3 @@
-from enum import Enum
-
 BASE_PATH = 'basePath'
 DEFINITIONS = 'definitions'
 OPERATIONS = 'operations'
@@ -8,11 +6,6 @@ PARAMETERS_FIELD = 'parameters'
 MODELS = 'models'
 REF = '$ref'
 ALL_OF = 'allOf'
-
-
-class Resource(Enum):
-    URL = 'url'
-    SPEC = 'spec'
 
 
 class FdmSwaggerParser:
@@ -118,8 +111,9 @@ class FdmSwaggerParser:
 
 class FdmSwaggerClient:
     __config = None
+    PATH_TO_API_SPEC = '/apispec/ngfw.json'
 
-    def __init__(self, conn, cache_file_path, cache_expiration_time):
+    def __init__(self, conn, cache_file_path=None, cache_expiration_time=0):
         self._conn = conn
 
         self._cache_expiration_time = cache_expiration_time
@@ -128,7 +122,7 @@ class FdmSwaggerClient:
         if cache_file_path:
             self.__config = self.get_config_from_cache()
 
-        if self.__config:
+        if not self.__config:
             self.__config = self.get_spec_from_server()
 
     def get_operations(self):
@@ -143,10 +137,13 @@ class FdmSwaggerClient:
     def get_model(self, model_name):
         return self.get_models().get(model_name, None)
 
+    def get_base_path(self):
+        return self.__config[BASE_PATH]
+
     def get_config_from_cache(self):
         # TODO:2018-08-07:alexander.vorkov: need to implement
         return None
 
     def get_spec_from_server(self):
-        # TODO:2018-08-07:alexander.vorkov: need to implement
-        return None
+        data = self._conn.send_request(url_path=self.PATH_TO_API_SPEC)
+        return FdmSwaggerParser().pars_spec(data)
