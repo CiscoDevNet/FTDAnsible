@@ -1,5 +1,7 @@
 from enum import Enum
 
+BASE_PATH = 'basePath'
+DEFINITIONS = 'definitions'
 OPERATIONS = 'operations'
 SCHEMA = 'schema'
 PARAMETERS_FIELD = 'parameters'
@@ -17,9 +19,10 @@ class FdmSwaggerParser:
     _definitions = None
 
     def pars_spec(self, spec):
-        self._definitions = spec['definitions']
+        self._definitions = spec[DEFINITIONS]
         _config = {
-            MODELS: self._definitions
+            MODELS: self._definitions,
+            BASE_PATH: spec[BASE_PATH]
         }
         _paths_dict = spec['paths']
 
@@ -116,11 +119,17 @@ class FdmSwaggerParser:
 class FdmSwaggerClient:
     __config = None
 
-    # TODO:2018-08-06:alexander.vorkov: pass the url or path to file.
-    # TODO:2018-08-06:alexander.vorkov: pass the connection object
-    def __init__(self, resource=Resource.URL, spec=None):
-        if spec:
-            self.__config = FdmSwaggerParser().pars_spec(spec)
+    def __init__(self, conn, cache_file_path, cache_expiration_time):
+        self._conn = conn
+
+        self._cache_expiration_time = cache_expiration_time
+        self._cache_file_path = cache_file_path
+
+        if cache_file_path:
+            self.__config = self.get_config_from_cache()
+
+        if self.__config:
+            self.__config = self.get_spec_from_server()
 
     def get_operations(self):
         return self.__config[OPERATIONS]
@@ -134,8 +143,10 @@ class FdmSwaggerClient:
     def get_model(self, model_name):
         return self.get_models().get(model_name, None)
 
-    def _from_url(self):
-        pass
+    def get_config_from_cache(self):
+        # TODO:2018-08-07:alexander.vorkov: need to implement
+        return None
 
-    def _from_spec(self):
-        pass
+    def get_spec_from_server(self):
+        # TODO:2018-08-07:alexander.vorkov: need to implement
+        return None

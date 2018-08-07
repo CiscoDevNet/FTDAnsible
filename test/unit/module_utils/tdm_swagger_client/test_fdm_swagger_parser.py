@@ -149,6 +149,6 @@ class TestFdmSwaggerParser(unittest.TestCase):
 
             if operation['modelName'] == '_File' and 'download' not in operation['url']:
                 assert_that(False)
-
+        assert_that(self.fdm_data['basePath'], equal_to('/api/fdm/v2'))
         assert_that(['/action/upgrade'], equal_to(without_model_name))
         assert_that(equal_to(len(list(operations.items()))), expected_operations_counter)
