@@ -6,7 +6,10 @@ import unittest
 
 from hamcrest import equal_to, assert_that
 
-from module_utils.fdm_swagger_client import FdmSwaggerClient
+try:
+    from ansible.module_utils.fdm_swagger_client import FdmSwaggerClient
+except ModuleNotFoundError:
+    from module_utils.fdm_swagger_client import FdmSwaggerClient
 
 pp = pprint.PrettyPrinter(width=41, compact=True)
 
@@ -124,3 +127,28 @@ class TestFdmSwaggerClient(unittest.TestCase):
         # pp.pprint(expected_operations[test_prop])
         # pp.pprint(self.fdm_swagger_client.get_operations()[test_prop])
         assert_that(expected_operations, equal_to(self.fdm_swagger_client.get_operations()))
+
+    def test_parse_all_data(self):
+        self._data['definitions'] = self.base_data['definitions']
+
+        self._data['paths'] = self.base_data['paths']
+
+        self.fdm_swagger_client = FdmSwaggerClient(spec=self._data)
+        operations = self.fdm_swagger_client.get_operations()
+        without_model_name = []
+        expected_operations_counter = 0
+        for key in self._data['paths']:
+            operation = self._data['paths'][key]
+            for _ in operation:
+                expected_operations_counter += 1
+
+        for key in operations:
+            operation = operations[key]
+            if not operation['modelName'] and (operation['method'] != 'delete'):
+                without_model_name.append(operation['url'])
+
+            if operation['modelName'] == '_File' and 'download' not in operation['url']:
+                assert_that(False)
+
+        assert_that(['/action/upgrade'], equal_to(without_model_name))
+        assert_that(equal_to(len(list(operations.items()))), expected_operations_counter)
