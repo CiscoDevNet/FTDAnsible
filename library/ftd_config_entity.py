@@ -1,3 +1,66 @@
+#!/usr/bin/python
+
+# Copyright (c) 2018 Cisco Systems, Inc.
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'network'}
+
+DOCUMENTATION = """
+---
+module: ftd_config_entity
+short_description: Manages ConfigEntity objects on Cisco FTD devices over REST API.
+version_added: "2.7"
+author: "Cisco Systems, Inc."
+options:
+  operation:
+    description:
+      - The name of the operation to execute. Commonly, the operation starts with 'add', 'edit', 'get'
+       or 'delete' verbs, but can have an arbitrary name too. 
+    required: true
+  data:
+    description:
+      - Key-value pairs that should be sent as body parameters in a REST API call
+  query_params:
+    description:
+      - Key-value pairs that should be sent as query parameters in a REST API call.
+  path_params:
+    description:
+      - Key-value pairs that should be sent as path parameters in a REST API call.
+  register_as:
+    description:
+      - Specifies Ansible fact name that is used to register received response from the FTD device.
+"""
+
+EXAMPLES = """
+- name: Create a network object
+  ftd_config_entity:
+    operation: "addNetworkObject"
+    data:
+      name: "Ansible-network-host"
+      description: "From Ansible with love"
+      subType: "HOST"
+      value: "192.168.2.0"
+      dnsResolution: "IPV4_AND_IPV6"
+      type: "networkobject"
+      isSystemDefined: false
+    register_as: "hostNetwork"
+
+- name: Delete the network object
+  ftd_config_entity:
+    operation: "deleteNetworkObject"
+    path_params:
+      objId: "{{ hostNetwork['id'] }}"
+"""
+
+RETURN = """
+response:
+  description: HTTP response returned from the API call.
+  returned: success
+  type: dict
+"""
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 
