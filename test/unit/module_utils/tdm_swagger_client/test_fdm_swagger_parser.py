@@ -7,9 +7,9 @@ import unittest
 from hamcrest import equal_to, assert_that
 
 try:
-    from ansible.module_utils.fdm_swagger_client import FdmSwaggerClient
+    from ansible.module_utils.fdm_swagger_client import FdmSwaggerParser
 except ModuleNotFoundError:
-    from module_utils.fdm_swagger_client import FdmSwaggerClient
+    from module_utils.fdm_swagger_client import FdmSwaggerParser
 
 pp = pprint.PrettyPrinter(width=41, compact=True)
 
@@ -26,7 +26,7 @@ def _get_objects(base_object, key_names):
     return {_key: base_object[_key] for _key in key_names}
 
 
-class TestFdmSwaggerClient(unittest.TestCase):
+class TestFdmSwaggerParser(unittest.TestCase):
     def setUp(self):
         self.init_mock_data()
 
@@ -42,7 +42,7 @@ class TestFdmSwaggerClient(unittest.TestCase):
         self._data['paths'] = _get_objects(self.base_data['paths'],
                                            ['/object/networks', '/object/networks/{objId}'])
 
-        self.fdm_swagger_client = FdmSwaggerClient(spec=self._data)
+        self.fdm_data = FdmSwaggerParser().pars_spec(self._data)
 
         expected_operations = {
             'getNetworkObjectList': {
@@ -122,19 +122,19 @@ class TestFdmSwaggerClient(unittest.TestCase):
             }
         }
         assert_that(['NetworkObject', 'NetworkObjectWrapper'],
-                    equal_to(list(self.fdm_swagger_client.get_models().keys())))
+                    equal_to(list(self.fdm_data['models'].keys())))
         # test_prop = 'deleteNetworkObject'
         # pp.pprint(expected_operations[test_prop])
         # pp.pprint(self.fdm_swagger_client.get_operations()[test_prop])
-        assert_that(expected_operations, equal_to(self.fdm_swagger_client.get_operations()))
+        assert_that(expected_operations, equal_to(self.fdm_data['operations']))
 
     def test_parse_all_data(self):
         self._data['definitions'] = self.base_data['definitions']
 
         self._data['paths'] = self.base_data['paths']
 
-        self.fdm_swagger_client = FdmSwaggerClient(spec=self._data)
-        operations = self.fdm_swagger_client.get_operations()
+        self.fdm_data = FdmSwaggerParser().pars_spec(self._data)
+        operations = self.fdm_data['operations']
         without_model_name = []
         expected_operations_counter = 0
         for key in self._data['paths']:
