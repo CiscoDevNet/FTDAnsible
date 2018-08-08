@@ -91,14 +91,17 @@ def get_operation_spec(operation_name):
 
 
 def is_add_operation(operation_name, operation_spec):
+    # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
     return operation_name.startswith('add') and operation_spec['method'] == HTTPMethod.POST
 
 
 def is_edit_operation(operation_name, operation_spec):
+    # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
     return operation_name.startswith('edit') and operation_spec['method'] == HTTPMethod.PUT
 
 
 def is_delete_operation(operation_name, operation_spec):
+    # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
     return operation_name.startswith('delete') and operation_spec['method'] == HTTPMethod.DELETE
 
 
