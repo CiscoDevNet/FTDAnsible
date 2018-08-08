@@ -105,10 +105,10 @@ class FdmSwaggerParser:
             'query': query
         }
         for param in params:
-            in_parm = param['in']
-            if in_parm == 'query':
+            in_param = param['in']
+            if in_param == 'query':
                 query[param['name']] = self._simplify_param_def(param)
-            elif in_parm == 'path':
+            elif in_param == 'path':
                 path[param['name']] = self._simplify_param_def(param)
         return operation_param
 
