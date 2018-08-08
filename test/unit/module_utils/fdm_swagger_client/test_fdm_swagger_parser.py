@@ -1,7 +1,6 @@
 import copy
 import json
 import os
-import pprint
 import unittest
 
 from hamcrest import equal_to, assert_that
@@ -10,8 +9,6 @@ try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerParser
 except ModuleNotFoundError:
     from module_utils.fdm_swagger_client import FdmSwaggerParser
-
-pp = pprint.PrettyPrinter(width=41, compact=True)
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
