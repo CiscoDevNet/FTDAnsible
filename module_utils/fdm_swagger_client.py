@@ -1,3 +1,11 @@
+import json
+import os
+import time
+
+CACHE_TIME = 'time'
+
+CACHE_SPEC = 'spec'
+
 MODEL_NAME_FIELD = 'modelName'
 URL_FIELD = 'url'
 METHOD_FIELD = 'method'
@@ -155,9 +163,47 @@ class FdmSwaggerClient:
         return self.get_models().get(model_name, None)
 
     def get_config_from_cache(self):
-        # TODO:2018-08-07:alexander.vorkov: need to implement
-        return None
+        try:
+            file_path = self._get_cache_file_path()
+            if file_path and self._cache_expiration_time and os.path.exists(file_path):
+                with open(file_path) as f:
+                    data = json.load(f)
+                    if CACHE_TIME in data:
+                        if (int(time.time()) - data[CACHE_TIME]) < self._cache_expiration_time:
+                            return data[CACHE_SPEC]
+                        else:
+                            self.clean_cache()
+            return None
+        except Exception:
+            return None
+
+    def clean_cache(self):
+        file_path = self._get_cache_file_path()
+        if file_path and os.path.exists(file_path):
+            os.remove(file_path)
+
+    def _get_cache_file_path(self):
+        # TODO:2018-08-08:alexander.vorkov: add host to the file name
+        return self._cache_file_path
 
     def get_spec_from_server(self):
         data = self._conn.send_request(url_path=self.PATH_TO_API_SPEC)
-        return FdmSwaggerParser().pars_spec(data)
+        spec = FdmSwaggerParser().pars_spec(data)
+        self._cache_spec(spec)
+        return spec
+
+    def _cache_spec(self, spec):
+        file_path = self._get_cache_file_path()
+        if file_path and self._cache_expiration_time:
+            directory = os.path.dirname(file_path)
+
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+            with open(file_path, 'w') as outfile:
+                json.dump({
+                    CACHE_TIME: int(time.time()),
+                    CACHE_SPEC: spec
+                }, outfile)
+                return True
+        return False

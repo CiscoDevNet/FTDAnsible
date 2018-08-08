@@ -2,6 +2,7 @@ import copy
 import json
 import os
 import pprint
+import time
 import unittest
 
 import requests
@@ -64,3 +65,41 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 assert_that(False)
         assert_that(['/api/fdm/v2/action/upgrade'], equal_to(without_model_name))
         assert_that(equal_to(len(list(operations.items()))), expected_operations_counter)
+
+    def test_data_should_be_cached(self):
+        response = {
+            'basePath': "/api/fdm/v2",
+            'definitions': {
+                'TestModel': {}
+            },
+            'paths': {
+                'testPath': {}
+            }
+        }
+
+        class MockConnection:
+            def send_request(self, url_path):
+                return copy.deepcopy(response)
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        swagger_client = FdmSwaggerClient(conn=MockConnection(),
+                                          cache_file_path=os.path.join(dir_path, 'tmp/test.json'),
+                                          cache_expiration_time=2)
+        models = swagger_client.get_models()
+        assert_that(list(models.keys()), equal_to(['TestModel']))
+
+        response['definitions']['TestModel2'] = {}
+
+        swagger_client = FdmSwaggerClient(conn=MockConnection(),
+                                          cache_file_path=os.path.join(dir_path, 'tmp/test.json'),
+                                          cache_expiration_time=2)
+        models = swagger_client.get_models()
+        assert_that(list(models.keys()), equal_to(['TestModel']))
+
+        time.sleep(2)
+
+        swagger_client = FdmSwaggerClient(conn=MockConnection(),
+                                          cache_file_path=os.path.join(dir_path, 'tmp/test.json'),
+                                          cache_expiration_time=2)
+        models = swagger_client.get_models()
+        assert_that(list(models.keys()), equal_to(['TestModel', 'TestModel2']))
