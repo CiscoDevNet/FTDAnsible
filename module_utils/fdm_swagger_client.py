@@ -1,11 +1,25 @@
+MODEL_NAME_FIELD = 'modelName'
+URL_FIELD = 'url'
+METHOD_FIELD = 'method'
+PARAMETERS_FIELD = 'parameters'
+
+PATHS = 'paths'
+OPERATION_ID = 'operationId'
+FILE_MODEL_NAME = '_File'
+SUCCESS_RESPONSE_CODE = '200'
 BASE_PATH = 'basePath'
 DEFINITIONS = 'definitions'
 OPERATIONS = 'operations'
 SCHEMA = 'schema'
-PARAMETERS_FIELD = 'parameters'
 MODELS = 'models'
 REF = '$ref'
 ALL_OF = 'allOf'
+
+
+class HttpMethod:
+    GET = 'get'
+    POST = 'post'
+    PUT = 'put'
 
 
 class FdmSwaggerParser:
@@ -13,31 +27,34 @@ class FdmSwaggerParser:
 
     def pars_spec(self, spec):
         self._definitions = spec[DEFINITIONS]
-        _base_path = spec[BASE_PATH]
         _config = {
-            MODELS: self._definitions
+            MODELS: self._definitions,
+            OPERATIONS: self._get_operations(spec)
         }
-        _paths_dict = spec['paths']
+        return _config
 
+    def _get_operations(self, spec):
+        _base_path = spec[BASE_PATH]
+        _paths_dict = spec[PATHS]
         _operations_dict = {}
         for _url, _operation_params in list(_paths_dict.items()):
             for _method, _params in list(_operation_params.items()):
-                _operation_id = _params['operationId']
                 _operation = {
-                    'method': _method,
-                    'url': _base_path + _url,
-                    'modelName': self._get_model_name(_method, _params)
+                    METHOD_FIELD: _method,
+                    URL_FIELD: _base_path + _url,
+                    MODEL_NAME_FIELD: self._get_model_name(_method, _params)
                 }
                 if PARAMETERS_FIELD in _params:
                     _operation[PARAMETERS_FIELD] = self._get_rest_params(_params[PARAMETERS_FIELD])
+
+                _operation_id = _params[OPERATION_ID]
                 _operations_dict[_operation_id] = _operation
-        _config[OPERATIONS] = _operations_dict
-        return _config
+        return _operations_dict
 
     def _get_model_name(self, _method, _params):
-        if _method == 'get':
+        if _method == HttpMethod.GET:
             return self._get_model_name_from_responses(_params)
-        elif _method == 'post' or _method == 'put':
+        elif _method == HttpMethod.POST or _method == HttpMethod.PUT:
             return self._get_model_name_for_post_put_requests(_params)
         else:
             return None
@@ -61,15 +78,15 @@ class FdmSwaggerParser:
 
     def _get_model_name_from_responses(self, params):
         _responses = params['responses']
-        if '200' in _responses:
-            response = _responses['200'][SCHEMA]
+        if SUCCESS_RESPONSE_CODE in _responses:
+            response = _responses[SUCCESS_RESPONSE_CODE][SCHEMA]
             if REF in response:
                 return self._get_model_name_by_schema_ref(response[REF])
             elif 'properties' in response:
                 ref = response['properties']['items']['items'][REF]
                 return self._get_model_name_by_schema_ref(ref)
             elif ('type' in response) and response['type'] == "file":
-                return '_File'
+                return FILE_MODEL_NAME
         else:
             return None
 
