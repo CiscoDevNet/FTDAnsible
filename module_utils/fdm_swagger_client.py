@@ -81,9 +81,7 @@ class FdmSwaggerParser:
 
     @staticmethod
     def _get_body_param_from_parameters(params):
-        for param in params:
-            if param['in'] == 'body':
-                return param
+        return next((param for param in params if param['in'] == 'body'), None)
 
     def _get_model_name_from_responses(self, params):
         responses = params['responses']
