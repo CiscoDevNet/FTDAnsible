@@ -13,9 +13,9 @@ class FdmSwaggerParser:
 
     def pars_spec(self, spec):
         self._definitions = spec[DEFINITIONS]
+        _base_path = spec[BASE_PATH]
         _config = {
-            MODELS: self._definitions,
-            BASE_PATH: spec[BASE_PATH]
+            MODELS: self._definitions
         }
         _paths_dict = spec['paths']
 
@@ -25,7 +25,7 @@ class FdmSwaggerParser:
                 _operation_id = _params['operationId']
                 _operation = {
                     'method': _method,
-                    'url': _url,
+                    'url': _base_path + _url,
                     'modelName': self._get_model_name(_method, _params)
                 }
                 if PARAMETERS_FIELD in _params:
@@ -136,9 +136,6 @@ class FdmSwaggerClient:
 
     def get_model(self, model_name):
         return self.get_models().get(model_name, None)
-
-    def get_base_path(self):
-        return self.__config[BASE_PATH]
 
     def get_config_from_cache(self):
         # TODO:2018-08-07:alexander.vorkov: need to implement

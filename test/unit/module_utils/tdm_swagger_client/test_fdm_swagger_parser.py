@@ -47,7 +47,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
         expected_operations = {
             'getNetworkObjectList': {
                 'method': 'get',
-                'url': '/object/networks',
+                'url': '/api/fdm/v2/object/networks',
                 'modelName': 'NetworkObject',
                 'parameters': {
                     'path': {},
@@ -73,14 +73,14 @@ class TestFdmSwaggerParser(unittest.TestCase):
             },
             'addNetworkObject': {
                 'method': 'post',
-                'url': '/object/networks',
+                'url': '/api/fdm/v2/object/networks',
                 'modelName': 'NetworkObject',
                 'parameters': {'path': {},
                                'query': {}}
             },
             'getNetworkObject': {
                 'method': 'get',
-                'url': '/object/networks/{objId}',
+                'url': '/api/fdm/v2/object/networks/{objId}',
                 'modelName': 'NetworkObject',
                 'parameters': {
                     'path': {
@@ -94,7 +94,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
             },
             'editNetworkObject': {
                 'method': 'put',
-                'url': '/object/networks/{objId}',
+                'url': '/api/fdm/v2/object/networks/{objId}',
                 'modelName': 'NetworkObject',
                 'parameters': {
                     'path': {
@@ -108,7 +108,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
             },
             'deleteNetworkObject': {
                 'method': 'delete',
-                'url': '/object/networks/{objId}',
+                'url': '/api/fdm/v2/object/networks/{objId}',
                 'modelName': None,
                 'parameters': {
                     'path': {
@@ -123,9 +123,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
         }
         assert_that(['NetworkObject', 'NetworkObjectWrapper'],
                     equal_to(list(self.fdm_data['models'].keys())))
-        # test_prop = 'deleteNetworkObject'
-        # pp.pprint(expected_operations[test_prop])
-        # pp.pprint(self.fdm_swagger_client.get_operations()[test_prop])
+
         assert_that(expected_operations, equal_to(self.fdm_data['operations']))
 
     def test_parse_all_data(self):
@@ -149,6 +147,5 @@ class TestFdmSwaggerParser(unittest.TestCase):
 
             if operation['modelName'] == '_File' and 'download' not in operation['url']:
                 assert_that(False)
-        assert_that(self.fdm_data['basePath'], equal_to('/api/fdm/v2'))
-        assert_that(['/action/upgrade'], equal_to(without_model_name))
+        assert_that(['/api/fdm/v2/action/upgrade'], equal_to(without_model_name))
         assert_that(equal_to(len(list(operations.items()))), expected_operations_counter)
