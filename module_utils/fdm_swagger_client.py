@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from enum import Enum
 
 CACHE_TIME = 'time'
 
@@ -24,7 +25,7 @@ REF = '$ref'
 ALL_OF = 'allOf'
 
 
-class HttpMethod:
+class HttpMethod(Enum):
     GET = 'get'
     POST = 'post'
     PUT = 'put'
@@ -35,34 +36,34 @@ class FdmSwaggerParser:
 
     def pars_spec(self, spec):
         self._definitions = spec[DEFINITIONS]
-        _config = {
+        config = {
             MODELS: self._definitions,
             OPERATIONS: self._get_operations(spec)
         }
-        return _config
+        return config
 
     def _get_operations(self, spec):
-        _base_path = spec[BASE_PATH]
-        _paths_dict = spec[PATHS]
-        _operations_dict = {}
-        for _url, _operation_params in list(_paths_dict.items()):
-            for _method, _params in list(_operation_params.items()):
-                _operation = {
-                    METHOD_FIELD: _method,
-                    URL_FIELD: _base_path + _url,
-                    MODEL_NAME_FIELD: self._get_model_name(_method, _params)
+        base_path = spec[BASE_PATH]
+        paths_dict = spec[PATHS]
+        operations_dict = {}
+        for url, operation_params in list(paths_dict.items()):
+            for method, params in list(operation_params.items()):
+                operation = {
+                    METHOD_FIELD: method,
+                    URL_FIELD: base_path + url,
+                    MODEL_NAME_FIELD: self._get_model_name(method, params)
                 }
-                if PARAMETERS_FIELD in _params:
-                    _operation[PARAMETERS_FIELD] = self._get_rest_params(_params[PARAMETERS_FIELD])
+                if PARAMETERS_FIELD in params:
+                    operation[PARAMETERS_FIELD] = self._get_rest_params(params[PARAMETERS_FIELD])
 
-                _operation_id = _params[OPERATION_ID]
-                _operations_dict[_operation_id] = _operation
-        return _operations_dict
+                operation_id = params[OPERATION_ID]
+                operations_dict[operation_id] = operation
+        return operations_dict
 
-    def _get_model_name(self, _method, _params):
-        if _method == HttpMethod.GET:
+    def _get_model_name(self, method, _params):
+        if method == HttpMethod.GET.value:
             return self._get_model_name_from_responses(_params)
-        elif _method == HttpMethod.POST or _method == HttpMethod.PUT:
+        elif method == HttpMethod.POST.value or method == HttpMethod.PUT.value:
             return self._get_model_name_for_post_put_requests(_params)
         else:
             return None
@@ -70,10 +71,10 @@ class FdmSwaggerParser:
     def _get_model_name_for_post_put_requests(self, params):
         model_name = None
         if PARAMETERS_FIELD in params:
-            _body_param_dict = self._get_body_param_form_parameters(params[PARAMETERS_FIELD])
-            if _body_param_dict:
-                _schema_ref = _body_param_dict[SCHEMA][REF]
-                model_name = self._get_model_name_by_schema_ref(_schema_ref)
+            body_param_dict = self._get_body_param_form_parameters(params[PARAMETERS_FIELD])
+            if body_param_dict:
+                schema_ref = body_param_dict[SCHEMA][REF]
+                model_name = self._get_model_name_by_schema_ref(schema_ref)
         if model_name is None:
             model_name = self._get_model_name_from_responses(params)
         return model_name
@@ -85,9 +86,9 @@ class FdmSwaggerParser:
                 return param
 
     def _get_model_name_from_responses(self, params):
-        _responses = params['responses']
-        if SUCCESS_RESPONSE_CODE in _responses:
-            response = _responses[SUCCESS_RESPONSE_CODE][SCHEMA]
+        responses = params['responses']
+        if SUCCESS_RESPONSE_CODE in responses:
+            response = responses[SUCCESS_RESPONSE_CODE][SCHEMA]
             if REF in response:
                 return self._get_model_name_by_schema_ref(response[REF])
             elif 'properties' in response:
@@ -101,7 +102,7 @@ class FdmSwaggerParser:
     def _get_rest_params(self, params):
         path = {}
         query = {}
-        _param = {
+        operation_param = {
             'path': path,
             'query': query
         }
@@ -111,7 +112,7 @@ class FdmSwaggerParser:
                 query[param['name']] = self._simplify_param_def(param)
             elif in_parm == 'path':
                 path[param['name']] = self._simplify_param_def(param)
-        return _param
+        return operation_param
 
     @staticmethod
     def _simplify_param_def(param):
@@ -130,13 +131,16 @@ class FdmSwaggerParser:
 
     @staticmethod
     def _get_model_name_from_url(_schema_ref):
-        _path = _schema_ref.split('/')
-        return _path[len(_path) - 1]
+        path = _schema_ref.split('/')
+        return path[len(path) - 1]
 
 
 class FdmSwaggerClient:
-    __config = None
     PATH_TO_API_SPEC = '/apispec/ngfw.json'
+
+    _config = None
+    _conn = None
+    _cache_expiration_time = None
 
     def __init__(self, conn, cache_file_path=None, cache_expiration_time=0):
         self._conn = conn
@@ -145,19 +149,19 @@ class FdmSwaggerClient:
         self._cache_file_path = cache_file_path
 
         if cache_file_path:
-            self.__config = self.get_config_from_cache()
+            self._config = self.get_config_from_cache()
 
-        if not self.__config:
-            self.__config = self.get_spec_from_server()
+        if not self._config:
+            self._config = self.get_spec_from_server()
 
     def get_operations(self):
-        return self.__config[OPERATIONS]
+        return self._config[OPERATIONS]
 
     def get_operation(self, operation_name):
         return self.get_operations().get(operation_name, None)
 
     def get_models(self):
-        return self.__config[MODELS]
+        return self._config[MODELS]
 
     def get_model(self, model_name):
         return self.get_models().get(model_name, None)
