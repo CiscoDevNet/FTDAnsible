@@ -149,4 +149,4 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 assert_that(False)
 
         assert_that(['/api/fdm/v2/action/upgrade'], equal_to(without_model_name))
-        assert_that(equal_to(len(list(operations.items()))), expected_operations_counter)
+        assert_that(equal_to(len(operations.items())), expected_operations_counter)

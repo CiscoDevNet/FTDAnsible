@@ -46,8 +46,8 @@ class FdmSwaggerParser:
         base_path = spec[BASE_PATH]
         paths_dict = spec[PATHS]
         operations_dict = {}
-        for url, operation_params in list(paths_dict.items()):
-            for method, params in list(operation_params.items()):
+        for url, operation_params in paths_dict.items():
+            for method, params in operation_params.items():
                 operation = {
                     METHOD_FIELD: method,
                     URL_FIELD: base_path + url,

@@ -36,7 +36,7 @@ class FtdConnection(object):
         return json.loads(response.text)
 
 
-class TestFdmSwaggerParser(unittest.TestCase):
+class TestFdmSwaggerClient(unittest.TestCase):
     def setUp(self):
         self.init_mock_data()
 
