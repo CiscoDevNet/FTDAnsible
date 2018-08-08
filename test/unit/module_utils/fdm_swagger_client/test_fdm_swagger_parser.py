@@ -42,7 +42,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
         self._data['paths'] = _get_objects(self.base_data['paths'],
                                            ['/object/networks', '/object/networks/{objId}'])
 
-        self.fdm_data = FdmSwaggerParser().pars_spec(self._data)
+        self.fdm_data = FdmSwaggerParser().parse_spec(self._data)
 
         expected_operations = {
             'getNetworkObjectList': {
@@ -131,7 +131,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
 
         self._data['paths'] = self.base_data['paths']
 
-        self.fdm_data = FdmSwaggerParser().pars_spec(self._data)
+        self.fdm_data = FdmSwaggerParser().parse_spec(self._data)
         operations = self.fdm_data['operations']
         without_model_name = []
         expected_operations_counter = 0

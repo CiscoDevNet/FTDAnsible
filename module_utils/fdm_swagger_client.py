@@ -34,7 +34,7 @@ class HttpMethod(Enum):
 class FdmSwaggerParser:
     _definitions = None
 
-    def pars_spec(self, spec):
+    def parse_spec(self, spec):
         self._definitions = spec[DEFINITIONS]
         config = {
             MODELS: self._definitions,
@@ -190,7 +190,7 @@ class FdmSwaggerClient:
 
     def get_spec_from_server(self):
         data = self._conn.send_request(url_path=self.PATH_TO_API_SPEC)
-        spec = FdmSwaggerParser().pars_spec(data)
+        spec = FdmSwaggerParser().parse_spec(data)
         self._cache_spec(spec)
         return spec
 
