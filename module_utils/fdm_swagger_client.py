@@ -60,18 +60,18 @@ class FdmSwaggerParser:
                 operations_dict[operation_id] = operation
         return operations_dict
 
-    def _get_model_name(self, method, _params):
+    def _get_model_name(self, method, params):
         if method == HttpMethod.GET.value:
-            return self._get_model_name_from_responses(_params)
+            return self._get_model_name_from_responses(params)
         elif method == HttpMethod.POST.value or method == HttpMethod.PUT.value:
-            return self._get_model_name_for_post_put_requests(_params)
+            return self._get_model_name_for_post_put_requests(params)
         else:
             return None
 
     def _get_model_name_for_post_put_requests(self, params):
         model_name = None
         if PARAMETERS_FIELD in params:
-            body_param_dict = self._get_body_param_form_parameters(params[PARAMETERS_FIELD])
+            body_param_dict = self._get_body_param_from_parameters(params[PARAMETERS_FIELD])
             if body_param_dict:
                 schema_ref = body_param_dict[SCHEMA][REF]
                 model_name = self._get_model_name_by_schema_ref(schema_ref)
@@ -80,7 +80,7 @@ class FdmSwaggerParser:
         return model_name
 
     @staticmethod
-    def _get_body_param_form_parameters(params):
+    def _get_body_param_from_parameters(params):
         for param in params:
             if param['in'] == 'body':
                 return param
