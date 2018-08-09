@@ -69,25 +69,12 @@ try:
     from ansible.module_utils.config_resource import BaseConfigObjectResource
     from ansible.module_utils.http import HTTPMethod
     from ansible.module_utils.misc import construct_ansible_facts
+    from ansible.module_utils.fdm_swagger_client import METHOD_FIELD
 except (ImportError, ModuleNotFoundError):
     from module_utils.config_resource import BaseConfigObjectResource
     from module_utils.http import HTTPMethod
     from module_utils.misc import construct_ansible_facts
-
-
-def get_operation_spec(operation_name):
-    # TODO: replace with real data from the 'ngfw.json' file, stub data for now
-    operations = {
-        'addNetworkObject': dict(
-            method=HTTPMethod.POST,
-            url='/object/networks'
-        ),
-        'deleteNetworkObject': dict(
-            method=HTTPMethod.DELETE,
-            url='/object/networks/{objId}'
-        )
-    }
-    return operations.get(operation_name)
+    from module_utils.fdm_swagger_client import METHOD_FIELD
 
 
 def is_add_operation(operation_name, operation_spec):
@@ -115,16 +102,18 @@ def main():
     )
     module = AnsibleModule(argument_spec=fields)
     params = module.params
+    connection = Connection(module._socket_path)
 
     op_name = params['operation']
-    op_spec = get_operation_spec(op_name)
+    op_spec = connection.get_operation_spec(op_name)
     if op_spec is None:
         module.fail_json(msg='Invalid operation name provided: %s' % op_name)
+    op_spec[METHOD_FIELD] = HTTPMethod(op_spec[METHOD_FIELD].upper())
 
     data, query_params, path_params = params['data'], params['query_params'], params['path_params']
     # TODO: implement validation for input parameters
 
-    resource = BaseConfigObjectResource(Connection(module._socket_path))
+    resource = BaseConfigObjectResource(connection)
 
     if is_add_operation(op_name, op_spec):
         resp = resource.add_object(op_spec['url'], data, path_params, query_params)

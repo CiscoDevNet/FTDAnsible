@@ -78,7 +78,7 @@ class BaseConfigObjectResource(object):
 
     def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         response = self._conn.send_request(url_path=url_path, http_method=http_method.value, body_params=body_params,
-                                           path_params=path_params, query_params=query_params)
+                                           path_params=path_params, query_params=query_params, add_api_prefix=False)
         if http_method != HTTPMethod.GET:
             self.config_changed = True
         return response

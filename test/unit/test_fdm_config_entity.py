@@ -20,11 +20,11 @@ class TestFtdConfigEntity(object):
 
     @pytest.fixture
     def operation_mock(self, mocker):
-        return mocker.patch('library.ftd_config_entity.get_operation_spec')
+        connection_class_mock = mocker.patch('library.ftd_config_entity.Connection')
+        return connection_class_mock.return_value.get_operation_spec
 
     @pytest.fixture
     def resource_mock(self, mocker):
-        mocker.patch('library.ftd_config_entity.Connection')
         resource_class_mock = mocker.patch('library.ftd_config_entity.BaseConfigObjectResource')
         resource_instance = resource_class_mock.return_value
         resource_instance.add_object.return_value = ADD_RESPONSE
@@ -52,7 +52,7 @@ class TestFtdConfigEntity(object):
 
     def test_module_should_add_object_when_add_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'method': HTTPMethod.POST,
+            'method': HTTPMethod.POST.value,
             'url': '/object'
         }
 
@@ -67,7 +67,7 @@ class TestFtdConfigEntity(object):
 
     def test_module_should_edit_object_when_edit_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'method': HTTPMethod.PUT,
+            'method': HTTPMethod.PUT.value,
             'url': '/object/{objId}'
         }
 
@@ -84,7 +84,7 @@ class TestFtdConfigEntity(object):
 
     def test_module_should_delete_object_when_delete_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'method': HTTPMethod.DELETE,
+            'method': HTTPMethod.DELETE.value,
             'url': '/object/{objId}'
         }
 
@@ -99,7 +99,7 @@ class TestFtdConfigEntity(object):
 
     def test_module_should_send_request_when_arbitrary_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'method': HTTPMethod.GET,
+            'method': HTTPMethod.GET.value,
             'url': '/object/status/{objId}'
         }
 
