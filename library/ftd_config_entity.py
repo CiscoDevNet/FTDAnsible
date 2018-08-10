@@ -69,34 +69,34 @@ try:
     from ansible.module_utils.config_resource import BaseConfigObjectResource
     from ansible.module_utils.http import HTTPMethod
     from ansible.module_utils.misc import construct_ansible_facts
-    from ansible.module_utils.fdm_swagger_client import METHOD_FIELD
+    from ansible.module_utils.fdm_swagger_client import METHOD_FIELD, URL_FIELD
 except (ImportError, ModuleNotFoundError):
     from module_utils.config_resource import BaseConfigObjectResource
     from module_utils.http import HTTPMethod
     from module_utils.misc import construct_ansible_facts
-    from module_utils.fdm_swagger_client import METHOD_FIELD
+    from module_utils.fdm_swagger_client import METHOD_FIELD, URL_FIELD
 
 
 def is_add_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('add') and operation_spec['method'] == HTTPMethod.POST
+    return operation_name.startswith('add') and operation_spec[METHOD_FIELD] == HTTPMethod.POST
 
 
 def is_edit_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('edit') and operation_spec['method'] == HTTPMethod.PUT
+    return operation_name.startswith('edit') and operation_spec[METHOD_FIELD] == HTTPMethod.PUT
 
 
 def is_delete_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('delete') and operation_spec['method'] == HTTPMethod.DELETE
+    return operation_name.startswith('delete') and operation_spec[METHOD_FIELD] == HTTPMethod.DELETE
 
 
 def main():
     fields = dict(
         operation=dict(type='str', required=True),
         data=dict(type='dict'),
-        query_params=dict(typee='dict'),
+        query_params=dict(type='dict'),
         path_params=dict(type='dict'),
         register_as=dict(type='str')
     )
@@ -108,7 +108,6 @@ def main():
     op_spec = connection.get_operation_spec(op_name)
     if op_spec is None:
         module.fail_json(msg='Invalid operation name provided: %s' % op_name)
-    op_spec[METHOD_FIELD] = HTTPMethod(op_spec[METHOD_FIELD].upper())
 
     data, query_params, path_params = params['data'], params['query_params'], params['path_params']
     # TODO: implement validation for input parameters
@@ -116,13 +115,13 @@ def main():
     resource = BaseConfigObjectResource(connection)
 
     if is_add_operation(op_name, op_spec):
-        resp = resource.add_object(op_spec['url'], data, path_params, query_params)
+        resp = resource.add_object(op_spec[URL_FIELD], data, path_params, query_params)
     elif is_edit_operation(op_name, op_spec):
-        resp = resource.edit_object(op_spec['url'], data, path_params, query_params)
+        resp = resource.edit_object(op_spec[URL_FIELD], data, path_params, query_params)
     elif is_delete_operation(op_name, op_spec):
-        resp = resource.delete_object(op_spec['url'], path_params)
+        resp = resource.delete_object(op_spec[URL_FIELD], path_params)
     else:
-        resp = resource.send_request(op_spec['url'], op_spec['method'], data, path_params, query_params)
+        resp = resource.send_request(op_spec[URL_FIELD], op_spec[METHOD_FIELD], data, path_params, query_params)
 
     module.exit_json(changed=resource.config_changed, response=resp,
                      ansible_facts=construct_ansible_facts(resp, module.params))

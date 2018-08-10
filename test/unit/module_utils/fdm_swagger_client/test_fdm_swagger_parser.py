@@ -7,8 +7,10 @@ from hamcrest import equal_to, assert_that
 
 try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerParser
+    from ansible.module_utils.http import HTTPMethod
 except ModuleNotFoundError:
     from module_utils.fdm_swagger_client import FdmSwaggerParser
+    from module_utils.http import HTTPMethod
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
@@ -43,7 +45,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
 
         expected_operations = {
             'getNetworkObjectList': {
-                'method': 'get',
+                'method': HTTPMethod.GET,
                 'url': '/api/fdm/v2/object/networks',
                 'modelName': 'NetworkObject',
                 'parameters': {
@@ -69,14 +71,14 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 }
             },
             'addNetworkObject': {
-                'method': 'post',
+                'method': HTTPMethod.POST,
                 'url': '/api/fdm/v2/object/networks',
                 'modelName': 'NetworkObject',
                 'parameters': {'path': {},
                                'query': {}}
             },
             'getNetworkObject': {
-                'method': 'get',
+                'method': HTTPMethod.GET,
                 'url': '/api/fdm/v2/object/networks/{objId}',
                 'modelName': 'NetworkObject',
                 'parameters': {
@@ -90,7 +92,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 }
             },
             'editNetworkObject': {
-                'method': 'put',
+                'method': HTTPMethod.PUT,
                 'url': '/api/fdm/v2/object/networks/{objId}',
                 'modelName': 'NetworkObject',
                 'parameters': {
@@ -104,7 +106,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 }
             },
             'deleteNetworkObject': {
-                'method': 'delete',
+                'method': HTTPMethod.DELETE,
                 'url': '/api/fdm/v2/object/networks/{objId}',
                 'modelName': None,
                 'parameters': {
@@ -139,7 +141,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
 
         for key in operations:
             operation = operations[key]
-            if not operation['modelName'] and (operation['method'] != 'delete'):
+            if not operation['modelName'] and (operation['method'] != HTTPMethod.DELETE):
                 without_model_name.append(operation['url'])
 
             if operation['modelName'] == '_File' and 'download' not in operation['url']:

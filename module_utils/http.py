@@ -1,5 +1,3 @@
-from enum import Enum
-
 import time
 from ansible.module_utils.facts.timeout import TimeoutError
 
@@ -7,11 +5,11 @@ DEFAULT_PAGE_SIZE = 10
 DEFAULT_TIMEOUT = 60 * 10  # 10 minutes
 
 
-class HTTPMethod(Enum):
-    GET = 'GET'
-    POST = 'POST'
-    PUT = 'PUT'
-    DELETE = 'DELETE'
+class HTTPMethod:
+    GET = 'get'
+    POST = 'post'
+    PUT = 'put'
+    DELETE = 'delete'
 
 
 def iterate_over_pageable_resource(resource, params):

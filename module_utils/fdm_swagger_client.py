@@ -1,4 +1,7 @@
-from enum import Enum
+try:
+    from ansible.module_utils.http import HTTPMethod
+except (ImportError, ModuleNotFoundError):
+    from module_utils.http import HTTPMethod
 
 MODEL_NAME_FIELD = 'modelName'
 URL_FIELD = 'url'
@@ -16,12 +19,6 @@ SCHEMA = 'schema'
 MODELS = 'models'
 REF = '$ref'
 ALL_OF = 'allOf'
-
-
-class HttpMethod(Enum):
-    GET = 'get'
-    POST = 'post'
-    PUT = 'put'
 
 
 class FdmSwaggerParser:
@@ -54,9 +51,9 @@ class FdmSwaggerParser:
         return operations_dict
 
     def _get_model_name(self, method, params):
-        if method == HttpMethod.GET.value:
+        if method == HTTPMethod.GET:
             return self._get_model_name_from_responses(params)
-        elif method == HttpMethod.POST.value or method == HttpMethod.PUT.value:
+        elif method == HTTPMethod.POST or method == HTTPMethod.PUT:
             return self._get_model_name_for_post_put_requests(params)
         else:
             return None

@@ -52,7 +52,7 @@ class TestFtdConfigEntity(object):
 
     def test_module_should_add_object_when_add_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'method': HTTPMethod.POST.value,
+            'method': HTTPMethod.POST,
             'url': '/object'
         }
 
@@ -67,7 +67,7 @@ class TestFtdConfigEntity(object):
 
     def test_module_should_edit_object_when_edit_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'method': HTTPMethod.PUT.value,
+            'method': HTTPMethod.PUT,
             'url': '/object/{objId}'
         }
 
@@ -84,7 +84,7 @@ class TestFtdConfigEntity(object):
 
     def test_module_should_delete_object_when_delete_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'method': HTTPMethod.DELETE.value,
+            'method': HTTPMethod.DELETE,
             'url': '/object/{objId}'
         }
 
@@ -99,7 +99,7 @@ class TestFtdConfigEntity(object):
 
     def test_module_should_send_request_when_arbitrary_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
-            'method': HTTPMethod.GET.value,
+            'method': HTTPMethod.GET,
             'url': '/object/status/{objId}'
         }
 
