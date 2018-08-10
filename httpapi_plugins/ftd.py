@@ -22,8 +22,8 @@ BASE_HEADERS = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
 }
-API_PREFIX = "/api/fdm/v2"
-API_TOKEN_PATH = "/fdm/token"
+API_VERSION = "v1"
+API_TOKEN_PATH = "/api/fdm/{version}/fdm/token"
 API_SPEC_PATH = '/apispec/ngfw.json'
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
@@ -58,14 +58,13 @@ class HttpApi(HttpApiBase):
             'username': username,
             'password': password
         }
-        response = self.connection.send(API_PREFIX + API_TOKEN_PATH, json.dumps(auth_payload), method='POST',
-                                        headers=BASE_HEADERS)
+        response = self.connection.send(API_TOKEN_PATH.format(version=API_VERSION), json.dumps(auth_payload),
+                                        method='POST', headers=BASE_HEADERS)
         self._set_token_info(response)
 
     @retry_on_token_expiration
-    def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None,
-                     add_api_prefix=True):
-        url = construct_url_path(url_path, path_params, query_params, add_api_prefix)
+    def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
+        url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
         response = self.connection.send(url, data, method=http_method, headers=self._authorized_headers()).read()
         return json.loads(to_text(response)) if response else ''
@@ -107,7 +106,7 @@ class HttpApi(HttpApiBase):
             'grant_type': 'refresh_token',
             'refresh_token': self.refresh_token
         }
-        response = self.connection.send(API_PREFIX + API_TOKEN_PATH, json.dumps(payload), method='POST',
+        response = self.connection.send(API_TOKEN_PATH.format(version=API_VERSION), json.dumps(payload), method='POST',
                                         headers=BASE_HEADERS)
         self._set_token_info(response)
 
@@ -125,13 +124,13 @@ class HttpApi(HttpApiBase):
     @property
     def api_spec(self):
         if self._api_spec is None:
-            data = self.send_request(url_path=API_SPEC_PATH, http_method='GET', add_api_prefix=False)
+            data = self.send_request(url_path=API_SPEC_PATH, http_method='GET')
             self._api_spec = FdmSwaggerParser().parse_spec(data)
         return self._api_spec
 
 
-def construct_url_path(path, path_params=None, query_params=None, add_api_prefix=True):
-    url = API_PREFIX + path if add_api_prefix else path
+def construct_url_path(path, path_params=None, query_params=None):
+    url = path
     if path_params:
         url = url.format(**path_params)
     if query_params:
