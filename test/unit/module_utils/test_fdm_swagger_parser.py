@@ -118,8 +118,8 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 }
             }
         }
-        self.assertEquals(['NetworkObject', 'NetworkObjectWrapper'], list(self.fdm_data['models'].keys()))
-        self.assertEquals(expected_operations, self.fdm_data['operations'])
+        assert ['NetworkObject', 'NetworkObjectWrapper'] == list(self.fdm_data['models'].keys())
+        assert expected_operations == self.fdm_data['operations']
 
     def test_parse_all_data(self):
         self._data['definitions'] = self.base_data['definitions']
@@ -143,5 +143,5 @@ class TestFdmSwaggerParser(unittest.TestCase):
             if operation['modelName'] == '_File' and 'download' not in operation['url']:
                 self.fail('File type can be defined for download operation only')
 
-        self.assertEquals(['/api/fdm/v2/action/upgrade'], without_model_name)
-        self.assertEquals(expected_operations_counter, len(operations))
+        assert ['/api/fdm/v2/action/upgrade'] == without_model_name
+        assert expected_operations_counter == len(operations)

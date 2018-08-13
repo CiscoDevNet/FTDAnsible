@@ -17,12 +17,13 @@ from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 
 from module_utils.fdm_swagger_client import FdmSwaggerParser, OPERATIONS, MODELS
+from module_utils.http import HTTPMethod
 
 BASE_HEADERS = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
 }
-API_VERSION = "v1"
+API_VERSION = "v2"
 API_TOKEN_PATH = "/api/fdm/{version}/fdm/token"
 API_SPEC_PATH = '/apispec/ngfw.json'
 
@@ -59,7 +60,7 @@ class HttpApi(HttpApiBase):
             'password': password
         }
         response = self.connection.send(API_TOKEN_PATH.format(version=API_VERSION), json.dumps(auth_payload),
-                                        method='POST', headers=BASE_HEADERS)
+                                        method=HTTPMethod.POST, headers=BASE_HEADERS)
         self._set_token_info(response)
 
     @retry_on_token_expiration
@@ -81,13 +82,13 @@ class HttpApi(HttpApiBase):
             headers['Content-Type'] = content_type
             headers['Content-Length'] = len(body)
 
-            response = self.connection.send(url, data=body, method='POST', headers=headers).read()
+            response = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers).read()
         return json.loads(to_text(response))
 
     @retry_on_token_expiration
     def download_file(self, from_url, to_path):
         url = construct_url_path(from_url)
-        response = self.connection.send(url, data=None, method='GET', headers=self._authorized_headers())
+        response = self.connection.send(url, data=None, method=HTTPMethod.GET, headers=self._authorized_headers())
 
         if os.path.isdir(to_path):
             filename = extract_filename_from_headers(response.info())
@@ -106,8 +107,8 @@ class HttpApi(HttpApiBase):
             'grant_type': 'refresh_token',
             'refresh_token': self.refresh_token
         }
-        response = self.connection.send(API_TOKEN_PATH.format(version=API_VERSION), json.dumps(payload), method='POST',
-                                        headers=BASE_HEADERS)
+        response = self.connection.send(API_TOKEN_PATH.format(version=API_VERSION), json.dumps(payload),
+                                        method=HTTPMethod.POST, headers=BASE_HEADERS)
         self._set_token_info(response)
 
     def _set_token_info(self, token_response):
@@ -124,7 +125,7 @@ class HttpApi(HttpApiBase):
     @property
     def api_spec(self):
         if self._api_spec is None:
-            data = self.send_request(url_path=API_SPEC_PATH, http_method='GET')
+            data = self.send_request(url_path=API_SPEC_PATH, http_method=HTTPMethod.GET)
             self._api_spec = FdmSwaggerParser().parse_spec(data)
         return self._api_spec
 
