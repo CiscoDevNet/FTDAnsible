@@ -3,8 +3,6 @@ import json
 import os
 import unittest
 
-from hamcrest import equal_to, assert_that
-
 try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerParser
     from ansible.module_utils.http import HTTPMethod
@@ -120,10 +118,8 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 }
             }
         }
-        assert_that(['NetworkObject', 'NetworkObjectWrapper'],
-                    equal_to(list(self.fdm_data['models'].keys())))
-
-        assert_that(expected_operations, equal_to(self.fdm_data['operations']))
+        self.assertEquals(['NetworkObject', 'NetworkObjectWrapper'], list(self.fdm_data['models'].keys()))
+        self.assertEquals(expected_operations, self.fdm_data['operations'])
 
     def test_parse_all_data(self):
         self._data['definitions'] = self.base_data['definitions']
@@ -145,7 +141,7 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 without_model_name.append(operation['url'])
 
             if operation['modelName'] == '_File' and 'download' not in operation['url']:
-                assert_that(False)
+                self.fail('File type can be defined for download operation only')
 
-        assert_that(['/api/fdm/v2/action/upgrade'], equal_to(without_model_name))
-        assert_that(equal_to(len(operations.items())), expected_operations_counter)
+        self.assertEquals(['/api/fdm/v2/action/upgrade'], without_model_name)
+        self.assertEquals(expected_operations_counter, len(operations))
