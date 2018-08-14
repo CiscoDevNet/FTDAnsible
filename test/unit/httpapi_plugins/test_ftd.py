@@ -3,8 +3,10 @@ import unittest
 from unittest import mock
 
 from ansible.compat.tests.mock import mock_open, patch
+from ansible.errors import AnsibleConnectionFailure
 from ansible.module_utils.six import BytesIO, PY3
 from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.connection import ConnectionError
 
 from httpapi_plugins.ftd import HttpApi
 from module_utils.fdm_swagger_client import OPERATIONS, MODELS, FdmSwaggerParser
@@ -23,8 +25,7 @@ class TestFtdHttpApi(unittest.TestCase):
         self.ftd_plugin = HttpApi(self.connection_mock)
         self.ftd_plugin.access_token = 'ACCESS_TOKEN'
 
-    def test_login_should_update_token_info(self):
-        self.ftd_plugin.access_token = False
+    def test_login_should_request_tokens_when_no_refresh_token(self):
         self.connection_mock.send.return_value = self._connection_response(
             {'access_token': 'ACCESS_TOKEN', 'refresh_token': 'REFRESH_TOKEN'}
         )
@@ -33,6 +34,49 @@ class TestFtdHttpApi(unittest.TestCase):
 
         assert 'ACCESS_TOKEN' == self.ftd_plugin.access_token
         assert 'REFRESH_TOKEN' == self.ftd_plugin.refresh_token
+        expected_body = json.dumps({'grant_type': 'password', 'username': 'foo', 'password': 'bar'})
+        self.connection_mock.send.assert_called_once_with(mock.ANY, expected_body, headers=mock.ANY, method=mock.ANY)
+
+    def test_login_should_update_tokens_when_refresh_token_exists(self):
+        self.ftd_plugin.refresh_token = 'REFRESH_TOKEN'
+        self.connection_mock.send.return_value = self._connection_response(
+            {'access_token': 'NEW_ACCESS_TOKEN', 'refresh_token': 'NEW_REFRESH_TOKEN'}
+        )
+
+        self.ftd_plugin.login('foo', 'bar')
+
+        assert 'NEW_ACCESS_TOKEN' == self.ftd_plugin.access_token
+        assert 'NEW_REFRESH_TOKEN' == self.ftd_plugin.refresh_token
+        expected_body = json.dumps({'grant_type': 'refresh_token', 'refresh_token': 'REFRESH_TOKEN'})
+        self.connection_mock.send.assert_called_once_with(mock.ANY, expected_body, headers=mock.ANY, method=mock.ANY)
+
+    def test_login_raises_exception_when_no_refresh_token_and_no_credentials(self):
+        with self.assertRaises(AnsibleConnectionFailure) as res:
+            self.ftd_plugin.login(None, None)
+        assert 'Username and password are required' in str(res.exception)
+
+    def test_login_raises_exception_when_invalid_response(self):
+        self.connection_mock.send.return_value = self._connection_response(
+            {'no_access_token': 'ACCESS_TOKEN'}
+        )
+
+        with self.assertRaises(ConnectionError) as res:
+            self.ftd_plugin.login('foo', 'bar')
+
+        assert 'Invalid JSON response during connection authentication' in str(res.exception)
+
+    def test_logout_should_revoke_tokens(self):
+        self.ftd_plugin.access_token = 'ACCESS_TOKEN_TO_REVOKE'
+        self.ftd_plugin.refresh_token = 'REFRESH_TOKEN_TO_REVOKE'
+        self.connection_mock.send.return_value = self._connection_response(None)
+
+        self.ftd_plugin.logout()
+
+        assert self.ftd_plugin.access_token is None
+        assert self.ftd_plugin.refresh_token is None
+        expected_body = json.dumps({'grant_type': 'revoke_token', 'access_token': 'ACCESS_TOKEN_TO_REVOKE',
+                                    'token_to_revoke': 'REFRESH_TOKEN_TO_REVOKE'})
+        self.connection_mock.send.assert_called_once_with(mock.ANY, expected_body, headers=mock.ANY, method=HttpApi)
 
     def test_send_request_should_send_correct_request(self):
         exp_resp = {'id': '123', 'name': 'foo'}
@@ -56,18 +100,28 @@ class TestFtdHttpApi(unittest.TestCase):
         self.connection_mock.send.assert_called_once_with('/test', None, method=HTTPMethod.GET,
                                                           headers=self._expected_headers())
 
-    def test_send_request_should_resend_request_when_token_expires(self):
-        self.connection_mock.send.side_effect = [
-            self._connection_response('', 408),
-            self._connection_response({'access_token': 'NEW_ACCESS_TOKEN', 'refresh_token': 'NEW_REFRESH_TOKEN'}),
-            self._connection_response({'foo': 'bar'})
-        ]
+    def test_send_request_raises_exception_when_invalid_response(self):
+        self.connection_mock.send.return_value = self._connection_response('nonValidJson')
 
-        resp = self.ftd_plugin.send_request('/test', HTTPMethod.GET)
+        with self.assertRaises(ConnectionError) as res:
+            self.ftd_plugin.send_request('/test', HTTPMethod.GET)
 
-        assert {'foo': 'bar'} == resp
+        assert 'Invalid JSON response' in str(res.exception)
+
+    def test_handle_httperror_should_update_tokens_and_retry_on_auth_errors(self):
+        self.ftd_plugin.refresh_token = 'REFRESH_TOKEN'
+        self.connection_mock.send.return_value = self._connection_response(
+            {'access_token': 'NEW_ACCESS_TOKEN', 'refresh_token': 'NEW_REFRESH_TOKEN'}
+        )
+
+        retry = self.ftd_plugin.handle_httperror(HTTPError('http://testhost.com', 401, '', {}, None))
+
+        assert retry
         assert 'NEW_ACCESS_TOKEN' == self.ftd_plugin.access_token
         assert 'NEW_REFRESH_TOKEN' == self.ftd_plugin.refresh_token
+
+    def test_handle_httperror_should_not_retry_on_non_auth_errors(self):
+        assert not self.ftd_plugin.handle_httperror(HTTPError('http://testhost.com', 500, '', {}, None))
 
     @patch('os.path.isdir', mock.Mock(return_value=False))
     def test_download_file(self):
@@ -134,13 +188,10 @@ class TestFtdHttpApi(unittest.TestCase):
         assert self.ftd_plugin.get_model_spec('NonExistingTestModel') is None
 
     @staticmethod
-    def _connection_response(response, status_code=200):
+    def _connection_response(response):
         response_str = json.dumps(response) if type(response) is dict else response
         response_mock = BytesIO(response_str.encode('utf-8') if response_str else None)
-        if status_code == 200:
-            return response_mock
-        else:
-            return HTTPError('http://testhost.com', status_code, '', {}, response_mock)
+        return None, response_mock
 
     def _expected_headers(self):
         return {

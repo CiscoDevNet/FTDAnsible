@@ -36,36 +36,44 @@ UNAUTHORIZED_STATUS_CODE = 401
 class HttpApi(HttpApiBase):
     def __init__(self, connection):
         self.connection = connection
-        self.access_token = False
-        self.refresh_token = False
+        self.access_token = None
+        self.refresh_token = None
         self._api_spec = None
 
     def login(self, username, password):
-        if self.refresh_token:
-            payload = {
-                'grant_type': 'refresh_token',
-                'refresh_token': self.refresh_token
-            }
-        elif username and password:
-            payload = {
+        def request_token_payload(username, password):
+            return {
                 'grant_type': 'password',
                 'username': username,
                 'password': password
             }
+
+        def refresh_token_payload(refresh_token):
+            return {
+                'grant_type': 'refresh_token',
+                'refresh_token': refresh_token
+            }
+
+        if self.refresh_token:
+            payload = refresh_token_payload(self.refresh_token)
+        elif username and password:
+            payload = request_token_payload(username, password)
         else:
-            raise AnsibleConnectionFailure(
-                'Username and password are required for login in absence of refresh token'
-            )
+            raise AnsibleConnectionFailure('Username and password are required for login in absence of refresh token')
 
         _, response_data = self.connection.send(
             API_TOKEN_PATH.format(version=API_VERSION),
             json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
         )
+        response_text = to_text(response_data.getvalue())
+
         try:
-            self._set_token_info(response_data)
+            token_info = json.loads(response_text)
+            self.refresh_token = token_info['refresh_token']
+            self.access_token = token_info['access_token']
         # JSONDecodeError only available on Python 3.5+
-        except getattr(json.decoder, 'JSONDecodeError', ValueError) as e:
-            raise ConnectionError('Invalid JSON response during connection authentication: %s' % e)
+        except (getattr(json.decoder, 'JSONDecodeError', ValueError), KeyError):
+            raise ConnectionError('Invalid JSON response during connection authentication: %s' % response_text)
 
     def logout(self):
         auth_payload = {
@@ -77,8 +85,8 @@ class HttpApi(HttpApiBase):
             API_TOKEN_PATH.format(version=API_VERSION),
             json.dumps(auth_payload), method=HTTPMethod.POST, headers=self._authorized_headers()
         )
-        self.refresh_token = False
-        self.access_token = False
+        self.refresh_token = None
+        self.access_token = None
 
     def update_auth(self, response, response_data):
         # With tokens, authentication should not be checked and updated on each request
@@ -136,11 +144,6 @@ class HttpApi(HttpApiBase):
         headers = dict(BASE_HEADERS)
         headers['Authorization'] = 'Bearer %s' % self.access_token
         return headers
-
-    def _set_token_info(self, response_data):
-        token_info = json.loads(to_text(response_data.getvalue()))
-        self.refresh_token = token_info['refresh_token']
-        self.access_token = token_info['access_token']
 
     def get_operation_spec(self, operation_name):
         return self.api_spec[OPERATIONS].get(operation_name, None)
