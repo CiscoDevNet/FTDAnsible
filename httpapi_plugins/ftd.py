@@ -2,6 +2,7 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import (absolute_import, division, print_function)
+
 __metaclass__ = type
 
 import json
@@ -16,7 +17,6 @@ from ansible.plugins.httpapi import HttpApiBase
 from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 from ansible.module_utils.connection import ConnectionError
-
 
 from module_utils.fdm_swagger_client import FdmSwaggerParser, OPERATIONS, MODELS
 from module_utils.http import HTTPMethod
@@ -117,19 +117,27 @@ class HttpApi(HttpApiBase):
             headers['Content-Type'] = content_type
             headers['Content-Length'] = len(body)
 
-            response = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers).read()
-        return json.loads(to_text(response))
+            _, response_data = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers)
+        try:
+            response_text = to_text(response_data.getvalue())
+            return json.loads(response_text)
+        # JSONDecodeError only available on Python 3.5+
+        except getattr(json.decoder, 'JSONDecodeError', ValueError):
+            raise ConnectionError('Invalid JSON response after uploading the file: %s' % response_text)
 
     def download_file(self, from_url, to_path):
         url = construct_url_path(from_url)
-        response = self.connection.send(url, data=None, method=HTTPMethod.GET, headers=self._authorized_headers())
+        response, response_data = self.connection.send(
+            url, data=None, method=HTTPMethod.GET,
+            headers=self._authorized_headers()
+        )
 
         if os.path.isdir(to_path):
             filename = extract_filename_from_headers(response.info())
             to_path = os.path.join(to_path, filename)
 
         with open(to_path, "wb") as output_file:
-            shutil.copyfileobj(response, output_file)
+            shutil.copyfileobj(response_data, output_file)
 
     def handle_httperror(self, exc):
         # Called by connection plugin when it gets HTTP Error for a request.

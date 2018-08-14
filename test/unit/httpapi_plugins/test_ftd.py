@@ -76,7 +76,7 @@ class TestFtdHttpApi(unittest.TestCase):
         assert self.ftd_plugin.refresh_token is None
         expected_body = json.dumps({'grant_type': 'revoke_token', 'access_token': 'ACCESS_TOKEN_TO_REVOKE',
                                     'token_to_revoke': 'REFRESH_TOKEN_TO_REVOKE'})
-        self.connection_mock.send.assert_called_once_with(mock.ANY, expected_body, headers=mock.ANY, method=HttpApi)
+        self.connection_mock.send.assert_called_once_with(mock.ANY, expected_body, headers=mock.ANY, method=mock.ANY)
 
     def test_send_request_should_send_correct_request(self):
         exp_resp = {'id': '123', 'name': 'foo'}
@@ -136,11 +136,11 @@ class TestFtdHttpApi(unittest.TestCase):
 
     @patch('os.path.isdir', mock.Mock(return_value=True))
     def test_download_file_should_extract_filename_from_headers(self):
-        self.connection_mock.send.return_value = self._connection_response('File content')
         filename = 'test_file.txt'
-        self.connection_mock.send.return_value.info = lambda: {
-            'Content-Disposition': 'attachment; filename="%s"' % filename
-        }
+        response = mock.Mock()
+        response.info.return_value = {'Content-Disposition': 'attachment; filename="%s"' % filename}
+        _, response_data = self._connection_response('File content')
+        self.connection_mock.send.return_value = response, response_data
 
         open_mock = mock_open()
         with patch('%s.open' % BUILTINS_NAME, open_mock):
@@ -166,6 +166,19 @@ class TestFtdHttpApi(unittest.TestCase):
         self.connection_mock.send.assert_called_once_with('/files', data='--Encoded data--',
                                                           headers=exp_headers, method=HTTPMethod.POST)
         open_mock.assert_called_once_with('/tmp/test.txt', 'rb')
+
+    @patch('os.path.basename', mock.Mock(return_value='test.txt'))
+    @patch('httpapi_plugins.ftd.encode_multipart_formdata',
+           mock.Mock(return_value=('--Encoded data--', 'multipart/form-data')))
+    def test_upload_file_raises_exception_when_invalid_response(self):
+        self.connection_mock.send.return_value = self._connection_response('invalidJsonResponse')
+
+        open_mock = mock_open()
+        with patch('%s.open' % BUILTINS_NAME, open_mock):
+            with self.assertRaises(ConnectionError) as res:
+                self.ftd_plugin.upload_file('/tmp/test.txt', '/files')
+
+        assert 'Invalid JSON response after uploading the file' in str(res.exception)
 
     @patch.object(FdmSwaggerParser, 'parse_spec')
     def test_get_operation_spec(self, parse_spec_mock):
