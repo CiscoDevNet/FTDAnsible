@@ -27,6 +27,7 @@ Sample playbooks located in `samples` folder contain examples of their usage. To
 
 1. Run the playbook:
     ```
+    export PYTHONPATH=.:$PYTHONPATH
     $ ansible-playbook samples/network_object.yml
     ```
 

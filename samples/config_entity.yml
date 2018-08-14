@@ -1,0 +1,21 @@
+- hosts: vftd
+  connection: httpapi
+
+  tasks:
+    - name: Create a network object
+      ftd_config_entity:
+        operation: "addNetworkObject"
+        data:
+          name: "Ansible-network-host"
+          description: "From Ansible with love"
+          subType: "HOST"
+          value: "{{ host_ip }}"
+          type: "networkobject"
+          isSystemDefined: false
+        register_as: "hostNetwork"
+
+    - name: Delete the network object
+      ftd_config_entity:
+        operation: "deleteNetworkObject"
+        path_params:
+          objId: "{{ hostNetwork['id'] }}"
