@@ -121,3 +121,49 @@ class FdmSwaggerParser:
     def _get_model_name_from_url(_schema_ref):
         path = _schema_ref.split('/')
         return path[len(path) - 1]
+
+
+class FdmSwaggerValidator:
+    def __init__(self, spec):
+        self._operations = spec['operations']
+        self._models = spec['models']
+
+    def validate_query_params(self, operation, params):
+        pass
+
+    def validate_path_params(self, operation, params):
+        pass
+
+    def validate_data(self, operation, data, skip_fields=None):
+        if skip_fields is None:
+            skip_fields = []
+
+        operation = self._operations[operation]
+        model = self._models[operation['modelName']]
+        status = {
+            'required': [],
+            'invalid_type': {}
+        }
+        rez = self._validate_object(status, model, data, '', skip_fields)
+
+        if len(rez['required']) > 0 or len(rez['invalid_type'].keys()) > 0:
+            status['status'] = 'invalid'
+            return status
+        return {'status': 'valid'}
+
+    def _validate_object(self, status, model, data, path, skip_fields):
+        missed_required_fields = self._check_required_fields(model['required'], data, path, skip_fields)
+        if len(missed_required_fields) > 0:
+            status['required'] += missed_required_fields
+
+        model_properties = model['properties']
+        for prop in model_properties.keys():
+            if prop in data:
+                self._check_types(model_properties[prop], data[prop])
+
+        return status
+
+    @staticmethod
+    def _check_required_fields(required_fields, data, path, skip_fields):
+        return ["{}{}".format(path, field) for field in required_fields if
+                not (field in skip_fields or field in data.keys())]

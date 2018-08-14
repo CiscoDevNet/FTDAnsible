@@ -1,0 +1,417 @@
+import unittest
+
+try:
+    from ansible.module_utils.fdm_swagger_client import FdmSwaggerValidator
+except ModuleNotFoundError:
+    from module_utils.fdm_swagger_client import FdmSwaggerValidator
+
+mock_data = {
+    'models': {
+        'ReferenceModel': {'type': 'object', 'required': ['id', 'type'],
+                           'properties': {'id': {'type': 'string'}, 'type': {'type': 'string'},
+                                          'version': {'type': 'string'}, 'name': {'type': 'string'}}},
+        'FQDNDNSResolution': {'type': 'string', 'enum': ['IPV4_ONLY', 'IPV6_ONLY', 'IPV4_AND_IPV6']},
+        'NetworkObjectType': {'type': 'string', 'enum': ['HOST', 'NETWORK', 'IPRANGE', 'FQDN']},
+        'NetworkObject': {'type': 'object',
+                          'properties': {'version': {'type': 'string'},
+                                         'name': {'type': 'string'},
+                                         'description': {'type': 'string'},
+                                         'subType': {'type': 'object',
+                                                     '$ref': '#/definitions/NetworkObjectType'},
+                                         'value': {'type': 'string'},
+                                         'isSystemDefined': {'type': 'boolean'},
+                                         'dnsResolution': {'type': 'object',
+                                                           '$ref': '#/definitions/FQDNDNSResolution'},
+                                         'objects': {'type': 'array',
+                                                     'items': {'type': 'object',
+                                                               '$ref': '#/definitions/ReferenceModel'}},
+                                         'id': {'type': 'string'},
+                                         'type': {'type': 'string',
+                                                  'default': 'networkobject'}},
+                          'required': ['subType', 'type', 'value']}
+    },
+    'operations': {
+        'getNetworkObjectList': {
+            'method': 'get',
+            'url': '/api/fdm/v2/object/networks',
+            'modelName': 'NetworkObject',
+            'parameters': {
+                'path': {
+                    'objId': {
+                        'required': True,
+                        'type': "string"
+                    }
+                },
+                'query': {
+                    'offset': {
+                        'required': False,
+                        'type': 'integer'
+                    },
+                    'limit': {
+                        'required': True,
+                        'type': 'integer'
+                    },
+                    'sort': {
+                        'required': False,
+                        'type': 'string'
+                    },
+                    'filter': {
+                        'required': False,
+                        'type': 'string'
+                    }
+                }
+            }
+        }
+    }
+}
+
+nested_mock_data1 = {
+    'models': {
+        'model1': {
+            'properties': {
+                'f_string': {'type': 'string'},
+                'f_number': {'type': 'number'},
+                'f_boolean': {'type': 'boolean'},
+                'f_integer': {'type': 'integer'}
+            },
+            'required': ['f_string']
+        },
+        'TestModel': {
+            'type': 'object',
+            'properties': {
+                'nested_model': {'type': 'object',
+                                 '$ref': '#/definitions/model1'},
+                'f_integer': {'type': 'integer'}
+            },
+            'required': ['nested_model']
+        }
+    },
+    'operations': {
+        'getdata': {
+            'modelName': 'TestModel'
+        }
+    }
+}
+
+
+class TestFdmSwaggerValidator(unittest.TestCase):
+
+    def test_path_params(self):
+        assert False
+
+    def test_query_params(self):
+        assert False
+
+    def test_skipped_param_for_validate_data_method(self):
+        assert False
+
+    def test_errors_for_required_fields(self):
+        data = {
+            'name': 'test'
+        }
+        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert {
+                   'status': 'invalid',
+                   'required': ['subType', 'type', 'value'],
+                   'invalid_type': {}
+               } == rez
+
+    def test_errors_if_no_data_was_passed(self):
+        data = {}
+        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert {
+                   'status': 'invalid',
+                   'required': ['subType', 'type', 'value'],
+                   'invalid_type': {}
+               } == rez
+
+    def test_errors_if_one_required_field_is_empty(self):
+        data = {
+            'subType': 'NETWORK',
+            'value': '1.1.1.1'
+        }
+        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert {
+                   'status': 'invalid',
+                   'required': ['type'],
+                   'invalid_type': {}} == rez
+
+    def test_types_of_required_fields_are_incorrect(self):
+        data = {
+            'subType': True,
+            'type': 1,
+            'value': False
+        }
+        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert {
+                   'status': 'invalid',
+                   'required': [],
+                   'invalid_type': {
+                       'subType': {
+                           'field'
+                           'expected_type': 'string',
+                           'actually_value': True
+                       },
+                       'type': {
+                           'expected_type': 'string',
+                           'actually_value': 1
+                       },
+                       'value': {
+                           'expected_type': 'string',
+                           'actually_value': False
+                       }
+                   }
+               } == rez
+
+    def test_pass_only_required_fields(self):
+        data = {
+            'subType': 'NETWORK',
+            'type': 'networkobject',
+            'value': '1.1.1.1'
+        }
+        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert {
+                   'status': 'valid'
+               } == rez
+
+    def test_pass_all_fields_with_correct_data(self):
+        data = {
+            'id': 'id-di',
+            'version': 'v',
+            'name': 'test_name',
+            'subType': 'NETWORK',
+            'type': 'networkobject',
+            'value': '1.1.1.1',
+            'description': 'des',
+            'isSystemDefined': False,
+            'dnsResolution': 'IPV4_ONLY',
+            'objects': {
+                'type': 'port',
+                'id': 'fs-sf'
+            }
+        }
+        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert {
+                   'status': 'valid'
+               } == rez
+
+    def test_types(self):
+        local_mock_data = {
+            'models': {
+                'TestModel': {
+                    'type': 'object',
+                    'properties': {
+                        'f_string': {'type': 'string'},
+                        'f_number': {'type': 'number'},
+                        'f_boolean': {'type': 'boolean'},
+                        'f_integer': {'type': 'integer'}
+                    },
+                    'required': []
+                }
+            },
+            'operations': {
+                'getdata': {
+                    'modelName': 'TestModel'
+                }
+            }
+        }
+        valid_data = {
+            "f_string": "test",
+            "f_number": 2,
+            "f_boolean": False,
+            "f_integer": 1.2
+        }
+
+        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
+        assert {
+                   'status': 'valid'
+               } == rez
+
+        valid_data = {
+            "f_string": "",
+            "f_number": 0,
+            "f_boolean": True,
+            "f_integer": 0
+        }
+
+        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
+        assert {
+                   'status': 'valid'
+               } == rez
+
+        valid_data = {
+            "f_string": "0",
+            "f_number": 100,
+            "f_boolean": True,
+            "f_integer": 2
+        }
+
+        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
+        assert {
+                   'status': 'valid'
+               } == rez
+
+    def test_invalid_types(self):
+        local_mock_data = {
+            'models': {
+                'TestModel': {
+                    'type': 'object',
+                    'properties': {
+                        'f_string': {'type': 'string'},
+                        'f_number': {'type': 'number'},
+                        'f_boolean': {'type': 'boolean'},
+                        'f_integer': {'type': 'integer'}
+                    },
+                    'required': []
+                }
+            },
+            'operations': {
+                'getdata': {
+                    'modelName': 'TestModel'
+                }
+            }
+        }
+        invalid_data = {
+            "f_string": True,
+            "f_number": True,
+            "f_boolean": 1,
+            "f_integer": True
+        }
+
+        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
+        assert {
+                   'status': 'invalid',
+                   'required': [],
+                   'invalid_type': {
+                       'nested_model.f_string': {
+                           'expected_type': 'string',
+                           'actually_value': True
+                       },
+                       'nested_model.f_number': {
+                           'expected_type': 'number',
+                           'actually_value': True
+                       },
+                       'nested_model.f_boolean': {
+                           'expected_type': 'boolean',
+                           'actually_value': 1
+                       },
+                       'nested_model.f_integer': {
+                           'expected_type': 'integer',
+                           'actually_value': True
+                       }
+                   }
+               } == rez
+
+        invalid_data = {
+            "f_string": 1,
+            "f_number": False,
+            "f_boolean": 0,
+            "f_integer": "test"
+        }
+
+        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
+        assert {
+                   'status': 'invalid',
+                   'required': [],
+                   'invalid_type': {
+                       'nested_model.f_string': {
+                           'expected_type': 'string',
+                           'actually_value': 1
+                       },
+                       'nested_model.f_number': {
+                           'expected_type': 'number',
+                           'actually_value': False
+                       },
+                       'nested_model.f_boolean': {
+                           'expected_type': 'boolean',
+                           'actually_value': 0
+                       },
+                       'nested_model.f_integer': {
+                           'expected_type': 'integer',
+                           'actually_value': "test"
+                       }
+                   }
+               } == rez
+
+    def test_nested_required_fields(self):
+        valid_data = {
+            'nested_model': {
+                'f_string': "test"
+            }
+        }
+
+        rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', valid_data)
+        assert {
+                   'status': 'valid'
+               } == rez
+
+    def test_invalid_nested_required_fields(self):
+        invalid_data = {
+            'nested_model': {
+                'f_integer': 2
+            }
+        }
+
+        rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
+        assert {
+                   'status': 'invalid',
+                   'required': ['nested_model'],
+                   'invalid_type': {}
+               } == rez
+
+        invalid_data = {
+            'nested_model': {
+                'nested_model': {
+                    'f_number': 1.2
+                }
+            }
+        }
+
+        rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
+        assert {
+                   'status': 'invalid',
+                   'required': ['nested_model.f_string'],
+                   'invalid_type': {}
+               } == rez
+
+    def test_invalid_type_in_nested_fields(self):
+        invalid_data = {
+            'nested_model': {
+                "f_string": 1,
+                "f_number": "ds",
+                "f_boolean": 1.3,
+                "f_integer": True
+            }
+        }
+
+        rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
+
+        assert {
+                   'status': 'invalid',
+                   'required': [],
+                   'invalid_type': {
+                       'nested_model.f_string': {
+                           'expected_type': 'string',
+                           'actually_value': 1
+                       },
+                       'nested_model.f_number': {
+                           'expected_type': 'number',
+                           'actually_value': "ds"
+                       },
+                       'nested_model.f_boolean': {
+                           'expected_type': 'boolean',
+                           'actually_value': 1.3
+                       },
+                       'nested_model.f_integer': {
+                           'expected_type': 'integer',
+                           'actually_value': True
+                       }
+                   }
+
+               } == rez
+
+    def test_invalid_type_in_3_levels_nested_fields(self):
+        assert False
+
+    def test_array_props(self):
+        assert False
