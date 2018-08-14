@@ -96,13 +96,13 @@ nested_mock_data1 = {
 
 class TestFdmSwaggerValidator(unittest.TestCase):
 
-    def test_path_params(self):
+    def test_path_params__(self):
         assert False
 
-    def test_query_params(self):
+    def test_query_params__(self):
         assert False
 
-    def test_skipped_param_for_validate_data_method(self):
+    def test_skipped_param_for_validate_data_method__(self):
         assert False
 
     def test_errors_for_required_fields(self):
@@ -113,7 +113,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert {
                    'status': 'invalid',
                    'required': ['subType', 'type', 'value'],
-                   'invalid_type': {}
+                   'invalid_type': []
                } == rez
 
     def test_errors_if_no_data_was_passed(self):
@@ -122,7 +122,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert {
                    'status': 'invalid',
                    'required': ['subType', 'type', 'value'],
-                   'invalid_type': {}
+                   'invalid_type': []
                } == rez
 
     def test_errors_if_one_required_field_is_empty(self):
@@ -134,7 +134,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert {
                    'status': 'invalid',
                    'required': ['type'],
-                   'invalid_type': {}} == rez
+                   'invalid_type': []
+               } == rez
 
     def test_types_of_required_fields_are_incorrect(self):
         data = {
@@ -146,21 +147,23 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert {
                    'status': 'invalid',
                    'required': [],
-                   'invalid_type': {
-                       'subType': {
-                           'field'
-                           'expected_type': 'string',
+                   'invalid_type': [
+                       {
+                           'path': 'subType',
+                           'expected_type': 'enum',
                            'actually_value': True
                        },
-                       'type': {
-                           'expected_type': 'string',
-                           'actually_value': 1
-                       },
-                       'value': {
+                       {
+                           'path': 'value',
                            'expected_type': 'string',
                            'actually_value': False
+                       },
+                       {
+                           'path': 'type',
+                           'expected_type': 'string',
+                           'actually_value': 1
                        }
-                   }
+                   ]
                } == rez
 
     def test_pass_only_required_fields(self):
@@ -185,17 +188,17 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             'description': 'des',
             'isSystemDefined': False,
             'dnsResolution': 'IPV4_ONLY',
-            'objects': {
+            'objects': [{
                 'type': 'port',
                 'id': 'fs-sf'
-            }
+            }]
         }
         rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
         assert {
                    'status': 'valid'
                } == rez
 
-    def test_types(self):
+    def test_simple_types(self):
         local_mock_data = {
             'models': {
                 'TestModel': {
@@ -217,9 +220,9 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         }
         valid_data = {
             "f_string": "test",
-            "f_number": 2,
+            "f_number": 2.2,
             "f_boolean": False,
-            "f_integer": 1.2
+            "f_integer": 1
         }
 
         rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
@@ -251,7 +254,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                    'status': 'valid'
                } == rez
 
-    def test_invalid_types(self):
+    def test_invalid_simple_types(self):
         local_mock_data = {
             'models': {
                 'TestModel': {
@@ -282,24 +285,28 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert {
                    'status': 'invalid',
                    'required': [],
-                   'invalid_type': {
-                       'nested_model.f_string': {
+                   'invalid_type': [
+                       {
+                           'path': 'f_string',
                            'expected_type': 'string',
                            'actually_value': True
                        },
-                       'nested_model.f_number': {
+                       {
+                           'path': 'f_number',
                            'expected_type': 'number',
                            'actually_value': True
                        },
-                       'nested_model.f_boolean': {
+                       {
+                           'path': 'f_boolean',
                            'expected_type': 'boolean',
                            'actually_value': 1
                        },
-                       'nested_model.f_integer': {
+                       {
+                           'path': 'f_integer',
                            'expected_type': 'integer',
                            'actually_value': True
                        }
-                   }
+                   ]
                } == rez
 
         invalid_data = {
@@ -313,24 +320,63 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert {
                    'status': 'invalid',
                    'required': [],
-                   'invalid_type': {
-                       'nested_model.f_string': {
+                   'invalid_type': [
+                       {
+                           'path': 'f_string',
                            'expected_type': 'string',
                            'actually_value': 1
                        },
-                       'nested_model.f_number': {
+                       {
+                           'path': 'f_number',
                            'expected_type': 'number',
                            'actually_value': False
                        },
-                       'nested_model.f_boolean': {
+                       {
+                           'path': 'f_boolean',
                            'expected_type': 'boolean',
                            'actually_value': 0
                        },
-                       'nested_model.f_integer': {
+                       {
+                           'path': 'f_integer',
                            'expected_type': 'integer',
                            'actually_value': "test"
                        }
-                   }
+                   ]
+               } == rez
+
+        invalid_data = {
+            "f_string": False,
+            "f_number": "1",
+            "f_boolean": "",
+            "f_integer": 1.2
+        }
+
+        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
+        assert {
+                   'status': 'invalid',
+                   'required': [],
+                   'invalid_type': [
+                       {
+                           'path': 'f_string',
+                           'expected_type': 'string',
+                           'actually_value': False
+                       },
+                       {
+                           'path': 'f_number',
+                           'expected_type': 'number',
+                           'actually_value': "1"
+                       },
+                       {
+                           'path': 'f_boolean',
+                           'expected_type': 'boolean',
+                           'actually_value': ""
+                       },
+                       {
+                           'path': 'f_integer',
+                           'expected_type': 'integer',
+                           'actually_value': 1.2
+                       }
+                   ]
                } == rez
 
     def test_nested_required_fields(self):
@@ -356,7 +402,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert {
                    'status': 'invalid',
                    'required': ['nested_model'],
-                   'invalid_type': {}
+                   'invalid_type': []
                } == rez
 
         invalid_data = {
@@ -371,7 +417,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert {
                    'status': 'invalid',
                    'required': ['nested_model.f_string'],
-                   'invalid_type': {}
+                   'invalid_type': []
                } == rez
 
     def test_invalid_type_in_nested_fields(self):
@@ -389,29 +435,33 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert {
                    'status': 'invalid',
                    'required': [],
-                   'invalid_type': {
-                       'nested_model.f_string': {
+                   'invalid_type': [
+                       {
+                           'path': 'nested_model.f_string',
                            'expected_type': 'string',
                            'actually_value': 1
                        },
-                       'nested_model.f_number': {
+                       {
+                           'path': 'nested_model.f_number',
                            'expected_type': 'number',
                            'actually_value': "ds"
                        },
-                       'nested_model.f_boolean': {
+                       {
+                           'path': 'nested_model.f_boolean',
                            'expected_type': 'boolean',
                            'actually_value': 1.3
                        },
-                       'nested_model.f_integer': {
+                       {
+                           'path': 'nested_model.f_integer',
                            'expected_type': 'integer',
                            'actually_value': True
                        }
-                   }
+                   ]
 
                } == rez
 
-    def test_invalid_type_in_3_levels_nested_fields(self):
+    def test_invalid_type_in_3_levels_nested_fields__(self):
         assert False
 
-    def test_array_props(self):
+    def test_array_props__(self):
         assert False
