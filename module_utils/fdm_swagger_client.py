@@ -161,8 +161,8 @@ class FdmSwaggerValidator:
 
         if len(status['required']) > 0 or len(status['invalid_type']) > 0:
             status['status'] = 'invalid'
-            return status
-        return {'status': 'valid'}
+            return False, status
+        return True, None
 
     def _validate_object(self, status, model, data, path):
         if self._is_enum(model):
@@ -183,9 +183,9 @@ class FdmSwaggerValidator:
             self._add_invalid_type_report(status, path, '', PronName.ENUM, value)
 
     @staticmethod
-    def _add_invalid_type_report(status, path, prop, expected_type, actually_value):
+    def _add_invalid_type_report(status, path, prop_name, expected_type, actually_value):
         status['invalid_type'].append({
-            'path': FdmSwaggerValidator._create_path_to_field(path, prop),
+            'path': FdmSwaggerValidator._create_path_to_field(path, prop_name),
             'expected_type': expected_type,
             'actually_value': actually_value
         })
@@ -226,15 +226,10 @@ class FdmSwaggerValidator:
             self._check_array(status, model, actually_value,
                               path=self._create_path_to_field(path, prop_name))
         elif not self._is_simple_types(expected_type, actually_value):
-            status['invalid_type'].append({
-                'path': self._create_path_to_field(path, prop_name),
-                'expected_type': expected_type,
-                'actually_value': actually_value
-            })
+            self._add_invalid_type_report(status, path, prop_name, expected_type, actually_value)
 
     @staticmethod
     def _is_simple_types(model_prop, value):
-        # TODO:2018-08-14:alexander.vorkov: Should we support a string version "True", "1" ...?
         if model_prop == PropType.STRING:
             return isinstance(value, string_types)
         elif model_prop == PropType.BOOLEAN:
@@ -256,7 +251,10 @@ class FdmSwaggerValidator:
         if len(missed_required_fields) > 0:
             status['required'] += missed_required_fields
 
-    def _check_array(self, status, model, actually_value, path):
-        item_model = model['items']
-        for i, item_data in enumerate(actually_value):
-            self._check_types(status, item_data, item_model['type'], item_model, "{}[{}]".format(path, i), '')
+    def _check_array(self, status, model, data, path):
+        if not isinstance(data, list):
+            self._add_invalid_type_report(status, path, '', PropType.ARRAY, data)
+        else:
+            item_model = model['items']
+            for i, item_data in enumerate(data):
+                self._check_types(status, item_data, item_model['type'], item_model, "{}[{}]".format(path, i), '')

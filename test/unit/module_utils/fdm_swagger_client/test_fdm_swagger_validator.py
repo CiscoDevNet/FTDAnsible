@@ -110,7 +110,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         data = {
             'name': 'test'
         }
-        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': ['subType', 'type', 'value'],
@@ -119,7 +120,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
     def test_errors_if_no_data_was_passed(self):
         data = {}
-        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': ['subType', 'type', 'value'],
@@ -131,7 +133,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             'subType': 'NETWORK',
             'value': '1.1.1.1'
         }
-        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': ['type'],
@@ -144,7 +147,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             'type': 1,
             'value': False
         }
-        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': [],
@@ -171,7 +175,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             'type': [],
             'value': {}
         }
-        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': [],
@@ -200,10 +205,9 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             'type': 'networkobject',
             'value': '1.1.1.1'
         }
-        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
-        assert {
-                   'status': 'valid'
-               } == rez
+        valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert valid
+        assert rez is None
 
     def test_pass_all_fields_with_correct_data(self):
         data = {
@@ -221,10 +225,9 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                 'id': 'fs-sf'
             }]
         }
-        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
-        assert {
-                   'status': 'valid'
-               } == rez
+        valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert valid
+        assert rez is None
 
     def test_array_data_is_not_correct(self):
         data = {
@@ -248,7 +251,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                 'test'
             ]
         }
-        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': ['objects[0].type', 'objects[1].id', 'objects[2].id', 'objects[2].type'],
@@ -303,10 +307,9 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             "f_integer": 1
         }
 
-        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
-        assert {
-                   'status': 'valid'
-               } == rez
+        valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
+        assert valid
+        assert rez is None
 
         valid_data = {
             "f_string": "",
@@ -315,10 +318,9 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             "f_integer": 0
         }
 
-        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
-        assert {
-                   'status': 'valid'
-               } == rez
+        valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
+        assert valid
+        assert rez is None
 
         valid_data = {
             "f_string": "0",
@@ -327,10 +329,9 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             "f_integer": 2
         }
 
-        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
-        assert {
-                   'status': 'valid'
-               } == rez
+        valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
+        assert valid
+        assert rez is None
 
     def test_invalid_simple_types(self):
         local_mock_data = {
@@ -359,7 +360,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             "f_integer": True
         }
 
-        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
+        valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': [],
@@ -394,7 +396,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             "f_integer": "test"
         }
 
-        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
+        valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': [],
@@ -429,7 +432,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             "f_integer": 1.2
         }
 
-        rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
+        valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': [],
@@ -464,17 +468,17 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             }
         }
 
-        rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', valid_data)
-        assert {
-                   'status': 'valid'
-               } == rez
+        valid, rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', valid_data)
+        assert valid
+        assert rez is None
 
     def test_invalid_nested_required_fields(self):
         invalid_data = {
             'f_integer': 2
         }
 
-        rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
+        valid, rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': ['nested_model'],
@@ -487,7 +491,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             }
         }
 
-        rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
+        valid, rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': ['nested_model.f_string'],
@@ -504,8 +509,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             }
         }
 
-        rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
-
+        valid, rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
+        assert not valid
         assert {
                    'status': 'invalid',
                    'required': [],
@@ -534,5 +539,168 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
                } == rez
 
-    def test_invalid_type_in_3_levels_nested_fields__(self):
-        assert False
+    def test_few_levels_nested_fields(self):
+        local_mock_data = {
+            'models': {
+                'Model2': {
+                    'type': 'object',
+                    'required': ['ms', 'ts'],
+                    'properties': {
+                        'ms': {'type': 'array',
+                               'items': {
+                                   'type': 'object',
+                                   '$ref': '#/definitions/ReferenceModel'}},
+                        'ts': {'type': 'array',
+                               'items': {
+                                   'type': 'object',
+                                   '$ref': '#/definitions/ReferenceModel'}}
+                    }
+                },
+                'NetworkObjectType': {'type': 'string', 'enum': ['HOST', 'NETWORK', 'IPRANGE', 'FQDN']},
+                'Fragment': {'type': 'object',
+                             'required': ['type', 'objects', 'subType', 'object'],
+                             'properties': {
+                                 'objects': {'type': 'array',
+                                             'items': {
+                                                 'type': 'object',
+                                                 '$ref': '#/definitions/ReferenceModel'}},
+                                 'object': {'type': 'object',
+                                            '$ref': '#/definitions/Model2'},
+                                 'subType': {'type': 'object',
+                                             '$ref': '#/definitions/NetworkObjectType'},
+                                 'type': {'type': 'string'},
+                                 'value': {'type': 'number'},
+                                 'name': {'type': 'string'}}},
+                'ReferenceModel': {'type': 'object', 'required': ['id', 'type'],
+                                   'properties': {
+                                       'id': {'type': 'string'},
+                                       'type': {'type': 'string'},
+                                       'version': {'type': 'string'},
+                                       'name': {'type': 'string'}}},
+                'model1': {
+                    'type': 'object',
+                    'properties': {
+                        'f_string': {'type': 'string'},
+                        'f_number': {'type': 'number'},
+                        'f_boolean': {'type': 'boolean'},
+                        'f_integer': {'type': 'integer'},
+                        'objects': {'type': 'array',
+                                    'items': {
+                                        'type': 'object',
+                                        '$ref': '#/definitions/ReferenceModel'}},
+                        'fragments': {'type': 'array',
+                                      'items': {
+                                          'type': 'object',
+                                          '$ref': '#/definitions/Fragment'}}
+                    },
+                    'required': ['f_string', 'objects', 'fragments']
+                },
+                'TestModel': {
+                    'type': 'object',
+                    'properties': {
+                        'nested_model': {'type': 'object',
+                                         '$ref': '#/definitions/model1'},
+                        'f_integer': {'type': 'integer'}
+                    },
+                    'required': ['nested_model']
+                }
+            },
+            'operations': {
+                'getdata': {
+                    'modelName': 'TestModel'
+                }
+            }
+        }
+
+        valid_data = {
+            "nested_model": {
+                'objects': [{
+                    'type': 't1',
+                    'id': 'id1'
+                }],
+                'fragments': [{
+                    'type': "test",
+                    'subType': 'NETWORK',
+                    'object': {
+                        'ts': [],
+                        'ms': [{
+                            'type': "tt",
+                            'id': 'id'
+                        }]
+                    },
+                    'objects': [{
+                        'type': 't',
+                        'id': 'id'
+                    }]
+                }],
+                'f_string': '1'
+            }
+        }
+
+        valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
+        assert valid
+        assert rez is None
+
+        valid_data = {
+            "nested_model": {
+                'objects': [{
+                    'type': 't1',
+                    'id': 'id1'
+                }],
+                'fragments': [{
+                    'type': "test",
+                    'subType': 'NETWORK',
+                    'object': {
+                        'ms': {}
+                    },
+                    'objects': [{
+                        'type': 't',
+                        'id': 'id'
+                    }]
+                }],
+                'f_string': '1'
+            }
+        }
+
+        valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
+        assert not valid
+        assert {
+                   'required': ['nested_model.fragments[0].object.ts'],
+                   'invalid_type': [{
+                       'path': 'nested_model.fragments[0].object.ms',
+                       'expected_type': 'array',
+                       'actually_value': {}
+                   }],
+                   'status': 'invalid'} == rez
+
+        valid_data = {
+            "nested_model": {
+                'objects': [{
+                    'type': 't1',
+                    'id': 'id1'
+                }],
+                'fragments': [{
+                    'type': "test",
+                    'subType': 'NETWORK',
+                    'object': [],
+                    'objects': {}
+                }],
+                'f_string': '1'
+            }
+        }
+
+        valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
+        assert not valid
+        assert {
+                   'required': [],
+                   'invalid_type': [
+                       {
+                           'path': 'nested_model.fragments[0].objects',
+                           'expected_type': 'array',
+                           'actually_value': {}
+                       },
+                       {
+                           'path': 'nested_model.fragments[0].object',
+                           'expected_type': 'object',
+                           'actually_value': []}
+                   ], 'status': 'invalid'} == rez
