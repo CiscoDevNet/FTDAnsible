@@ -251,13 +251,10 @@ class FdmSwaggerValidator:
 
     @staticmethod
     def _check_required_fields(status, required_fields, data, path):
-        try:
-            missed_required_fields = [FdmSwaggerValidator._create_path_to_field(path, field) for field in
-                                      required_fields if field not in data.keys()]
-            if len(missed_required_fields) > 0:
-                status['required'] += missed_required_fields
-        except Exception as e:
-            pass
+        missed_required_fields = [FdmSwaggerValidator._create_path_to_field(path, field) for field in
+                                  required_fields if field not in data.keys()]
+        if len(missed_required_fields) > 0:
+            status['required'] += missed_required_fields
 
     def _check_array(self, status, model, actually_value, path):
         item_model = model['items']

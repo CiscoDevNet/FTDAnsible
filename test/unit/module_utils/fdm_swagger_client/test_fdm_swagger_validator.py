@@ -166,6 +166,33 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                        }
                    ]
                } == rez
+        data = {
+            'subType': {},
+            'type': [],
+            'value': {}
+        }
+        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert {
+                   'status': 'invalid',
+                   'required': [],
+                   'invalid_type': [
+                       {
+                           'path': 'subType',
+                           'expected_type': 'enum',
+                           'actually_value': {}
+                       },
+                       {
+                           'path': 'value',
+                           'expected_type': 'string',
+                           'actually_value': {}
+                       },
+                       {
+                           'path': 'type',
+                           'expected_type': 'string',
+                           'actually_value': []
+                       }
+                   ]
+               } == rez
 
     def test_pass_only_required_fields(self):
         data = {
@@ -216,7 +243,9 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                 {
                     'id': 1,
                     'type': True
-                }
+                },
+                [],
+                'test'
             ]
         }
         rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
@@ -233,6 +262,16 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'path': 'objects[3].type',
                            'expected_type': 'string',
                            'actually_value': True
+                       },
+                       {
+                           'path': 'objects[4]',
+                           'expected_type': 'object',
+                           'actually_value': []
+                       },
+                       {
+                           'path': 'objects[5]',
+                           'expected_type': 'object',
+                           'actually_value': 'test'
                        }
                    ]
                } == rez
