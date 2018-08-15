@@ -151,6 +151,15 @@ class FdmSwaggerValidator:
         pass
 
     def validate_data(self, operation, data):
+        if not operation or not isinstance(operation, string_types):
+            return False, "The operation parameter must be a non-empty string"
+
+        if not isinstance(data, dict):
+            return False, "The data parameter must be a dict"
+
+        if operation not in self._operations:
+            return False, "{} operation does not support".format(operation)
+
         operation = self._operations[operation]
         model = self._models[operation['modelName']]
         status = {
@@ -160,7 +169,6 @@ class FdmSwaggerValidator:
         self._validate_object(status, model, data, '')
 
         if len(status['required']) > 0 or len(status['invalid_type']) > 0:
-            status['status'] = 'invalid'
             return False, status
         return True, None
 
