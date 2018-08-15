@@ -10,7 +10,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_config_entity
+module: ftd_configuration
 short_description: Manages ConfigEntity objects on Cisco FTD devices over REST API.
 version_added: "2.7"
 author: "Cisco Systems, Inc."
@@ -36,7 +36,7 @@ options:
 
 EXAMPLES = """
 - name: Create a network object
-  ftd_config_entity:
+  ftd_configuration:
     operation: "addNetworkObject"
     data:
       name: "Ansible-network-host"
@@ -49,7 +49,7 @@ EXAMPLES = """
     register_as: "hostNetwork"
 
 - name: Delete the network object
-  ftd_config_entity:
+  ftd_configuration:
     operation: "deleteNetworkObject"
     path_params:
       objId: "{{ hostNetwork['id'] }}"

@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Create a HOST network object
-      ftd_config_entity:
+      ftd_configuration:
         operation: "addNetworkObject"
         data:
           name: "Ansible-network-host"
@@ -12,7 +12,7 @@
           type: "networkobject"
 
     - name: Create a NETWORK network object
-      ftd_config_entity:
+      ftd_configuration:
         operation: "addNetworkObject"
         data:
           name: "Ansible-network-network"
@@ -22,7 +22,7 @@
           type: "networkobject"
 
     - name: Create a network group
-      ftd_config_entity:
+      ftd_configuration:
         operation: "addNetworkObjectGroup"
         data:
           name: "Ansible-network-group"
@@ -33,7 +33,7 @@
             - "{{ networkobject_ansible_network_network }}"
 
     - name: Update the HOST network object
-      ftd_config_entity:
+      ftd_configuration:
         operation: 'editNetworkObject'
         path_params:
           objId: "{{ networkobject_ansible_network_host['id'] }}"
@@ -50,13 +50,13 @@
 #      ftd_deployment:
 
     - name: Refresh a NETWORK network object
-      ftd_config_entity:
+      ftd_configuration:
         operation: 'getNetworkObject'
         path_params:
           objId: "{{ networkobject_ansible_network_host['id'] }}"
 
     - name: Update the network group
-      ftd_config_entity:
+      ftd_configuration:
         operation: 'editNetworkObjectGroup'
         path_params:
           objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
@@ -70,19 +70,19 @@
             - "{{ networkobject_ansible_network_network }}"
 
     - name: Delete a network group
-      ftd_config_entity:
+      ftd_configuration:
         operation: 'deleteNetworkObjectGroup'
         path_params:
           objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
 
     - name: Delete a HOST network object
-      ftd_config_entity:
+      ftd_configuration:
         operation: 'deleteNetworkObject'
         path_params:
           objId: "{{ networkobject_ansible_network_host['id'] }}"
 
     - name: Delete a NETWORK network object
-      ftd_config_entity:
+      ftd_configuration:
         operation: 'deleteNetworkObject'
         path_params:
           objId: "{{ networkobject_ansible_network_network['id'] }}"

@@ -2,7 +2,7 @@ import pytest
 from ansible.module_utils import basic
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
-from library import ftd_config_entity
+from library import ftd_configuration
 from module_utils.http import HTTPMethod
 
 ADD_RESPONSE = {'status': 'Object added'}
@@ -11,8 +11,8 @@ DELETE_RESPONSE = {'status': 'Object deleted'}
 ARBITRARY_RESPONSE = {'status': 'Arbitrary request sent'}
 
 
-class TestFtdConfigEntity(object):
-    module = ftd_config_entity
+class TestFtdConfiguration(object):
+    module = ftd_configuration
 
     @pytest.fixture(autouse=True)
     def module_mock(self, mocker):
@@ -20,12 +20,12 @@ class TestFtdConfigEntity(object):
 
     @pytest.fixture
     def operation_mock(self, mocker):
-        connection_class_mock = mocker.patch('library.ftd_config_entity.Connection')
+        connection_class_mock = mocker.patch('library.ftd_configuration.Connection')
         return connection_class_mock.return_value.get_operation_spec
 
     @pytest.fixture
     def resource_mock(self, mocker):
-        resource_class_mock = mocker.patch('library.ftd_config_entity.BaseConfigObjectResource')
+        resource_class_mock = mocker.patch('library.ftd_configuration.BaseConfigObjectResource')
         resource_instance = resource_class_mock.return_value
         resource_instance.add_object.return_value = ADD_RESPONSE
         resource_instance.edit_object.return_value = EDIT_RESPONSE

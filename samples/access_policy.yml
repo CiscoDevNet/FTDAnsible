@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Create a network object
-      ftd_config_entity:
+      ftd_configuration:
         operation: "addNetworkObject"
         data:
           name: "Ansible-network-host"
@@ -12,7 +12,7 @@
           type: "networkobject"
 
     - name: Create an access rule
-      ftd_config_entity:
+      ftd_configuration:
         operation: "addAccessRule"
         data:
           name: "Ansible-accessrule"
@@ -25,7 +25,7 @@
           parentId: "default"
 
     - name: Update the access rule
-      ftd_config_entity:
+      ftd_configuration:
         operation: 'editAccessRule'
         data:
           name: "Ansible-accessrule"
@@ -45,14 +45,14 @@
 #      ftd_deployment:
 
     - name: Delete an access rule
-      ftd_config_entity:
+      ftd_configuration:
         operation: 'deleteAccessRule'
         path_params:
           objId: "{{ accessrule_ansible_accessrule['id'] }}"
           parentId: "default"
 
     - name: Delete a network object
-      ftd_config_entity:
+      ftd_configuration:
         operation: 'deleteNetworkObject'
         path_params:
           objId: "{{ networkobject_ansible_network_host['id'] }}"
