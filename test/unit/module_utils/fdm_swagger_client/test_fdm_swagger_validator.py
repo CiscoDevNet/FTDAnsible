@@ -68,6 +68,7 @@ mock_data = {
 nested_mock_data1 = {
     'models': {
         'model1': {
+            'type': 'object',
             'properties': {
                 'f_string': {'type': 'string'},
                 'f_number': {'type': 'number'},
@@ -393,9 +394,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
     def test_invalid_nested_required_fields(self):
         invalid_data = {
-            'nested_model': {
-                'f_integer': 2
-            }
+            'f_integer': 2
         }
 
         rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
@@ -407,9 +406,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         invalid_data = {
             'nested_model': {
-                'nested_model': {
-                    'f_number': 1.2
-                }
+                'f_number': 1.2
             }
         }
 
