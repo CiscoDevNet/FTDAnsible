@@ -150,31 +150,25 @@ class FdmSwaggerValidator:
     def validate_path_params(self, operation, params):
         pass
 
-    def validate_data(self, operation, data, skip_fields=None):
-        if skip_fields is None:
-            skip_fields = []
-
+    def validate_data(self, operation, data):
         operation = self._operations[operation]
         model = self._models[operation['modelName']]
         status = {
             'required': [],
             'invalid_type': []
         }
-        self._validate_object(status, model, data, '', skip_fields)
+        self._validate_object(status, model, data, '')
 
         if len(status['required']) > 0 or len(status['invalid_type']) > 0:
             status['status'] = 'invalid'
             return status
         return {'status': 'valid'}
 
-    def _validate_object(self, status, model, data, path, skip_fields=None):
-        if skip_fields is None:
-            skip_fields = []
-
+    def _validate_object(self, status, model, data, path):
         if self._is_enum(model):
             self._check_enum(status, model, data, path)
         elif self._is_object(model):
-            self._check_object(status, model, data, path, skip_fields)
+            self._check_object(status, model, data, path)
 
     @staticmethod
     def _is_enum(model):
@@ -207,8 +201,12 @@ class FdmSwaggerValidator:
     def _is_object(model):
         return PronName.TYPE in model and model[PronName.TYPE] == PropType.OBJECT
 
-    def _check_object(self, status, model, data, path, skip_fields):
-        FdmSwaggerValidator._check_required_fields(status, model['required'], data, path, skip_fields)
+    def _check_object(self, status, model, data, path):
+        if not isinstance(data, dict):
+            self._add_invalid_type_report(status, path, '', PropType.OBJECT, data)
+            return None
+
+        FdmSwaggerValidator._check_required_fields(status, model['required'], data, path)
 
         model_properties = model['properties']
         for prop in model_properties.keys():
@@ -223,7 +221,7 @@ class FdmSwaggerValidator:
             ref_model = self._get_model_by_ref(model)
 
             self._validate_object(status, ref_model, actually_value,
-                                  path=self._create_path_to_field(path, prop_name), skip_fields=[])
+                                  path=self._create_path_to_field(path, prop_name))
         elif expected_type == PropType.ARRAY:
             self._check_array(status, model, actually_value,
                               path=self._create_path_to_field(path, prop_name))
@@ -252,14 +250,15 @@ class FdmSwaggerValidator:
         return self._models[model]
 
     @staticmethod
-    def _check_required_fields(status, required_fields, data, path, skip_fields):
-        missed_required_fields = [FdmSwaggerValidator._create_path_to_field(path, field) for field in
-                                  required_fields if
-                                  not (field in skip_fields or field in data.keys())]
-        if len(missed_required_fields) > 0:
-            status['required'] += missed_required_fields
+    def _check_required_fields(status, required_fields, data, path):
+        try:
+            missed_required_fields = [FdmSwaggerValidator._create_path_to_field(path, field) for field in
+                                      required_fields if field not in data.keys()]
+            if len(missed_required_fields) > 0:
+                status['required'] += missed_required_fields
+        except Exception as e:
+            pass
 
-    # TODO:2018-08-14:alexander.vorkov: need to add tests
     def _check_array(self, status, model, actually_value, path):
         item_model = model['items']
         for i, item_data in enumerate(actually_value):

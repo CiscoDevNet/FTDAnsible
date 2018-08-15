@@ -1,9 +1,12 @@
+import os
 import unittest
 
 try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerValidator
 except ModuleNotFoundError:
     from module_utils.fdm_swagger_client import FdmSwaggerValidator
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
 
 mock_data = {
     'models': {
@@ -103,9 +106,6 @@ class TestFdmSwaggerValidator(unittest.TestCase):
     def test_query_params__(self):
         assert False
 
-    def test_skipped_param_for_validate_data_method__(self):
-        assert False
-
     def test_errors_for_required_fields(self):
         data = {
             'name': 'test'
@@ -197,6 +197,44 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
         assert {
                    'status': 'valid'
+               } == rez
+
+    def test_array_data_is_not_correct(self):
+        data = {
+            'name': 'test_name',
+            'subType': 'NETWORK',
+            'type': 'networkobject',
+            'value': '1.1.1.1',
+            'objects': [
+                {
+                    'id': 'fs-sf'
+                },
+                {
+                    'type': 'type'
+                },
+                {},
+                {
+                    'id': 1,
+                    'type': True
+                }
+            ]
+        }
+        rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert {
+                   'status': 'invalid',
+                   'required': ['objects[0].type', 'objects[1].id', 'objects[2].id', 'objects[2].type'],
+                   'invalid_type': [
+                       {
+                           'path': 'objects[3].id',
+                           'expected_type': 'string',
+                           'actually_value': 1
+                       },
+                       {
+                           'path': 'objects[3].type',
+                           'expected_type': 'string',
+                           'actually_value': True
+                       }
+                   ]
                } == rez
 
     def test_simple_types(self):
@@ -458,7 +496,4 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                } == rez
 
     def test_invalid_type_in_3_levels_nested_fields__(self):
-        assert False
-
-    def test_array_props__(self):
         assert False

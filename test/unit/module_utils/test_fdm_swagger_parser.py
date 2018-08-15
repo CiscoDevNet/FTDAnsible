@@ -1,5 +1,4 @@
 import copy
-import json
 import os
 import unittest
 
@@ -12,10 +11,83 @@ except ModuleNotFoundError:
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
+
 base = {
     'basePath': "/api/fdm/v2",
-    'definitions': {},
-    'paths': {}
+    'definitions': {"NetworkObject": {"type": "object",
+                                      "properties": {"version": {"type": "string"}, "name": {"type": "string"},
+                                                     "description": {"type": "string"},
+                                                     "subType": {"type": "object",
+                                                                 "$ref": "#/definitions/NetworkObjectType"},
+                                                     "value": {"type": "string"},
+                                                     "isSystemDefined": {"type": "boolean"},
+                                                     "dnsResolution": {"type": "object",
+                                                                       "$ref": "#/definitions/FQDNDNSResolution"},
+                                                     "id": {"type": "string"},
+                                                     "type": {"type": "string", "default": "networkobject"}},
+                                      "required": ["subType", "type", "value"]},
+                    "NetworkObjectWrapper": {
+                        "allOf": [{"$ref": "#/definitions/NetworkObject"}, {"$ref": "#/definitions/LinksWrapper"}]}
+                    },
+    'paths': {
+        "/object/networks": {
+            "get": {"tags": ["NetworkObject"], "operationId": "getNetworkObjectList",
+                    "responses": {"200": {"description": "", "schema": {"type": "object",
+                                                                        "title": "NetworkObjectList",
+                                                                        "properties": {"items": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "$ref": "#/definitions/NetworkObjectWrapper"}},
+                                                                            "paging": {
+                                                                                "$ref": "#/definitions/Paging"}},
+                                                                        "required": ["items",
+                                                                                     "paging"]}}},
+                    "parameters": [
+                        {"name": "offset", "in": "query", "required": False, "type": "integer"},
+                        {"name": "limit", "in": "query", "required": False, "type": "integer"},
+                        {"name": "sort", "in": "query", "required": False, "type": "string"},
+                        {"name": "filter", "in": "query", "required": False, "type": "string"}]},
+            "post": {"tags": ["NetworkObject"], "operationId": "addNetworkObject",
+                     "responses": {
+                         "200": {"description": "",
+                                 "schema": {"type": "object",
+                                            "$ref": "#/definitions/NetworkObjectWrapper"}},
+                         "422": {"description": "",
+                                 "schema": {"type": "object", "$ref": "#/definitions/ErrorWrapper"}}
+                     },
+                     "parameters": [{"in": "body", "name": "body",
+                                     "required": True,
+                                     "schema": {"$ref": "#/definitions/NetworkObject"}}]}
+        },
+        "/object/networks/{objId}": {
+            "get": {"tags": ["NetworkObject"], "operationId": "getNetworkObject",
+                    "responses": {"200": {"description": "",
+                                          "schema": {"type": "object",
+                                                     "$ref": "#/definitions/NetworkObjectWrapper"}},
+                                  "404": {"description": "",
+                                          "schema": {"type": "object",
+                                                     "$ref": "#/definitions/ErrorWrapper"}}},
+                    "parameters": [{"name": "objId", "in": "path", "required": True,
+                                    "type": "string"}]},
+
+            "put": {"tags": ["NetworkObject"], "operationId": "editNetworkObject",
+                    "responses": {"200": {"description": "",
+                                          "schema": {"type": "object",
+                                                     "$ref": "#/definitions/NetworkObjectWrapper"}},
+                                  "422": {"description": "",
+                                          "schema": {"type": "object",
+                                                     "$ref": "#/definitions/ErrorWrapper"}}},
+                    "parameters": [{"name": "objId", "in": "path", "required": True,
+                                    "type": "string"},
+                                   {"in": "body", "name": "body", "required": True,
+                                    "schema": {"$ref": "#/definitions/NetworkObject"}}]},
+            "delete": {"tags": ["NetworkObject"], "operationId": "deleteNetworkObject",
+                       "responses": {"204": {"description": ""},
+                                     "422": {"description": "",
+                                             "schema": {"type": "object",
+                                                        "$ref": "#/definitions/ErrorWrapper"}}},
+                       "parameters": [{"name": "objId", "in": "path", "required": True,
+                                       "type": "string"}]}}}
 }
 
 
@@ -24,20 +96,9 @@ def _get_objects(base_object, key_names):
 
 
 class TestFdmSwaggerParser(unittest.TestCase):
-    def setUp(self):
-        self.init_mock_data()
-
-    def init_mock_data(self):
-        with open(os.path.join(TEST_DATA_FOLDER, 'ngfw.json')) as f:
-            self.base_data = json.load(f)
-            self._data = copy.deepcopy(base)
 
     def test_simple_object(self):
-        self._data['definitions'] = _get_objects(self.base_data['definitions'],
-                                                 ['NetworkObject', 'NetworkObjectWrapper'])
-
-        self._data['paths'] = _get_objects(self.base_data['paths'],
-                                           ['/object/networks', '/object/networks/{objId}'])
+        self._data = copy.deepcopy(base)
 
         self.fdm_data = FdmSwaggerParser().parse_spec(self._data)
 
@@ -120,28 +181,3 @@ class TestFdmSwaggerParser(unittest.TestCase):
         }
         assert ['NetworkObject', 'NetworkObjectWrapper'] == list(self.fdm_data['models'].keys())
         assert expected_operations == self.fdm_data['operations']
-
-    def test_parse_all_data(self):
-        self._data['definitions'] = self.base_data['definitions']
-
-        self._data['paths'] = self.base_data['paths']
-
-        self.fdm_data = FdmSwaggerParser().parse_spec(self._data)
-        operations = self.fdm_data['operations']
-        without_model_name = []
-        expected_operations_counter = 0
-        for key in self._data['paths']:
-            operation = self._data['paths'][key]
-            for _ in operation:
-                expected_operations_counter += 1
-
-        for key in operations:
-            operation = operations[key]
-            if not operation['modelName'] and (operation['method'] != HTTPMethod.DELETE):
-                without_model_name.append(operation['url'])
-
-            if operation['modelName'] == '_File' and 'download' not in operation['url']:
-                self.fail('File type can be defined for download operation only')
-
-        assert ['/api/fdm/v2/action/upgrade'] == without_model_name
-        assert expected_operations_counter == len(operations)
