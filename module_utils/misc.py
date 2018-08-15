@@ -6,6 +6,10 @@ IDENTITY_PROPERTIES = ['id', 'version', 'ruleId']
 NON_COMPARABLE_PROPERTIES = IDENTITY_PROPERTIES + ['isSystemDefined', 'links']
 
 
+class ConfigurationError(Exception):
+    pass
+
+
 def dict_subset(dictionary, keys):
     return dict((k, dictionary[k]) for k in keys if dictionary[k])
 

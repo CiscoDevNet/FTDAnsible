@@ -4,6 +4,7 @@ from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFa
 
 from library import ftd_configuration
 from module_utils.http import HTTPMethod
+from module_utils.misc import ConfigurationError
 
 ADD_RESPONSE = {'status': 'Object added'}
 EDIT_RESPONSE = {'status': 'Object edited'}
@@ -112,6 +113,18 @@ class TestFtdConfiguration(object):
         assert ARBITRARY_RESPONSE == result['response']
         resource_mock.send_request.assert_called_with(operation_mock.return_value['url'], HTTPMethod.GET, None,
                                                       params['path_params'], None)
+
+    def test_module_should_fail_when_operation_raises_configuration_error(self, operation_mock, resource_mock):
+        operation_mock.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+        set_module_args({'operation': 'failure'})
+        resource_mock.send_request.side_effect = ConfigurationError('Foo error.')
+
+        with pytest.raises(AnsibleFailJson) as exс:
+            self.module.main()
+
+        result = exс.value.args[0]
+        assert result['failed']
+        assert 'Failed to execute failure operation because of the configuration error: Foo error.' == result['msg']
 
     def _run_module(self, module_args):
         set_module_args(module_args)

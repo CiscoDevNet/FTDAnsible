@@ -6,10 +6,10 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 # TODO: remove import workarounds when module_utils are moved to the Ansible core
 try:
     from ansible.module_utils.http import iterate_over_pageable_resource, HTTPMethod
-    from ansible.module_utils.misc import equal_objects, copy_identity_properties
+    from ansible.module_utils.misc import equal_objects, copy_identity_properties, ConfigurationError
 except (ImportError, ModuleNotFoundError):
     from module_utils.http import iterate_over_pageable_resource, HTTPMethod
-    from module_utils.misc import equal_objects, copy_identity_properties
+    from module_utils.misc import equal_objects, copy_identity_properties, ConfigurationError
 
 UNPROCESSABLE_ENTITY_STATUS = 422
 INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
@@ -49,7 +49,7 @@ class BaseConfigObjectResource(object):
                                      path_params=path_params,
                                      query_params=query_params)
         else:
-            raise ValueError(
+            raise ConfigurationError(
                 'Cannot add new object. An object with the same name but different parameters already exists.')
 
     def delete_object(self, url_path, path_params):
@@ -69,7 +69,7 @@ class BaseConfigObjectResource(object):
         existing_object = self.send_request(url_path=url_path, http_method=HTTPMethod.GET, path_params=path_params)
 
         if not existing_object:
-            raise ValueError('Referenced object does not exist')
+            raise ConfigurationError('Referenced object does not exist')
         elif equal_objects(existing_object, body_params):
             return existing_object
         else:
