@@ -74,7 +74,7 @@ class TestFtdHttpApi(unittest.TestCase):
         with self.assertRaises(ConnectionError) as res:
             self.ftd_plugin.login('foo', 'bar')
 
-        assert 'Invalid JSON response during connection authentication' in str(res.exception)
+        assert 'Server returned response without token info during connection authentication' in str(res.exception)
 
     def test_logout_should_revoke_tokens(self):
         self.ftd_plugin.access_token = 'ACCESS_TOKEN_TO_REVOKE'
@@ -102,12 +102,12 @@ class TestFtdHttpApi(unittest.TestCase):
         self.connection_mock.send.assert_called_once_with('/test/123?at=0', '{"name": "foo"}', method=HTTPMethod.PUT,
                                                           headers=self._expected_headers())
 
-    def test_send_request_should_return_empty_string_when_no_response_data(self):
+    def test_send_request_should_return_empty_dict_when_no_response_data(self):
         self.connection_mock.send.return_value = self._connection_response(None)
 
         resp = self.ftd_plugin.send_request('/test', HTTPMethod.GET)
 
-        assert '' == resp
+        assert {} == resp
         self.connection_mock.send.assert_called_once_with('/test', None, method=HTTPMethod.GET,
                                                           headers=self._expected_headers())
 
@@ -189,7 +189,7 @@ class TestFtdHttpApi(unittest.TestCase):
             with self.assertRaises(ConnectionError) as res:
                 self.ftd_plugin.upload_file('/tmp/test.txt', '/files')
 
-        assert 'Invalid JSON response after uploading the file' in str(res.exception)
+        assert 'Invalid JSON response' in str(res.exception)
 
     @patch.object(FdmSwaggerParser, 'parse_spec')
     def test_get_operation_spec(self, parse_spec_mock):
