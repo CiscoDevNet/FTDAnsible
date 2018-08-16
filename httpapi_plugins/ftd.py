@@ -12,6 +12,7 @@ import shutil
 
 from ansible.module_utils.basic import to_text
 from ansible.errors import AnsibleConnectionFailure
+from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.six.moves.urllib.parse import urlencode
 from ansible.plugins.httpapi import HttpApiBase
 from urllib3 import encode_multipart_formdata
@@ -93,11 +94,24 @@ class HttpApi(HttpApiBase):
     def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
-        _, response_data = self.connection.send(
-            url, data, method=http_method,
-            headers=self._authorized_headers()
-        )
-        return self._response_to_json(response_data)
+        try:
+            response, response_data = self.connection.send(
+                url, data, method=http_method,
+                headers=self._authorized_headers()
+            )
+            return {
+                'success': True,
+                'status': response.getcode(),
+                'response': self._response_to_json(response_data)
+            }
+        # Being invoked via JSON-RPC, this method does not serialize and pass HTTPError correctly to the method caller.
+        # Thus, in order to handle non-200 responses, we need to wrap them into a simple structure and pass explicitly.
+        except HTTPError as e:
+            return {
+                'success': False,
+                'status': e.code,
+                'response': self._response_to_json(e)
+            }
 
     def upload_file(self, from_path, to_url):
         url = construct_url_path(to_url)
@@ -147,7 +161,7 @@ class HttpApi(HttpApiBase):
 
     @staticmethod
     def _response_to_json(response_data):
-        response_text = to_text(response_data.getvalue())
+        response_text = to_text(response_data.read())
         try:
             return json.loads(response_text) if response_text else {}
         # JSONDecodeError only available on Python 3.5+
@@ -163,8 +177,12 @@ class HttpApi(HttpApiBase):
     @property
     def api_spec(self):
         if self._api_spec is None:
-            data = self.send_request(url_path=API_SPEC_PATH, http_method=HTTPMethod.GET)
-            self._api_spec = FdmSwaggerParser().parse_spec(data)
+            response = self.send_request(url_path=API_SPEC_PATH, http_method=HTTPMethod.GET)
+            if response['success']:
+                self._api_spec = FdmSwaggerParser().parse_spec(response['response'])
+            else:
+                raise ConnectionError('Failed to download API specification. Status code: %s. Response: %s' % (
+                    response['status'], response['response']))
         return self._api_spec
 
 

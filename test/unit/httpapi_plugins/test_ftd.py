@@ -5,7 +5,7 @@ from unittest import mock
 
 from ansible.compat.tests.mock import mock_open, patch
 from ansible.errors import AnsibleConnectionFailure
-from ansible.module_utils.six import BytesIO, PY3
+from ansible.module_utils.six import BytesIO, PY3, StringIO
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.connection import ConnectionError
 
@@ -98,7 +98,7 @@ class TestFtdHttpApi(unittest.TestCase):
                                             path_params={'objId': '123'},
                                             query_params={'at': 0})
 
-        assert exp_resp == resp
+        assert {'success': True, 'status': 200, 'response': exp_resp} == resp
         self.connection_mock.send.assert_called_once_with('/test/123?at=0', '{"name": "foo"}', method=HTTPMethod.PUT,
                                                           headers=self._expected_headers())
 
@@ -107,9 +107,17 @@ class TestFtdHttpApi(unittest.TestCase):
 
         resp = self.ftd_plugin.send_request('/test', HTTPMethod.GET)
 
-        assert {} == resp
+        assert {'success': True, 'status': 200, 'response': {}} == resp
         self.connection_mock.send.assert_called_once_with('/test', None, method=HTTPMethod.GET,
                                                           headers=self._expected_headers())
+
+    def test_send_request_should_return_error_info_when_http_error_raises(self):
+        self.connection_mock.send.side_effect = HTTPError('http://testhost.com', 500, '', {},
+                                                          StringIO('{"errorMessage": "ERROR"}'))
+
+        resp = self.ftd_plugin.send_request('/test', HTTPMethod.GET)
+
+        assert {'success': False, 'status': 500, 'response': {'errorMessage': 'ERROR'}} == resp
 
     def test_send_request_raises_exception_when_invalid_response(self):
         self.connection_mock.send.return_value = self._connection_response('nonValidJson')
@@ -212,10 +220,12 @@ class TestFtdHttpApi(unittest.TestCase):
         assert self.ftd_plugin.get_model_spec('NonExistingTestModel') is None
 
     @staticmethod
-    def _connection_response(response):
-        response_str = json.dumps(response) if type(response) is dict else response
-        response_mock = BytesIO(response_str.encode('utf-8') if response_str else None)
-        return None, response_mock
+    def _connection_response(response, status=200):
+        response_mock = mock.Mock()
+        response_mock.getcode.return_value = status
+        response_text = json.dumps(response) if type(response) is dict else response
+        response_data = BytesIO(response_text.encode('utf-8') if response_text else None)
+        return response_mock, response_data
 
     def _expected_headers(self):
         return {
