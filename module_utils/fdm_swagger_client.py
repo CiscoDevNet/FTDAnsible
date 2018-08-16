@@ -53,7 +53,7 @@ class FdmSwaggerParser:
         Also, resolve a model name for each operation
         :param spec: data in the swagger format
         :return:
-            The models field contains model definition from swagger #https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions
+            The models field contains model definition from swagger see <#https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions>
             {
                 'models':{
                     'model_name':{...},
@@ -190,21 +190,133 @@ class PropType:
 
 class FdmSwaggerValidator:
     def __init__(self, spec):
+        """
+        :param spec: expect data in the swagger format see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
+        """
         self._operations = spec[PropName.OPERATIONS]
         self._models = spec[PropName.MODELS]
 
-    def validate_query_params(self, operation, params):
-        return self._validate_url_params(operation, params, resource=OperationParams.QUERY)
+    def validate_data(self, operation_name, data=None):
+        """
+        Validate data for post|put requests
+        :param operation_name: We use the operation name to get model specification
+        :param data: data should be in the format that the model(from operation) expects
+        :return:(Boolean, msg)
+            (True, None) - if data valid
+            Invalid:
+            (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
+            (False, 'The data parameter must be a dict' if data isn't dict or None
+            (False, '{operation_name} operation does not support' - if the spec does not contain the operation
+            (False, {
+                'required': [ #list of the fields that are required but are not present in the data
+                    'field_name',
+                    'patent.field_name',# when the nested field is omitted
+                    'patent.list[2].field_name' # if data is array and one of the field is omitted
+                ],
+                'invalid_type':[ #list of the fields with invalid data and expected type of the data
+                        {
+                           'path': 'objId', #field name or path to the field. Ex. objects[3].id, parent.name
+                           'expected_type': 'string',# expected type. Ex. 'object', 'array', 'string', 'integer',
+                                                     # 'boolean', 'number'
+                           'actually_value': 1 # the value that user passed
+                       }
+                ]
+            })
+        """
+        if data is None:
+            data = {}
 
-    def validate_path_params(self, operation, params):
-        return self._validate_url_params(operation, params, resource=OperationParams.PATH)
+        if not operation_name or not isinstance(operation_name, string_types):
+            return False, "The operation_name parameter must be a non-empty string"
+
+        if not isinstance(data, dict):
+            return False, "The data parameter must be a dict"
+
+        if operation_name not in self._operations:
+            return False, "{} operation does not support".format(operation_name)
+
+        operation = self._operations[operation_name]
+        model = self._models[operation['modelName']]
+        status = self._init_report()
+
+        self._validate_object(status, model, data, '')
+
+        if len(status[PropName.REQUIRED]) > 0 or len(status[PropName.INVALID_TYPE]) > 0:
+            return False, status
+        return True, None
+
+    def validate_query_params(self, operation_name, params):
+        """
+           Validate params for get requests in query part of the url.
+           :param operation_name: We use the operation name to get specification for params
+           :param params: data should be in the format that the specification expects
+                    Ex.
+                    {
+                        'objId': "string_value",
+                        'p_integer': 1,
+                        'p_boolean': True,
+                        'p_number': 2.3
+                    }
+           :return:(Boolean, msg)
+               (True, None) - if params valid
+               Invalid:
+               (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
+               (False, 'The params parameter must be a dict' if params isn't dict or None
+               (False, '{operation_name} operation does not support' - if the spec does not contain the operation
+               (False, {
+                   'required': [ #list of the fields that are required but are not present in the params
+                       'field_name'
+                   ],
+                   'invalid_type':[ #list of the fields with invalid data and expected type of the data
+                            {
+                              'path': 'objId', #field name
+                              'expected_type': 'string',#expected type. Ex. 'string', 'integer', 'boolean', 'number'
+                              'actually_value': 1 # the value that user passed
+                            }
+                   ]
+               })
+           """
+        return self._validate_url_params(operation_name, params, resource=OperationParams.QUERY)
+
+    def validate_path_params(self, operation_name, params):
+        """
+        Validate params for get requests in path part of the url.
+        :param operation_name: We use the operation name to get specification for params
+        :param params: data should be in the format that the specification expects
+                 Ex.
+                 {
+                     'objId': "string_value",
+                     'p_integer': 1,
+                     'p_boolean': True,
+                     'p_number': 2.3
+                 }
+        :return:(Boolean, msg)
+            (True, None) - if params valid
+            Invalid:
+            (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
+            (False, 'The params parameter must be a dict' if params isn't dict or None
+            (False, '{operation_name} operation does not support' - if the spec does not contain the operation
+            (False, {
+                'required': [ #list of the fields that are required but are not present in the params
+                    'field_name'
+                ],
+                'invalid_type':[ #list of the fields with invalid data and expected type of the data
+                         {
+                           'path': 'objId', #field name
+                           'expected_type': 'string',#expected type. Ex. 'string', 'integer', 'boolean', 'number'
+                           'actually_value': 1 # the value that user passed
+                         }
+                ]
+            })
+        """
+        return self._validate_url_params(operation_name, params, resource=OperationParams.PATH)
 
     def _validate_url_params(self, operation, params, resource):
         if params is None:
             params = {}
 
         if not operation or not isinstance(operation, string_types):
-            return False, "The operation parameter must be a non-empty string"
+            return False, "The operation_name parameter must be a non-empty string"
 
         if not isinstance(params, dict):
             return False, "The params parameter must be a dict"
@@ -235,36 +347,6 @@ class FdmSwaggerValidator:
                 if prop_name in params and not self._is_simple_types(expected_type, value):
                     self._add_invalid_type_report(status, '', prop_name, expected_type, value)
 
-    @staticmethod
-    def _init_report():
-        return {
-            PropName.REQUIRED: [],
-            PropName.INVALID_TYPE: []
-        }
-
-    def validate_data(self, operation, data=None):
-        if data is None:
-            data = {}
-
-        if not operation or not isinstance(operation, string_types):
-            return False, "The operation parameter must be a non-empty string"
-
-        if not isinstance(data, dict):
-            return False, "The data parameter must be a dict"
-
-        if operation not in self._operations:
-            return False, "{} operation does not support".format(operation)
-
-        operation = self._operations[operation]
-        model = self._models[operation['modelName']]
-        status = self._init_report()
-
-        self._validate_object(status, model, data, '')
-
-        if len(status[PropName.REQUIRED]) > 0 or len(status[PropName.INVALID_TYPE]) > 0:
-            return False, status
-        return True, None
-
     def _validate_object(self, status, model, data, path):
         if self._is_enum(model):
             self._check_enum(status, model, data, path)
@@ -273,10 +355,6 @@ class FdmSwaggerValidator:
 
     def _is_enum(self, model):
         return self._is_string_type(model) and PropName.ENUM in model
-
-    @staticmethod
-    def _is_string_type(model):
-        return PropName.TYPE in model and model[PropName.TYPE] == PropType.STRING
 
     def _check_enum(self, status, model, value, path):
         if value not in model[PropName.ENUM]:
@@ -288,17 +366,6 @@ class FdmSwaggerValidator:
             'expected_type': expected_type,
             'actually_value': actually_value
         })
-
-    @staticmethod
-    def _create_path_to_field(path='', field=''):
-        separator = ''
-        if path and field:
-            separator = '.'
-        return "{}{}{}".format(path, separator, field)
-
-    @staticmethod
-    def _is_object(model):
-        return PropName.TYPE in model and model[PropName.TYPE] == PropType.OBJECT
 
     def _check_object(self, status, model, data, path):
         if not isinstance(data, dict):
@@ -327,18 +394,6 @@ class FdmSwaggerValidator:
         elif not self._is_simple_types(expected_type, actually_value):
             self._add_invalid_type_report(status, path, prop_name, expected_type, actually_value)
 
-    @staticmethod
-    def _is_simple_types(expected_type, value):
-        if expected_type == PropType.STRING:
-            return isinstance(value, string_types)
-        elif expected_type == PropType.BOOLEAN:
-            return isinstance(value, bool)
-        elif expected_type == PropType.INTEGER:
-            return isinstance(value, integer_types) and not isinstance(value, bool)
-        elif expected_type == PropType.NUMBER:
-            return isinstance(value, (integer_types, float)) and not isinstance(value, bool)
-        return False
-
     def _get_model_by_ref(self, model_prop_val):
         model = _get_model_name_from_url(model_prop_val['$ref'])
         return self._models[model]
@@ -357,3 +412,37 @@ class FdmSwaggerValidator:
             for i, item_data in enumerate(data):
                 self._check_types(status, item_data, item_model[PropName.TYPE], item_model, "{}[{}]".format(path, i),
                                   '')
+
+    @staticmethod
+    def _is_simple_types(expected_type, value):
+        if expected_type == PropType.STRING:
+            return isinstance(value, string_types)
+        elif expected_type == PropType.BOOLEAN:
+            return isinstance(value, bool)
+        elif expected_type == PropType.INTEGER:
+            return isinstance(value, integer_types) and not isinstance(value, bool)
+        elif expected_type == PropType.NUMBER:
+            return isinstance(value, (integer_types, float)) and not isinstance(value, bool)
+        return False
+
+    @staticmethod
+    def _is_string_type(model):
+        return PropName.TYPE in model and model[PropName.TYPE] == PropType.STRING
+
+    @staticmethod
+    def _init_report():
+        return {
+            PropName.REQUIRED: [],
+            PropName.INVALID_TYPE: []
+        }
+
+    @staticmethod
+    def _create_path_to_field(path='', field=''):
+        separator = ''
+        if path and field:
+            separator = '.'
+        return "{}{}{}".format(path, separator, field)
+
+    @staticmethod
+    def _is_object(model):
+        return PropName.TYPE in model and model[PropName.TYPE] == PropType.OBJECT

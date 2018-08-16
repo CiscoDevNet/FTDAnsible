@@ -395,16 +395,16 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         validator = FdmSwaggerValidator(mock_data)
         valid, rez = getattr(validator, method)(None, {'name': 'test'})
         assert not valid
-        assert "The operation parameter must be a non-empty string" == rez
+        assert "The operation_name parameter must be a non-empty string" == rez
         valid, rez = getattr(validator, method)('', {'name': 'test'})
         assert not valid
-        assert "The operation parameter must be a non-empty string" == rez
+        assert "The operation_name parameter must be a non-empty string" == rez
         valid, rez = getattr(validator, method)([], {'name': 'test'})
         assert not valid
-        assert "The operation parameter must be a non-empty string" == rez
+        assert "The operation_name parameter must be a non-empty string" == rez
         valid, rez = getattr(validator, method)({}, {'name': 'test'})
         assert not valid
-        assert "The operation parameter must be a non-empty string" == rez
+        assert "The operation_name parameter must be a non-empty string" == rez
 
         valid, rez = getattr(validator, method)('operation_does_not_exist', {'name': 'test'})
         assert 'operation_does_not_exist operation does not support' == rez
@@ -434,19 +434,19 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = FdmSwaggerValidator(mock_data).validate_data(None, {'name': 'test'})
         assert not valid
-        assert "The operation parameter must be a non-empty string" == rez
+        assert "The operation_name parameter must be a non-empty string" == rez
 
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('', {'name': 'test'})
         assert not valid
-        assert "The operation parameter must be a non-empty string" == rez
+        assert "The operation_name parameter must be a non-empty string" == rez
 
         valid, rez = FdmSwaggerValidator(mock_data).validate_data([], {'name': 'test'})
         assert not valid
-        assert "The operation parameter must be a non-empty string" == rez
+        assert "The operation_name parameter must be a non-empty string" == rez
 
         valid, rez = FdmSwaggerValidator(mock_data).validate_data({}, {'name': 'test'})
         assert not valid
-        assert "The operation parameter must be a non-empty string" == rez
+        assert "The operation_name parameter must be a non-empty string" == rez
 
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('operation_does_not_exist', {'name': 'test'})
         assert 'operation_does_not_exist operation does not support' == rez
