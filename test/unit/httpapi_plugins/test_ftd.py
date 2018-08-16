@@ -1,4 +1,5 @@
 import json
+import os
 import unittest
 from unittest import mock
 
@@ -8,7 +9,7 @@ from ansible.module_utils.six import BytesIO, PY3
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.connection import ConnectionError
 
-from httpapi_plugins.ftd import HttpApi
+from httpapi_plugins.ftd import HttpApi, API_TOKEN_PATH_ENV_VAR
 from module_utils.fdm_swagger_client import OPERATIONS, MODELS, FdmSwaggerParser
 from module_utils.http import HTTPMethod
 
@@ -49,6 +50,16 @@ class TestFtdHttpApi(unittest.TestCase):
         assert 'NEW_REFRESH_TOKEN' == self.ftd_plugin.refresh_token
         expected_body = json.dumps({'grant_type': 'refresh_token', 'refresh_token': 'REFRESH_TOKEN'})
         self.connection_mock.send.assert_called_once_with(mock.ANY, expected_body, headers=mock.ANY, method=mock.ANY)
+
+    @patch.dict(os.environ, {API_TOKEN_PATH_ENV_VAR: '/testLoginUrl'})
+    def test_login_should_use_env_variable_when_set(self):
+        self.connection_mock.send.return_value = self._connection_response(
+            {'access_token': 'ACCESS_TOKEN', 'refresh_token': 'REFRESH_TOKEN'}
+        )
+
+        self.ftd_plugin.login('foo', 'bar')
+
+        self.connection_mock.send.assert_called_once_with('/testLoginUrl', mock.ANY, headers=mock.ANY, method=mock.ANY)
 
     def test_login_raises_exception_when_no_refresh_token_and_no_credentials(self):
         with self.assertRaises(AnsibleConnectionFailure) as res:

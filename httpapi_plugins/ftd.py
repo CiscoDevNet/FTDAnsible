@@ -25,8 +25,8 @@ BASE_HEADERS = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
 }
-API_VERSION = "v1"
-API_TOKEN_PATH = "/api/fdm/{version}/fdm/token"
+API_TOKEN_PATH_ENV_VAR = 'FTD_API_TOKEN_PATH'
+DEFAULT_API_TOKEN_PATH = '/api/fdm/v2/fdm/token'
 API_SPEC_PATH = '/apispec/ngfw.json'
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
@@ -61,9 +61,9 @@ class HttpApi(HttpApiBase):
         else:
             raise AnsibleConnectionFailure('Username and password are required for login in absence of refresh token')
 
+        token_url = os.environ.get(API_TOKEN_PATH_ENV_VAR, DEFAULT_API_TOKEN_PATH)
         _, response_data = self.connection.send(
-            API_TOKEN_PATH.format(version=API_VERSION),
-            json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
+            token_url, json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
         )
         response_text = to_text(response_data.getvalue())
 
@@ -81,9 +81,9 @@ class HttpApi(HttpApiBase):
             'access_token': self.access_token,
             'token_to_revoke': self.refresh_token
         }
+        token_url = os.environ.get(API_TOKEN_PATH_ENV_VAR, DEFAULT_API_TOKEN_PATH)
         self.connection.send(
-            API_TOKEN_PATH.format(version=API_VERSION),
-            json.dumps(auth_payload), method=HTTPMethod.POST, headers=self._authorized_headers()
+            token_url, json.dumps(auth_payload), method=HTTPMethod.POST, headers=self._authorized_headers()
         )
         self.refresh_token = None
         self.access_token = None
