@@ -145,12 +145,58 @@ class FdmSwaggerValidator:
         self._models = spec['models']
 
     def validate_query_params(self, operation, params):
-        pass
+        return self._validate_url_params(operation, params, resource='query')
 
     def validate_path_params(self, operation, params):
-        pass
+        return self._validate_url_params(operation, params, resource='path')
 
-    def validate_data(self, operation, data):
+    def _validate_url_params(self, operation, params, resource):
+        if params is None:
+            params = {}
+
+        if not operation or not isinstance(operation, string_types):
+            return False, "The operation parameter must be a non-empty string"
+
+        if not isinstance(params, dict):
+            return False, "The params parameter must be a dict"
+
+        if operation not in self._operations:
+            return False, "{} operation does not support".format(operation)
+
+        operation = self._operations[operation]
+        if PARAMETERS_FIELD in operation and resource in operation[PARAMETERS_FIELD]:
+            spec = operation[PARAMETERS_FIELD][resource]
+            status = self._init_report()
+            self._check_url_params(status, spec, params)
+            if len(status['required']) > 0 or len(status['invalid_type']) > 0:
+                return False, status
+            return True, None
+        else:
+            return True, None
+
+    def _check_url_params(self, status, spec, params):
+        for prop_name in spec.keys():
+            prop = spec[prop_name]
+            if prop['required'] and prop_name not in params:
+                status['required'].append(prop_name)
+                continue
+            if prop_name in params:
+                expected_type = prop[PronName.TYPE]
+                value = params[prop_name]
+                if prop_name in params and not self._is_simple_types(expected_type, value):
+                    self._add_invalid_type_report(status, '', prop_name, expected_type, value)
+
+    @staticmethod
+    def _init_report():
+        return {
+            'required': [],
+            'invalid_type': []
+        }
+
+    def validate_data(self, operation, data=None):
+        if data is None:
+            data = {}
+
         if not operation or not isinstance(operation, string_types):
             return False, "The operation parameter must be a non-empty string"
 
@@ -162,10 +208,8 @@ class FdmSwaggerValidator:
 
         operation = self._operations[operation]
         model = self._models[operation['modelName']]
-        status = {
-            'required': [],
-            'invalid_type': []
-        }
+        status = self._init_report()
+
         self._validate_object(status, model, data, '')
 
         if len(status['required']) > 0 or len(status['invalid_type']) > 0:
@@ -214,7 +258,7 @@ class FdmSwaggerValidator:
             self._add_invalid_type_report(status, path, '', PropType.OBJECT, data)
             return None
 
-        FdmSwaggerValidator._check_required_fields(status, model['required'], data, path)
+        self._check_required_fields(status, model['required'], data, path)
 
         model_properties = model['properties']
         for prop in model_properties.keys():
@@ -237,14 +281,14 @@ class FdmSwaggerValidator:
             self._add_invalid_type_report(status, path, prop_name, expected_type, actually_value)
 
     @staticmethod
-    def _is_simple_types(model_prop, value):
-        if model_prop == PropType.STRING:
+    def _is_simple_types(expected_type, value):
+        if expected_type == PropType.STRING:
             return isinstance(value, string_types)
-        elif model_prop == PropType.BOOLEAN:
+        elif expected_type == PropType.BOOLEAN:
             return isinstance(value, bool)
-        elif model_prop == PropType.INTEGER:
+        elif expected_type == PropType.INTEGER:
             return isinstance(value, integer_types) and not isinstance(value, bool)
-        elif model_prop == PropType.NUMBER:
+        elif expected_type == PropType.NUMBER:
             return isinstance(value, (integer_types, float)) and not isinstance(value, bool)
         return False
 

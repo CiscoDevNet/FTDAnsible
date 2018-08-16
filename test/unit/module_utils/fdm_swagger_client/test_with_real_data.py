@@ -33,16 +33,14 @@ class TestFdmSwagger(unittest.TestCase):
                 if 'example' in models[model_name]:
                     example = models[model_name]['example']
                     try:
-                        rez = validator.validate_data(operation, example)
-                        assert {
-                                   'status': 'valid'
-                               } == rez
+                        valid, rez = validator.validate_data(operation, example)
+                        assert valid
                     except Exception as e:
                         invalid.append(model_name)
         assert invalid == ['TCPPortObject', 'TCPPortObject',
                            'UDPPortObject', 'UDPPortObject', 'ICMPv4PortObject',
                            'ICMPv4PortObject', 'ICMPv6PortObject', 'ICMPv6PortObject',
-                           'StandardAccessList','StandardAccessList',
+                           'StandardAccessList', 'StandardAccessList',
                            'ExtendedAccessList', 'ExtendedAccessList',
                            'ASPathList', 'ASPathList',
                            'RouteMap', 'RouteMap',
@@ -51,7 +49,7 @@ class TestFdmSwagger(unittest.TestCase):
                            'IPV4PrefixList', 'IPV4PrefixList',
                            'IPV6PrefixList', 'IPV6PrefixList',
                            'PolicyList', 'PolicyList',
-                           'SyslogServer','SyslogServer',
+                           'SyslogServer', 'SyslogServer',
                            'HAConfiguration',
                            'TestIdentitySource']
 

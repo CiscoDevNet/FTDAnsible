@@ -101,23 +101,35 @@ nested_mock_data1 = {
 class TestFdmSwaggerValidator(unittest.TestCase):
 
     def test_path_params_valid(self):
+        self.url_data_valid(method='validate_path_params', parameters_type='path')
+
+    def test_query_params_valid(self):
+        self.url_data_valid(method='validate_query_params', parameters_type='query')
+
+    @staticmethod
+    def url_data_valid(method, parameters_type):
         local_mock_spec = {
+            'models': {},
             'operations': {
                 'getNetwork': {
                     'method': 'get',
                     'parameters': {
-                        'path': {
+                        parameters_type: {
                             'objId': {
                                 'required': True,
                                 'type': "string"
                             },
-                            'parentId': {
-                                'required': True,
-                                'type': "string"
-                            },
-                            'someParam': {
+                            'p_integer': {
                                 'required': False,
-                                'type': "string"
+                                'type': "integer"
+                            },
+                            'p_boolean': {
+                                'required': False,
+                                'type': "boolean"
+                            },
+                            'p_number': {
+                                'required': False,
+                                'type': "number"
                             }
                         }
                     }
@@ -126,20 +138,30 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         }
         data = {
             'objId': "value1",
-            'parentId': 'value2'
+            'p_integer': 1,
+            'p_boolean': True,
+            'p_number': 2.3
         }
-        valid, rez = FdmSwaggerValidator(local_mock_spec).validate_path_params('getNetwork', data)
-
+        validator = FdmSwaggerValidator(local_mock_spec)
+        valid, rez = getattr(validator, method)('getNetwork', data)
         assert valid
         assert rez is None
 
     def test_path_params_invalid(self):
+        self.url_data_invalid(method='validate_path_params', parameters_type='path')
+
+    def test_query_params_invalid(self):
+        self.url_data_invalid(method='validate_query_params', parameters_type='query')
+
+    @staticmethod
+    def url_data_invalid(method, parameters_type):
         local_mock_spec = {
+            'models': {},
             'operations': {
                 'getNetwork': {
                     'method': 'get',
                     'parameters': {
-                        'path': {
+                        parameters_type: {
                             'objId': {
                                 'required': True,
                                 'type': "string"
@@ -151,28 +173,249 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                             'someParam': {
                                 'required': False,
                                 'type': "string"
+                            },
+                            'p_integer': {
+                                'required': False,
+                                'type': "integer"
+                            },
+                            'p_boolean': {
+                                'required': False,
+                                'type': "boolean"
+                            },
+                            'p_number': {
+                                'required': False,
+                                'type': "number"
                             }
                         }
                     }
                 }
             }
         }
-        data = None
-        valid, rez = FdmSwaggerValidator(local_mock_spec).validate_path_params('getNetwork', data)
-
+        validator = FdmSwaggerValidator(local_mock_spec)
+        valid, rez = getattr(validator, method)('getNetwork', None)
         assert not valid
         assert {
                    'required': ['objId', 'parentId'],
                    'invalid_type': []
                } == rez
+        valid, rez = getattr(validator, method)('getNetwork', {})
+        assert not valid
+        assert {
+                   'required': ['objId', 'parentId'],
+                   'invalid_type': []
+               } == rez
+        data = {
+            'someParam': "test"
+        }
+        valid, rez = getattr(validator, method)('getNetwork', data)
+        assert not valid
+        assert {
+                   'required': ['objId', 'parentId'],
+                   'invalid_type': []
+               } == rez
+        data = {
+            'objId': 1,
+            'parentId': True,
+            'someParam': [],
+            'p_integer': 1.2,
+            'p_boolean': 0,
+            'p_number': False
+        }
+        valid, rez = getattr(validator, method)('getNetwork', data)
+        assert not valid
+        assert {
+                   'required': [],
+                   'invalid_type': [
+                       {
+                           'path': 'objId',
+                           'expected_type': 'string',
+                           'actually_value': 1
+                       },
+                       {
+                           'path': 'parentId',
+                           'expected_type': 'string',
+                           'actually_value': True
+                       },
+                       {
+                           'path': 'someParam',
+                           'expected_type': 'string',
+                           'actually_value': []
+                       },
+                       {
+                           'path': 'p_integer',
+                           'expected_type': 'integer',
+                           'actually_value': 1.2
+                       },
+                       {
+                           'path': 'p_boolean',
+                           'expected_type': 'boolean',
+                           'actually_value': 0
+                       },
+                       {
+                           'path': 'p_number',
+                           'expected_type': 'number',
+                           'actually_value': False
+                       }
+                   ]
+               } == rez
+        data = {
+            'objId': {},
+            'parentId': 0,
+            'someParam': 1.2,
+            'p_integer': True,
+            'p_boolean': 1,
+            'p_number': True
+        }
+        valid, rez = getattr(validator, method)('getNetwork', data)
+        assert not valid
+        assert {
+                   'required': [],
+                   'invalid_type': [
+                       {
+                           'path': 'objId',
+                           'expected_type': 'string',
+                           'actually_value': {}
+                       },
+                       {
+                           'path': 'parentId',
+                           'expected_type': 'string',
+                           'actually_value': 0
+                       },
+                       {
+                           'path': 'someParam',
+                           'expected_type': 'string',
+                           'actually_value': 1.2
+                       },
+                       {
+                           'path': 'p_integer',
+                           'expected_type': 'integer',
+                           'actually_value': True
+                       },
+                       {
+                           'path': 'p_boolean',
+                           'expected_type': 'boolean',
+                           'actually_value': 1
+                       },
+                       {
+                           'path': 'p_number',
+                           'expected_type': 'number',
+                           'actually_value': True
+                       }
+                   ]
+               } == rez
+        data = {
+            'objId': {},
+            'parentId': 0,
+            'someParam': 1.2,
+            'p_integer': "1",
+            'p_boolean': "",
+            'p_number': "2"
+        }
+        valid, rez = getattr(validator, method)('getNetwork', data)
+        assert not valid
+        assert {
+                   'required': [],
+                   'invalid_type': [
+                       {
+                           'path': 'objId',
+                           'expected_type': 'string',
+                           'actually_value': {}
+                       },
+                       {
+                           'path': 'parentId',
+                           'expected_type': 'string',
+                           'actually_value': 0
+                       },
+                       {
+                           'path': 'someParam',
+                           'expected_type': 'string',
+                           'actually_value': 1.2
+                       },
+                       {
+                           'path': 'p_integer',
+                           'expected_type': 'integer',
+                           'actually_value': "1"
+                       },
+                       {
+                           'path': 'p_boolean',
+                           'expected_type': 'boolean',
+                           'actually_value': ""
+                       },
+                       {
+                           'path': 'p_number',
+                           'expected_type': 'number',
+                           'actually_value': "2"
+                       }
+                   ]
+               } == rez
 
-    def test_query_params__(self):
-        assert False
+    def test_validate_path_params_method_with_empty_data(self):
+        self.validate_url_data_with_empty_data(method='validate_path_params', parameters_type='path')
+
+    def test_validate_query_params_method_with_empty_data(self):
+        self.validate_url_data_with_empty_data(method='validate_query_params', parameters_type='query')
+
+    @staticmethod
+    def validate_url_data_with_empty_data(method, parameters_type):
+        local_mock_spec = {
+            'models': {},
+            'operations': {
+                'getNetwork': {
+                    'method': 'get',
+                    'parameters': {
+                        parameters_type: {
+                            'objId': {
+                                'required': True,
+                                'type': "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        validator = FdmSwaggerValidator(local_mock_spec)
+        valid, rez = getattr(validator, method)('getNetwork', None)
+        assert not valid
+        assert {
+                   'required': ['objId'],
+                   'invalid_type': []
+               } == rez
+        valid, rez = getattr(validator, method)('getNetwork', '')
+        assert not valid
+        assert "The params parameter must be a dict" == rez
+        valid, rez = getattr(validator, method)('getNetwork', [])
+        assert not valid
+        assert "The params parameter must be a dict" == rez
+        valid, rez = getattr(validator, method)('getNetwork', {})
+        assert not valid
+        assert {
+                   'required': ['objId'],
+                   'invalid_type': []
+               } == rez
+        validator = FdmSwaggerValidator(mock_data)
+        valid, rez = getattr(validator, method)(None, {'name': 'test'})
+        assert not valid
+        assert "The operation parameter must be a non-empty string" == rez
+        valid, rez = getattr(validator, method)('', {'name': 'test'})
+        assert not valid
+        assert "The operation parameter must be a non-empty string" == rez
+        valid, rez = getattr(validator, method)([], {'name': 'test'})
+        assert not valid
+        assert "The operation parameter must be a non-empty string" == rez
+        valid, rez = getattr(validator, method)({}, {'name': 'test'})
+        assert not valid
+        assert "The operation parameter must be a non-empty string" == rez
+
+        valid, rez = getattr(validator, method)('operation_does_not_exist', {'name': 'test'})
+        assert 'operation_does_not_exist operation does not support' == rez
 
     def test_validate_data_method_with_empty_data(self):
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', None)
         assert not valid
-        assert "The data parameter must be a dict" == rez
+        assert {
+                   'required': ['subType', 'type', 'value'],
+                   'invalid_type': []
+               } == rez
 
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', '')
         assert not valid
