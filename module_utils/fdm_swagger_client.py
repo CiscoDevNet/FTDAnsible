@@ -5,22 +5,37 @@ try:
 except (ImportError, ModuleNotFoundError):
     from module_utils.http import HTTPMethod
 
-MODEL_NAME_FIELD = 'modelName'
-URL_FIELD = 'url'
-METHOD_FIELD = 'method'
-PARAMETERS_FIELD = 'parameters'
-
-PATHS = 'paths'
-OPERATION_ID = 'operationId'
 FILE_MODEL_NAME = '_File'
 SUCCESS_RESPONSE_CODE = '200'
-BASE_PATH = 'basePath'
-DEFINITIONS = 'definitions'
-OPERATIONS = 'operations'
-SCHEMA = 'schema'
-MODELS = 'models'
-REF = '$ref'
-ALL_OF = 'allOf'
+
+
+class PropName:
+    ENUM = 'enum'
+    TYPE = 'type'
+    REQUIRED = 'required'
+    INVALID_TYPE = 'invalid_type'
+    REF = '$ref'
+    ALL_OF = 'allOf'
+    BASE_PATH = 'basePath'
+    DEFINITIONS = 'definitions'
+    OPERATIONS = 'operations'
+    PATHS = 'paths'
+    OPERATION_ID = 'operationId'
+    PARAMETERS_FIELD = 'parameters'
+    MODEL_NAME_FIELD = 'modelName'
+    URL_FIELD = 'url'
+    METHOD_FIELD = 'method'
+    SCHEMA = 'schema'
+    MODELS = 'models'
+    ITEMS = 'items'
+    PROPERTIES = 'properties'
+    RESPONSES = 'responses'
+    NAME = 'name'
+
+
+class OperationParams:
+    PATH = 'path'
+    QUERY = 'query'
 
 
 def _get_model_name_from_url(_schema_ref):
@@ -32,28 +47,28 @@ class FdmSwaggerParser:
     _definitions = None
 
     def parse_spec(self, spec):
-        self._definitions = spec[DEFINITIONS]
+        self._definitions = spec[PropName.DEFINITIONS]
         config = {
-            MODELS: self._definitions,
-            OPERATIONS: self._get_operations(spec)
+            PropName.MODELS: self._definitions,
+            PropName.OPERATIONS: self._get_operations(spec)
         }
         return config
 
     def _get_operations(self, spec):
-        base_path = spec[BASE_PATH]
-        paths_dict = spec[PATHS]
+        base_path = spec[PropName.BASE_PATH]
+        paths_dict = spec[PropName.PATHS]
         operations_dict = {}
         for url, operation_params in paths_dict.items():
             for method, params in operation_params.items():
                 operation = {
-                    METHOD_FIELD: method,
-                    URL_FIELD: base_path + url,
-                    MODEL_NAME_FIELD: self._get_model_name(method, params)
+                    PropName.METHOD_FIELD: method,
+                    PropName.URL_FIELD: base_path + url,
+                    PropName.MODEL_NAME_FIELD: self._get_model_name(method, params)
                 }
-                if PARAMETERS_FIELD in params:
-                    operation[PARAMETERS_FIELD] = self._get_rest_params(params[PARAMETERS_FIELD])
+                if PropName.PARAMETERS_FIELD in params:
+                    operation[PropName.PARAMETERS_FIELD] = self._get_rest_params(params[PropName.PARAMETERS_FIELD])
 
-                operation_id = params[OPERATION_ID]
+                operation_id = params[PropName.OPERATION_ID]
                 operations_dict[operation_id] = operation
         return operations_dict
 
@@ -67,10 +82,10 @@ class FdmSwaggerParser:
 
     def _get_model_name_for_post_put_requests(self, params):
         model_name = None
-        if PARAMETERS_FIELD in params:
-            body_param_dict = self._get_body_param_from_parameters(params[PARAMETERS_FIELD])
+        if PropName.PARAMETERS_FIELD in params:
+            body_param_dict = self._get_body_param_from_parameters(params[PropName.PARAMETERS_FIELD])
             if body_param_dict:
-                schema_ref = body_param_dict[SCHEMA][REF]
+                schema_ref = body_param_dict[PropName.SCHEMA][PropName.REF]
                 model_name = self._get_model_name_by_schema_ref(schema_ref)
         if model_name is None:
             model_name = self._get_model_name_from_responses(params)
@@ -81,15 +96,15 @@ class FdmSwaggerParser:
         return next((param for param in params if param['in'] == 'body'), None)
 
     def _get_model_name_from_responses(self, params):
-        responses = params['responses']
+        responses = params[PropName.RESPONSES]
         if SUCCESS_RESPONSE_CODE in responses:
-            response = responses[SUCCESS_RESPONSE_CODE][SCHEMA]
-            if REF in response:
-                return self._get_model_name_by_schema_ref(response[REF])
-            elif 'properties' in response:
-                ref = response['properties']['items']['items'][REF]
+            response = responses[SUCCESS_RESPONSE_CODE][PropName.SCHEMA]
+            if PropName.REF in response:
+                return self._get_model_name_by_schema_ref(response[PropName.REF])
+            elif PropName.PROPERTIES in response:
+                ref = response[PropName.PROPERTIES][PropName.ITEMS][PropName.ITEMS][PropName.REF]
                 return self._get_model_name_by_schema_ref(ref)
-            elif ('type' in response) and response['type'] == "file":
+            elif (PropName.TYPE in response) and response[PropName.TYPE] == "file":
                 return FILE_MODEL_NAME
         else:
             return None
@@ -98,29 +113,29 @@ class FdmSwaggerParser:
         path = {}
         query = {}
         operation_param = {
-            'path': path,
-            'query': query
+            OperationParams.PATH: path,
+            OperationParams.QUERY: query
         }
         for param in params:
             in_param = param['in']
-            if in_param == 'query':
-                query[param['name']] = self._simplify_param_def(param)
-            elif in_param == 'path':
-                path[param['name']] = self._simplify_param_def(param)
+            if in_param == OperationParams.QUERY:
+                query[param[PropName.NAME]] = self._simplify_param_def(param)
+            elif in_param == OperationParams.PATH:
+                path[param[PropName.NAME]] = self._simplify_param_def(param)
         return operation_param
 
     @staticmethod
     def _simplify_param_def(param):
         return {
-            'type': param['type'],
-            'required': param['required']
+            PropName.TYPE: param[PropName.TYPE],
+            PropName.REQUIRED: param[PropName.REQUIRED]
         }
 
     def _get_model_name_by_schema_ref(self, _schema_ref):
         model_name = _get_model_name_from_url(_schema_ref)
         model_def = self._definitions[model_name]
-        if ALL_OF in model_def:
-            return self._get_model_name_by_schema_ref(model_def[ALL_OF][0][REF])
+        if PropName.ALL_OF in model_def:
+            return self._get_model_name_by_schema_ref(model_def[PropName.ALL_OF][0][PropName.REF])
         else:
             return model_name
 
@@ -134,21 +149,16 @@ class PropType:
     ARRAY = 'array'
 
 
-class PronName:
-    ENUM = 'enum'
-    TYPE = 'type'
-
-
 class FdmSwaggerValidator:
     def __init__(self, spec):
-        self._operations = spec['operations']
-        self._models = spec['models']
+        self._operations = spec[PropName.OPERATIONS]
+        self._models = spec[PropName.MODELS]
 
     def validate_query_params(self, operation, params):
-        return self._validate_url_params(operation, params, resource='query')
+        return self._validate_url_params(operation, params, resource=OperationParams.QUERY)
 
     def validate_path_params(self, operation, params):
-        return self._validate_url_params(operation, params, resource='path')
+        return self._validate_url_params(operation, params, resource=OperationParams.PATH)
 
     def _validate_url_params(self, operation, params, resource):
         if params is None:
@@ -164,11 +174,11 @@ class FdmSwaggerValidator:
             return False, "{} operation does not support".format(operation)
 
         operation = self._operations[operation]
-        if PARAMETERS_FIELD in operation and resource in operation[PARAMETERS_FIELD]:
-            spec = operation[PARAMETERS_FIELD][resource]
+        if PropName.PARAMETERS_FIELD in operation and resource in operation[PropName.PARAMETERS_FIELD]:
+            spec = operation[PropName.PARAMETERS_FIELD][resource]
             status = self._init_report()
             self._check_url_params(status, spec, params)
-            if len(status['required']) > 0 or len(status['invalid_type']) > 0:
+            if len(status[PropName.REQUIRED]) > 0 or len(status[PropName.INVALID_TYPE]) > 0:
                 return False, status
             return True, None
         else:
@@ -177,11 +187,11 @@ class FdmSwaggerValidator:
     def _check_url_params(self, status, spec, params):
         for prop_name in spec.keys():
             prop = spec[prop_name]
-            if prop['required'] and prop_name not in params:
-                status['required'].append(prop_name)
+            if prop[PropName.REQUIRED] and prop_name not in params:
+                status[PropName.REQUIRED].append(prop_name)
                 continue
             if prop_name in params:
-                expected_type = prop[PronName.TYPE]
+                expected_type = prop[PropName.TYPE]
                 value = params[prop_name]
                 if prop_name in params and not self._is_simple_types(expected_type, value):
                     self._add_invalid_type_report(status, '', prop_name, expected_type, value)
@@ -189,8 +199,8 @@ class FdmSwaggerValidator:
     @staticmethod
     def _init_report():
         return {
-            'required': [],
-            'invalid_type': []
+            PropName.REQUIRED: [],
+            PropName.INVALID_TYPE: []
         }
 
     def validate_data(self, operation, data=None):
@@ -212,7 +222,7 @@ class FdmSwaggerValidator:
 
         self._validate_object(status, model, data, '')
 
-        if len(status['required']) > 0 or len(status['invalid_type']) > 0:
+        if len(status[PropName.REQUIRED]) > 0 or len(status[PropName.INVALID_TYPE]) > 0:
             return False, status
         return True, None
 
@@ -224,19 +234,19 @@ class FdmSwaggerValidator:
 
     @staticmethod
     def _is_enum(model):
-        return FdmSwaggerValidator._is_string_type(model) and PronName.ENUM in model
+        return FdmSwaggerValidator._is_string_type(model) and PropName.ENUM in model
 
     @staticmethod
     def _is_string_type(model):
-        return PronName.TYPE in model and model[PronName.TYPE] == PropType.STRING
+        return PropName.TYPE in model and model[PropName.TYPE] == PropType.STRING
 
     def _check_enum(self, status, model, value, path):
-        if value not in model[PronName.ENUM]:
-            self._add_invalid_type_report(status, path, '', PronName.ENUM, value)
+        if value not in model[PropName.ENUM]:
+            self._add_invalid_type_report(status, path, '', PropName.ENUM, value)
 
     @staticmethod
     def _add_invalid_type_report(status, path, prop_name, expected_type, actually_value):
-        status['invalid_type'].append({
+        status[PropName.INVALID_TYPE].append({
             'path': FdmSwaggerValidator._create_path_to_field(path, prop_name),
             'expected_type': expected_type,
             'actually_value': actually_value
@@ -251,20 +261,20 @@ class FdmSwaggerValidator:
 
     @staticmethod
     def _is_object(model):
-        return PronName.TYPE in model and model[PronName.TYPE] == PropType.OBJECT
+        return PropName.TYPE in model and model[PropName.TYPE] == PropType.OBJECT
 
     def _check_object(self, status, model, data, path):
         if not isinstance(data, dict):
             self._add_invalid_type_report(status, path, '', PropType.OBJECT, data)
             return None
 
-        self._check_required_fields(status, model['required'], data, path)
+        self._check_required_fields(status, model[PropName.REQUIRED], data, path)
 
-        model_properties = model['properties']
+        model_properties = model[PropName.PROPERTIES]
         for prop in model_properties.keys():
             if prop in data:
                 model_prop_val = model_properties[prop]
-                expected_type = model_prop_val[PronName.TYPE]
+                expected_type = model_prop_val[PropName.TYPE]
                 actually_value = data[prop]
                 self._check_types(status, actually_value, expected_type, model_prop_val, path, prop)
 
@@ -301,12 +311,13 @@ class FdmSwaggerValidator:
         missed_required_fields = [FdmSwaggerValidator._create_path_to_field(path, field) for field in
                                   required_fields if field not in data.keys()]
         if len(missed_required_fields) > 0:
-            status['required'] += missed_required_fields
+            status[PropName.REQUIRED] += missed_required_fields
 
     def _check_array(self, status, model, data, path):
         if not isinstance(data, list):
             self._add_invalid_type_report(status, path, '', PropType.ARRAY, data)
         else:
-            item_model = model['items']
+            item_model = model[PropName.ITEMS]
             for i, item_data in enumerate(data):
-                self._check_types(status, item_data, item_model['type'], item_model, "{}[{}]".format(path, i), '')
+                self._check_types(status, item_data, item_model[PropName.TYPE], item_model, "{}[{}]".format(path, i),
+                                  '')
