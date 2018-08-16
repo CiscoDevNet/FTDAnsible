@@ -41,9 +41,6 @@
           objId: "{{ accessrule_ansible_accessrule['id'] }}"
           parentId: "default"
 
-#    - name: Deploy changes
-#      ftd_deployment:
-
     - name: Delete an access rule
       ftd_configuration:
         operation: 'deleteAccessRule'

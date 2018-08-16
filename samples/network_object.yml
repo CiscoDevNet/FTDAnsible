@@ -46,9 +46,6 @@
           subType: "HOST"
           type: "networkobject"
 
-#    - name: Deploy changes
-#      ftd_deployment:
-
     - name: Refresh a NETWORK network object
       ftd_configuration:
         operation: 'getNetworkObject'
