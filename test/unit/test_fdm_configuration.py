@@ -119,10 +119,10 @@ class TestFtdConfiguration(object):
         set_module_args({'operation': 'failure'})
         resource_mock.send_request.side_effect = ConfigurationError('Foo error.')
 
-        with pytest.raises(AnsibleFailJson) as exс:
+        with pytest.raises(AnsibleFailJson) as exc:
             self.module.main()
 
-        result = exс.value.args[0]
+        result = exc.value.args[0]
         assert result['failed']
         assert 'Failed to execute failure operation because of the configuration error: Foo error.' == result['msg']
 

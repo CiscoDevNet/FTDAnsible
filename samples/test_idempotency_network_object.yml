@@ -3,13 +3,14 @@
 
   tasks:
     - name: addNetworkObject should create a new network
-      ftd_network_object:
+      ftd_configuration:
         operation: 'addNetworkObject'
-        name: "ansible-test-network"
-        description: "Ansible Integration tests in action"
-        subType: "HOST"
-        value: "192.22.22.24"
-        type: "networkobject"
+        data:
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "HOST"
+          value: "192.22.22.24"
+          type: "networkobject"
         register_as: "testObj"
       register: result
     - assert:
@@ -20,13 +21,14 @@
 
 
     - name: addNetworkObject should NOT create a network when the network with the same name exists
-      ftd_network_object:
+      ftd_configuration:
         operation: 'addNetworkObject'
-        name: "ansible-test-network"
-        description: "Ansible Integration tests in action"
-        subType: "HOST"
-        value: "192.22.22.24"
-        type: "networkobject"
+        data:
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "HOST"
+          value: "192.22.22.24"
+          type: "networkobject"
         register_as: "sameTestObj"
       register: result
     - assert:
@@ -37,13 +39,14 @@
 
 
     - name: addNetworkObject should raise an error when the network with the same name but different params exists
-      ftd_network_object:
+      ftd_configuration:
         operation: 'addNetworkObject'
-        name: "ansible-test-network"
-        description: "Ansible Integration tests in action"
-        subType: "NETWORK"
-        value: "192.22.22.24/12"
-        type: "networkobject"
+        data:
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "NETWORK"
+          value: "192.22.22.24/12"
+          type: "networkobject"
       register: result
       ignore_errors: yes
     - assert:
@@ -53,34 +56,37 @@
           - "'An object with the same name but different parameters already exists' in result.msg"
 
 
-    - name: upsertNetworkObject should update the existing network when it exists
-      ftd_network_object:
-        operation: 'upsertNetworkObject'
-        name: "ansible-test-network"
-        description: "Ansible Integration tests in action"
-        subType: "NETWORK"
-        value: "192.23.23.0/24"
-        type: "networkobject"
-        register_as: "upsertedTestObj"
-      register: result
-    - assert:
-        that:
-          - result.changed == true
-          - upsertedTestObj['id'] == testObj['id']
-          - upsertedTestObj['subType'] == "NETWORK"
-          - upsertedTestObj['value'] == "192.23.23.0/24"
+#    - name: upsertNetworkObject should update the existing network when it exists
+#      ftd_configuration:
+#        operation: 'upsertNetworkObject'
+#        data:
+#          name: "ansible-test-network"
+#          description: "Ansible Integration tests in action"
+#          subType: "NETWORK"
+#          value: "192.23.23.0/24"
+#          type: "networkobject"
+#        register_as: "upsertedTestObj"
+#      register: result
+#    - assert:
+#        that:
+#          - result.changed == true
+#          - upsertedTestObj['id'] == testObj['id']
+#          - upsertedTestObj['subType'] == "NETWORK"
+#          - upsertedTestObj['value'] == "192.23.23.0/24"
 
 
     - name: editNetworkObject should update the existing network
-      ftd_network_object:
+      ftd_configuration:
         operation: 'editNetworkObject'
-        objId: "{{ upsertedTestObj['id'] }}"
-        version: "{{ upsertedTestObj['version'] }}"
-        name: "ansible-test-network"
-        description: "Ansible Integration tests in action"
-        subType: "NETWORK"
-        value: "192.168.2.0/24"
-        type: "networkobject"
+        path_params:
+          objId: "{{ testObj['id'] }}"
+        data:
+          version: "{{ testObj['version'] }}"
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "NETWORK"
+          value: "192.168.2.0/24"
+          type: "networkobject"
         register_as: "updatedTestObj"
       register: result
     - assert:
@@ -92,15 +98,17 @@
 
 
     - name: editNetworkObject should NOT update the network if there are no changes
-      ftd_network_object:
+      ftd_configuration:
         operation: 'editNetworkObject'
-        objId: "{{ updatedTestObj['id'] }}"
-        version: "{{ updatedTestObj['version'] }}"
-        name: "ansible-test-network"
-        description: "Ansible Integration tests in action"
-        subType: "NETWORK"
-        value: "192.168.2.0/24"
-        type: "networkobject"
+        path_params:
+          objId: "{{ updatedTestObj['id'] }}"
+        data:
+          version: "{{ updatedTestObj['version'] }}"
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "NETWORK"
+          value: "192.168.2.0/24"
+          type: "networkobject"
         register_as: "updatedTestObj"
       register: result
     - assert:
@@ -110,9 +118,10 @@
 
 
     - name: deleteNetworkObject should delete the network
-      ftd_network_object:
+      ftd_configuration:
         operation: 'deleteNetworkObject'
-        objId: "{{ testObj['id'] }}"
+        path_params:
+          objId: "{{ testObj['id'] }}"
       register: result
     - assert:
         that:
@@ -120,9 +129,10 @@
 
 
     - name: deleteNetworkObject should silently pass when the referenced network does not exist
-      ftd_network_object:
+      ftd_configuration:
         operation: 'deleteNetworkObject'
-        objId: "{{ testObj['id'] }}"
+        path_params:
+          objId: "{{ testObj['id'] }}"
       register: result
     - assert:
         that:
