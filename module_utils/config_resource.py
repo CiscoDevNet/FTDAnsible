@@ -13,6 +13,7 @@ except (ImportError, ModuleNotFoundError):
 
 UNPROCESSABLE_ENTITY_STATUS = 422
 INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
+DUPLICATE_NAME_ERROR_MESSAGE = "Validation failed due to a duplicate name"
 
 
 class BaseConfigObjectResource(object):
@@ -32,30 +33,36 @@ class BaseConfigObjectResource(object):
         return next((item for item in item_generator if item['name'] == name), None)
 
     def add_object(self, url_path, body_params, path_params=None, query_params=None, update_if_exists=False):
-        existing_obj = self.get_object_by_name(url_path, body_params['name'], path_params)
+        def is_duplicate_name_error(err):
+            return err.code == UNPROCESSABLE_ENTITY_STATUS and DUPLICATE_NAME_ERROR_MESSAGE in str(err)
 
-        if not existing_obj:
-            return self.send_request(url_path=url_path, http_method=HTTPMethod.POST, body_params=body_params,
-                                     path_params=path_params, query_params=query_params)
-        elif equal_objects(existing_obj, body_params):
-            return existing_obj
-        elif update_if_exists:
-            if path_params is None:
-                path_params = {}
-            path_params['objId'] = existing_obj['id']
+        def update_existing_object(obj):
+            new_path_params = {} if path_params is None else path_params
+            new_path_params['objId'] = obj['id']
             return self.send_request(url_path=url_path + '/{objId}',
                                      http_method=HTTPMethod.PUT,
-                                     body_params=copy_identity_properties(existing_obj, body_params),
-                                     path_params=path_params,
+                                     body_params=copy_identity_properties(obj, body_params),
+                                     path_params=new_path_params,
                                      query_params=query_params)
-        else:
-            raise ConfigurationError(
-                'Cannot add new object. An object with the same name but different parameters already exists.')
+
+        try:
+            return self.send_request(url_path=url_path, http_method=HTTPMethod.POST, body_params=body_params,
+                                     path_params=path_params, query_params=query_params)
+        except ConnectionError as e:
+            if is_duplicate_name_error(e):
+                existing_obj = self.get_object_by_name(url_path, body_params['name'], path_params)
+                if equal_objects(existing_obj, body_params):
+                    return existing_obj
+                elif update_if_exists:
+                    return update_existing_object(existing_obj)
+                else:
+                    raise ConfigurationError(
+                        'Cannot add new object. An object with the same name but different parameters already exists.')
+            else:
+                raise e
 
     def delete_object(self, url_path, path_params):
         def is_invalid_uuid_error(err):
-            # Ansible does not pass HTTP errors from plugin to module.
-            # The only available information is HTTP status stored in the message.
             return err.code == UNPROCESSABLE_ENTITY_STATUS and INVALID_UUID_ERROR_MESSAGE in str(err)
 
         try:
