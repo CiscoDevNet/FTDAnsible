@@ -47,6 +47,45 @@ class FdmSwaggerParser:
     _definitions = None
 
     def parse_spec(self, spec):
+        """
+        Extract data for the FdmSwaggerValidator class
+        We simplify a swagger format.
+        Also, resolve a model name for each operation
+        :param spec: data in the swagger format
+        :return:
+            The models field contains model definition from swagger #https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions
+            {
+                'models':{
+                    'model_name':{...},
+                    ...
+                },
+                'operations':{
+                    'operation_name':{
+                        'method': 'get', #post, put, delete
+                        'url': '/api/fdm/v2/object/networks', #url already contains a value from `basePath`
+                        'modelName': 'NetworkObject', # it is a link to the model from 'models'
+                                                      # None - for a delete operation or we don't have information
+                                                      # '_File' - if an endpoint works with files
+                        'parameters': {
+                            'path':{
+                                'param_name':{
+                                    'type': 'string'#integer, boolean, number
+                                    'required' True #False
+                                }
+                                ...
+                                },
+                            'query':{
+                                'param_name':{
+                                    'type': 'string'#integer, boolean, number
+                                    'required' True #False
+                                }
+                                ...
+                            }
+                        }
+                    }
+                }
+            }
+        """
         self._definitions = spec[PropName.DEFINITIONS]
         config = {
             PropName.MODELS: self._definitions,
@@ -232,9 +271,8 @@ class FdmSwaggerValidator:
         elif self._is_object(model):
             self._check_object(status, model, data, path)
 
-    @staticmethod
-    def _is_enum(model):
-        return FdmSwaggerValidator._is_string_type(model) and PropName.ENUM in model
+    def _is_enum(self, model):
+        return self._is_string_type(model) and PropName.ENUM in model
 
     @staticmethod
     def _is_string_type(model):
@@ -244,10 +282,9 @@ class FdmSwaggerValidator:
         if value not in model[PropName.ENUM]:
             self._add_invalid_type_report(status, path, '', PropName.ENUM, value)
 
-    @staticmethod
-    def _add_invalid_type_report(status, path, prop_name, expected_type, actually_value):
+    def _add_invalid_type_report(self, status, path, prop_name, expected_type, actually_value):
         status[PropName.INVALID_TYPE].append({
-            'path': FdmSwaggerValidator._create_path_to_field(path, prop_name),
+            'path': self._create_path_to_field(path, prop_name),
             'expected_type': expected_type,
             'actually_value': actually_value
         })
@@ -306,9 +343,8 @@ class FdmSwaggerValidator:
         model = _get_model_name_from_url(model_prop_val['$ref'])
         return self._models[model]
 
-    @staticmethod
-    def _check_required_fields(status, required_fields, data, path):
-        missed_required_fields = [FdmSwaggerValidator._create_path_to_field(path, field) for field in
+    def _check_required_fields(self, status, required_fields, data, path):
+        missed_required_fields = [self._create_path_to_field(path, field) for field in
                                   required_fields if field not in data.keys()]
         if len(missed_required_fields) > 0:
             status[PropName.REQUIRED] += missed_required_fields
