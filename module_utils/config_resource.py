@@ -1,7 +1,7 @@
+import json
 from functools import partial
 
-from ansible.module_utils.basic import to_text
-from ansible.module_utils.six.moves.urllib.error import HTTPError
+from ansible.module_utils.connection import ConnectionError
 
 # TODO: remove import workarounds when module_utils are moved to the Ansible core
 try:
@@ -54,14 +54,15 @@ class BaseConfigObjectResource(object):
 
     def delete_object(self, url_path, path_params):
         def is_invalid_uuid_error(err):
-            err_msg = to_text(err.read())
-            return err.code == UNPROCESSABLE_ENTITY_STATUS and INVALID_UUID_ERROR_MESSAGE in err_msg
+            # Ansible does not pass HTTP errors from plugin to module.
+            # The only available information is HTTP status stored in the message.
+            return err.code == UNPROCESSABLE_ENTITY_STATUS and INVALID_UUID_ERROR_MESSAGE in str(err)
 
         try:
             return self.send_request(url_path=url_path, http_method=HTTPMethod.DELETE, path_params=path_params)
-        except HTTPError as e:
+        except ConnectionError as e:
             if is_invalid_uuid_error(e):
-                return {'response': 'Referenced object does not exist'}
+                return {'status': 'Referenced object does not exist'}
             else:
                 raise e
 
@@ -77,8 +78,13 @@ class BaseConfigObjectResource(object):
                                      path_params=path_params, query_params=query_params)
 
     def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
+        def raise_for_failure(resp):
+            if not resp['success']:
+                raise ConnectionError(json.dumps(resp['response']), code=resp['status_code'])
+
         response = self._conn.send_request(url_path=url_path, http_method=http_method, body_params=body_params,
                                            path_params=path_params, query_params=query_params)
+        raise_for_failure(response)
         if http_method != HTTPMethod.GET:
             self.config_changed = True
-        return response
+        return response['response']

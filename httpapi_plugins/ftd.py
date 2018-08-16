@@ -65,7 +65,7 @@ class HttpApi(HttpApiBase):
         _, response_data = self.connection.send(
             self._get_api_token_path(), json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
         )
-        response = self._response_to_json(response_data)
+        response = self._response_to_json(response_data.getvalue())
 
         try:
             self.refresh_token = response['refresh_token']
@@ -101,16 +101,16 @@ class HttpApi(HttpApiBase):
             )
             return {
                 'success': True,
-                'status': response.getcode(),
-                'response': self._response_to_json(response_data)
+                'status_code': response.getcode(),
+                'response': self._response_to_json(response_data.getvalue())
             }
         # Being invoked via JSON-RPC, this method does not serialize and pass HTTPError correctly to the method caller.
         # Thus, in order to handle non-200 responses, we need to wrap them into a simple structure and pass explicitly.
         except HTTPError as e:
             return {
                 'success': False,
-                'status': e.code,
-                'response': self._response_to_json(e)
+                'status_code': e.code,
+                'response': self._response_to_json(e.read())
             }
 
     def upload_file(self, from_path, to_url):
@@ -161,7 +161,7 @@ class HttpApi(HttpApiBase):
 
     @staticmethod
     def _response_to_json(response_data):
-        response_text = to_text(response_data.read())
+        response_text = to_text(response_data)
         try:
             return json.loads(response_text) if response_text else {}
         # JSONDecodeError only available on Python 3.5+

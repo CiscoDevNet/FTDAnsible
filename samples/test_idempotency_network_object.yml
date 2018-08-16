@@ -137,4 +137,4 @@
     - assert:
         that:
           - result.changed == false
-          - "'Referenced object does not exist' in result.response"
+          - "'Referenced object does not exist' in result.response.status"
