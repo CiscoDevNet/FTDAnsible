@@ -80,7 +80,8 @@ class FdmSwaggerParser:
                                 ...
                             }
                         }
-                    }
+                    },
+                    ...
                 }
             }
         """
@@ -196,22 +197,23 @@ class FdmSwaggerValidator:
 
     def validate_data(self, operation_name, data=None):
         """
-        Validate data for post|put requests
-        :param operation_name: We use the operation name to get model specification
-        :param data: data should be in the format that the model(from operation) expects
+        Validate data for the post|put requests
+        :param operation_name: The value must be non empty string.
+                               The operation name is used to get a model specification
+        :param data: The value must be in the format that the model(from operation) expects
         :return:(Boolean, msg)
             (True, None) - if data valid
             Invalid:
             (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
-            (False, 'The data parameter must be a dict' if data isn't dict or None
+            (False, 'The data parameter must be a dict' if data neither dict or None
             (False, '{operation_name} operation does not support' - if the spec does not contain the operation
             (False, {
-                'required': [ #list of the fields that are required but are not present in the data
+                'required': [ #list of the fields that are required but were not present in the data
                     'field_name',
                     'patent.field_name',# when the nested field is omitted
                     'patent.list[2].field_name' # if data is array and one of the field is omitted
                 ],
-                'invalid_type':[ #list of the fields with invalid data and expected type of the data
+                'invalid_type':[ #list of the fields with invalid data
                         {
                            'path': 'objId', #field name or path to the field. Ex. objects[3].id, parent.name
                            'expected_type': 'string',# expected type. Ex. 'object', 'array', 'string', 'integer',
@@ -245,8 +247,9 @@ class FdmSwaggerValidator:
 
     def validate_query_params(self, operation_name, params):
         """
-           Validate params for get requests in query part of the url.
-           :param operation_name: We use the operation name to get specification for params
+           Validate params for the get requests. Use this method for validating the query part of the url.
+           :param operation_name: The value must be non empty string.
+                               The operation name is used to get a params specification
            :param params: data should be in the format that the specification expects
                     Ex.
                     {
@@ -259,13 +262,13 @@ class FdmSwaggerValidator:
                (True, None) - if params valid
                Invalid:
                (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
-               (False, 'The params parameter must be a dict' if params isn't dict or None
+               (False, 'The params parameter must be a dict' if params neither dict or None
                (False, '{operation_name} operation does not support' - if the spec does not contain the operation
                (False, {
                    'required': [ #list of the fields that are required but are not present in the params
                        'field_name'
                    ],
-                   'invalid_type':[ #list of the fields with invalid data and expected type of the data
+                   'invalid_type':[ #list of the fields with invalid data and expected type of the params
                             {
                               'path': 'objId', #field name
                               'expected_type': 'string',#expected type. Ex. 'string', 'integer', 'boolean', 'number'
@@ -278,8 +281,9 @@ class FdmSwaggerValidator:
 
     def validate_path_params(self, operation_name, params):
         """
-        Validate params for get requests in path part of the url.
-        :param operation_name: We use the operation name to get specification for params
+        Validate params for the get requests. Use this method for validating the path part of the url.
+        :param operation_name: The value must be non empty string.
+                               The operation name is used to get a params specification
         :param params: data should be in the format that the specification expects
                  Ex.
                  {
@@ -292,13 +296,13 @@ class FdmSwaggerValidator:
             (True, None) - if params valid
             Invalid:
             (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
-            (False, 'The params parameter must be a dict' if params isn't dict or None
+            (False, 'The params parameter must be a dict' if params neither dict or None
             (False, '{operation_name} operation does not support' - if the spec does not contain the operation
             (False, {
                 'required': [ #list of the fields that are required but are not present in the params
                     'field_name'
                 ],
-                'invalid_type':[ #list of the fields with invalid data and expected type of the data
+                'invalid_type':[ #list of the fields with invalid data and expected type of the params
                          {
                            'path': 'objId', #field name
                            'expected_type': 'string',#expected type. Ex. 'string', 'integer', 'boolean', 'number'
