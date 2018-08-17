@@ -33,6 +33,16 @@ class PropName:
     NAME = 'name'
 
 
+class PropType:
+    STRING = 'string'
+    BOOLEAN = 'boolean'
+    INTEGER = 'integer'
+    NUMBER = 'number'
+    OBJECT = 'object'
+    ARRAY = 'array'
+    FILE = 'file'
+
+
 class OperationParams:
     PATH = 'path'
     QUERY = 'query'
@@ -142,7 +152,7 @@ class FdmSwaggerParser:
             elif PropName.PROPERTIES in response:
                 ref = response[PropName.PROPERTIES][PropName.ITEMS][PropName.ITEMS][PropName.REF]
                 return self._get_model_name_by_schema_ref(ref)
-            elif (PropName.TYPE in response) and response[PropName.TYPE] == "file":
+            elif (PropName.TYPE in response) and response[PropName.TYPE] == PropType.FILE:
                 return FILE_MODEL_NAME
         else:
             return None
@@ -176,15 +186,6 @@ class FdmSwaggerParser:
             return self._get_model_name_by_schema_ref(model_def[PropName.ALL_OF][0][PropName.REF])
         else:
             return model_name
-
-
-class PropType:
-    STRING = 'string'
-    BOOLEAN = 'boolean'
-    INTEGER = 'integer'
-    NUMBER = 'number'
-    OBJECT = 'object'
-    ARRAY = 'array'
 
 
 class FdmSwaggerValidator:
@@ -236,7 +237,7 @@ class FdmSwaggerValidator:
             return False, "{} operation does not support".format(operation_name)
 
         operation = self._operations[operation_name]
-        model = self._models[operation['modelName']]
+        model = self._models[operation[PropName.MODEL_NAME_FIELD]]
         status = self._init_report()
 
         self._validate_object(status, model, data, '')
@@ -331,6 +332,7 @@ class FdmSwaggerValidator:
             spec = operation[PropName.PARAMETERS_FIELD][resource]
             status = self._init_report()
             self._check_url_params(status, spec, params)
+
             if len(status[PropName.REQUIRED]) > 0 or len(status[PropName.INVALID_TYPE]) > 0:
                 return False, status
             return True, None
@@ -397,7 +399,7 @@ class FdmSwaggerValidator:
             self._add_invalid_type_report(status, path, prop_name, expected_type, actually_value)
 
     def _get_model_by_ref(self, model_prop_val):
-        model = _get_model_name_from_url(model_prop_val['$ref'])
+        model = _get_model_name_from_url(model_prop_val[PropName.REF])
         return self._models[model]
 
     def _check_required_fields(self, status, required_fields, data, path):
