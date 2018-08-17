@@ -69,27 +69,27 @@ try:
     from ansible.module_utils.config_resource import BaseConfigObjectResource
     from ansible.module_utils.http import HTTPMethod
     from ansible.module_utils.misc import construct_ansible_facts
-    from ansible.module_utils.fdm_swagger_client import METHOD_FIELD, URL_FIELD
+    from ansible.module_utils.fdm_swagger_client import OperationField
 except (ImportError, ModuleNotFoundError):
     from module_utils.config_resource import BaseConfigObjectResource
     from module_utils.http import HTTPMethod
     from module_utils.misc import construct_ansible_facts
-    from module_utils.fdm_swagger_client import METHOD_FIELD, URL_FIELD
+    from module_utils.fdm_swagger_client import OperationField
 
 
 def is_add_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('add') and operation_spec[METHOD_FIELD] == HTTPMethod.POST
+    return operation_name.startswith('add') and operation_spec[OperationField.METHOD] == HTTPMethod.POST
 
 
 def is_edit_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('edit') and operation_spec[METHOD_FIELD] == HTTPMethod.PUT
+    return operation_name.startswith('edit') and operation_spec[OperationField.METHOD] == HTTPMethod.PUT
 
 
 def is_delete_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('delete') and operation_spec[METHOD_FIELD] == HTTPMethod.DELETE
+    return operation_name.startswith('delete') and operation_spec[OperationField.METHOD] == HTTPMethod.DELETE
 
 
 def main():
@@ -115,13 +115,13 @@ def main():
     resource = BaseConfigObjectResource(connection)
 
     if is_add_operation(op_name, op_spec):
-        resp = resource.add_object(op_spec[URL_FIELD], data, path_params, query_params)
+        resp = resource.add_object(op_spec[OperationField.URL], data, path_params, query_params)
     elif is_edit_operation(op_name, op_spec):
-        resp = resource.edit_object(op_spec[URL_FIELD], data, path_params, query_params)
+        resp = resource.edit_object(op_spec[OperationField.URL], data, path_params, query_params)
     elif is_delete_operation(op_name, op_spec):
-        resp = resource.delete_object(op_spec[URL_FIELD], path_params)
+        resp = resource.delete_object(op_spec[OperationField.URL], path_params)
     else:
-        resp = resource.send_request(op_spec[URL_FIELD], op_spec[METHOD_FIELD], data, path_params, query_params)
+        resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data, path_params, query_params)
 
     module.exit_json(changed=resource.config_changed, response=resp,
                      ansible_facts=construct_ansible_facts(resp, module.params))

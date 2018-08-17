@@ -9,6 +9,19 @@ FILE_MODEL_NAME = '_File'
 SUCCESS_RESPONSE_CODE = '200'
 
 
+class OperationField:
+    URL = 'url'
+    METHOD = 'method'
+    PARAMETERS = 'parameters'
+    MODEL_NAME = 'modelName'
+
+
+class SpecProp:
+    DEFINITIONS = 'definitions'
+    OPERATIONS = 'operations'
+    MODELS = 'models'
+
+
 class PropName:
     ENUM = 'enum'
     TYPE = 'type'
@@ -17,16 +30,9 @@ class PropName:
     REF = '$ref'
     ALL_OF = 'allOf'
     BASE_PATH = 'basePath'
-    DEFINITIONS = 'definitions'
-    OPERATIONS = 'operations'
     PATHS = 'paths'
     OPERATION_ID = 'operationId'
-    PARAMETERS_FIELD = 'parameters'
-    MODEL_NAME_FIELD = 'modelName'
-    URL_FIELD = 'url'
-    METHOD_FIELD = 'method'
     SCHEMA = 'schema'
-    MODELS = 'models'
     ITEMS = 'items'
     PROPERTIES = 'properties'
     RESPONSES = 'responses'
@@ -48,8 +54,8 @@ class OperationParams:
     QUERY = 'query'
 
 
-def _get_model_name_from_url(_schema_ref):
-    path = _schema_ref.split('/')
+def _get_model_name_from_url(schema_ref):
+    path = schema_ref.split('/')
     return path[len(path) - 1]
 
 
@@ -59,8 +65,10 @@ class FdmSwaggerParser:
     def parse_spec(self, spec):
         """
         This method simplifies a swagger format and also resolves a model name for each operation
-        :param spec: expect data in the swagger format see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
-        :return:
+        :param spec: dict
+                    expect data in the swagger format see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
+        :rtype: (bool, string|dict)
+        Ex.
             The models field contains model definition from swagger see <#https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions>
             {
                 'models':{
@@ -95,10 +103,10 @@ class FdmSwaggerParser:
                 }
             }
         """
-        self._definitions = spec[PropName.DEFINITIONS]
+        self._definitions = spec[SpecProp.DEFINITIONS]
         config = {
-            PropName.MODELS: self._definitions,
-            PropName.OPERATIONS: self._get_operations(spec)
+            SpecProp.MODELS: self._definitions,
+            SpecProp.OPERATIONS: self._get_operations(spec)
         }
         return config
 
@@ -109,12 +117,12 @@ class FdmSwaggerParser:
         for url, operation_params in paths_dict.items():
             for method, params in operation_params.items():
                 operation = {
-                    PropName.METHOD_FIELD: method,
-                    PropName.URL_FIELD: base_path + url,
-                    PropName.MODEL_NAME_FIELD: self._get_model_name(method, params)
+                    OperationField.METHOD: method,
+                    OperationField.URL: base_path + url,
+                    OperationField.MODEL_NAME: self._get_model_name(method, params)
                 }
-                if PropName.PARAMETERS_FIELD in params:
-                    operation[PropName.PARAMETERS_FIELD] = self._get_rest_params(params[PropName.PARAMETERS_FIELD])
+                if OperationField.PARAMETERS in params:
+                    operation[OperationField.PARAMETERS] = self._get_rest_params(params[OperationField.PARAMETERS])
 
                 operation_id = params[PropName.OPERATION_ID]
                 operations_dict[operation_id] = operation
@@ -130,11 +138,11 @@ class FdmSwaggerParser:
 
     def _get_model_name_for_post_put_requests(self, params):
         model_name = None
-        if PropName.PARAMETERS_FIELD in params:
-            body_param_dict = self._get_body_param_from_parameters(params[PropName.PARAMETERS_FIELD])
+        if OperationField.PARAMETERS in params:
+            body_param_dict = self._get_body_param_from_parameters(params[OperationField.PARAMETERS])
             if body_param_dict:
                 schema_ref = body_param_dict[PropName.SCHEMA][PropName.REF]
-                model_name = self._get_model_name_by_schema_ref(schema_ref)
+                model_name = self._get_model_name_byschema_ref(schema_ref)
         if model_name is None:
             model_name = self._get_model_name_from_responses(params)
         return model_name
@@ -148,10 +156,10 @@ class FdmSwaggerParser:
         if SUCCESS_RESPONSE_CODE in responses:
             response = responses[SUCCESS_RESPONSE_CODE][PropName.SCHEMA]
             if PropName.REF in response:
-                return self._get_model_name_by_schema_ref(response[PropName.REF])
+                return self._get_model_name_byschema_ref(response[PropName.REF])
             elif PropName.PROPERTIES in response:
                 ref = response[PropName.PROPERTIES][PropName.ITEMS][PropName.ITEMS][PropName.REF]
-                return self._get_model_name_by_schema_ref(ref)
+                return self._get_model_name_byschema_ref(ref)
             elif (PropName.TYPE in response) and response[PropName.TYPE] == PropType.FILE:
                 return FILE_MODEL_NAME
         else:
@@ -179,11 +187,11 @@ class FdmSwaggerParser:
             PropName.REQUIRED: param[PropName.REQUIRED]
         }
 
-    def _get_model_name_by_schema_ref(self, _schema_ref):
-        model_name = _get_model_name_from_url(_schema_ref)
+    def _get_model_name_byschema_ref(self, schema_ref):
+        model_name = _get_model_name_from_url(schema_ref)
         model_def = self._definitions[model_name]
         if PropName.ALL_OF in model_def:
-            return self._get_model_name_by_schema_ref(model_def[PropName.ALL_OF][0][PropName.REF])
+            return self._get_model_name_byschema_ref(model_def[PropName.ALL_OF][0][PropName.REF])
         else:
             return model_name
 
@@ -191,18 +199,21 @@ class FdmSwaggerParser:
 class FdmSwaggerValidator:
     def __init__(self, spec):
         """
-        :param spec: data from FdmSwaggerParser().parse_spec()
+        :param spec: dict
+                    data from FdmSwaggerParser().parse_spec()
         """
-        self._operations = spec[PropName.OPERATIONS]
-        self._models = spec[PropName.MODELS]
+        self._operations = spec[SpecProp.OPERATIONS]
+        self._models = spec[SpecProp.MODELS]
 
     def validate_data(self, operation_name, data=None):
         """
         Validate data for the post|put requests
-        :param operation_name: The value must be non empty string.
-                               The operation name is used to get a model specification
-        :param data: The value must be in the format that the model(from operation) expects
-        :return:(Boolean, msg)
+        :param operation_name: string
+                            The value must be non empty string.
+                            The operation name is used to get a model specification
+        :param data: dict
+                    The value must be in the format that the model(from operation) expects
+        :rtype: (bool, string|dict)
             (True, None) - if data valid
             Invalid:
             (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
@@ -237,7 +248,7 @@ class FdmSwaggerValidator:
             return False, "{} operation does not support".format(operation_name)
 
         operation = self._operations[operation_name]
-        model = self._models[operation[PropName.MODEL_NAME_FIELD]]
+        model = self._models[operation[OperationField.MODEL_NAME]]
         status = self._init_report()
 
         self._validate_object(status, model, data, '')
@@ -249,9 +260,11 @@ class FdmSwaggerValidator:
     def validate_query_params(self, operation_name, params):
         """
            Validate params for the get requests. Use this method for validating the query part of the url.
-           :param operation_name: The value must be non empty string.
+           :param operation_name: string
+                               The value must be non empty string.
                                The operation name is used to get a params specification
-           :param params: data should be in the format that the specification expects
+           :param params: dict
+                        should be in the format that the specification(from operation) expects
                     Ex.
                     {
                         'objId': "string_value",
@@ -283,9 +296,12 @@ class FdmSwaggerValidator:
     def validate_path_params(self, operation_name, params):
         """
         Validate params for the get requests. Use this method for validating the path part of the url.
-        :param operation_name: The value must be non empty string.
+           :param operation_name: string
+                               The value must be non empty string.
                                The operation name is used to get a params specification
-        :param params: data should be in the format that the specification expects
+           :param params: dict
+                        should be in the format that the specification(from operation) expects
+
                  Ex.
                  {
                      'objId': "string_value",
@@ -328,8 +344,8 @@ class FdmSwaggerValidator:
             return False, "{} operation does not support".format(operation)
 
         operation = self._operations[operation]
-        if PropName.PARAMETERS_FIELD in operation and resource in operation[PropName.PARAMETERS_FIELD]:
-            spec = operation[PropName.PARAMETERS_FIELD][resource]
+        if OperationField.PARAMETERS in operation and resource in operation[OperationField.PARAMETERS]:
+            spec = operation[OperationField.PARAMETERS][resource]
             status = self._init_report()
             self._check_url_params(status, spec, params)
 
