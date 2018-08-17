@@ -68,6 +68,7 @@ class FdmSwaggerParser:
         :param spec: dict
                     expect data in the swagger format see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
         :rtype: (bool, string|dict)
+        :return:
         Ex.
             The models field contains model definition from swagger see <#https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions>
             {
@@ -214,6 +215,7 @@ class FdmSwaggerValidator:
         :param data: dict
                     The value must be in the format that the model(from operation) expects
         :rtype: (bool, string|dict)
+        :return:
             (True, None) - if data valid
             Invalid:
             (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
@@ -272,7 +274,8 @@ class FdmSwaggerValidator:
                         'p_boolean': True,
                         'p_number': 2.3
                     }
-           :return:(Boolean, msg)
+           :rtype:(Boolean, msg)
+           :return:
                (True, None) - if params valid
                Invalid:
                (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
@@ -309,7 +312,8 @@ class FdmSwaggerValidator:
                      'p_boolean': True,
                      'p_number': 2.3
                  }
-        :return:(Boolean, msg)
+        :rtype:(Boolean, msg)
+        :return:
             (True, None) - if params valid
             Invalid:
             (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
@@ -364,7 +368,7 @@ class FdmSwaggerValidator:
             if prop_name in params:
                 expected_type = prop[PropName.TYPE]
                 value = params[prop_name]
-                if prop_name in params and not self._is_simple_types(expected_type, value):
+                if prop_name in params and not self._is_correct_simple_types(expected_type, value):
                     self._add_invalid_type_report(status, '', prop_name, expected_type, value)
 
     def _validate_object(self, status, model, data, path):
@@ -411,7 +415,7 @@ class FdmSwaggerValidator:
         elif expected_type == PropType.ARRAY:
             self._check_array(status, model, actually_value,
                               path=self._create_path_to_field(path, prop_name))
-        elif not self._is_simple_types(expected_type, actually_value):
+        elif not self._is_correct_simple_types(expected_type, actually_value):
             self._add_invalid_type_report(status, path, prop_name, expected_type, actually_value)
 
     def _get_model_by_ref(self, model_prop_val):
@@ -434,7 +438,7 @@ class FdmSwaggerValidator:
                                   '')
 
     @staticmethod
-    def _is_simple_types(expected_type, value):
+    def _is_correct_simple_types(expected_type, value):
         if expected_type == PropType.STRING:
             return isinstance(value, string_types)
         elif expected_type == PropType.BOOLEAN:
