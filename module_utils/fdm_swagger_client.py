@@ -59,6 +59,16 @@ def _get_model_name_from_url(schema_ref):
     return path[len(path) - 1]
 
 
+class IllegalArgumentException(ValueError):
+    """
+    Exception raised when the function parameters:
+        - not all passed
+        - empty string
+        - wrong type
+    """
+    pass
+
+
 class FdmSwaggerParser:
     _definitions = None
 
@@ -218,9 +228,6 @@ class FdmSwaggerValidator:
         :return:
             (True, None) - if data valid
             Invalid:
-            (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
-            (False, 'The data parameter must be a dict' if data neither dict or None
-            (False, '{operation_name} operation does not support' - if the spec does not contain the operation
             (False, {
                 'required': [ #list of the fields that are required but were not present in the data
                     'field_name',
@@ -236,18 +243,15 @@ class FdmSwaggerValidator:
                        }
                 ]
             })
+        :raises IllegalArgumentException
+            'The operation_name parameter must be a non-empty string' if operation_name is not valid
+            'The data parameter must be a dict' if data neither dict or None
+            '{operation_name} operation does not support' if the spec does not contain the operation
         """
         if data is None:
             data = {}
 
-        if not operation_name or not isinstance(operation_name, string_types):
-            return False, "The operation_name parameter must be a non-empty string"
-
-        if not isinstance(data, dict):
-            return False, "The data parameter must be a dict"
-
-        if operation_name not in self._operations:
-            return False, "{} operation does not support".format(operation_name)
+        self._check_validate_data_params(data, operation_name)
 
         operation = self._operations[operation_name]
         model = self._models[operation[OperationField.MODEL_NAME]]
@@ -258,6 +262,14 @@ class FdmSwaggerValidator:
         if len(status[PropName.REQUIRED]) > 0 or len(status[PropName.INVALID_TYPE]) > 0:
             return False, status
         return True, None
+
+    def _check_validate_data_params(self, data, operation_name):
+        if not operation_name or not isinstance(operation_name, string_types):
+            raise IllegalArgumentException("The operation_name parameter must be a non-empty string")
+        if not isinstance(data, dict):
+            raise IllegalArgumentException("The data parameter must be a dict")
+        if operation_name not in self._operations:
+            raise IllegalArgumentException("{} operation does not support".format(operation_name))
 
     def validate_query_params(self, operation_name, params):
         """
@@ -278,9 +290,6 @@ class FdmSwaggerValidator:
            :return:
                (True, None) - if params valid
                Invalid:
-               (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
-               (False, 'The params parameter must be a dict' if params neither dict or None
-               (False, '{operation_name} operation does not support' - if the spec does not contain the operation
                (False, {
                    'required': [ #list of the fields that are required but are not present in the params
                        'field_name'
@@ -293,6 +302,10 @@ class FdmSwaggerValidator:
                             }
                    ]
                })
+            :raises IllegalArgumentException
+               'The operation_name parameter must be a non-empty string' if operation_name is not valid
+               'The params parameter must be a dict' if params neither dict or None
+               '{operation_name} operation does not support' if the spec does not contain the operation
            """
         return self._validate_url_params(operation_name, params, resource=OperationParams.QUERY)
 
@@ -316,9 +329,6 @@ class FdmSwaggerValidator:
         :return:
             (True, None) - if params valid
             Invalid:
-            (False, 'The operation_name parameter must be a non-empty string' if operation_name - is not valid
-            (False, 'The params parameter must be a dict' if params neither dict or None
-            (False, '{operation_name} operation does not support' - if the spec does not contain the operation
             (False, {
                 'required': [ #list of the fields that are required but are not present in the params
                     'field_name'
@@ -331,6 +341,10 @@ class FdmSwaggerValidator:
                          }
                 ]
             })
+        :raises IllegalArgumentException
+            'The operation_name parameter must be a non-empty string' if operation_name is not valid
+            'The params parameter must be a dict' if params neither dict or None
+            '{operation_name} operation does not support' if the spec does not contain the operation
         """
         return self._validate_url_params(operation_name, params, resource=OperationParams.PATH)
 
@@ -338,14 +352,7 @@ class FdmSwaggerValidator:
         if params is None:
             params = {}
 
-        if not operation or not isinstance(operation, string_types):
-            return False, "The operation_name parameter must be a non-empty string"
-
-        if not isinstance(params, dict):
-            return False, "The params parameter must be a dict"
-
-        if operation not in self._operations:
-            return False, "{} operation does not support".format(operation)
+        self._check_validate_url_params(operation, params)
 
         operation = self._operations[operation]
         if OperationField.PARAMETERS in operation and resource in operation[OperationField.PARAMETERS]:
@@ -358,6 +365,14 @@ class FdmSwaggerValidator:
             return True, None
         else:
             return True, None
+
+    def _check_validate_url_params(self, operation, params):
+        if not operation or not isinstance(operation, string_types):
+            raise IllegalArgumentException("The operation_name parameter must be a non-empty string")
+        if not isinstance(params, dict):
+            raise IllegalArgumentException("The params parameter must be a dict")
+        if operation not in self._operations:
+            raise IllegalArgumentException("{} operation does not support".format(operation))
 
     def _check_url_params(self, status, spec, params):
         for prop_name in spec.keys():
