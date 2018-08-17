@@ -48,10 +48,8 @@ class FdmSwaggerParser:
 
     def parse_spec(self, spec):
         """
-        Extract data for the FdmSwaggerValidator class
-        We simplify a swagger format.
-        Also, resolve a model name for each operation
-        :param spec: data in the swagger format
+        This method simplifies a swagger format and also resolves a model name for each operation
+        :param spec: expect data in the swagger format see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
         :return:
             The models field contains model definition from swagger see <#https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions>
             {
@@ -191,7 +189,7 @@ class PropType:
 class FdmSwaggerValidator:
     def __init__(self, spec):
         """
-        :param spec: expect data in the swagger format see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
+        :param spec: data from FdmSwaggerParser().parse_spec()
         """
         self._operations = spec[PropName.OPERATIONS]
         self._models = spec[PropName.MODELS]
