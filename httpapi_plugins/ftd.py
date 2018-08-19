@@ -125,7 +125,7 @@ class HttpApi(HttpApiBase):
             headers['Content-Length'] = len(body)
 
             _, response_data = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers)
-            return self._response_to_json(response_data)
+            return self._response_to_json(response_data.getvalue())
 
     def download_file(self, from_url, to_path):
         url = construct_url_path(from_url)
