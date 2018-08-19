@@ -1,10 +1,17 @@
+from __future__ import absolute_import
+
 import pytest
 from ansible.module_utils import basic
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
 from library import ftd_configuration
-from module_utils.http import HTTPMethod
-from module_utils.misc import ConfigurationError
+
+try:
+    from ansible.module_utils.http import HTTPMethod
+    from ansible.module_utils.misc import ConfigurationError
+except ImportError:
+    from module_utils.misc import ConfigurationError
+    from module_utils.http import HTTPMethod
 
 ADD_RESPONSE = {'status': 'Object added'}
 EDIT_RESPONSE = {'status': 'Object edited'}

@@ -2,7 +2,7 @@ from ansible.module_utils.six import integer_types, string_types
 
 try:
     from ansible.module_utils.http import HTTPMethod
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     from module_utils.http import HTTPMethod
 
 FILE_MODEL_NAME = '_File'

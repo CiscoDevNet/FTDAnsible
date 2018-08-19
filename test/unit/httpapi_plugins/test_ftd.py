@@ -1,13 +1,13 @@
 import json
 import os
-import unittest
-from unittest import mock
 
+from ansible.compat.tests import mock
+from ansible.compat.tests import unittest
 from ansible.compat.tests.mock import mock_open, patch
 from ansible.errors import AnsibleConnectionFailure
+from ansible.module_utils.connection import ConnectionError
 from ansible.module_utils.six import BytesIO, PY3, StringIO
 from ansible.module_utils.six.moves.urllib.error import HTTPError
-from ansible.module_utils.connection import ConnectionError
 
 from httpapi_plugins.ftd import HttpApi, API_TOKEN_PATH_ENV_VAR
 from module_utils.fdm_swagger_client import SpecProp, FdmSwaggerParser
@@ -224,7 +224,7 @@ class TestFtdHttpApi(unittest.TestCase):
         response_mock = mock.Mock()
         response_mock.getcode.return_value = status
         response_text = json.dumps(response) if type(response) is dict else response
-        response_data = BytesIO(response_text.encode('utf-8') if response_text else None)
+        response_data = BytesIO(response_text.encode() if response_text else ''.encode())
         return response_mock, response_data
 
     def _expected_headers(self):

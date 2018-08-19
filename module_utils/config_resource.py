@@ -7,7 +7,7 @@ from ansible.module_utils.connection import ConnectionError
 try:
     from ansible.module_utils.http import iterate_over_pageable_resource, HTTPMethod
     from ansible.module_utils.misc import equal_objects, copy_identity_properties, ConfigurationError
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     from module_utils.http import iterate_over_pageable_resource, HTTPMethod
     from module_utils.misc import equal_objects, copy_identity_properties, ConfigurationError
 
