@@ -12,6 +12,7 @@ import shutil
 
 from ansible.module_utils.basic import to_text
 from ansible.errors import AnsibleConnectionFailure
+from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.six.moves.urllib.parse import urlencode
 from ansible.plugins.httpapi import HttpApiBase
 from urllib3 import encode_multipart_formdata
@@ -31,6 +32,12 @@ API_SPEC_PATH = '/apispec/ngfw.json'
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
+
+
+class ResponseParams:
+    SUCCESS = 'success'
+    STATUS_CODE = 'status_code'
+    RESPONSE = 'response'
 
 
 class HttpApi(HttpApiBase):
@@ -64,15 +71,14 @@ class HttpApi(HttpApiBase):
         _, response_data = self.connection.send(
             self._get_api_token_path(), json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
         )
-        response_text = to_text(response_data.getvalue())
+        response = self._response_to_json(response_data.getvalue())
 
         try:
-            token_info = json.loads(response_text)
-            self.refresh_token = token_info['refresh_token']
-            self.access_token = token_info['access_token']
-        # JSONDecodeError only available on Python 3.5+
-        except (getattr(json.decoder, 'JSONDecodeError', ValueError), KeyError):
-            raise ConnectionError('Invalid JSON response during connection authentication: %s' % response_text)
+            self.refresh_token = response['refresh_token']
+            self.access_token = response['access_token']
+        except KeyError:
+            raise ConnectionError(
+                'Server returned response without token info during connection authentication: %s' % response)
 
     def logout(self):
         auth_payload = {
@@ -94,16 +100,24 @@ class HttpApi(HttpApiBase):
     def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
-        _, response_data = self.connection.send(
-            url, data, method=http_method,
-            headers=self._authorized_headers()
-        )
         try:
-            response_text = to_text(response_data.getvalue())
-            return json.loads(response_text) if response_text else ''
-        # JSONDecodeError only available on Python 3.5+
-        except getattr(json.decoder, 'JSONDecodeError', ValueError):
-            raise ConnectionError('Invalid JSON response: %s' % response_text)
+            response, response_data = self.connection.send(
+                url, data, method=http_method,
+                headers=self._authorized_headers()
+            )
+            return {
+                ResponseParams.SUCCESS: True,
+                ResponseParams.STATUS_CODE: response.getcode(),
+                ResponseParams.RESPONSE: self._response_to_json(response_data.getvalue())
+            }
+        # Being invoked via JSON-RPC, this method does not serialize and pass HTTPError correctly to the method caller.
+        # Thus, in order to handle non-200 responses, we need to wrap them into a simple structure and pass explicitly.
+        except HTTPError as e:
+            return {
+                ResponseParams.SUCCESS: False,
+                ResponseParams.STATUS_CODE: e.code,
+                ResponseParams.RESPONSE: self._response_to_json(e.read())
+            }
 
     def upload_file(self, from_path, to_url):
         url = construct_url_path(to_url)
@@ -117,12 +131,7 @@ class HttpApi(HttpApiBase):
             headers['Content-Length'] = len(body)
 
             _, response_data = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers)
-        try:
-            response_text = to_text(response_data.getvalue())
-            return json.loads(response_text)
-        # JSONDecodeError only available on Python 3.5+
-        except getattr(json.decoder, 'JSONDecodeError', ValueError):
-            raise ConnectionError('Invalid JSON response after uploading the file: %s' % response_text)
+            return self._response_to_json(response_data.getvalue())
 
     def download_file(self, from_url, to_path):
         url = construct_url_path(from_url)
@@ -139,13 +148,13 @@ class HttpApi(HttpApiBase):
             shutil.copyfileobj(response_data, output_file)
 
     def handle_httperror(self, exc):
-        # Called by connection plugin when it gets HTTP Error for a request.
-        # Connection plugin will resend this request if we return true here.
+        # None means that the exception will be passed further to the caller
+        retry_request = None
         if exc.code == TOKEN_EXPIRATION_STATUS_CODE or exc.code == UNAUTHORIZED_STATUS_CODE:
             self.connection._auth = None
             self.login(self.connection.get_option('remote_user'), self.connection.get_option('password'))
-            return True
-        return False
+            retry_request = True
+        return retry_request
 
     def _authorized_headers(self):
         headers = dict(BASE_HEADERS)
@@ -156,6 +165,15 @@ class HttpApi(HttpApiBase):
     def _get_api_token_path():
         return os.environ.get(API_TOKEN_PATH_ENV_VAR, DEFAULT_API_TOKEN_PATH)
 
+    @staticmethod
+    def _response_to_json(response_data):
+        response_text = to_text(response_data)
+        try:
+            return json.loads(response_text) if response_text else {}
+        # JSONDecodeError only available on Python 3.5+
+        except getattr(json.decoder, 'JSONDecodeError', ValueError):
+            raise ConnectionError('Invalid JSON response: %s' % response_text)
+
     def get_operation_spec(self, operation_name):
         return self.api_spec[SpecProp.OPERATIONS].get(operation_name, None)
 
@@ -165,8 +183,12 @@ class HttpApi(HttpApiBase):
     @property
     def api_spec(self):
         if self._api_spec is None:
-            data = self.send_request(url_path=API_SPEC_PATH, http_method=HTTPMethod.GET)
-            self._api_spec = FdmSwaggerParser().parse_spec(data)
+            response = self.send_request(url_path=API_SPEC_PATH, http_method=HTTPMethod.GET)
+            if response[ResponseParams.SUCCESS]:
+                self._api_spec = FdmSwaggerParser().parse_spec(response[ResponseParams.RESPONSE])
+            else:
+                raise ConnectionError('Failed to download API specification. Status code: %s. Response: %s' % (
+                    response[ResponseParams.STATUS_CODE], response[ResponseParams.RESPONSE]))
         return self._api_spec
 
 

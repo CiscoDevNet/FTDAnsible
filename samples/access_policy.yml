@@ -2,40 +2,54 @@
   connection: httpapi
   tasks:
     - name: Create a network object
-      ftd_network_object:
-        name: "Ansible-network-host"
-        description: "From Ansible with love"
-        subType: "HOST"
-        value: "{{ access_rule_source_ip }}"
-        type: "networkobject"
+      ftd_configuration:
+        operation: "addNetworkObject"
+        data:
+          name: "Ansible-network-host"
+          description: "From Ansible with love"
+          subType: "HOST"
+          value: "{{ access_rule_source_ip }}"
+          type: "networkobject"
 
     - name: Create an access rule
-      ftd_access_rule:
-        name: "Ansible-accessrule"
-        type: "accessrule"
-        parentId: "default"
-        sourceNetworks:
-          - "{{ networkobject_ansible_network_host }}"
+      ftd_configuration:
+        operation: "addAccessRule"
+        data:
+          name: "Ansible-accessrule"
+          type: "accessrule"
+          sourceNetworks:
+            - "{{ networkobject_ansible_network_host }}"
+          ruleAction: "PERMIT"
+          eventLogAction: "LOG_BOTH"
+        path_params:
+          parentId: "default"
 
     - name: Update the access rule
-      ftd_access_rule:
-        operation: 'editAccessRuleByName'
-        name: "Ansible-accessrule"
-        type: "accessrule"
-        parentId: "default"
-        destinationNetworks:
-          - "{{ networkobject_ansible_network_host }}"
-
-    - name: Deploy changes
-      ftd_deployment:
+      ftd_configuration:
+        operation: 'editAccessRule'
+        data:
+          name: "Ansible-accessrule"
+          id: "{{ accessrule_ansible_accessrule['id'] }}"
+          ruleId: "{{ accessrule_ansible_accessrule['ruleId'] }}"
+          version: "{{ accessrule_ansible_accessrule['version'] }}"
+          type: "accessrule"
+          destinationNetworks:
+            - "{{ networkobject_ansible_network_host }}"
+          ruleAction: "PERMIT"
+          eventLogAction: "LOG_BOTH"
+        path_params:
+          objId: "{{ accessrule_ansible_accessrule['id'] }}"
+          parentId: "default"
 
     - name: Delete an access rule
-      ftd_access_rule:
-        operation: 'deleteAccessRuleByName'
-        name: 'Ansible-accessrule'
-        parentId: "default"
+      ftd_configuration:
+        operation: 'deleteAccessRule'
+        path_params:
+          objId: "{{ accessrule_ansible_accessrule['id'] }}"
+          parentId: "default"
 
     - name: Delete a network object
-      ftd_network_object:
+      ftd_configuration:
         operation: 'deleteNetworkObject'
-        objId: "{{ networkobject_ansible_network_host['id'] }}"
+        path_params:
+          objId: "{{ networkobject_ansible_network_host['id'] }}"

@@ -5,7 +5,7 @@ import unittest
 try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerParser
     from ansible.module_utils.http import HTTPMethod
-except ModuleNotFoundError:
+except ImportError:
     from module_utils.fdm_swagger_client import FdmSwaggerParser
     from module_utils.http import HTTPMethod
 
@@ -92,7 +92,7 @@ base = {
 
 
 def _get_objects(base_object, key_names):
-    return {_key: base_object[_key] for _key in key_names}
+    return dict((_key, base_object[_key]) for _key in key_names)
 
 
 class TestFdmSwaggerParser(unittest.TestCase):
@@ -179,5 +179,5 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 }
             }
         }
-        assert ['NetworkObject', 'NetworkObjectWrapper'] == list(self.fdm_data['models'].keys())
+        assert sorted(['NetworkObject', 'NetworkObjectWrapper']) == sorted(self.fdm_data['models'].keys())
         assert expected_operations == self.fdm_data['operations']

@@ -1,9 +1,17 @@
+from __future__ import absolute_import
+
 import pytest
 from ansible.module_utils import basic
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
-from library import ftd_config_entity
-from module_utils.http import HTTPMethod
+from library import ftd_configuration
+
+try:
+    from ansible.module_utils.http import HTTPMethod
+    from ansible.module_utils.misc import FtdConfigurationError, FtdServerError
+except ImportError:
+    from module_utils.misc import FtdConfigurationError, FtdServerError
+    from module_utils.http import HTTPMethod
 
 ADD_RESPONSE = {'status': 'Object added'}
 EDIT_RESPONSE = {'status': 'Object edited'}
@@ -11,8 +19,8 @@ DELETE_RESPONSE = {'status': 'Object deleted'}
 ARBITRARY_RESPONSE = {'status': 'Arbitrary request sent'}
 
 
-class TestFtdConfigEntity(object):
-    module = ftd_config_entity
+class TestFtdConfiguration(object):
+    module = ftd_configuration
 
     @pytest.fixture(autouse=True)
     def module_mock(self, mocker):
@@ -20,12 +28,12 @@ class TestFtdConfigEntity(object):
 
     @pytest.fixture
     def operation_mock(self, mocker):
-        connection_class_mock = mocker.patch('library.ftd_config_entity.Connection')
+        connection_class_mock = mocker.patch('library.ftd_configuration.Connection')
         return connection_class_mock.return_value.get_operation_spec
 
     @pytest.fixture
     def resource_mock(self, mocker):
-        resource_class_mock = mocker.patch('library.ftd_config_entity.BaseConfigObjectResource')
+        resource_class_mock = mocker.patch('library.ftd_configuration.BaseConfigObjectResource')
         resource_instance = resource_class_mock.return_value
         resource_instance.add_object.return_value = ADD_RESPONSE
         resource_instance.edit_object.return_value = EDIT_RESPONSE
@@ -112,6 +120,31 @@ class TestFtdConfigEntity(object):
         assert ARBITRARY_RESPONSE == result['response']
         resource_mock.send_request.assert_called_with(operation_mock.return_value['url'], HTTPMethod.GET, None,
                                                       params['path_params'], None)
+
+    def test_module_should_fail_when_operation_raises_configuration_error(self, operation_mock, resource_mock):
+        operation_mock.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+        set_module_args({'operation': 'failure'})
+        resource_mock.send_request.side_effect = FtdConfigurationError('Foo error.')
+
+        with pytest.raises(AnsibleFailJson) as exc:
+            self.module.main()
+
+        result = exc.value.args[0]
+        assert result['failed']
+        assert 'Failed to execute failure operation because of the configuration error: Foo error.' == result['msg']
+
+    def test_module_should_fail_when_operation_raises_server_error(self, operation_mock, resource_mock):
+        operation_mock.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+        set_module_args({'operation': 'failure'})
+        resource_mock.send_request.side_effect = FtdServerError({'error': 'foo'}, 500)
+
+        with pytest.raises(AnsibleFailJson) as exc:
+            self.module.main()
+
+        result = exc.value.args[0]
+        assert result['failed']
+        assert 'Server returned an error trying to execute failure operation. Status code: 500. ' \
+               'Server response: {\'error\': \'foo\'}' == result['msg']
 
     def _run_module(self, module_args):
         set_module_args(module_args)

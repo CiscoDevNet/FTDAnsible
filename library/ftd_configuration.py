@@ -10,7 +10,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_config_entity
+module: ftd_configuration
 short_description: Manages ConfigEntity objects on Cisco FTD devices over REST API.
 version_added: "2.7"
 author: "Cisco Systems, Inc."
@@ -36,7 +36,7 @@ options:
 
 EXAMPLES = """
 - name: Create a network object
-  ftd_config_entity:
+  ftd_configuration:
     operation: "addNetworkObject"
     data:
       name: "Ansible-network-host"
@@ -49,7 +49,7 @@ EXAMPLES = """
     register_as: "hostNetwork"
 
 - name: Delete the network object
-  ftd_config_entity:
+  ftd_configuration:
     operation: "deleteNetworkObject"
     path_params:
       objId: "{{ hostNetwork['id'] }}"
@@ -68,12 +68,12 @@ from ansible.module_utils.connection import Connection
 try:
     from ansible.module_utils.config_resource import BaseConfigObjectResource
     from ansible.module_utils.http import HTTPMethod
-    from ansible.module_utils.misc import construct_ansible_facts
+    from ansible.module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
     from ansible.module_utils.fdm_swagger_client import OperationField
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     from module_utils.config_resource import BaseConfigObjectResource
     from module_utils.http import HTTPMethod
-    from module_utils.misc import construct_ansible_facts
+    from module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
     from module_utils.fdm_swagger_client import OperationField
 
 
@@ -114,17 +114,24 @@ def main():
 
     resource = BaseConfigObjectResource(connection)
 
-    if is_add_operation(op_name, op_spec):
-        resp = resource.add_object(op_spec[OperationField.URL], data, path_params, query_params)
-    elif is_edit_operation(op_name, op_spec):
-        resp = resource.edit_object(op_spec[OperationField.URL], data, path_params, query_params)
-    elif is_delete_operation(op_name, op_spec):
-        resp = resource.delete_object(op_spec[OperationField.URL], path_params)
-    else:
-        resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data, path_params, query_params)
+    try:
+        if is_add_operation(op_name, op_spec):
+            resp = resource.add_object(op_spec[OperationField.URL], data, path_params, query_params)
+        elif is_edit_operation(op_name, op_spec):
+            resp = resource.edit_object(op_spec[OperationField.URL], data, path_params, query_params)
+        elif is_delete_operation(op_name, op_spec):
+            resp = resource.delete_object(op_spec[OperationField.URL], path_params)
+        else:
+            resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data, path_params,
+                                         query_params)
 
-    module.exit_json(changed=resource.config_changed, response=resp,
-                     ansible_facts=construct_ansible_facts(resp, module.params))
+        module.exit_json(changed=resource.config_changed, response=resp,
+                         ansible_facts=construct_ansible_facts(resp, module.params))
+    except FtdConfigurationError as e:
+        module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e))
+    except FtdServerError as e:
+        module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
+                             'Server response: %s' % (op_name, e.code, e.response))
 
 
 if __name__ == '__main__':

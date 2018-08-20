@@ -4,7 +4,7 @@ import unittest
 
 try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerValidator, FdmSwaggerParser
-except ModuleNotFoundError:
+except ImportError:
     from module_utils.fdm_swagger_client import FdmSwaggerValidator, FdmSwaggerParser
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
@@ -37,21 +37,21 @@ class TestFdmSwagger(unittest.TestCase):
                         assert valid
                     except Exception as e:
                         invalid.append(model_name)
-        assert invalid == ['TCPPortObject', 'TCPPortObject',
-                           'UDPPortObject', 'UDPPortObject', 'ICMPv4PortObject',
-                           'ICMPv4PortObject', 'ICMPv6PortObject', 'ICMPv6PortObject',
-                           'StandardAccessList', 'StandardAccessList',
-                           'ExtendedAccessList', 'ExtendedAccessList',
-                           'ASPathList', 'ASPathList',
-                           'RouteMap', 'RouteMap',
-                           'StandardCommunityList', 'StandardCommunityList',
-                           'ExpandedCommunityList', 'ExpandedCommunityList',
-                           'IPV4PrefixList', 'IPV4PrefixList',
-                           'IPV6PrefixList', 'IPV6PrefixList',
-                           'PolicyList', 'PolicyList',
-                           'SyslogServer', 'SyslogServer',
-                           'HAConfiguration',
-                           'TestIdentitySource']
+        assert sorted(invalid) == sorted(['TCPPortObject', 'TCPPortObject',
+                                          'UDPPortObject', 'UDPPortObject', 'ICMPv4PortObject',
+                                          'ICMPv4PortObject', 'ICMPv6PortObject', 'ICMPv6PortObject',
+                                          'StandardAccessList', 'StandardAccessList',
+                                          'ExtendedAccessList', 'ExtendedAccessList',
+                                          'ASPathList', 'ASPathList',
+                                          'RouteMap', 'RouteMap',
+                                          'StandardCommunityList', 'StandardCommunityList',
+                                          'ExpandedCommunityList', 'ExpandedCommunityList',
+                                          'IPV4PrefixList', 'IPV4PrefixList',
+                                          'IPV6PrefixList', 'IPV6PrefixList',
+                                          'PolicyList', 'PolicyList',
+                                          'SyslogServer', 'SyslogServer',
+                                          'HAConfiguration',
+                                          'TestIdentitySource'])
 
     def test_parse_all_data(self):
         self.fdm_data = FdmSwaggerParser().parse_spec(self.base_data)

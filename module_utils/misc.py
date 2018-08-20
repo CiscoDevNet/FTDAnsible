@@ -6,6 +6,17 @@ IDENTITY_PROPERTIES = ['id', 'version', 'ruleId']
 NON_COMPARABLE_PROPERTIES = IDENTITY_PROPERTIES + ['isSystemDefined', 'links']
 
 
+class FtdConfigurationError(Exception):
+    pass
+
+
+class FtdServerError(Exception):
+    def __init__(self, response, code):
+        super(FtdServerError, self).__init__(response)
+        self.response = response
+        self.code = code
+
+
 def construct_ansible_facts(response, params):
     facts = dict()
     if response:

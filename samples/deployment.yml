@@ -1,0 +1,21 @@
+- hosts: vftd
+  connection: httpapi
+  tasks:
+    - name: Start deployment
+      ftd_configuration:
+        operation: "addDeployment"
+        register_as: "deploymentJob"
+
+    - name: Poll deployment status until the job is finished
+      ftd_configuration:
+        operation: "getDeployment"
+        path_params:
+          objId: "{{ deploymentJob['id'] }}"
+        register_as: "deploymentStatus"
+      until: deploymentStatus['endTime'] != -1
+      retries: 100
+      delay: 3
+
+    - fail:
+        msg: "Deployment failed. Status: {{ deploymentStatus['statusMessages'] }}"
+      when: deploymentStatus['state'] != 'DEPLOYED'

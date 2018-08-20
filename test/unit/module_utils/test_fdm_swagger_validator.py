@@ -1,9 +1,11 @@
 import os
 import unittest
 
+import pytest
+
 try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerValidator, IllegalArgumentException
-except ModuleNotFoundError:
+except ImportError:
     from module_utils.fdm_swagger_client import FdmSwaggerValidator, IllegalArgumentException
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
@@ -98,12 +100,21 @@ nested_mock_data1 = {
 }
 
 
+def sort_validator_rez(data):
+    data['required'] = sorted(data['required'])
+    data['invalid_type'] = sorted(data['invalid_type'],
+                                  key=lambda k: '{0}{1}{2}'.format(k['path'], ['expected_type'], ['actually_value']))
+
+    return data
+
+
 class TestFdmSwaggerValidator(unittest.TestCase):
 
-    def check_illegal_argument_exception(self, cb, msg):
-        with self.assertRaises(IllegalArgumentException) as ctx:
+    @staticmethod
+    def check_illegal_argument_exception(cb, msg):
+        with pytest.raises(IllegalArgumentException) as ctx:
             cb()
-        self.assertEqual(msg, str(ctx.exception))
+        assert msg == str(ctx.value)
 
     def test_path_params_valid(self):
         self.url_data_valid(method='validate_path_params', parameters_type='path')
@@ -274,41 +285,41 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         }
         valid, rez = getattr(validator, method)('getNetwork', data)
         assert not valid
-        assert {
-                   'required': [],
-                   'invalid_type': [
-                       {
-                           'path': 'objId',
-                           'expected_type': 'string',
-                           'actually_value': 1
-                       },
-                       {
-                           'path': 'parentId',
-                           'expected_type': 'string',
-                           'actually_value': True
-                       },
-                       {
-                           'path': 'someParam',
-                           'expected_type': 'string',
-                           'actually_value': []
-                       },
-                       {
-                           'path': 'p_integer',
-                           'expected_type': 'integer',
-                           'actually_value': 1.2
-                       },
-                       {
-                           'path': 'p_boolean',
-                           'expected_type': 'boolean',
-                           'actually_value': 0
-                       },
-                       {
-                           'path': 'p_number',
-                           'expected_type': 'number',
-                           'actually_value': False
-                       }
-                   ]
-               } == rez
+        assert sort_validator_rez({
+            'required': [],
+            'invalid_type': [
+                {
+                    'path': 'objId',
+                    'expected_type': 'string',
+                    'actually_value': 1
+                },
+                {
+                    'path': 'parentId',
+                    'expected_type': 'string',
+                    'actually_value': True
+                },
+                {
+                    'path': 'someParam',
+                    'expected_type': 'string',
+                    'actually_value': []
+                },
+                {
+                    'path': 'p_integer',
+                    'expected_type': 'integer',
+                    'actually_value': 1.2
+                },
+                {
+                    'path': 'p_boolean',
+                    'expected_type': 'boolean',
+                    'actually_value': 0
+                },
+                {
+                    'path': 'p_number',
+                    'expected_type': 'number',
+                    'actually_value': False
+                }
+            ]
+        }) == sort_validator_rez(rez)
         data = {
             'objId': {},
             'parentId': 0,
@@ -319,7 +330,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         }
         valid, rez = getattr(validator, method)('getNetwork', data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
                    'required': [],
                    'invalid_type': [
                        {
@@ -353,7 +364,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'actually_value': True
                        }
                    ]
-               } == rez
+               }) == sort_validator_rez(rez)
         data = {
             'objId': {},
             'parentId': 0,
@@ -364,7 +375,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         }
         valid, rez = getattr(validator, method)('getNetwork', data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
                    'required': [],
                    'invalid_type': [
                        {
@@ -398,7 +409,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'actually_value': "2"
                        }
                    ]
-               } == rez
+               }) == sort_validator_rez(rez)
 
     def test_validate_path_params_method_with_empty_data(self):
         self.validate_url_data_with_empty_data(method='validate_path_params', parameters_type='path')
@@ -537,7 +548,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         }
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
                    'required': [],
                    'invalid_type': [
                        {
@@ -556,7 +567,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'actually_value': 1
                        }
                    ]
-               } == rez
+               }) == sort_validator_rez(rez)
         data = {
             'subType': {},
             'type': [],
@@ -564,7 +575,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         }
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
                    'required': [],
                    'invalid_type': [
                        {
@@ -583,7 +594,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'actually_value': []
                        }
                    ]
-               } == rez
+               }) == sort_validator_rez(rez)
 
     def test_pass_only_required_fields(self):
         data = {
@@ -639,7 +650,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         }
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
                    'required': ['objects[0].type', 'objects[1].id', 'objects[2].id', 'objects[2].type'],
                    'invalid_type': [
                        {
@@ -663,7 +674,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'actually_value': 'test'
                        }
                    ]
-               } == rez
+               }) == sort_validator_rez(rez)
 
     def test_simple_types(self):
         local_mock_data = {
@@ -747,7 +758,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
                    'required': [],
                    'invalid_type': [
                        {
@@ -771,7 +782,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'actually_value': True
                        }
                    ]
-               } == rez
+               }) == sort_validator_rez(rez)
 
         invalid_data = {
             "f_string": 1,
@@ -782,7 +793,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
 
                    'required': [],
                    'invalid_type': [
@@ -807,7 +818,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'actually_value': "test"
                        }
                    ]
-               } == rez
+               }) == sort_validator_rez(rez)
 
         invalid_data = {
             "f_string": False,
@@ -818,7 +829,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', invalid_data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
 
                    'required': [],
                    'invalid_type': [
@@ -843,7 +854,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'actually_value': 1.2
                        }
                    ]
-               } == rez
+               }) == sort_validator_rez(rez)
 
     def test_nested_required_fields(self):
         valid_data = {
@@ -895,7 +906,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
 
                    'required': [],
                    'invalid_type': [
@@ -921,7 +932,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                        }
                    ]
 
-               } == rez
+               }) == sort_validator_rez(rez)
 
     def test_few_levels_nested_fields(self):
         local_mock_data = {
@@ -1048,14 +1059,14 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
                    'required': ['nested_model.fragments[0].object.ts'],
                    'invalid_type': [{
                        'path': 'nested_model.fragments[0].object.ms',
                        'expected_type': 'array',
                        'actually_value': {}
                    }]
-               } == rez
+               }) == sort_validator_rez(rez)
 
         valid_data = {
             "nested_model": {
@@ -1075,7 +1086,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = FdmSwaggerValidator(local_mock_data).validate_data('getdata', valid_data)
         assert not valid
-        assert {
+        assert sort_validator_rez({
                    'required': [],
                    'invalid_type': [
                        {
@@ -1087,4 +1098,4 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'path': 'nested_model.fragments[0].object',
                            'expected_type': 'object',
                            'actually_value': []}
-                   ]} == rez
+                   ]}) == sort_validator_rez(rez)
