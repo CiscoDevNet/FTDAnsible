@@ -18,7 +18,7 @@ from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 from ansible.module_utils.connection import ConnectionError
 
-from module_utils.fdm_swagger_client import FdmSwaggerParser, OPERATIONS, MODELS
+from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp
 from module_utils.http import HTTPMethod
 
 BASE_HEADERS = {
@@ -157,10 +157,10 @@ class HttpApi(HttpApiBase):
         return os.environ.get(API_TOKEN_PATH_ENV_VAR, DEFAULT_API_TOKEN_PATH)
 
     def get_operation_spec(self, operation_name):
-        return self.api_spec[OPERATIONS].get(operation_name, None)
+        return self.api_spec[SpecProp.OPERATIONS].get(operation_name, None)
 
     def get_model_spec(self, model_name):
-        return self.api_spec[MODELS].get(model_name, None)
+        return self.api_spec[SpecProp.MODELS].get(model_name, None)
 
     @property
     def api_spec(self):

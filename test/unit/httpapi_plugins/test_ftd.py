@@ -10,7 +10,7 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.connection import ConnectionError
 
 from httpapi_plugins.ftd import HttpApi, API_TOKEN_PATH_ENV_VAR
-from module_utils.fdm_swagger_client import OPERATIONS, MODELS, FdmSwaggerParser
+from module_utils.fdm_swagger_client import SpecProp, FdmSwaggerParser
 from module_utils.http import HTTPMethod
 
 if PY3:
@@ -195,7 +195,7 @@ class TestFtdHttpApi(unittest.TestCase):
     def test_get_operation_spec(self, parse_spec_mock):
         self.connection_mock.send.return_value = self._connection_response(None)
         parse_spec_mock.return_value = {
-            OPERATIONS: {'testOp': 'Specification for testOp'}
+            SpecProp.OPERATIONS: {'testOp': 'Specification for testOp'}
         }
 
         assert 'Specification for testOp' == self.ftd_plugin.get_operation_spec('testOp')
@@ -205,7 +205,7 @@ class TestFtdHttpApi(unittest.TestCase):
     def test_get_model_spec(self, parse_spec_mock):
         self.connection_mock.send.return_value = self._connection_response(None)
         parse_spec_mock.return_value = {
-            MODELS: {'TestModel': 'Specification for TestModel'}
+            SpecProp.MODELS: {'TestModel': 'Specification for TestModel'}
         }
 
         assert 'Specification for TestModel' == self.ftd_plugin.get_model_spec('TestModel')
