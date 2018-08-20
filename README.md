@@ -17,9 +17,7 @@ Inventory is used to tell Ansible what hosts to run the tasks on. By default, th
 
 ## Ansible modules
 
-The project contains Ansible modules for managing Network, Network Group, Access Policy and Access Rule objects, handling authentication and making deployment on FTD devices. 
-
-Ansible modules are located in the `library` folder. Modules generated automatically from Swagger specification are located in `library/generated` folder. 
+The project contains Ansible modules for managing device configuration (`library/ftd_configuration.py`), uploading (`library/ftd_upload.py`) and downloading (`library/ftd_download.py`) files.  
 
 Sample playbooks located in `samples` folder contain examples of their usage. To run the playbook:
  
@@ -31,27 +29,11 @@ Sample playbooks located in `samples` folder contain examples of their usage. To
     $ ansible-playbook samples/network_object.yml
     ```
 
-
-## Module Generator
-Ansible modules can be automatically generated from Swagger specification. The generator downloads available Swagger Resources and creates
-a separate module for each model per resource. Currently, modules are only generated for resources configured in `generator/module_gelerator.py` file.
-
-To generate Ansible modules:
-
-1. Complete "Common environment setup" section;
-
-1. Run the generator:
-    ```
-    python -m generator.module_generator $HOSTNAME $USERNAME $PASSWORD
-    ```
-
-1. Generated files must be located in the `library/generated` folder.
-
 ## Testing
 
 ### Unit Tests
 
-The project contains examples of Ansible unit tests written for `ftd_deploy` module. They can be found in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests
+The project contains unit tests for Ansible modules, HTTP API plugin and util files. They can be found in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests
 in this project also rely on them and including Ansible test module to the Python path is required to run them. When the project is
 developed further, modules and tests will be moved to the Ansible repository and this extra step will be no longer needed.
 
@@ -70,24 +52,6 @@ In order to run the unit tests:
     
 ### Integration Tests
 
-Ansible integration tests are written in a form of playbooks and are usually run with `ansible-test` utility command from Ansible repository. This project 
-contains examples of integration tests written for `ftd_network_object` module that are located in `test/integration` folder.
-
-As current project is created outside Ansible repository, copying modules/module utils/tests is required before running them. In order to run the integration tests:
-
-1. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
-1. Copy Ansible modules from `library` to `ANSIBLE_DIR/lib/ansible/modules/network/ftd`;
-1. Copy module utils from `module_utils` to `ANSIBLE_DIR/lib/ansible/module_utils`;
-1. Copy integration †ests from `test/integration` to `ANSIBLE_DIR/test/integration/targets`;
-1. Configure test inventory:
-    ```
-    cd ANSIBLE_DIR/test/integration
-    cp inventory.network.template inventory.networking
-    ${EDITOR:-vi} inventory.networking
-    # Add in machines for the platform(s) you wish to test
-    ```
-1. Define FTD modules as network modules by adding `ftd` prefix to `ANSIBLE_DIR/test/integration/target-prefixes.network` file;
-1. Run integration tests for `ftd_network_object` module:
-    ```
-    ansible-test network-integration --inventory inventory.networking ftd_network_object
-    ```
+Integration tests are written in a form of playbooks and are usually run with `ansible-test` utility command from Ansible repository. As this project is created outside Ansible, it 
+does not have utils to run the tests. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be 
+run as usual playbooks.
