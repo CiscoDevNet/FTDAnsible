@@ -1,9 +1,11 @@
 import os
 import unittest
 
+import pytest
+
 try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerValidator, IllegalArgumentException
-except ModuleNotFoundError:
+except ImportError:
     from module_utils.fdm_swagger_client import FdmSwaggerValidator, IllegalArgumentException
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
@@ -100,10 +102,11 @@ nested_mock_data1 = {
 
 class TestFdmSwaggerValidator(unittest.TestCase):
 
-    def check_illegal_argument_exception(self, cb, msg):
-        with self.assertRaises(IllegalArgumentException) as ctx:
+    @staticmethod
+    def check_illegal_argument_exception(cb, msg):
+        with pytest.raises(IllegalArgumentException) as ctx:
             cb()
-        self.assertEqual(msg, str(ctx.exception))
+        assert msg == str(ctx.value)
 
     def test_path_params_valid(self):
         self.url_data_valid(method='validate_path_params', parameters_type='path')
@@ -308,7 +311,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
                            'actually_value': False
                        }
                    ]
-               } == rez
+               } == sorted(rez)
         data = {
             'objId': {},
             'parentId': 0,
