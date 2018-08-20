@@ -68,12 +68,12 @@ from ansible.module_utils.connection import Connection
 try:
     from ansible.module_utils.config_resource import BaseConfigObjectResource
     from ansible.module_utils.http import HTTPMethod
-    from ansible.module_utils.misc import construct_ansible_facts, ConfigurationError
+    from ansible.module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
     from ansible.module_utils.fdm_swagger_client import OperationField
 except ImportError:
     from module_utils.config_resource import BaseConfigObjectResource
     from module_utils.http import HTTPMethod
-    from module_utils.misc import construct_ansible_facts, ConfigurationError
+    from module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
     from module_utils.fdm_swagger_client import OperationField
 
 
@@ -127,8 +127,11 @@ def main():
 
         module.exit_json(changed=resource.config_changed, response=resp,
                          ansible_facts=construct_ansible_facts(resp, module.params))
-    except ConfigurationError as e:
+    except FtdConfigurationError as e:
         module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e))
+    except FtdServerError as e:
+        module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
+                             'Server response: %s' % (op_name, e.code, e.response))
 
 
 if __name__ == '__main__':

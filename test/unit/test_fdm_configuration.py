@@ -8,9 +8,9 @@ from library import ftd_configuration
 
 try:
     from ansible.module_utils.http import HTTPMethod
-    from ansible.module_utils.misc import ConfigurationError
+    from ansible.module_utils.misc import FtdConfigurationError, FtdServerError
 except ImportError:
-    from module_utils.misc import ConfigurationError
+    from module_utils.misc import FtdConfigurationError, FtdServerError
     from module_utils.http import HTTPMethod
 
 ADD_RESPONSE = {'status': 'Object added'}
@@ -124,7 +124,7 @@ class TestFtdConfiguration(object):
     def test_module_should_fail_when_operation_raises_configuration_error(self, operation_mock, resource_mock):
         operation_mock.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
         set_module_args({'operation': 'failure'})
-        resource_mock.send_request.side_effect = ConfigurationError('Foo error.')
+        resource_mock.send_request.side_effect = FtdConfigurationError('Foo error.')
 
         with pytest.raises(AnsibleFailJson) as exc:
             self.module.main()
@@ -132,6 +132,19 @@ class TestFtdConfiguration(object):
         result = exc.value.args[0]
         assert result['failed']
         assert 'Failed to execute failure operation because of the configuration error: Foo error.' == result['msg']
+
+    def test_module_should_fail_when_operation_raises_server_error(self, operation_mock, resource_mock):
+        operation_mock.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+        set_module_args({'operation': 'failure'})
+        resource_mock.send_request.side_effect = FtdServerError({'error': 'foo'}, 500)
+
+        with pytest.raises(AnsibleFailJson) as exc:
+            self.module.main()
+
+        result = exc.value.args[0]
+        assert result['failed']
+        assert 'Server returned an error trying to execute failure operation. Status code: 500. ' \
+               'Server response: {\'error\': \'foo\'}' == result['msg']
 
     def _run_module(self, module_args):
         set_module_args(module_args)

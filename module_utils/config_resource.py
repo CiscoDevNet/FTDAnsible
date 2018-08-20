@@ -1,17 +1,14 @@
-import json
 from functools import partial
-
-from ansible.module_utils.connection import ConnectionError
 
 # TODO: remove import workarounds when module_utils are moved to the Ansible core
 from httpapi_plugins.ftd import ResponseParams
 
 try:
     from ansible.module_utils.http import iterate_over_pageable_resource, HTTPMethod
-    from ansible.module_utils.misc import equal_objects, copy_identity_properties, ConfigurationError
+    from ansible.module_utils.misc import equal_objects, copy_identity_properties, FtdConfigurationError, FtdServerError
 except ImportError:
     from module_utils.http import iterate_over_pageable_resource, HTTPMethod
-    from module_utils.misc import equal_objects, copy_identity_properties, ConfigurationError
+    from module_utils.misc import equal_objects, copy_identity_properties, FtdConfigurationError, FtdServerError
 
 UNPROCESSABLE_ENTITY_STATUS = 422
 INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
@@ -50,7 +47,7 @@ class BaseConfigObjectResource(object):
         try:
             return self.send_request(url_path=url_path, http_method=HTTPMethod.POST, body_params=body_params,
                                      path_params=path_params, query_params=query_params)
-        except ConnectionError as e:
+        except FtdServerError as e:
             if is_duplicate_name_error(e):
                 existing_obj = self.get_object_by_name(url_path, body_params['name'], path_params)
                 if equal_objects(existing_obj, body_params):
@@ -58,7 +55,7 @@ class BaseConfigObjectResource(object):
                 elif update_if_exists:
                     return update_existing_object(existing_obj)
                 else:
-                    raise ConfigurationError(
+                    raise FtdConfigurationError(
                         'Cannot add new object. An object with the same name but different parameters already exists.')
             else:
                 raise e
@@ -69,7 +66,7 @@ class BaseConfigObjectResource(object):
 
         try:
             return self.send_request(url_path=url_path, http_method=HTTPMethod.DELETE, path_params=path_params)
-        except ConnectionError as e:
+        except FtdServerError as e:
             if is_invalid_uuid_error(e):
                 return {'status': 'Referenced object does not exist'}
             else:
@@ -79,7 +76,7 @@ class BaseConfigObjectResource(object):
         existing_object = self.send_request(url_path=url_path, http_method=HTTPMethod.GET, path_params=path_params)
 
         if not existing_object:
-            raise ConfigurationError('Referenced object does not exist')
+            raise FtdConfigurationError('Referenced object does not exist')
         elif equal_objects(existing_object, body_params):
             return existing_object
         else:
@@ -89,7 +86,7 @@ class BaseConfigObjectResource(object):
     def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         def raise_for_failure(resp):
             if not resp[ResponseParams.SUCCESS]:
-                raise ConnectionError(json.dumps(resp[ResponseParams.RESPONSE]), code=resp[ResponseParams.STATUS_CODE])
+                raise FtdServerError(resp[ResponseParams.RESPONSE], resp[ResponseParams.STATUS_CODE])
 
         response = self._conn.send_request(url_path=url_path, http_method=http_method, body_params=body_params,
                                            path_params=path_params, query_params=query_params)
