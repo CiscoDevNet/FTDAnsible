@@ -32,6 +32,10 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
+  filters:
+    description:
+      - Key-value dict that represents equality filters. Every key is a property name and value is its desired value.
+        If multiple filters are present, they are combined with logical operator AND.
 """
 
 EXAMPLES = """
@@ -92,13 +96,33 @@ def is_delete_operation(operation_name, operation_spec):
     return operation_name.startswith('delete') and operation_spec[OperationField.METHOD] == HTTPMethod.DELETE
 
 
+def is_find_by_filter_operation(operation_name, operation_spec, params):
+    """
+    Checks whether the called operation is 'find by filter'. This operation fetches all objects and finds
+    the matching ones by the given filter. As filtering is done on the client side, this operation should be used
+    only when selected filters are not implemented on the server side.
+
+    :param operation_name: name of the operation being called by the user
+    :type operation_name: str
+    :param operation_spec: specification of the operation being called by the user
+    :type operation_spec: dict
+    :param params: module parameters
+    :return: True if called operation is find by filter, otherwise False
+    :rtype: bool
+    """
+    is_get_list_operation = operation_name.startswith('get') and operation_name.endswith('List')
+    is_get_method = operation_spec[OperationField.METHOD] == HTTPMethod.GET
+    return is_get_list_operation and is_get_method and params['filters']
+
+
 def main():
     fields = dict(
         operation=dict(type='str', required=True),
         data=dict(type='dict'),
         query_params=dict(type='dict'),
         path_params=dict(type='dict'),
-        register_as=dict(type='str')
+        register_as=dict(type='str'),
+        filters=dict(type='dict')
     )
     module = AnsibleModule(argument_spec=fields)
     params = module.params
@@ -121,6 +145,8 @@ def main():
             resp = resource.edit_object(op_spec[OperationField.URL], data, path_params, query_params)
         elif is_delete_operation(op_name, op_spec):
             resp = resource.delete_object(op_spec[OperationField.URL], path_params)
+        elif is_find_by_filter_operation(op_name, op_spec, params):
+            resp = resource.get_objects_by_filter(op_spec[OperationField.URL], params['filters'], path_params)
         else:
             resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data, path_params,
                                          query_params)

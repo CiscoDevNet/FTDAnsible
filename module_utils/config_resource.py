@@ -31,6 +31,19 @@ class BaseConfigObjectResource(object):
         # not all endpoints support filtering so checking name explicitly
         return next((item for item in item_generator if item['name'] == name), None)
 
+    def get_objects_by_filter(self, url_path, filters, path_params=None):
+        def match_filters(obj):
+            for k, v in filters.items():
+                if k not in obj or obj[k] != v:
+                    return False
+            return True
+
+        item_generator = iterate_over_pageable_resource(
+            lambda query_params: self.send_request(url_path, HTTPMethod.GET, path_params=path_params,
+                                                   query_params=query_params), {}
+        )
+        return [i for i in item_generator if match_filters(i)]
+
     def add_object(self, url_path, body_params, path_params=None, query_params=None, update_if_exists=False):
         def is_duplicate_name_error(err):
             return err.code == UNPROCESSABLE_ENTITY_STATUS and DUPLICATE_NAME_ERROR_MESSAGE in str(err)
