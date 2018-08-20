@@ -17,10 +17,6 @@ class FtdServerError(Exception):
         self.code = code
 
 
-def dict_subset(dictionary, keys):
-    return dict((k, dictionary[k]) for k in keys if dictionary[k])
-
-
 def construct_ansible_facts(response, params):
     facts = dict()
     if response:
