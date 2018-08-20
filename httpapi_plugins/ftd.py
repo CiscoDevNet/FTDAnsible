@@ -34,6 +34,12 @@ TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
 
 
+class ResponseParams:
+    SUCCESS = 'success'
+    STATUS_CODE = 'status_code'
+    RESPONSE = 'response'
+
+
 class HttpApi(HttpApiBase):
     def __init__(self, connection):
         self.connection = connection
@@ -100,17 +106,17 @@ class HttpApi(HttpApiBase):
                 headers=self._authorized_headers()
             )
             return {
-                'success': True,
-                'status_code': response.getcode(),
-                'response': self._response_to_json(response_data.getvalue())
+                ResponseParams.SUCCESS: True,
+                ResponseParams.STATUS_CODE: response.getcode(),
+                ResponseParams.RESPONSE: self._response_to_json(response_data.getvalue())
             }
         # Being invoked via JSON-RPC, this method does not serialize and pass HTTPError correctly to the method caller.
         # Thus, in order to handle non-200 responses, we need to wrap them into a simple structure and pass explicitly.
         except HTTPError as e:
             return {
-                'success': False,
-                'status_code': e.code,
-                'response': self._response_to_json(e.read())
+                ResponseParams.SUCCESS: False,
+                ResponseParams.STATUS_CODE: e.code,
+                ResponseParams.RESPONSE: self._response_to_json(e.read())
             }
 
     def upload_file(self, from_path, to_url):
@@ -178,11 +184,11 @@ class HttpApi(HttpApiBase):
     def api_spec(self):
         if self._api_spec is None:
             response = self.send_request(url_path=API_SPEC_PATH, http_method=HTTPMethod.GET)
-            if response['success']:
-                self._api_spec = FdmSwaggerParser().parse_spec(response['response'])
+            if response[ResponseParams.SUCCESS]:
+                self._api_spec = FdmSwaggerParser().parse_spec(response[ResponseParams.RESPONSE])
             else:
                 raise ConnectionError('Failed to download API specification. Status code: %s. Response: %s' % (
-                    response['status'], response['response']))
+                    response[ResponseParams.STATUS_CODE], response[ResponseParams.RESPONSE]))
         return self._api_spec
 
 

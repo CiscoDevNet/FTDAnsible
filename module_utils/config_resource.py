@@ -4,6 +4,8 @@ from functools import partial
 from ansible.module_utils.connection import ConnectionError
 
 # TODO: remove import workarounds when module_utils are moved to the Ansible core
+from httpapi_plugins.ftd import ResponseParams
+
 try:
     from ansible.module_utils.http import iterate_over_pageable_resource, HTTPMethod
     from ansible.module_utils.misc import equal_objects, copy_identity_properties, ConfigurationError
@@ -86,12 +88,12 @@ class BaseConfigObjectResource(object):
 
     def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         def raise_for_failure(resp):
-            if not resp['success']:
-                raise ConnectionError(json.dumps(resp['response']), code=resp['status_code'])
+            if not resp[ResponseParams.SUCCESS]:
+                raise ConnectionError(json.dumps(resp[ResponseParams.RESPONSE]), code=resp[ResponseParams.STATUS_CODE])
 
         response = self._conn.send_request(url_path=url_path, http_method=http_method, body_params=body_params,
                                            path_params=path_params, query_params=query_params)
         raise_for_failure(response)
         if http_method != HTTPMethod.GET:
             self.config_changed = True
-        return response['response']
+        return response[ResponseParams.RESPONSE]

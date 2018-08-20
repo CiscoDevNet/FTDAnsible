@@ -9,7 +9,7 @@ from ansible.module_utils.connection import ConnectionError
 from ansible.module_utils.six import BytesIO, PY3, StringIO
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
-from httpapi_plugins.ftd import HttpApi, API_TOKEN_PATH_ENV_VAR
+from httpapi_plugins.ftd import HttpApi, API_TOKEN_PATH_ENV_VAR, ResponseParams
 from module_utils.fdm_swagger_client import SpecProp, FdmSwaggerParser
 from module_utils.http import HTTPMethod
 
@@ -98,7 +98,8 @@ class TestFtdHttpApi(unittest.TestCase):
                                             path_params={'objId': '123'},
                                             query_params={'at': 0})
 
-        assert {'success': True, 'status_code': 200, 'response': exp_resp} == resp
+        assert {ResponseParams.SUCCESS: True, ResponseParams.STATUS_CODE: 200,
+                ResponseParams.RESPONSE: exp_resp} == resp
         self.connection_mock.send.assert_called_once_with('/test/123?at=0', '{"name": "foo"}', method=HTTPMethod.PUT,
                                                           headers=self._expected_headers())
 
@@ -107,7 +108,7 @@ class TestFtdHttpApi(unittest.TestCase):
 
         resp = self.ftd_plugin.send_request('/test', HTTPMethod.GET)
 
-        assert {'success': True, 'status_code': 200, 'response': {}} == resp
+        assert {ResponseParams.SUCCESS: True, ResponseParams.STATUS_CODE: 200, ResponseParams.RESPONSE: {}} == resp
         self.connection_mock.send.assert_called_once_with('/test', None, method=HTTPMethod.GET,
                                                           headers=self._expected_headers())
 
@@ -117,7 +118,8 @@ class TestFtdHttpApi(unittest.TestCase):
 
         resp = self.ftd_plugin.send_request('/test', HTTPMethod.GET)
 
-        assert {'success': False, 'status_code': 500, 'response': {'errorMessage': 'ERROR'}} == resp
+        assert {ResponseParams.SUCCESS: False, ResponseParams.STATUS_CODE: 500,
+                ResponseParams.RESPONSE: {'errorMessage': 'ERROR'}} == resp
 
     def test_send_request_raises_exception_when_invalid_response(self):
         self.connection_mock.send.return_value = self._connection_response('nonValidJson')
