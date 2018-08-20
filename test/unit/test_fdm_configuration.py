@@ -16,6 +16,7 @@ except ImportError:
 ADD_RESPONSE = {'status': 'Object added'}
 EDIT_RESPONSE = {'status': 'Object edited'}
 DELETE_RESPONSE = {'status': 'Object deleted'}
+GET_BY_FILTER_RESPONSE = [{'name': 'foo', 'description': 'bar'}]
 ARBITRARY_RESPONSE = {'status': 'Arbitrary request sent'}
 
 
@@ -39,6 +40,7 @@ class TestFtdConfiguration(object):
         resource_instance.edit_object.return_value = EDIT_RESPONSE
         resource_instance.delete_object.return_value = DELETE_RESPONSE
         resource_instance.send_request.return_value = ARBITRARY_RESPONSE
+        resource_instance.get_objects_by_filter.return_value = GET_BY_FILTER_RESPONSE
         return resource_instance
 
     def test_module_should_fail_without_operation_arg(self):
@@ -104,6 +106,22 @@ class TestFtdConfiguration(object):
 
         assert DELETE_RESPONSE == result['response']
         resource_mock.delete_object.assert_called_with(operation_mock.return_value['url'], params['path_params'])
+
+    def test_module_should_get_objects_by_filter_when_find_by_filter_operation(self, operation_mock, resource_mock):
+        operation_mock.return_value = {
+            'method': HTTPMethod.GET,
+            'url': '/objects'
+        }
+
+        params = {
+            'operation': 'getObjectList',
+            'filters': {'name': 'foo'}
+        }
+        result = self._run_module(params)
+
+        assert GET_BY_FILTER_RESPONSE == result['response']
+        resource_mock.get_objects_by_filter.assert_called_with(operation_mock.return_value['url'], params['filters'],
+                                                               None)
 
     def test_module_should_send_request_when_arbitrary_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {
