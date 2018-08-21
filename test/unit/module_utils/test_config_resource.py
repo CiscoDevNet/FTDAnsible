@@ -25,7 +25,6 @@ class TestBaseConfigurationResource(object):
         assert [objects[1]] == resource.get_objects_by_filter('/objects',
                                                               {'type': 1, 'foo': {'bar': 'buz'}})
 
-    #
     @patch.object(BaseConfigurationResource, 'send_request')
     def test_get_objects_by_filter_with_multiple_responses(self, send_request_mock):
         send_request_mock.side_effect = [
