@@ -116,3 +116,17 @@ class TestIterateOverPageableResource(object):
             call(query_params={'offset': 3, 'limit': 10}),
             call(query_params={'offset': 13, 'limit': 10})
         ])
+
+    def test_iterate_over_pageable_resource_should_pass_with_string_offset_and_limit(self):
+        resource_func = mock.Mock(side_effect=[
+            {'items': ['foo']},
+            {'items': []},
+        ])
+
+        items = iterate_over_pageable_resource(resource_func, {'offset': '1', 'limit': '1'})
+
+        assert ['foo'] == list(items)
+        resource_func.assert_has_calls([
+            call(query_params={'offset': '1', 'limit': '1'}),
+            call(query_params={'offset': 2, 'limit': '1'})
+        ])

@@ -131,5 +131,5 @@ def iterate_over_pageable_resource(resource_func, query_params=None):
             yield item
         # creating a copy not to mutate existing dict
         query_params = dict(query_params)
-        query_params['offset'] += query_params['limit']
+        query_params['offset'] = int(query_params['offset']) + int(query_params['limit'])
         result = resource_func(query_params=query_params)
