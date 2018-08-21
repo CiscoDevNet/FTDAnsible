@@ -121,7 +121,7 @@ class TestFtdConfiguration(object):
 
         assert GET_BY_FILTER_RESPONSE == result['response']
         resource_mock.get_objects_by_filter.assert_called_with(operation_mock.return_value['url'], params['filters'],
-                                                               None)
+                                                               None, None)
 
     def test_module_should_send_request_when_arbitrary_operation(self, operation_mock, resource_mock):
         operation_mock.return_value = {

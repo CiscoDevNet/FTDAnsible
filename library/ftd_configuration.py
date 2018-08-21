@@ -146,7 +146,8 @@ def main():
         elif is_delete_operation(op_name, op_spec):
             resp = resource.delete_object(op_spec[OperationField.URL], path_params)
         elif is_find_by_filter_operation(op_name, op_spec, params):
-            resp = resource.get_objects_by_filter(op_spec[OperationField.URL], params['filters'], path_params)
+            resp = resource.get_objects_by_filter(op_spec[OperationField.URL], params['filters'], path_params,
+                                                  query_params)
         else:
             resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data, path_params,
                                          query_params)
