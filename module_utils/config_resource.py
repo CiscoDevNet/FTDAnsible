@@ -11,6 +11,7 @@ except ImportError:
     from module_utils.misc import equal_objects, copy_identity_properties, FtdConfigurationError, FtdServerError
 
 DEFAULT_PAGE_SIZE = 10
+DEFAULT_OFFSET = 0
 
 UNPROCESSABLE_ENTITY_STATUS = 422
 INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
@@ -121,10 +122,8 @@ def iterate_over_pageable_resource(resource_func, query_params=None):
     :rtype: iterator of dict
     """
     query_params = {} if query_params is None else dict(query_params)
-    if 'limit' not in query_params:
-        query_params['limit'] = DEFAULT_PAGE_SIZE
-    if 'offset' not in query_params:
-        query_params['offset'] = 0
+    query_params.setdefault('limit', DEFAULT_PAGE_SIZE)
+    query_params.setdefault('offset', DEFAULT_OFFSET)
 
     result = resource_func(query_params=query_params)
     while result['items']:
