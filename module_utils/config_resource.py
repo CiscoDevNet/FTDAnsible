@@ -17,7 +17,7 @@ INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
 DUPLICATE_NAME_ERROR_MESSAGE = "Validation failed due to a duplicate name"
 
 
-class BaseConfigObjectResource(object):
+class BaseConfigurationResource(object):
     def __init__(self, conn):
         self._conn = conn
         self.config_changed = False
@@ -120,8 +120,7 @@ def iterate_over_pageable_resource(resource_func, query_params=None):
     :return: an iterator containing returned items
     :rtype: iterator of dict
     """
-    if query_params is None:
-        query_params = {}
+    query_params = {} if query_params is None else dict(query_params)
     if 'limit' not in query_params:
         query_params['limit'] = DEFAULT_PAGE_SIZE
     if 'offset' not in query_params:
@@ -131,5 +130,7 @@ def iterate_over_pageable_resource(resource_func, query_params=None):
     while result['items']:
         for item in result['items']:
             yield item
+        # creating a copy not to mutate existing dict
+        query_params = dict(query_params)
         query_params['offset'] += query_params['limit']
         result = resource_func(query_params=query_params)

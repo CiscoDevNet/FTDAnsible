@@ -34,7 +34,7 @@ class TestFtdConfiguration(object):
 
     @pytest.fixture
     def resource_mock(self, mocker):
-        resource_class_mock = mocker.patch('library.ftd_configuration.BaseConfigObjectResource')
+        resource_class_mock = mocker.patch('library.ftd_configuration.BaseConfigurationResource')
         resource_instance = resource_class_mock.return_value
         resource_instance.add_object.return_value = ADD_RESPONSE
         resource_instance.edit_object.return_value = EDIT_RESPONSE

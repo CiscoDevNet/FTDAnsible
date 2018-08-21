@@ -70,12 +70,12 @@ from ansible.module_utils.connection import Connection
 
 # TODO: remove import workarounds when module_utils are moved to the Ansible core
 try:
-    from ansible.module_utils.config_resource import BaseConfigObjectResource
+    from ansible.module_utils.config_resource import BaseConfigurationResource
     from ansible.module_utils.http import HTTPMethod
     from ansible.module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
     from ansible.module_utils.fdm_swagger_client import OperationField
 except ImportError:
-    from module_utils.config_resource import BaseConfigObjectResource
+    from module_utils.config_resource import BaseConfigurationResource
     from module_utils.http import HTTPMethod
     from module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
     from module_utils.fdm_swagger_client import OperationField
@@ -136,7 +136,7 @@ def main():
     data, query_params, path_params = params['data'], params['query_params'], params['path_params']
     # TODO: implement validation for input parameters
 
-    resource = BaseConfigObjectResource(connection)
+    resource = BaseConfigurationResource(connection)
 
     try:
         if is_add_operation(op_name, op_spec):
