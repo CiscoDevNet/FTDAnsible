@@ -4,32 +4,45 @@ from functools import partial
 from httpapi_plugins.ftd import ResponseParams
 
 try:
-    from ansible.module_utils.http import iterate_over_pageable_resource, HTTPMethod
+    from ansible.module_utils.http import HTTPMethod
     from ansible.module_utils.misc import equal_objects, copy_identity_properties, FtdConfigurationError, FtdServerError
 except ImportError:
-    from module_utils.http import iterate_over_pageable_resource, HTTPMethod
+    from module_utils.http import HTTPMethod
     from module_utils.misc import equal_objects, copy_identity_properties, FtdConfigurationError, FtdServerError
+
+DEFAULT_PAGE_SIZE = 10
+DEFAULT_OFFSET = 0
 
 UNPROCESSABLE_ENTITY_STATUS = 422
 INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
 DUPLICATE_NAME_ERROR_MESSAGE = "Validation failed due to a duplicate name"
 
 
-class BaseConfigObjectResource(object):
+class BaseConfigurationResource(object):
     def __init__(self, conn):
         self._conn = conn
         self.config_changed = False
 
     def get_object_by_name(self, url_path, name, path_params=None):
-        get_object_list = partial(self.send_request, url_path=url_path, http_method=HTTPMethod.GET,
-                                  path_params=path_params)
-
         item_generator = iterate_over_pageable_resource(
-            lambda query_params: get_object_list(query_params=query_params),
+            partial(self.send_request, url_path=url_path, http_method=HTTPMethod.GET, path_params=path_params),
             {'filter': 'name:%s' % name}
         )
         # not all endpoints support filtering so checking name explicitly
         return next((item for item in item_generator if item['name'] == name), None)
+
+    def get_objects_by_filter(self, url_path, filters, path_params=None, query_params=None):
+        def match_filters(obj):
+            for k, v in filters.items():
+                if k not in obj or obj[k] != v:
+                    return False
+            return True
+
+        item_generator = iterate_over_pageable_resource(
+            partial(self.send_request, url_path=url_path, http_method=HTTPMethod.GET, path_params=path_params),
+            query_params
+        )
+        return [i for i in item_generator if match_filters(i)]
 
     def add_object(self, url_path, body_params, path_params=None, query_params=None, update_if_exists=False):
         def is_duplicate_name_error(err):
@@ -94,3 +107,29 @@ class BaseConfigObjectResource(object):
         if http_method != HTTPMethod.GET:
             self.config_changed = True
         return response[ResponseParams.RESPONSE]
+
+
+def iterate_over_pageable_resource(resource_func, query_params=None):
+    """
+    A generator function that iterates over a resource that supports pagination and lazily returns present items
+    one by one.
+
+    :param resource_func: function that receives `query_params` named argument and returns a page of objects
+    :type resource_func: callable
+    :param query_params: initial dictionary of query parameters that will be passed to the resource_func
+    :type query_params: dict
+    :return: an iterator containing returned items
+    :rtype: iterator of dict
+    """
+    query_params = {} if query_params is None else dict(query_params)
+    query_params.setdefault('limit', DEFAULT_PAGE_SIZE)
+    query_params.setdefault('offset', DEFAULT_OFFSET)
+
+    result = resource_func(query_params=query_params)
+    while result['items']:
+        for item in result['items']:
+            yield item
+        # creating a copy not to mutate existing dict
+        query_params = dict(query_params)
+        query_params['offset'] = int(query_params['offset']) + int(query_params['limit'])
+        result = resource_func(query_params=query_params)
