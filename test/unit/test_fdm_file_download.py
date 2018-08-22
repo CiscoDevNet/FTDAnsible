@@ -21,9 +21,9 @@ class TestFtdConfiguration(object):
         connection_class_mock = mocker.patch('library.ftd_file_download.Connection')
         return connection_class_mock.return_value
 
-    @pytest.mark.parametrize("missing_arg", ['operation', 'dest'])
+    @pytest.mark.parametrize("missing_arg", ['operation', 'destination'])
     def test_module_should_fail_without_required_args(self, missing_arg):
-        module_args = {'operation': 'downloadFile', 'dest': '/tmp'}
+        module_args = {'operation': 'downloadFile', 'destination': '/tmp'}
         del module_args[missing_arg]
         set_module_args(module_args)
 
@@ -34,7 +34,7 @@ class TestFtdConfiguration(object):
 
     def test_module_should_fail_when_no_operation_spec_found(self, connection_mock):
         connection_mock.get_operation_spec.return_value = None
-        set_module_args({'operation': 'nonExistingDownloadOperation', 'dest': '/tmp'})
+        set_module_args({'operation': 'nonExistingDownloadOperation', 'destination': '/tmp'})
 
         with pytest.raises(AnsibleFailJson) as ex:
             self.module.main()
@@ -49,15 +49,15 @@ class TestFtdConfiguration(object):
             OperationField.URL: '/object',
             OperationField.MODEL_NAME: 'NetworkObject'
         }
-        set_module_args({'operation': 'nonDownloadOperation', 'dest': '/tmp'})
+        set_module_args({'operation': 'nonDownloadOperation', 'destination': '/tmp'})
 
         with pytest.raises(AnsibleFailJson) as ex:
             self.module.main()
 
         result = ex.value.args[0]
         assert result['failed']
-        assert result['msg'] == 'Specified operation is not valid: nonDownloadOperation. ' \
-                                'Selected operation must return a file.'
+        assert result['msg'] == 'Invalid download operation: nonDownloadOperation. ' \
+                                'The operation must make GET request and return a file.'
 
     def test_module_should_call_download_and_return(self, connection_mock):
         connection_mock.get_operation_spec.return_value = {
@@ -69,7 +69,7 @@ class TestFtdConfiguration(object):
         set_module_args({
             'operation': 'downloadFile',
             'path_params': {'objId': '12'},
-            'dest': '/tmp'
+            'destination': '/tmp'
         })
         with pytest.raises(AnsibleExitJson) as ex:
             self.module.main()

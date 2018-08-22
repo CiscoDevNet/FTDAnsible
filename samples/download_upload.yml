@@ -6,16 +6,17 @@
         operation: 'getdownload'
         path_params:
           objId: 'default'
-        dest: /tmp/
+        destination: /tmp/
 
-#    - name: Upload disk file
-#      ftd_upload:
-#        object_type: 'diskFile'
-#        src: '{{ disk_file }}'
-#        register_as: diskFile
-#
-#    - name: Download disk file
-#      ftd_download:
-#        object_type: 'diskFile'
-#        object_id: "{{ diskFile['id'] }}"
-#        dest: /tmp/test2.txt
+    - name: Upload disk file
+      ftd_file_upload:
+        operation: 'postuploaddiskfile'
+        fileToUpload: /tmp/test1.txt
+        register_as: diskFile
+
+    - name: Download disk file
+      ftd_file_download:
+        operation: 'getdownloaddiskfile'
+        path_params:
+          objId: "{{ diskFile['id'] }}"
+        destination: /tmp/test2.txt
