@@ -17,7 +17,7 @@ Inventory is used to tell Ansible what hosts to run the tasks on. By default, th
 
 ## Ansible modules
 
-The project contains Ansible modules for managing device configuration (`library/ftd_configuration.py`), uploading (`library/ftd_upload.py`) and downloading (`library/ftd_download.py`) files.  
+The project contains Ansible modules for managing device configuration (`library/ftd_configuration.py`), uploading (`library/ftd_file_upload.py`) and downloading (`library/ftd_file_download.py`) files.  
 
 Sample playbooks located in `samples` folder contain examples of their usage. To run the playbook:
  
