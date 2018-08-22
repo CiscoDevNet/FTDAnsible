@@ -77,7 +77,8 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert ADD_RESPONSE == result['response']
-        resource_mock.add_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'], params['data'], None, None)
+        resource_mock.add_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
+                                                    params['data'], None, None)
 
     def test_module_should_edit_object_when_edit_operation(self, connection_mock, resource_mock):
         connection_mock.get_operation_spec.return_value = {
@@ -93,7 +94,8 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert EDIT_RESPONSE == result['response']
-        resource_mock.edit_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'], params['data'],
+        resource_mock.edit_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
+                                                     params['data'],
                                                      params['path_params'], None)
 
     def test_module_should_delete_object_when_delete_operation(self, connection_mock, resource_mock):
@@ -109,7 +111,8 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert DELETE_RESPONSE == result['response']
-        resource_mock.delete_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'], params['path_params'])
+        resource_mock.delete_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
+                                                       params['path_params'])
 
     def test_module_should_get_objects_by_filter_when_find_by_filter_operation(self, connection_mock, resource_mock):
         connection_mock.get_operation_spec.return_value = {
@@ -124,7 +127,8 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert GET_BY_FILTER_RESPONSE == result['response']
-        resource_mock.get_objects_by_filter.assert_called_with(connection_mock.get_operation_spec.return_value['url'], params['filters'],
+        resource_mock.get_objects_by_filter.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
+                                                               params['filters'],
                                                                None, None)
 
     def test_module_should_send_request_when_arbitrary_operation(self, connection_mock, resource_mock):
@@ -140,7 +144,8 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert ARBITRARY_RESPONSE == result['response']
-        resource_mock.send_request.assert_called_with(connection_mock.get_operation_spec.return_value['url'], HTTPMethod.GET, None,
+        resource_mock.send_request.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
+                                                      HTTPMethod.GET, None,
                                                       params['path_params'], None)
 
     def test_module_should_fail_when_operation_raises_configuration_error(self, connection_mock, resource_mock):
