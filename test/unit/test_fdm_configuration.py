@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import pytest
 from ansible.module_utils import basic
+from ansible.plugins.callback import json
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
 from library import ftd_configuration
@@ -30,11 +31,12 @@ class TestFtdConfiguration(object):
     @pytest.fixture
     def connection_mock(self, mocker):
         connection_class_mock = mocker.patch('library.ftd_configuration.Connection')
-        connection_class_mock.return_value.validate_data.return_value = True, None
-        connection_class_mock.return_value.validate_query_params.return_value = True, None
-        connection_class_mock.return_value.validate_path_params.return_value = True, None
+        connection_instance = connection_class_mock.return_value
+        connection_instance.validate_data.return_value = True, None
+        connection_instance.validate_query_params.return_value = True, None
+        connection_instance.validate_path_params.return_value = True, None
 
-        return connection_class_mock.return_value
+        return connection_instance
 
     @pytest.fixture
     def resource_mock(self, mocker):
@@ -150,31 +152,149 @@ class TestFtdConfiguration(object):
 
     def test_module_should_fail_when_operation_raises_configuration_error(self, connection_mock, resource_mock):
         connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
-        set_module_args({'operation': 'failure'})
         resource_mock.send_request.side_effect = FtdConfigurationError('Foo error.')
 
-        with pytest.raises(AnsibleFailJson) as exc:
-            self.module.main()
-
-        result = exc.value.args[0]
+        result = self._run_module_with_fail_json({'operation': 'failure'})
         assert result['failed']
         assert 'Failed to execute failure operation because of the configuration error: Foo error.' == result['msg']
 
     def test_module_should_fail_when_operation_raises_server_error(self, connection_mock, resource_mock):
         connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
-        set_module_args({'operation': 'failure'})
         resource_mock.send_request.side_effect = FtdServerError({'error': 'foo'}, 500)
 
-        with pytest.raises(AnsibleFailJson) as exc:
-            self.module.main()
-
-        result = exc.value.args[0]
+        result = self._run_module_with_fail_json({'operation': 'failure'})
         assert result['failed']
         assert 'Server returned an error trying to execute failure operation. Status code: 500. ' \
                'Server response: {\'error\': \'foo\'}' == result['msg']
+
+    def test_module_should_fail_if_validation_error_in_data(self, connection_mock):
+        report = {
+            'data': {
+                'required': ['objects[0].type'],
+                'invalid_type': [
+                    {
+                        'path': 'objects[3].id',
+                        'expected_type': 'string',
+                        'actually_value': 1
+                    }
+                ]
+            }
+        }
+        connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+
+        result = self._run_module_with_fail_json({
+            'operation': 'test',
+            'data': {}
+        })
+        assert result == {'msg': {'data': {
+            'data': {'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+                     'required': ['objects[0].type']}}}, 'failed': True}
+
+    def test_module_should_fail_if_validation_error_in_query_params(self, connection_mock):
+        report = {
+            'query_params': {
+                'required': ['objects[0].type'],
+                'invalid_type': [
+                    {
+                        'path': 'objects[3].id',
+                        'expected_type': 'string',
+                        'actually_value': 1
+                    }
+                ]
+            }
+        }
+        connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+
+        result = self._run_module_with_fail_json({
+            'operation': 'test',
+            'data': {}
+        })
+        assert result == {'msg': {'data': {
+            'query_params': {
+                'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+                'required': ['objects[0].type']}}}, 'failed': True}
+
+    def test_module_should_fail_if_validation_error_in_path_params(self, connection_mock):
+        report = {
+            'path_params': {
+                'required': ['objects[0].type'],
+                'invalid_type': [
+                    {
+                        'path': 'objects[3].id',
+                        'expected_type': 'string',
+                        'actually_value': 1
+                    }
+                ]
+            }
+        }
+        connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+
+        result = self._run_module_with_fail_json({
+            'operation': 'test',
+            'data': {}
+        })
+        assert result == {'msg': {'data': {
+            'path_params': {
+                'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+                'required': ['objects[0].type']}}}, 'failed': True}
+
+    def test_module_should_fail_if_validation_error_in_all_params(self, connection_mock):
+        report = {
+            'data': {
+                'required': ['objects[0].type'],
+                'invalid_type': [
+                    {
+                        'path': 'objects[3].id',
+                        'expected_type': 'string',
+                        'actually_value': 1
+                    }
+                ]
+            },
+            'path_params': {
+                'required': ['some_param'],
+                'invalid_type': [
+                    {
+                        'path': 'name',
+                        'expected_type': 'string',
+                        'actually_value': True
+                    }
+                ]
+            },
+            'query_params': {
+                'required': ['other_param'],
+                'invalid_type': [
+                    {
+                        'path': 'f_integer',
+                        'expected_type': 'integer',
+                        'actually_value': "test"
+                    }
+                ]
+            }
+        }
+        connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+
+        result = self._run_module_with_fail_json({
+            'operation': 'test',
+            'data': {}
+        })
+        assert result == {'msg': {'data': {
+            'data': {'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+                     'required': ['objects[0].type']},
+            'path_params': {'invalid_type': [{'actually_value': True, 'expected_type': 'string', 'path': 'name'}],
+                            'required': ['some_param']},
+            'query_params': {
+                'invalid_type': [{'actually_value': 'test', 'expected_type': 'integer', 'path': 'f_integer'}],
+                'required': ['other_param']}}}, 'failed': True}
 
     def _run_module(self, module_args):
         set_module_args(module_args)
         with pytest.raises(AnsibleExitJson) as ex:
             self.module.main()
         return ex.value.args[0]
+
+    def _run_module_with_fail_json(self, module_args):
+        set_module_args(module_args)
+        with pytest.raises(AnsibleFailJson) as exc:
+            self.module.main()
+        result = exc.value.args[0]
+        return result

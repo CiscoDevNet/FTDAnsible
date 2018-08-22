@@ -170,7 +170,7 @@ def validate_params(connection, op_name, data, query_params, path_params):
         try:
             is_valid, validation_report = getattr(connection, validation_method)(op_name, params)
             if not is_valid:
-                report[field_name] = validation_report
+                report[field_name] = json.loads(validation_report)
         except Exception as e:
             report[field_name] = str(e)
 
@@ -181,7 +181,7 @@ def validate_params(connection, op_name, data, query_params, path_params):
     validate('validate_path_params', 'path_params', path_params)
 
     if report:
-        return False, json.dump(report, None, sort_keys=True, indent=4)
+        return False, report
     else:
         return True, None
 
