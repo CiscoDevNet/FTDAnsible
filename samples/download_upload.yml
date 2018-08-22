@@ -2,19 +2,20 @@
   connection: httpapi
   tasks:
     - name: Download pending changes
-      ftd_download:
-        object_type: 'pendingChanges'
-        object_id: 'default'
+      ftd_file_download:
+        operation: 'getdownload'
+        path_params:
+          objId: 'default'
         dest: /tmp/
 
-    - name: Upload disk file
-      ftd_upload:
-        object_type: 'diskFile'
-        src: '{{ disk_file }}'
-        register_as: diskFile
-
-    - name: Download disk file
-      ftd_download:
-        object_type: 'diskFile'
-        object_id: "{{ diskFile['id'] }}"
-        dest: /tmp/test2.txt
+#    - name: Upload disk file
+#      ftd_upload:
+#        object_type: 'diskFile'
+#        src: '{{ disk_file }}'
+#        register_as: diskFile
+#
+#    - name: Download disk file
+#      ftd_download:
+#        object_type: 'diskFile'
+#        object_id: "{{ diskFile['id'] }}"
+#        dest: /tmp/test2.txt
