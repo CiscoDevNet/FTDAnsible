@@ -1,8 +1,8 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 
 # Copyright (c) 2018 Cisco Systems, Inc.
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
+from ansible.plugins.callback import json
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
@@ -134,31 +134,56 @@ def main():
         module.fail_json(msg='Invalid operation name provided: %s' % op_name)
 
     data, query_params, path_params = params['data'], params['query_params'], params['path_params']
-    # TODO: implement validation for input parameters
 
-    resource = BaseConfigurationResource(connection)
+    valid, msg = validate_params(connection, op_name, data, query_params, path_params)
+    if valid:
+        resource = BaseConfigurationResource(connection)
 
-    try:
-        if is_add_operation(op_name, op_spec):
-            resp = resource.add_object(op_spec[OperationField.URL], data, path_params, query_params)
-        elif is_edit_operation(op_name, op_spec):
-            resp = resource.edit_object(op_spec[OperationField.URL], data, path_params, query_params)
-        elif is_delete_operation(op_name, op_spec):
-            resp = resource.delete_object(op_spec[OperationField.URL], path_params)
-        elif is_find_by_filter_operation(op_name, op_spec, params):
-            resp = resource.get_objects_by_filter(op_spec[OperationField.URL], params['filters'], path_params,
-                                                  query_params)
-        else:
-            resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data, path_params,
-                                         query_params)
+        try:
+            if is_add_operation(op_name, op_spec):
+                resp = resource.add_object(op_spec[OperationField.URL], data, path_params, query_params)
+            elif is_edit_operation(op_name, op_spec):
+                resp = resource.edit_object(op_spec[OperationField.URL], data, path_params, query_params)
+            elif is_delete_operation(op_name, op_spec):
+                resp = resource.delete_object(op_spec[OperationField.URL], path_params)
+            elif is_find_by_filter_operation(op_name, op_spec, params):
+                resp = resource.get_objects_by_filter(op_spec[OperationField.URL], params['filters'], path_params,
+                                                      query_params)
+            else:
+                resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data,
+                                             path_params,
+                                             query_params)
 
-        module.exit_json(changed=resource.config_changed, response=resp,
-                         ansible_facts=construct_ansible_facts(resp, module.params))
-    except FtdConfigurationError as e:
-        module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e))
-    except FtdServerError as e:
-        module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
-                             'Server response: %s' % (op_name, e.code, e.response))
+            module.exit_json(changed=resource.config_changed, response=resp,
+                             ansible_facts=construct_ansible_facts(resp, module.params))
+        except FtdConfigurationError as e:
+            module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e))
+        except FtdServerError as e:
+            module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
+                                 'Server response: %s' % (op_name, e.code, e.response))
+    else:
+        module.fail_json(msg=msg)
+
+
+def validate_params(connection, op_name, data, query_params, path_params):
+    def validate(validation_method, field_name, params):
+        try:
+            is_valid, validation_report = getattr(connection, validation_method)(op_name, params)
+            if not is_valid:
+                report[field_name] = validation_report
+        except Exception as e:
+            report[field_name] = str(e)
+
+    report = {}
+
+    validate('validate_data', 'data', data)
+    validate('validate_query_params', 'query_params', query_params)
+    validate('validate_path_params', 'path_params', path_params)
+
+    if report:
+        return False, json.dump(report, None, sort_keys=True, indent=4)
+    else:
+        return True, None
 
 
 if __name__ == '__main__':

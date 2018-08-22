@@ -28,9 +28,13 @@ class TestFtdConfiguration(object):
         return mocker.patch.multiple(basic.AnsibleModule, exit_json=exit_json, fail_json=fail_json)
 
     @pytest.fixture
-    def operation_mock(self, mocker):
+    def connection_mock(self, mocker):
         connection_class_mock = mocker.patch('library.ftd_configuration.Connection')
-        return connection_class_mock.return_value.get_operation_spec
+        connection_class_mock.return_value.validate_data.return_value = True, None
+        connection_class_mock.return_value.validate_query_params.return_value = True, None
+        connection_class_mock.return_value.validate_path_params.return_value = True, None
+
+        return connection_class_mock.return_value
 
     @pytest.fixture
     def resource_mock(self, mocker):
@@ -51,8 +55,8 @@ class TestFtdConfiguration(object):
 
         assert 'missing required arguments: operation' in str(ex)
 
-    def test_module_should_fail_when_no_operation_spec_found(self, operation_mock):
-        operation_mock.return_value = None
+    def test_module_should_fail_when_no_operation_spec_found(self, connection_mock):
+        connection_mock.get_operation_spec.return_value = None
         set_module_args({'operation': 'nonExistingOperation'})
 
         with pytest.raises(AnsibleFailJson) as ex:
@@ -60,8 +64,8 @@ class TestFtdConfiguration(object):
 
         assert 'Invalid operation name provided: nonExistingOperation' in str(ex)
 
-    def test_module_should_add_object_when_add_operation(self, operation_mock, resource_mock):
-        operation_mock.return_value = {
+    def test_module_should_add_object_when_add_operation(self, connection_mock, resource_mock):
+        connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.POST,
             'url': '/object'
         }
@@ -73,10 +77,10 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert ADD_RESPONSE == result['response']
-        resource_mock.add_object.assert_called_with(operation_mock.return_value['url'], params['data'], None, None)
+        resource_mock.add_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'], params['data'], None, None)
 
-    def test_module_should_edit_object_when_edit_operation(self, operation_mock, resource_mock):
-        operation_mock.return_value = {
+    def test_module_should_edit_object_when_edit_operation(self, connection_mock, resource_mock):
+        connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.PUT,
             'url': '/object/{objId}'
         }
@@ -89,11 +93,11 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert EDIT_RESPONSE == result['response']
-        resource_mock.edit_object.assert_called_with(operation_mock.return_value['url'], params['data'],
+        resource_mock.edit_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'], params['data'],
                                                      params['path_params'], None)
 
-    def test_module_should_delete_object_when_delete_operation(self, operation_mock, resource_mock):
-        operation_mock.return_value = {
+    def test_module_should_delete_object_when_delete_operation(self, connection_mock, resource_mock):
+        connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.DELETE,
             'url': '/object/{objId}'
         }
@@ -105,10 +109,10 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert DELETE_RESPONSE == result['response']
-        resource_mock.delete_object.assert_called_with(operation_mock.return_value['url'], params['path_params'])
+        resource_mock.delete_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'], params['path_params'])
 
-    def test_module_should_get_objects_by_filter_when_find_by_filter_operation(self, operation_mock, resource_mock):
-        operation_mock.return_value = {
+    def test_module_should_get_objects_by_filter_when_find_by_filter_operation(self, connection_mock, resource_mock):
+        connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.GET,
             'url': '/objects'
         }
@@ -120,11 +124,11 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert GET_BY_FILTER_RESPONSE == result['response']
-        resource_mock.get_objects_by_filter.assert_called_with(operation_mock.return_value['url'], params['filters'],
+        resource_mock.get_objects_by_filter.assert_called_with(connection_mock.get_operation_spec.return_value['url'], params['filters'],
                                                                None, None)
 
-    def test_module_should_send_request_when_arbitrary_operation(self, operation_mock, resource_mock):
-        operation_mock.return_value = {
+    def test_module_should_send_request_when_arbitrary_operation(self, connection_mock, resource_mock):
+        connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.GET,
             'url': '/object/status/{objId}'
         }
@@ -136,11 +140,11 @@ class TestFtdConfiguration(object):
         result = self._run_module(params)
 
         assert ARBITRARY_RESPONSE == result['response']
-        resource_mock.send_request.assert_called_with(operation_mock.return_value['url'], HTTPMethod.GET, None,
+        resource_mock.send_request.assert_called_with(connection_mock.get_operation_spec.return_value['url'], HTTPMethod.GET, None,
                                                       params['path_params'], None)
 
-    def test_module_should_fail_when_operation_raises_configuration_error(self, operation_mock, resource_mock):
-        operation_mock.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+    def test_module_should_fail_when_operation_raises_configuration_error(self, connection_mock, resource_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
         set_module_args({'operation': 'failure'})
         resource_mock.send_request.side_effect = FtdConfigurationError('Foo error.')
 
@@ -151,8 +155,8 @@ class TestFtdConfiguration(object):
         assert result['failed']
         assert 'Failed to execute failure operation because of the configuration error: Foo error.' == result['msg']
 
-    def test_module_should_fail_when_operation_raises_server_error(self, operation_mock, resource_mock):
-        operation_mock.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+    def test_module_should_fail_when_operation_raises_server_error(self, connection_mock, resource_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
         set_module_args({'operation': 'failure'})
         resource_mock.send_request.side_effect = FtdServerError({'error': 'foo'}, 500)
 

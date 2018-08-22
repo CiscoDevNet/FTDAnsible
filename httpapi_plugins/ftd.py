@@ -19,7 +19,7 @@ from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 from ansible.module_utils.connection import ConnectionError
 
-from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp
+from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, FdmSwaggerValidator
 from module_utils.http import HTTPMethod
 
 BASE_HEADERS = {
@@ -46,6 +46,7 @@ class HttpApi(HttpApiBase):
         self.access_token = None
         self.refresh_token = None
         self._api_spec = None
+        self._api_validator = None
 
     def login(self, username, password):
         def request_token_payload(username, password):
@@ -180,6 +181,15 @@ class HttpApi(HttpApiBase):
     def get_model_spec(self, model_name):
         return self.api_spec[SpecProp.MODELS].get(model_name, None)
 
+    def validate_data(self, operation_name, data):
+        self._api_validator.validate_data(operation_name, data)
+
+    def validate_query_params(self, operation_name, params):
+        self._api_validator.validate_query_params(operation_name, params)
+
+    def validate_path_params(self, operation_name, params):
+        self._api_validator.validate_path_params(operation_name, params)
+
     @property
     def api_spec(self):
         if self._api_spec is None:
@@ -190,6 +200,12 @@ class HttpApi(HttpApiBase):
                 raise ConnectionError('Failed to download API specification. Status code: %s. Response: %s' % (
                     response[ResponseParams.STATUS_CODE], response[ResponseParams.RESPONSE]))
         return self._api_spec
+
+    @property
+    def api_validator(self):
+        if self._api_validator is None:
+            self._api_validator = FdmSwaggerValidator(self.api_spec)
+        return self._api_validator
 
 
 def construct_url_path(path, path_params=None, query_params=None):
