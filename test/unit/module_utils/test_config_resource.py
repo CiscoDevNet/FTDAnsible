@@ -15,13 +15,13 @@ class TestBaseConfigurationResource(object):
         ]
         resource = BaseConfigurationResource(None)
 
-        send_request_mock.side_effect = [{'items': objects}]
+        send_request_mock.side_effect = [{'items': objects}, {'items': []}]
         assert objects == resource.get_objects_by_filter('/objects', {})
 
-        send_request_mock.side_effect = [{'items': objects}]
+        send_request_mock.side_effect = [{'items': objects}, {'items': []}]
         assert [objects[0]] == resource.get_objects_by_filter('/objects', {'name': 'obj1'})
 
-        send_request_mock.side_effect = [{'items': objects}]
+        send_request_mock.side_effect = [{'items': objects}, {'items': []}]
         assert [objects[1]] == resource.get_objects_by_filter('/objects',
                                                               {'type': 1, 'foo': {'bar': 'buz'}})
 
@@ -34,7 +34,8 @@ class TestBaseConfigurationResource(object):
             ]},
             {'items': [
                 {'name': 'obj3', 'type': 'foo'}
-            ]}
+            ]},
+            {'items': []}
         ]
 
         resource = BaseConfigurationResource(None)
