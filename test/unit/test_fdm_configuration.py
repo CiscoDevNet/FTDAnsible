@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import pytest
 from ansible.module_utils import basic
-from ansible.plugins.callback import json
+import json
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
 from library import ftd_configuration
