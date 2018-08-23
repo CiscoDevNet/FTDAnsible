@@ -81,19 +81,49 @@ except ImportError:
     from module_utils.fdm_swagger_client import OperationField, ValidationError
 
 
+def is_post_request(operation_spec):
+    return operation_spec[OperationField.METHOD] == HTTPMethod.POST
+
+
+def is_put_request(operation_spec):
+    return operation_spec[OperationField.METHOD] == HTTPMethod.PUT
+
+
 def is_add_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('add') and operation_spec[OperationField.METHOD] == HTTPMethod.POST
+    return operation_name.startswith('add') and is_post_request(operation_spec)
 
 
 def is_edit_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('edit') and operation_spec[OperationField.METHOD] == HTTPMethod.PUT
+    return operation_name.startswith('edit') and is_put_request(operation_spec)
 
 
 def is_delete_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
     return operation_name.startswith('delete') and operation_spec[OperationField.METHOD] == HTTPMethod.DELETE
+
+
+def validate_params(connection, op_name, query_params, path_params, data, op_spec):
+    report = {}
+
+    def validate(validation_method, field_name, params):
+        key = 'Invalid %s provided' % field_name
+        try:
+            is_valid, validation_report = validation_method(op_name, params)
+            if not is_valid:
+                report[key] = validation_report
+        except Exception as e:
+            report[key] = str(e)
+        return report
+
+    validate(connection.validate_query_params, 'query_params', query_params)
+    validate(connection.validate_path_params, 'path_params', path_params)
+    if is_post_request(op_spec) or is_post_request(op_spec):
+        validate(connection.validate_data, 'data', data)
+
+    if report:
+        raise ValidationError(report)
 
 
 def is_find_by_filter_operation(operation_name, operation_spec, params):
@@ -138,32 +168,28 @@ def main():
     data, query_params, path_params = params['data'], params['query_params'], params['path_params']
 
     try:
-        validate_params(connection, op_name, query_params, path_params)
+        validate_params(connection, op_name, query_params, path_params, data, op_spec)
+    except ValidationError as e:
+        module.fail_json(msg=e.args[0])
+
+    try:
+        if module.check_mode:
+            module.exit_json(changed=False)
+
         resource = BaseConfigurationResource(connection)
+        url = op_spec[OperationField.URL]
 
         if is_add_operation(op_name, op_spec):
-            validate_data(connection, op_name, data)
-            if module.check_mode:
-                module.exit_json()
-            resp = resource.add_object(op_spec[OperationField.URL], data, path_params, query_params)
+            resp = resource.add_object(url, data, path_params, query_params)
         elif is_edit_operation(op_name, op_spec):
-            validate_data(connection, op_name, data)
-            if module.check_mode:
-                module.exit_json()
-            resp = resource.edit_object(op_spec[OperationField.URL], data, path_params, query_params)
+            resp = resource.edit_object(url, data, path_params, query_params)
         elif is_delete_operation(op_name, op_spec):
-            if module.check_mode:
-                module.exit_json()
-            resp = resource.delete_object(op_spec[OperationField.URL], path_params)
+            resp = resource.delete_object(url, path_params)
         elif is_find_by_filter_operation(op_name, op_spec, params):
-            if module.check_mode:
-                module.exit_json()
-            resp = resource.get_objects_by_filter(op_spec[OperationField.URL], params['filters'], path_params,
+            resp = resource.get_objects_by_filter(url, params['filters'], path_params,
                                                   query_params)
         else:
-            if module.check_mode:
-                module.exit_json()
-            resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data,
+            resp = resource.send_request(url, op_spec[OperationField.METHOD], data,
                                          path_params,
                                          query_params)
 
@@ -174,36 +200,6 @@ def main():
     except FtdServerError as e:
         module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
                              'Server response: %s' % (op_name, e.code, e.response))
-    except ValidationError as e:
-        module.fail_json(msg=e.args[0])
-
-
-def validate(validation_method, field_name, params, op_name, report):
-    try:
-        is_valid, validation_report = validation_method(op_name, params)
-        if not is_valid:
-            report[field_name] = validation_report
-    except Exception as e:
-        report[field_name] = str(e)
-    return report
-
-
-def validate_params(connection, op_name, query_params, path_params):
-    report = {}
-    validate(connection.validate_query_params, 'Invalid query_params provided', query_params, op_name, report)
-    validate(connection.validate_path_params, 'Invalid path_params provided', path_params, op_name, report)
-
-    if report:
-        raise ValidationError(report)
-
-
-def validate_data(connection, op_name, data):
-    report = {}
-
-    validate(connection.validate_data, 'Invalid data provided', data, op_name, report)
-
-    if report:
-        raise ValidationError(report)
 
 
 if __name__ == '__main__':

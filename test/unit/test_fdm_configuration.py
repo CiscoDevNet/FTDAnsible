@@ -168,17 +168,16 @@ class TestFtdConfiguration(object):
                'Server response: {\'error\': \'foo\'}' == result['msg']
 
     def test_module_should_fail_if_validation_error_in_data(self, connection_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.POST, 'url': '/test'}
         report = {
-            'data': {
-                'required': ['objects[0].type'],
-                'invalid_type': [
-                    {
-                        'path': 'objects[3].id',
-                        'expected_type': 'string',
-                        'actually_value': 1
-                    }
-                ]
-            }
+            'required': ['objects[0].type'],
+            'invalid_type': [
+                {
+                    'path': 'objects[3].id',
+                    'expected_type': 'string',
+                    'actually_value': 1
+                }
+            ]
         }
         connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
 
@@ -186,35 +185,45 @@ class TestFtdConfiguration(object):
             'operation': 'test',
             'data': {}
         })
-        assert result == {'msg': {'data': {
-            'data': {'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
-                     'required': ['objects[0].type']}}}, 'failed': True}
+        key = 'Invalid data provided'
+        assert result['msg'][key]
+        result['msg'][key] = json.loads(result['msg'][key])
+        assert result == {
+            'msg':
+                {key: {
+                    'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+                    'required': ['objects[0].type']
+                }},
+            'failed': True}
 
     def test_module_should_fail_if_validation_error_in_query_params(self, connection_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
         report = {
-            'query_params': {
-                'required': ['objects[0].type'],
-                'invalid_type': [
-                    {
-                        'path': 'objects[3].id',
-                        'expected_type': 'string',
-                        'actually_value': 1
-                    }
-                ]
-            }
+            'required': ['objects[0].type'],
+            'invalid_type': [
+                {
+                    'path': 'objects[3].id',
+                    'expected_type': 'string',
+                    'actually_value': 1
+                }
+            ]
         }
-        connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+        connection_mock.validate_query_params.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
 
         result = self._run_module_with_fail_json({
             'operation': 'test',
             'data': {}
         })
-        assert result == {'msg': {'data': {
-            'query_params': {
-                'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
-                'required': ['objects[0].type']}}}, 'failed': True}
+        key = 'Invalid query_params provided'
+        assert result['msg'][key]
+        result['msg'][key] = json.loads(result['msg'][key])
+
+        assert result == {'msg': {key: {
+            'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+            'required': ['objects[0].type']}}, 'failed': True}
 
     def test_module_should_fail_if_validation_error_in_path_params(self, connection_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
         report = {
             'path_params': {
                 'required': ['objects[0].type'],
@@ -227,18 +236,23 @@ class TestFtdConfiguration(object):
                 ]
             }
         }
-        connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+        connection_mock.validate_path_params.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
 
         result = self._run_module_with_fail_json({
             'operation': 'test',
             'data': {}
         })
-        assert result == {'msg': {'data': {
+        key = 'Invalid path_params provided'
+        assert result['msg'][key]
+        result['msg'][key] = json.loads(result['msg'][key])
+
+        assert result == {'msg': {key: {
             'path_params': {
                 'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
                 'required': ['objects[0].type']}}}, 'failed': True}
 
     def test_module_should_fail_if_validation_error_in_all_params(self, connection_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.POST, 'url': '/test'}
         report = {
             'data': {
                 'required': ['objects[0].type'],
@@ -271,20 +285,38 @@ class TestFtdConfiguration(object):
                 ]
             }
         }
-        connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+        connection_mock.validate_data.return_value = (False, json.dumps(report['data'], sort_keys=True, indent=4))
+        connection_mock.validate_query_params.return_value = (False,
+                                                              json.dumps(report['query_params'], sort_keys=True,
+                                                                         indent=4))
+        connection_mock.validate_path_params.return_value = (False,
+                                                             json.dumps(report['path_params'], sort_keys=True,
+                                                                        indent=4))
 
         result = self._run_module_with_fail_json({
             'operation': 'test',
             'data': {}
         })
-        assert result == {'msg': {'data': {
-            'data': {'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
-                     'required': ['objects[0].type']},
-            'path_params': {'invalid_type': [{'actually_value': True, 'expected_type': 'string', 'path': 'name'}],
-                            'required': ['some_param']},
-            'query_params': {
+        key_data = 'Invalid data provided'
+        assert result['msg'][key_data]
+        result['msg'][key_data] = json.loads(result['msg'][key_data])
+
+        key_path_params = 'Invalid path_params provided'
+        assert result['msg'][key_path_params]
+        result['msg'][key_path_params] = json.loads(result['msg'][key_path_params])
+
+        key_query_params = 'Invalid query_params provided'
+        assert result['msg'][key_query_params]
+        result['msg'][key_query_params] = json.loads(result['msg'][key_query_params])
+
+        assert result == {'msg': {
+            key_data: {'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+                       'required': ['objects[0].type']},
+            key_path_params: {'invalid_type': [{'actually_value': True, 'expected_type': 'string', 'path': 'name'}],
+                              'required': ['some_param']},
+            key_query_params: {
                 'invalid_type': [{'actually_value': 'test', 'expected_type': 'integer', 'path': 'f_integer'}],
-                'required': ['other_param']}}}, 'failed': True}
+                'required': ['other_param']}}, 'failed': True}
 
     def _run_module(self, module_args):
         set_module_args(module_args)

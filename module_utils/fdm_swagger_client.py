@@ -68,8 +68,10 @@ class IllegalArgumentException(ValueError):
     """
     pass
 
+
 class ValidationError(ValueError):
     pass
+
 
 class FdmSwaggerParser:
     _definitions = None
