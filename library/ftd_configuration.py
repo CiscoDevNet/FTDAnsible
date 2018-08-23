@@ -73,12 +73,12 @@ try:
     from ansible.module_utils.config_resource import BaseConfigurationResource
     from ansible.module_utils.http import HTTPMethod
     from ansible.module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
-    from ansible.module_utils.fdm_swagger_client import OperationField
+    from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
 except ImportError:
     from module_utils.config_resource import BaseConfigurationResource
     from module_utils.http import HTTPMethod
     from module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
-    from module_utils.fdm_swagger_client import OperationField
+    from module_utils.fdm_swagger_client import OperationField, ValidationError
 
 
 def is_add_operation(operation_name, operation_spec):
@@ -124,8 +124,10 @@ def main():
         register_as=dict(type='str'),
         filters=dict(type='dict')
     )
-    module = AnsibleModule(argument_spec=fields)
+    module = AnsibleModule(argument_spec=fields,
+                           supports_check_mode=True)
     params = module.params
+
     connection = Connection(module._socket_path)
 
     op_name = params['operation']
@@ -135,55 +137,73 @@ def main():
 
     data, query_params, path_params = params['data'], params['query_params'], params['path_params']
 
-    valid, msg = validate_params(connection, op_name, data, query_params, path_params)
-    if valid:
+    try:
+        validate_params(connection, op_name, query_params, path_params)
         resource = BaseConfigurationResource(connection)
 
-        try:
-            if is_add_operation(op_name, op_spec):
-                resp = resource.add_object(op_spec[OperationField.URL], data, path_params, query_params)
-            elif is_edit_operation(op_name, op_spec):
-                resp = resource.edit_object(op_spec[OperationField.URL], data, path_params, query_params)
-            elif is_delete_operation(op_name, op_spec):
-                resp = resource.delete_object(op_spec[OperationField.URL], path_params)
-            elif is_find_by_filter_operation(op_name, op_spec, params):
-                resp = resource.get_objects_by_filter(op_spec[OperationField.URL], params['filters'], path_params,
-                                                      query_params)
-            else:
-                resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data,
-                                             path_params,
-                                             query_params)
+        if is_add_operation(op_name, op_spec):
+            validate_data(connection, op_name, data)
+            if module.check_mode:
+                module.exit_json()
+            resp = resource.add_object(op_spec[OperationField.URL], data, path_params, query_params)
+        elif is_edit_operation(op_name, op_spec):
+            validate_data(connection, op_name, data)
+            if module.check_mode:
+                module.exit_json()
+            resp = resource.edit_object(op_spec[OperationField.URL], data, path_params, query_params)
+        elif is_delete_operation(op_name, op_spec):
+            if module.check_mode:
+                module.exit_json()
+            resp = resource.delete_object(op_spec[OperationField.URL], path_params)
+        elif is_find_by_filter_operation(op_name, op_spec, params):
+            if module.check_mode:
+                module.exit_json()
+            resp = resource.get_objects_by_filter(op_spec[OperationField.URL], params['filters'], path_params,
+                                                  query_params)
+        else:
+            if module.check_mode:
+                module.exit_json()
+            resp = resource.send_request(op_spec[OperationField.URL], op_spec[OperationField.METHOD], data,
+                                         path_params,
+                                         query_params)
 
-            module.exit_json(changed=resource.config_changed, response=resp,
-                             ansible_facts=construct_ansible_facts(resp, module.params))
-        except FtdConfigurationError as e:
-            module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e))
-        except FtdServerError as e:
-            module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
-                                 'Server response: %s' % (op_name, e.code, e.response))
-    else:
-        module.fail_json(msg=msg)
+        module.exit_json(changed=resource.config_changed, response=resp,
+                         ansible_facts=construct_ansible_facts(resp, module.params))
+    except FtdConfigurationError as e:
+        module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e))
+    except FtdServerError as e:
+        module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
+                             'Server response: %s' % (op_name, e.code, e.response))
+    except ValidationError as e:
+        module.fail_json(msg=e.args[0])
 
 
-def validate_params(connection, op_name, data, query_params, path_params):
-    def validate(validation_method, field_name, params):
-        try:
-            is_valid, validation_report = getattr(connection, validation_method)(op_name, params)
-            if not is_valid:
-                report[field_name] = validation_report
-        except Exception as e:
-            report[field_name] = str(e)
+def validate(validation_method, field_name, params, op_name, report):
+    try:
+        is_valid, validation_report = validation_method(op_name, params)
+        if not is_valid:
+            report[field_name] = validation_report
+    except Exception as e:
+        report[field_name] = str(e)
+    return report
 
+
+def validate_params(connection, op_name, query_params, path_params):
     report = {}
-
-    validate('validate_data', 'data', data)
-    validate('validate_query_params', 'query_params', query_params)
-    validate('validate_path_params', 'path_params', path_params)
+    validate(connection.validate_query_params, 'Invalid query_params provided', query_params, op_name, report)
+    validate(connection.validate_path_params, 'Invalid path_params provided', path_params, op_name, report)
 
     if report:
-        return False, report
-    else:
-        return True, None
+        raise ValidationError(report)
+
+
+def validate_data(connection, op_name, data):
+    report = {}
+
+    validate(connection.validate_data, 'Invalid data provided', data, op_name, report)
+
+    if report:
+        raise ValidationError(report)
 
 
 if __name__ == '__main__':
