@@ -182,13 +182,13 @@ class HttpApi(HttpApiBase):
         return self.api_spec[SpecProp.MODELS].get(model_name, None)
 
     def validate_data(self, operation_name, data):
-        self._api_validator.validate_data(operation_name, data)
+        return self.api_validator.validate_data(operation_name, data)
 
     def validate_query_params(self, operation_name, params):
-        self._api_validator.validate_query_params(operation_name, params)
+        return self.api_validator.validate_query_params(operation_name, params)
 
     def validate_path_params(self, operation_name, params):
-        self._api_validator.validate_path_params(operation_name, params)
+        return self.api_validator.validate_path_params(operation_name, params)
 
     @property
     def api_spec(self):

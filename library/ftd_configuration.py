@@ -2,7 +2,7 @@
 
 # Copyright (c) 2018 Cisco Systems, Inc.
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-from ansible.plugins.callback import json
+
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
@@ -170,7 +170,7 @@ def validate_params(connection, op_name, data, query_params, path_params):
         try:
             is_valid, validation_report = getattr(connection, validation_method)(op_name, params)
             if not is_valid:
-                report[field_name] = json.loads(validation_report)
+                report[field_name] = validation_report
         except Exception as e:
             report[field_name] = str(e)
 
