@@ -1,5 +1,4 @@
 requests==2.18.4
-bravado==9.2.2
 git+https://github.com/ansible/ansible.git@devel#egg=ansible
 Jinja2==2.10
 pytest==3.6.2

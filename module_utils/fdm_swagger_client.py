@@ -69,6 +69,10 @@ class IllegalArgumentException(ValueError):
     pass
 
 
+class ValidationError(ValueError):
+    pass
+
+
 class FdmSwaggerParser:
     _definitions = None
 
@@ -260,7 +264,7 @@ class FdmSwaggerValidator:
         self._validate_object(status, model, data, '')
 
         if len(status[PropName.REQUIRED]) > 0 or len(status[PropName.INVALID_TYPE]) > 0:
-            return False, status
+            return False, self._delete_empty_field_from_report(status)
         return True, None
 
     def _check_validate_data_params(self, data, operation_name):
@@ -361,7 +365,7 @@ class FdmSwaggerValidator:
             self._check_url_params(status, spec, params)
 
             if len(status[PropName.REQUIRED]) > 0 or len(status[PropName.INVALID_TYPE]) > 0:
-                return False, status
+                return False, self._delete_empty_field_from_report(status)
             return True, None
         else:
             return True, None
@@ -474,6 +478,14 @@ class FdmSwaggerValidator:
             PropName.REQUIRED: [],
             PropName.INVALID_TYPE: []
         }
+
+    @staticmethod
+    def _delete_empty_field_from_report(status):
+        if not status[PropName.REQUIRED]:
+            del status[PropName.REQUIRED]
+        if not status[PropName.INVALID_TYPE]:
+            del status[PropName.INVALID_TYPE]
+        return status
 
     @staticmethod
     def _create_path_to_field(path='', field=''):
