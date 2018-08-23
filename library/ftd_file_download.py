@@ -65,6 +65,20 @@ def is_download_operation(op_spec):
     return op_spec[OperationField.METHOD] == HTTPMethod.GET and op_spec[OperationField.MODEL_NAME] == FILE_MODEL_NAME
 
 
+def validate_params(connection, op_name, path_params):
+    field_name = 'Invalid path_params provided'
+    try:
+        is_valid, validation_report = connection.validate_path_params(op_name, path_params)
+        if not is_valid:
+            raise ValidationError({
+                field_name: validation_report
+            })
+    except Exception as e:
+        raise ValidationError({
+            field_name: str(e)
+        })
+
+
 def main():
     fields = dict(
         operation=dict(type='str', required=True),
@@ -89,7 +103,7 @@ def main():
         path_params = params['path_params']
         validate_params(connection, op_name, path_params)
         if module.check_mode:
-            module.exit_json()
+            module.exit_json(changed=False)
         connection.download_file(op_spec[OperationField.URL], params['destination'], path_params)
         module.exit_json(changed=False)
     except FtdServerError as e:
@@ -97,20 +111,6 @@ def main():
                              'Server response: %s' % (op_name, e.code, e.response))
     except ValidationError as e:
         module.fail_json(msg=e.args[0])
-
-
-def validate_params(connection, op_name, path_params):
-    field_name = 'Invalid path_params provided'
-    try:
-        is_valid, validation_report = connection.validate_path_params(op_name, path_params)
-        if not is_valid:
-            raise ValidationError({
-                field_name: validation_report
-            })
-    except Exception as e:
-        raise ValidationError({
-            field_name: str(e)
-        })
 
 
 if __name__ == '__main__':
