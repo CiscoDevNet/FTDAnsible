@@ -8,7 +8,6 @@ __metaclass__ = type
 import json
 import os
 import re
-import shutil
 
 from ansible.module_utils.basic import to_text
 from ansible.errors import AnsibleConnectionFailure
@@ -134,8 +133,8 @@ class HttpApi(HttpApiBase):
             _, response_data = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers)
             return self._response_to_json(response_data.getvalue())
 
-    def download_file(self, from_url, to_path):
-        url = construct_url_path(from_url)
+    def download_file(self, from_url, to_path, path_params=None):
+        url = construct_url_path(from_url, path_params=path_params)
         response, response_data = self.connection.send(
             url, data=None, method=HTTPMethod.GET,
             headers=self._authorized_headers()
@@ -146,7 +145,7 @@ class HttpApi(HttpApiBase):
             to_path = os.path.join(to_path, filename)
 
         with open(to_path, "wb") as output_file:
-            shutil.copyfileobj(response_data, output_file)
+            output_file.write(response_data.getvalue())
 
     def handle_httperror(self, exc):
         # None means that the exception will be passed further to the caller
