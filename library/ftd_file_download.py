@@ -104,11 +104,11 @@ def validate_params(connection, op_name, path_params):
     try:
         is_valid, validation_report = connection.validate_path_params(op_name, path_params)
         if not is_valid:
-            ValidationError({
+            raise ValidationError({
                 field_name: validation_report
             })
     except Exception as e:
-        ValidationError({
+        raise ValidationError({
             field_name: str(e)
         })
 
