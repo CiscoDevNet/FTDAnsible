@@ -99,23 +99,18 @@ def main():
         module.fail_json(msg=e.args[0])
 
 
-def validate(validation_method, field_name, params, op_name, report):
-    try:
-        is_valid, validation_report = validation_method(op_name, params)
-        if not is_valid:
-            report[field_name] = validation_report
-    except Exception as e:
-        report[field_name] = str(e)
-    return report
-
-
 def validate_params(connection, op_name, path_params):
-    report = {}
-
-    validate(connection.validate_path_params, 'Invalid path_params provided', path_params, op_name, report)
-
-    if report:
-        raise ValidationError(report)
+    field_name = 'Invalid path_params provided'
+    try:
+        is_valid, validation_report = connection.validate_path_params(op_name, path_params)
+        if not is_valid:
+            ValidationError({
+                field_name: validation_report
+            })
+    except Exception as e:
+        ValidationError({
+            field_name: str(e)
+        })
 
 
 if __name__ == '__main__':
