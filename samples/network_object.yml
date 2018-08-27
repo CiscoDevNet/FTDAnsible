@@ -9,6 +9,7 @@
           description: "From Ansible with love"
           subType: "HOST"
           value: "{{ host_ip }}"
+          isSystemDefined: False
           type: "networkobject"
 
     - name: Create a NETWORK network object
