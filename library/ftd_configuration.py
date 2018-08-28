@@ -70,15 +70,15 @@ from ansible.module_utils.connection import Connection
 
 # TODO: remove import workarounds when module_utils are moved to the Ansible core
 try:
-    from ansible.module_utils.config_resource import BaseConfigurationResource
-    from ansible.module_utils.http import HTTPMethod
-    from ansible.module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
+    from ansible.module_utils.configuration import BaseConfigurationResource
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
+    from ansible.module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
+        FtdServerError
 except ImportError:
-    from module_utils.config_resource import BaseConfigurationResource
-    from module_utils.http import HTTPMethod
-    from module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
+    from module_utils.configuration import BaseConfigurationResource
     from module_utils.fdm_swagger_client import OperationField, ValidationError
+    from module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
+        FtdServerError
 
 
 def is_post_request(operation_spec):

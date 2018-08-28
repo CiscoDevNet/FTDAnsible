@@ -1,9 +1,9 @@
 from ansible.module_utils.six import integer_types, string_types
 
 try:
-    from ansible.module_utils.http import HTTPMethod
+    from ansible.module_utils.common import HTTPMethod
 except ImportError:
-    from module_utils.http import HTTPMethod
+    from module_utils.common import HTTPMethod
 
 FILE_MODEL_NAME = '_File'
 SUCCESS_RESPONSE_CODE = '200'

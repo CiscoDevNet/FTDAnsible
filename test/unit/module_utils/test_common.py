@@ -1,4 +1,4 @@
-from module_utils.misc import equal_objects
+from module_utils.common import equal_objects
 
 
 # simple objects

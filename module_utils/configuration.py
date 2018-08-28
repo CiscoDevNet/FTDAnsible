@@ -1,14 +1,11 @@
 from functools import partial
 
-# TODO: remove import workarounds when module_utils are moved to the Ansible core
-from httpapi_plugins.ftd import ResponseParams
-
 try:
-    from ansible.module_utils.http import HTTPMethod
-    from ansible.module_utils.misc import equal_objects, copy_identity_properties, FtdConfigurationError, FtdServerError
+    from ansible.module_utils.common import HTTPMethod, equal_objects, copy_identity_properties, FtdConfigurationError, \
+        FtdServerError, ResponseParams
 except ImportError:
-    from module_utils.http import HTTPMethod
-    from module_utils.misc import equal_objects, copy_identity_properties, FtdConfigurationError, FtdServerError
+    from module_utils.common import HTTPMethod, equal_objects, copy_identity_properties, FtdConfigurationError, \
+        FtdServerError, ResponseParams
 
 DEFAULT_PAGE_SIZE = 10
 DEFAULT_OFFSET = 0

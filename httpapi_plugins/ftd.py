@@ -19,7 +19,7 @@ from urllib3.fields import RequestField
 from ansible.module_utils.connection import ConnectionError
 
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, FdmSwaggerValidator
-from module_utils.http import HTTPMethod
+from module_utils.common import HTTPMethod, ResponseParams
 
 BASE_HEADERS = {
     'Content-Type': 'application/json',
@@ -31,12 +31,6 @@ API_SPEC_PATH = '/apispec/ngfw.json'
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
-
-
-class ResponseParams:
-    SUCCESS = 'success'
-    STATUS_CODE = 'status_code'
-    RESPONSE = 'response'
 
 
 class HttpApi(HttpApiBase):

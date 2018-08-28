@@ -1,7 +1,7 @@
 from ansible.compat.tests import mock
 from ansible.compat.tests.mock import call, patch
 
-from module_utils.config_resource import iterate_over_pageable_resource, BaseConfigurationResource
+from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource
 
 
 class TestBaseConfigurationResource(object):

@@ -53,12 +53,10 @@ from ansible.module_utils.connection import Connection
 
 try:
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError, FILE_MODEL_NAME
-    from ansible.module_utils.misc import FtdServerError
-    from ansible.module_utils.http import HTTPMethod
+    from ansible.module_utils.common import FtdServerError, HTTPMethod
 except ImportError:
     from module_utils.fdm_swagger_client import OperationField, ValidationError, FILE_MODEL_NAME
-    from module_utils.misc import FtdServerError
-    from module_utils.http import HTTPMethod
+    from module_utils.common import FtdServerError, HTTPMethod
 
 
 def is_download_operation(op_spec):

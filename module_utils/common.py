@@ -6,6 +6,19 @@ IDENTITY_PROPERTIES = ['id', 'version', 'ruleId']
 NON_COMPARABLE_PROPERTIES = IDENTITY_PROPERTIES + ['isSystemDefined', 'links']
 
 
+class HTTPMethod:
+    GET = 'get'
+    POST = 'post'
+    PUT = 'put'
+    DELETE = 'delete'
+
+
+class ResponseParams:
+    SUCCESS = 'success'
+    STATUS_CODE = 'status_code'
+    RESPONSE = 'response'
+
+
 class FtdConfigurationError(Exception):
     pass
 

@@ -11,7 +11,7 @@ from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 from httpapi_plugins.ftd import HttpApi, API_TOKEN_PATH_ENV_VAR, ResponseParams
 from module_utils.fdm_swagger_client import SpecProp, FdmSwaggerParser
-from module_utils.http import HTTPMethod
+from module_utils.common import HTTPMethod
 
 if PY3:
     BUILTINS_NAME = 'builtins'
