@@ -1,0 +1,187 @@
+- hosts: vftd
+  connection: httpapi
+
+  tasks:
+    - name: 'query_params should contain valid data'
+      ftd_configuration:
+        operation: 'getNetworkObjectList'
+        query_params:
+          offset: True
+          limit: '1'
+          sort: 0
+          filter: 1.1
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == true'
+          - '"Invalid query_params provided" in result.msg'
+          - 'result.msg == {"Invalid query_params provided":
+                            {"invalid_type": [
+                                  {"actually_value": true, "expected_type": "integer", "path": "offset"},
+                                  {"actually_value": "1", "expected_type": "integer", "path": "limit"},
+                                  {"actually_value": 0, "expected_type": "string", "path": "sort"},
+                                  {"actually_value": 1.1, "expected_type": "string", "path": "filter"}]}}'
+
+    - name: 'query_params should contain valid data'
+      ftd_configuration:
+        operation: 'getNetworkObjectList'
+        query_params:
+          offset: 10
+          limit: 2
+          sort: 'name'
+      register: result
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == false'
+
+    - name: 'add: path_params should contain all required params'
+      ftd_configuration:
+        operation: 'addAccessRule'
+        data:
+          name: "ansible-test-accessrule"
+          type: "accessrule"
+          ruleAction: "PERMIT"
+          eventLogAction: "LOG_BOTH"
+        register_as: "sameRuleObj"
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == true'
+          - 'result.msg == {"Invalid path_params provided": {"required": ["parentId"]}}'
+
+    - name: path_params should contain valid data
+      ftd_configuration:
+        operation: 'addAccessRule'
+        data:
+          name: "ansible-test-accessrule"
+          type: "accessrule"
+          ruleAction: "PERMIT"
+          eventLogAction: "LOG_BOTH"
+        path_params:
+          parentId: 1
+        register_as: "sameRuleObj"
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == true'
+          - 'result.msg == {"Invalid path_params provided": {"invalid_type": [{"actually_value": 1, "expected_type": "string", "path": "parentId"}]}}'
+
+    - name: 'edit: path_params should contain all required params'
+      ftd_configuration:
+        operation: 'editNetworkObject'
+        data:
+          name: "ansible-test-network"
+        register_as: "updatedTestObj"
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == true'
+          - 'result.msg == {"Invalid path_params provided": {"required": ["objId"]}}'
+
+    - name: 'delete: path_params should contain all required params'
+      ftd_configuration:
+        operation: 'deleteNetworkObject'
+        path_params:
+          test: "testId"
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == true'
+          - 'result.msg == {"Invalid path_params provided": {"required": ["objId"]}}'
+
+    - name: is_not_exist operation should be present in the swagger api
+      ftd_configuration:
+        operation: 'is_not_exist'
+        data:
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "HOST"
+          value: "192.22.22.24"
+          type: "networkobject"
+        register_as: "testObj"
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == true'
+          - "result.msg == 'Invalid operation name provided: is_not_exist'"
+
+    - name: data should contain all required fields
+      ftd_configuration:
+        operation: 'addNetworkObject'
+        data:
+          description: "Ansible Integration tests in action"
+        register_as: "testObj"
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == true'
+          - 'result.msg == {"Invalid data provided": {"required": ["subType", "type", "value"]}}'
+
+    - name: data should contain valid data
+      ftd_configuration:
+        operation: 'addNetworkObject'
+        data:
+          name: false
+          description: true
+          subType: "not_enum"
+          value: 0
+          type: 1
+          isSystemDefined: "test"
+        register_as: "testObj"
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == true'
+          - 'result.msg == {
+                            "Invalid data provided":
+                                {"invalid_type": [
+                                    {"actually_value": false, "expected_type": "string", "path": "name"},
+                                    {"actually_value": true, "expected_type": "string", "path": "description"},
+                                    {"actually_value": "not_enum", "expected_type": "enum", "path": "subType"},
+                                    {"actually_value": 0, "expected_type": "string", "path": "value"},
+                                    {"actually_value": "test", "expected_type": "boolean", "path": "isSystemDefined"},
+                                    {"actually_value": 1, "expected_type": "string", "path": "type"}]}}'
+
+    - name: data should contain valid data
+      ftd_configuration:
+        operation: 'addNetworkObject'
+        data:
+          name: 0
+          description: 1.2
+          subType: 0
+          value: 1
+          type: 1.1
+          isSystemDefined: 1
+        register_as: "testObj"
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - 'result.changed == false'
+          - 'result.failed == true'
+          - 'result.msg == {
+                            "Invalid data provided":
+                                {"invalid_type": [
+                                    {"actually_value": 0, "expected_type": "string", "path": "name"},
+                                    {"actually_value": 1.2, "expected_type": "string", "path": "description"},
+                                    {"actually_value": 0, "expected_type": "enum", "path": "subType"},
+                                    {"actually_value": 1, "expected_type": "string", "path": "value"},
+                                    {"actually_value": 1, "expected_type": "boolean", "path": "isSystemDefined"},
+                                    {"actually_value": 1.1, "expected_type": "string", "path": "type"}]}}'
