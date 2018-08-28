@@ -2,7 +2,7 @@
   connection: httpapi
 
   tasks:
-    - name: 'query_params should contains valid data'
+    - name: 'query_params should contain valid data'
       ftd_configuration:
         operation: 'getNetworkObjectList'
         query_params:
@@ -15,6 +15,7 @@
     - assert:
         that:
           - 'result.changed == false'
+          - 'result.failed == true'
           - '"Invalid query_params provided" in result.msg'
           - 'result.msg == {"Invalid query_params provided":
                             {"invalid_type": [
@@ -23,23 +24,20 @@
                                   {"actually_value": 0, "expected_type": "string", "path": "sort"},
                                   {"actually_value": 1.1, "expected_type": "string", "path": "filter"}]}}'
 
-    - name: 'query_params should contains valid data'
+    - name: 'query_params should contain valid data'
       ftd_configuration:
         operation: 'getNetworkObjectList'
         query_params:
           offset: 10
           limit: 2
           sort: 'name'
-          filter: 'name=test87te45687'
       register: result
-      ignore_errors: yes
     - assert:
         that:
           - 'result.changed == false'
-          - '"Invalid query_params provided" not in result.msg'
-          - '"Invalid path_params provided" not in result.msg'
+          - 'result.failed == false'
 
-    - name: 'add: path_params should contains all required params'
+    - name: 'add: path_params should contain all required params'
       ftd_configuration:
         operation: 'addAccessRule'
         data:
@@ -53,9 +51,10 @@
     - assert:
         that:
           - 'result.changed == false'
+          - 'result.failed == true'
           - 'result.msg == {"Invalid path_params provided": {"required": ["parentId"]}}'
 
-    - name: path_params should contains valid data
+    - name: path_params should contain valid data
       ftd_configuration:
         operation: 'addAccessRule'
         data:
@@ -71,9 +70,10 @@
     - assert:
         that:
           - 'result.changed == false'
+          - 'result.failed == true'
           - 'result.msg == {"Invalid path_params provided": {"invalid_type": [{"actually_value": 1, "expected_type": "string", "path": "parentId"}]}}'
 
-    - name: 'edit: path_params should contains all required params'
+    - name: 'edit: path_params should contain all required params'
       ftd_configuration:
         operation: 'editNetworkObject'
         data:
@@ -84,9 +84,10 @@
     - assert:
         that:
           - 'result.changed == false'
+          - 'result.failed == true'
           - 'result.msg == {"Invalid path_params provided": {"required": ["objId"]}}'
 
-    - name: 'delete: path_params should contains all required params'
+    - name: 'delete: path_params should contain all required params'
       ftd_configuration:
         operation: 'deleteNetworkObject'
         path_params:
@@ -96,9 +97,10 @@
     - assert:
         that:
           - 'result.changed == false'
+          - 'result.failed == true'
           - 'result.msg == {"Invalid path_params provided": {"required": ["objId"]}}'
 
-    - name: is_not_exist operation should be presented in the swagger api
+    - name: is_not_exist operation should be present in the swagger api
       ftd_configuration:
         operation: 'is_not_exist'
         data:
@@ -113,9 +115,10 @@
     - assert:
         that:
           - 'result.changed == false'
+          - 'result.failed == true'
           - "result.msg == 'Invalid operation name provided: is_not_exist'"
 
-    - name: data should contains all required fields
+    - name: data should contain all required fields
       ftd_configuration:
         operation: 'addNetworkObject'
         data:
@@ -126,9 +129,10 @@
     - assert:
         that:
           - 'result.changed == false'
+          - 'result.failed == true'
           - 'result.msg == {"Invalid data provided": {"required": ["subType", "type", "value"]}}'
 
-    - name: data should contains valid data
+    - name: data should contain valid data
       ftd_configuration:
         operation: 'addNetworkObject'
         data:
@@ -144,6 +148,7 @@
     - assert:
         that:
           - 'result.changed == false'
+          - 'result.failed == true'
           - 'result.msg == {
                             "Invalid data provided":
                                 {"invalid_type": [
@@ -154,7 +159,7 @@
                                     {"actually_value": "test", "expected_type": "boolean", "path": "isSystemDefined"},
                                     {"actually_value": 1, "expected_type": "string", "path": "type"}]}}'
 
-    - name: data should contains valid data
+    - name: data should contain valid data
       ftd_configuration:
         operation: 'addNetworkObject'
         data:
@@ -170,6 +175,7 @@
     - assert:
         that:
           - 'result.changed == false'
+          - 'result.failed == true'
           - 'result.msg == {
                             "Invalid data provided":
                                 {"invalid_type": [
