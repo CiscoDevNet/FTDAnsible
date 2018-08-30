@@ -1,5 +1,20 @@
-# Copyright (c) 2018 Cisco Systems, Inc.
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Copyright (c) 2018 Cisco and/or its affiliates.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 from __future__ import (absolute_import, division, print_function)
 
@@ -62,7 +77,7 @@ class HttpApi(HttpApiBase):
         else:
             raise AnsibleConnectionFailure('Username and password are required for login in absence of refresh token')
 
-        _, response_data = self.connection.send(
+        dummy, response_data = self.connection.send(
             self._get_api_token_path(), json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
         )
         response = self._response_to_json(response_data.getvalue())
@@ -124,7 +139,7 @@ class HttpApi(HttpApiBase):
             headers['Content-Type'] = content_type
             headers['Content-Length'] = len(body)
 
-            _, response_data = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers)
+            dummy, response_data = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers)
             return self._response_to_json(response_data.getvalue())
 
     def download_file(self, from_url, to_path, path_params=None):
@@ -142,13 +157,12 @@ class HttpApi(HttpApiBase):
             output_file.write(response_data.getvalue())
 
     def handle_httperror(self, exc):
-        # None means that the exception will be passed further to the caller
-        retry_request = None
         if exc.code == TOKEN_EXPIRATION_STATUS_CODE or exc.code == UNAUTHORIZED_STATUS_CODE:
             self.connection._auth = None
             self.login(self.connection.get_option('remote_user'), self.connection.get_option('password'))
-            retry_request = True
-        return retry_request
+            return True
+        # None means that the exception will be passed further to the caller
+        return None
 
     def _authorized_headers(self):
         headers = dict(BASE_HEADERS)
