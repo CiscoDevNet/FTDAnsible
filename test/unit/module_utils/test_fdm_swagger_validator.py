@@ -1,3 +1,21 @@
+# Copyright (c) 2018 Cisco and/or its affiliates.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 import os
 import unittest
 
@@ -214,21 +232,21 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         valid, rez = getattr(validator, method)('getNetwork', None)
         assert not valid
         assert sort_validator_rez({
-                   'required': ['objId', 'parentId']
-               }) == sort_validator_rez(rez)
+            'required': ['objId', 'parentId']
+        }) == sort_validator_rez(rez)
         valid, rez = getattr(validator, method)('getNetwork', {})
         assert not valid
         assert sort_validator_rez({
-                   'required': ['objId', 'parentId']
-               }) == sort_validator_rez(rez)
+            'required': ['objId', 'parentId']
+        }) == sort_validator_rez(rez)
         data = {
             'someParam': "test"
         }
         valid, rez = getattr(validator, method)('getNetwork', data)
         assert not valid
         assert sort_validator_rez({
-                   'required': ['objId', 'parentId']
-               }) == sort_validator_rez(rez)
+            'required': ['objId', 'parentId']
+        }) == sort_validator_rez(rez)
 
     def test_path_params_invalid_params(self):
         self.url_params_invalid_params(method='validate_path_params', parameters_type='path')
@@ -434,9 +452,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         validator = FdmSwaggerValidator(local_mock_spec)
         valid, rez = getattr(validator, method)('getNetwork', None)
         assert not valid
-        assert {
-                   'required': ['objId']
-               } == rez
+        assert {'required': ['objId']} == rez
 
         self.check_illegal_argument_exception(lambda: getattr(validator, method)('getNetwork', ''),
                                               "The params parameter must be a dict")
@@ -446,9 +462,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = getattr(validator, method)('getNetwork', {})
         assert not valid
-        assert {
-                   'required': ['objId']
-               } == rez
+        assert {'required': ['objId']} == rez
 
         self.check_illegal_argument_exception(lambda: getattr(validator, method)(None, {'name': 'test'}),
                                               "The operation_name parameter must be a non-empty string")
@@ -471,8 +485,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         valid, rez = validator.validate_data('getNetworkObjectList', None)
         assert not valid
         assert sort_validator_rez({
-                   'required': ['subType', 'type', 'value']
-               }) == sort_validator_rez(rez)
+            'required': ['subType', 'type', 'value']
+        }) == sort_validator_rez(rez)
 
         self.check_illegal_argument_exception(lambda: validator.validate_data('getNetworkObjectList', ''),
                                               "The data parameter must be a dict")
@@ -482,8 +496,8 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         valid, rez = validator.validate_data('getNetworkObjectList', {})
         assert not valid
         assert sort_validator_rez({
-                   'required': ['subType', 'type', 'value']
-               }) == sort_validator_rez(rez)
+            'required': ['subType', 'type', 'value']
+        }) == sort_validator_rez(rez)
 
         self.check_illegal_argument_exception(lambda: validator.validate_data(None, {'name': 'test'}),
                                               "The operation_name parameter must be a non-empty string")
@@ -508,16 +522,16 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
         assert not valid
         assert sort_validator_rez({
-                   'required': ['subType', 'type', 'value']
-               }) == sort_validator_rez(rez)
+            'required': ['subType', 'type', 'value']
+        }) == sort_validator_rez(rez)
 
     def test_errors_if_no_data_was_passed(self):
         data = {}
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
         assert not valid
         assert sort_validator_rez({
-                   'required': ['subType', 'type', 'value']
-               }) == sort_validator_rez(rez)
+            'required': ['subType', 'type', 'value']
+        }) == sort_validator_rez(rez)
 
     def test_errors_if_one_required_field_is_empty(self):
         data = {
@@ -526,9 +540,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         }
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
         assert not valid
-        assert {
-                   'required': ['type']
-               } == rez
+        assert {'required': ['type']} == rez
 
     def test_types_of_required_fields_are_incorrect(self):
         data = {
@@ -857,10 +869,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
         assert not valid
-        assert {
-
-                   'required': ['nested_model']
-               } == rez
+        assert {'required': ['nested_model']} == rez
 
         invalid_data = {
             'nested_model': {
@@ -870,10 +879,7 @@ class TestFdmSwaggerValidator(unittest.TestCase):
 
         valid, rez = FdmSwaggerValidator(nested_mock_data1).validate_data('getdata', invalid_data)
         assert not valid
-        assert {
-
-                   'required': ['nested_model.f_string']
-               } == rez
+        assert {'required': ['nested_model.f_string']} == rez
 
     def test_invalid_type_in_nested_fields(self):
         invalid_data = {

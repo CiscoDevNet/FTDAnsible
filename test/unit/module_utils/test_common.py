@@ -1,4 +1,22 @@
-from module_utils.misc import equal_objects
+# Copyright (c) 2018 Cisco and/or its affiliates.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+from module_utils.common import equal_objects
 
 
 # simple objects
@@ -128,4 +146,96 @@ def test_equal_objects_return_true_with_equal_ref_arrays():
         {'foo': [
             {'id': '1', 'type': 'network', 'ignored_field': 'bar'}
         ]}
+    )
+
+
+# objects with nested structures and object references
+
+def test_equal_objects_return_true_with_equal_nested_object_references():
+    assert equal_objects(
+        {
+            'name': 'foo',
+            'config': {
+                'version': '1',
+                'port': {
+                    'name': 'oldPortName',
+                    'type': 'port',
+                    'id': '123'
+                }
+            }
+        },
+        {
+            'name': 'foo',
+            'config': {
+                'version': '1',
+                'port': {
+                    'name': 'newPortName',
+                    'type': 'port',
+                    'id': '123'
+                }
+            }
+        }
+    )
+
+
+def test_equal_objects_return_false_with_different_nested_object_references():
+    assert not equal_objects(
+        {
+            'name': 'foo',
+            'config': {
+                'version': '1',
+                'port': {
+                    'name': 'oldPortName',
+                    'type': 'port',
+                    'id': '123'
+                }
+            }
+        },
+        {
+            'name': 'foo',
+            'config': {
+                'version': '1',
+                'port': {
+                    'name': 'oldPortName',
+                    'type': 'port',
+                    'id': '234'
+                }
+            }
+        }
+    )
+
+
+def test_equal_objects_return_true_with_equal_nested_list_of_object_references():
+    assert equal_objects(
+        {
+            'name': 'foo',
+            'config': {
+                'version': '1',
+                'ports': [{
+                    'name': 'oldPortName',
+                    'type': 'port',
+                    'id': '123'
+                }, {
+                    'name': 'oldPortName2',
+                    'type': 'port',
+                    'id': '234'
+                }]
+            }
+        },
+        {
+            'name': 'foo',
+            'config': {
+                'version': '1',
+                'ports': [{
+                    'name': 'newPortName',
+                    'type': 'port',
+                    'id': '123'
+                }, {
+                    'name': 'newPortName2',
+                    'type': 'port',
+                    'id': '234',
+                    'extraField': 'foo'
+                }]
+            }
+        }
     )

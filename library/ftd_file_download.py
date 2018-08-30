@@ -1,7 +1,25 @@
 #!/usr/bin/python
 
-# Copyright (c) 2018 Cisco Systems, Inc.
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Copyright (c) 2018 Cisco and/or its affiliates.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
@@ -11,16 +29,16 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = """
 ---
 module: ftd_file_download
-short_description: Downloads files from Cisco FTD devices over HTTP(S).
+short_description: Downloads files from Cisco FTD devices over HTTP(S)
 description:
-  - Downloads files from Cisco FTD devices including pending changes, disk files, certificates, 
+  - Downloads files from Cisco FTD devices including pending changes, disk files, certificates,
     troubleshoot reports, and backups.
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
   operation:
     description:
-      - The name of the operation to execute. 
+      - The name of the operation to execute.
       - Only operations that return a file can be used in this module.
     required: true
   path_params:
@@ -29,7 +47,7 @@ options:
   destination:
     description:
       - Absolute path of where to download the file to.
-      - If destination is a directory, the module uses a filename from 'Content-Disposition' header specified by the server. 
+      - If destination is a directory, the module uses a filename from 'Content-Disposition' header specified by the server.
     required: true
 """
 
@@ -53,12 +71,10 @@ from ansible.module_utils.connection import Connection
 
 try:
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError, FILE_MODEL_NAME
-    from ansible.module_utils.misc import FtdServerError
-    from ansible.module_utils.http import HTTPMethod
+    from ansible.module_utils.common import FtdServerError, HTTPMethod
 except ImportError:
     from module_utils.fdm_swagger_client import OperationField, ValidationError, FILE_MODEL_NAME
-    from module_utils.misc import FtdServerError
-    from module_utils.http import HTTPMethod
+    from module_utils.common import FtdServerError, HTTPMethod
 
 
 def is_download_operation(op_spec):
