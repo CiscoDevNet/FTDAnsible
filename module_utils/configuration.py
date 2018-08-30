@@ -1,14 +1,29 @@
+# Copyright (c) 2018 Cisco and/or its affiliates.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 from functools import partial
 
-# TODO: remove import workarounds when module_utils are moved to the Ansible core
-from httpapi_plugins.ftd import ResponseParams
-
 try:
-    from ansible.module_utils.http import HTTPMethod
-    from ansible.module_utils.misc import equal_objects, copy_identity_properties, FtdConfigurationError, FtdServerError
+    from ansible.module_utils.common import HTTPMethod, equal_objects, copy_identity_properties, FtdConfigurationError, \
+        FtdServerError, ResponseParams
 except ImportError:
-    from module_utils.http import HTTPMethod
-    from module_utils.misc import equal_objects, copy_identity_properties, FtdConfigurationError, FtdServerError
+    from module_utils.common import HTTPMethod, equal_objects, copy_identity_properties, FtdConfigurationError, \
+        FtdServerError, ResponseParams
 
 DEFAULT_PAGE_SIZE = 10
 DEFAULT_OFFSET = 0

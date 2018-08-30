@@ -8,11 +8,9 @@ from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFa
 from library import ftd_configuration
 
 try:
-    from ansible.module_utils.http import HTTPMethod
-    from ansible.module_utils.misc import FtdConfigurationError, FtdServerError
+    from ansible.module_utils.common import FtdConfigurationError, FtdServerError, HTTPMethod
 except ImportError:
-    from module_utils.misc import FtdConfigurationError, FtdServerError
-    from module_utils.http import HTTPMethod
+    from module_utils.common import FtdConfigurationError, FtdServerError, HTTPMethod
 
 ADD_RESPONSE = {'status': 'Object added'}
 EDIT_RESPONSE = {'status': 'Object edited'}

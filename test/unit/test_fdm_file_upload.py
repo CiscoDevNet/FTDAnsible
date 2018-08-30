@@ -6,7 +6,7 @@ from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFa
 
 from library import ftd_file_upload
 from module_utils.fdm_swagger_client import OperationField
-from module_utils.http import HTTPMethod
+from module_utils.common import HTTPMethod
 
 
 class TestFtdFileUpload(object):

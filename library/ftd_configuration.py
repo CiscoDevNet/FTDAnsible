@@ -1,7 +1,25 @@
 #!/usr/bin/python
 
-# Copyright (c) 2018 Cisco Systems, Inc.
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Copyright (c) 2018 Cisco and/or its affiliates.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
@@ -11,14 +29,17 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = """
 ---
 module: ftd_configuration
-short_description: Manages ConfigEntity objects on Cisco FTD devices over REST API.
+short_description: Manages configuration on Cisco FTD devices over REST API
+description:
+  - Manages configuration on Cisco FTD devices including creating, updating, removing configuration objects,
+    scheduling and staring jobs, deploying pending changes, etc. All operation are performed over REST API.
 version_added: "2.7"
 author: "Cisco Systems, Inc."
 options:
   operation:
     description:
       - The name of the operation to execute. Commonly, the operation starts with 'add', 'edit', 'get'
-       or 'delete' verbs, but can have an arbitrary name too. 
+       or 'delete' verbs, but can have an arbitrary name too.
     required: true
   data:
     description:
@@ -68,17 +89,16 @@ response:
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 
-# TODO: remove import workarounds when module_utils are moved to the Ansible core
 try:
-    from ansible.module_utils.config_resource import BaseConfigurationResource
-    from ansible.module_utils.http import HTTPMethod
-    from ansible.module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
+    from ansible.module_utils.configuration import BaseConfigurationResource
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
+    from ansible.module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
+        FtdServerError
 except ImportError:
-    from module_utils.config_resource import BaseConfigurationResource
-    from module_utils.http import HTTPMethod
-    from module_utils.misc import construct_ansible_facts, FtdConfigurationError, FtdServerError
+    from module_utils.configuration import BaseConfigurationResource
     from module_utils.fdm_swagger_client import OperationField, ValidationError
+    from module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
+        FtdServerError
 
 
 def is_post_request(operation_spec):

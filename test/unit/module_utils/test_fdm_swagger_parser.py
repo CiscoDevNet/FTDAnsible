@@ -1,13 +1,31 @@
+# Copyright (c) 2018 Cisco and/or its affiliates.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 import copy
 import os
 import unittest
 
 try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerParser
-    from ansible.module_utils.http import HTTPMethod
+    from ansible.module_utils.common import HTTPMethod
 except ImportError:
     from module_utils.fdm_swagger_client import FdmSwaggerParser
-    from module_utils.http import HTTPMethod
+    from module_utils.common import HTTPMethod
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
@@ -53,8 +71,7 @@ base = {
                                  "schema": {"type": "object",
                                             "$ref": "#/definitions/NetworkObjectWrapper"}},
                          "422": {"description": "",
-                                 "schema": {"type": "object", "$ref": "#/definitions/ErrorWrapper"}}
-                     },
+                                 "schema": {"type": "object", "$ref": "#/definitions/ErrorWrapper"}}},
                      "parameters": [{"in": "body", "name": "body",
                                      "required": True,
                                      "schema": {"$ref": "#/definitions/NetworkObject"}}]}

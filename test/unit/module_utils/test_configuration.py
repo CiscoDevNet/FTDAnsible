@@ -1,7 +1,25 @@
+# Copyright (c) 2018 Cisco and/or its affiliates.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 from ansible.compat.tests import mock
 from ansible.compat.tests.mock import call, patch
 
-from module_utils.config_resource import iterate_over_pageable_resource, BaseConfigurationResource
+from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource
 
 
 class TestBaseConfigurationResource(object):
@@ -40,11 +58,8 @@ class TestBaseConfigurationResource(object):
 
         resource = BaseConfigurationResource(None)
 
-        assert [
-                   {'name': 'obj1', 'type': 'foo'},
-                   {'name': 'obj3', 'type': 'foo'},
-
-               ] == resource.get_objects_by_filter('/objects', {'type': 'foo'})
+        assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == resource.get_objects_by_filter(
+            '/objects', {'type': 'foo'})
 
 
 class TestIterateOverPageableResource(object):

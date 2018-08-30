@@ -1,3 +1,21 @@
+# Copyright (c) 2018 Cisco and/or its affiliates.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 import json
 import os
 
@@ -9,9 +27,9 @@ from ansible.module_utils.connection import ConnectionError
 from ansible.module_utils.six import BytesIO, PY3, StringIO
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
-from httpapi_plugins.ftd import HttpApi, API_TOKEN_PATH_ENV_VAR, ResponseParams
+from httpapi_plugins.ftd import HttpApi, API_TOKEN_PATH_ENV_VAR
+from module_utils.common import HTTPMethod, ResponseParams
 from module_utils.fdm_swagger_client import SpecProp, FdmSwaggerParser
-from module_utils.http import HTTPMethod
 
 if PY3:
     BUILTINS_NAME = 'builtins'
@@ -160,7 +178,7 @@ class TestFtdHttpApi(unittest.TestCase):
         filename = 'test_file.txt'
         response = mock.Mock()
         response.info.return_value = {'Content-Disposition': 'attachment; filename="%s"' % filename}
-        _, response_data = self._connection_response('File content')
+        dummy, response_data = self._connection_response('File content')
         self.connection_mock.send.return_value = response, response_data
 
         open_mock = mock_open()
