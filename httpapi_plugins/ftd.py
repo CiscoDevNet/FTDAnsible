@@ -32,6 +32,13 @@ API_SPEC_PATH = '/apispec/ngfw.json'
 TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
 
+try:
+    from __main__ import display
+except ImportError:
+    from ansible.utils.display import Display
+
+    display = Display()
+
 
 class ResponseParams:
     SUCCESS = 'success'
@@ -101,26 +108,38 @@ class HttpApi(HttpApiBase):
         url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
         try:
+            self._display(http_method, 'url', url)
+            if data:
+                self._display(http_method, 'data', data)
+
             response, response_data = self.connection.send(
                 url, data, method=http_method,
                 headers=self._authorized_headers()
             )
+
+            value = response_data.getvalue()
+            self._display(http_method, 'response', value)
+
             return {
                 ResponseParams.SUCCESS: True,
                 ResponseParams.STATUS_CODE: response.getcode(),
-                ResponseParams.RESPONSE: self._response_to_json(response_data.getvalue())
+                ResponseParams.RESPONSE: self._response_to_json(value)
             }
         # Being invoked via JSON-RPC, this method does not serialize and pass HTTPError correctly to the method caller.
         # Thus, in order to handle non-200 responses, we need to wrap them into a simple structure and pass explicitly.
         except HTTPError as e:
+            read = e.read()
+            self._display(http_method, 'error', read)
             return {
                 ResponseParams.SUCCESS: False,
                 ResponseParams.STATUS_CODE: e.code,
-                ResponseParams.RESPONSE: self._response_to_json(e.read())
+                ResponseParams.RESPONSE: self._response_to_json(read)
             }
 
     def upload_file(self, from_path, to_url):
         url = construct_url_path(to_url)
+        request_type = 'upload'
+        self._display(request_type, 'url', url)
         with open(from_path, 'rb') as src_file:
             rf = RequestField('fileToUpload', src_file.read(), os.path.basename(src_file.name))
             rf.make_multipart()
@@ -131,10 +150,14 @@ class HttpApi(HttpApiBase):
             headers['Content-Length'] = len(body)
 
             _, response_data = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers)
-            return self._response_to_json(response_data.getvalue())
+            value = response_data.getvalue()
+            self._display(request_type, 'response', value)
+            return self._response_to_json(value)
 
     def download_file(self, from_url, to_path, path_params=None):
         url = construct_url_path(from_url, path_params=path_params)
+        request_type = 'download'
+        self._display(request_type, 'url', url)
         response, response_data = self.connection.send(
             url, data=None, method=HTTPMethod.GET,
             headers=self._authorized_headers()
@@ -160,6 +183,10 @@ class HttpApi(HttpApiBase):
         headers = dict(BASE_HEADERS)
         headers['Authorization'] = 'Bearer %s' % self.access_token
         return headers
+
+    def _display(self, http_method, title, msg=''):
+        if display.verbosity > 2:
+            display.vvv('REST:{0}:{1}:{2}\n{3}'.format(http_method, self.connection._url, title, to_text(msg)))
 
     @staticmethod
     def _get_api_token_path():
