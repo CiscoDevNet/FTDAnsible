@@ -184,7 +184,7 @@ class HttpApi(HttpApiBase):
             to_path = os.path.join(to_path, filename)
 
         with open(to_path, "wb") as output_file:
-            output_file.write(self._get_response_value(response_data))
+            output_file.write(response_data.getvalue())
         self._display(HTTPMethod.GET, 'downloaded', to_path)
 
     def handle_httperror(self, exc):
