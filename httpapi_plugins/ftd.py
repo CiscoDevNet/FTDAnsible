@@ -83,8 +83,11 @@ class HttpApi(HttpApiBase):
         else:
             raise AnsibleConnectionFailure('Username and password are required for login in absence of refresh token')
 
+        url = self._get_api_token_path()
+        self._display(HTTPMethod.POST, 'login', url)
+
         dummy, response_data = self.connection.send(
-            self._get_api_token_path(), json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
+            url, json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
         )
         response = self._response_to_json(response_data.getvalue())
 
@@ -101,8 +104,13 @@ class HttpApi(HttpApiBase):
             'access_token': self.access_token,
             'token_to_revoke': self.refresh_token
         }
+
+        url = self._get_api_token_path()
+
+        self._display(HTTPMethod.POST, 'logout', url)
+
         self.connection.send(
-            self._get_api_token_path(), json.dumps(auth_payload), method=HTTPMethod.POST,
+            url, json.dumps(auth_payload), method=HTTPMethod.POST,
             headers=self._authorized_headers()
         )
         self.refresh_token = None
@@ -146,8 +154,7 @@ class HttpApi(HttpApiBase):
 
     def upload_file(self, from_path, to_url):
         url = construct_url_path(to_url)
-        request_type = 'upload'
-        self._display(request_type, 'url', url)
+        self._display(HTTPMethod.POST, 'upload', url)
         with open(from_path, 'rb') as src_file:
             rf = RequestField('fileToUpload', src_file.read(), os.path.basename(src_file.name))
             rf.make_multipart()
@@ -159,13 +166,12 @@ class HttpApi(HttpApiBase):
 
             dummy, response_data = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers)
             value = response_data.getvalue()
-            self._display(request_type, 'response', value)
+            self._display(HTTPMethod.POST, 'upload:response', value)
             return self._response_to_json(value)
 
     def download_file(self, from_url, to_path, path_params=None):
         url = construct_url_path(from_url, path_params=path_params)
-        request_type = 'download'
-        self._display(request_type, 'url', url)
+        self._display(HTTPMethod.GET, 'download', url)
         response, response_data = self.connection.send(
             url, data=None, method=HTTPMethod.GET,
             headers=self._authorized_headers()
@@ -177,6 +183,7 @@ class HttpApi(HttpApiBase):
 
         with open(to_path, "wb") as output_file:
             output_file.write(response_data.getvalue())
+        self._display(HTTPMethod.GET, 'downloaded', to_path)
 
     def handle_httperror(self, exc):
         if exc.code == TOKEN_EXPIRATION_STATUS_CODE or exc.code == UNAUTHORIZED_STATUS_CODE:
