@@ -201,7 +201,7 @@ class HttpApi(HttpApiBase):
         return headers
 
     def _display(self, http_method, title, msg=''):
-        display.vvv('REST:{0}:{1}:{2}\n{3}'.format(http_method, self.connection._url, title, msg))
+        display.vvvv('REST:{0}:{1}:{2}\n{3}'.format(http_method, self.connection._url, title, msg))
 
     @staticmethod
     def _get_response_value(response_data):

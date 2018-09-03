@@ -59,8 +59,8 @@ run as usual playbooks.
 ### Debugging
 
 1. Add `log_path` with path to log file in `ansible.cfg`
-2. Run `ansible-playbook` with `-vvv`
+2. Run `ansible-playbook` with `-vvvv`
     ```
-    $ ansible-playbook samples/network_object.yml -vvv
+    $ ansible-playbook samples/network_object.yml -vvvv
     ```
 3. The log file will contain additional information(REST etc.)
