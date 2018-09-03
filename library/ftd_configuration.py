@@ -139,7 +139,7 @@ def validate_params(connection, op_name, query_params, path_params, data, op_spe
 
     validate(connection.validate_query_params, 'query_params', query_params)
     validate(connection.validate_path_params, 'path_params', path_params)
-    if is_post_request(op_spec) or is_post_request(op_spec):
+    if is_post_request(op_spec):
         validate(connection.validate_data, 'data', data)
 
     if report:

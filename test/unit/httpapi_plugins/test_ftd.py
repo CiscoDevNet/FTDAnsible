@@ -239,6 +239,43 @@ class TestFtdHttpApi(unittest.TestCase):
         assert 'Specification for TestModel' == self.ftd_plugin.get_model_spec('TestModel')
         assert self.ftd_plugin.get_model_spec('NonExistingTestModel') is None
 
+    @patch.object(FdmSwaggerParser, 'parse_spec')
+    def test_get_model_spec(self, parse_spec_mock):
+        self.connection_mock.send.return_value = self._connection_response(None)
+        operation1 = {'modelName': 'TestModel'}
+        op_model_name_is_none = {'modelName': None}
+        op_without_model_name = {'url': 'testUrl'}
+
+        parse_spec_mock.return_value = {
+            SpecProp.MODEL_OPERATIONS: {
+                'TestModel': {
+                    'testOp1': operation1,
+                    'testOp2': 'spec2'
+                },
+                'TestModel2': {
+                    'testOp10': 'spec10',
+                    'testOp20': 'spec20'
+                }
+            },
+            SpecProp.OPERATIONS: {
+                'testOp1': operation1,
+                'testOp10': {
+                    'modelName': 'TestModel2'
+                },
+                'testOpWithoutModelName': op_without_model_name,
+                'testOpModelNameIsNone': op_model_name_is_none
+            }
+        }
+
+        assert {'testOp1': operation1, 'testOp2': 'spec2'} == self.ftd_plugin.get_operations_spec('testOp1')
+        assert {'testOpModelNameIsNone': op_model_name_is_none} == self.ftd_plugin.get_operations_spec(
+            'testOpModelNameIsNone')
+
+        assert {'testOpWithoutModelName': op_without_model_name} == self.ftd_plugin.get_operations_spec(
+            'testOpWithoutModelName')
+
+        assert self.ftd_plugin.get_operations_spec('nonExistingOperation') is None
+
     @staticmethod
     def _connection_response(response, status=200):
         response_mock = mock.Mock()

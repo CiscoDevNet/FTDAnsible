@@ -21,6 +21,7 @@ from ansible.module_utils.six import integer_types, string_types
 
 FILE_MODEL_NAME = '_File'
 SUCCESS_RESPONSE_CODE = '200'
+DELETE_PREFIX = 'delete'
 
 
 class OperationField:
@@ -34,6 +35,7 @@ class SpecProp:
     DEFINITIONS = 'definitions'
     OPERATIONS = 'operations'
     MODELS = 'models'
+    MODEL_OPERATIONS = 'model_operations'
 
 
 class PropName:
@@ -95,7 +97,7 @@ class FdmSwaggerParser:
         This method simplifies a swagger format and also resolves a model name for each operation
         :param spec: dict
                     expect data in the swagger format see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
-        :rtype: (bool, string|dict)
+        :rtype: dict
         :return:
         Ex.
             The models field contains model definition from swagger see <#https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions>
@@ -103,7 +105,7 @@ class FdmSwaggerParser:
                 'models':{
                     'model_name':{...},
                     ...
-                },
+                },,
                 'operations':{
                     'operation_name':{
                         'method': 'get', #post, put, delete
@@ -129,15 +131,33 @@ class FdmSwaggerParser:
                         }
                     },
                     ...
+                },
+                'model_operations':{
+                    'model_name':{ # a list of operations available for the current model
+                        'operation_name':{
+                            ... # the same as in the operations section
+                        },
+                        ...
+                    },
+                    ...
                 }
             }
         """
         self._definitions = spec[SpecProp.DEFINITIONS]
+        operations = self._get_operations(spec)
         config = {
             SpecProp.MODELS: self._definitions,
-            SpecProp.OPERATIONS: self._get_operations(spec)
+            SpecProp.OPERATIONS: operations,
+            SpecProp.MODEL_OPERATIONS: self._get_model_operations(operations)
         }
         return config
+
+    def _get_model_operations(self, operations):
+        model_operations = {}
+        for operations_name, params in operations.items():
+            model_name = params[OperationField.MODEL_NAME]
+            model_operations.setdefault(model_name, {})[operations_name] = params
+        return model_operations
 
     def _get_operations(self, spec):
         base_path = spec[PropName.BASE_PATH]
@@ -162,8 +182,18 @@ class FdmSwaggerParser:
             return self._get_model_name_from_responses(params)
         elif method == HTTPMethod.POST or method == HTTPMethod.PUT:
             return self._get_model_name_for_post_put_requests(params)
+        elif method == HTTPMethod.DELETE:
+            return self._get_model_name_from_delete_operation(params)
         else:
             return None
+
+    def _get_model_name_from_delete_operation(self, params):
+        operation_id = params[PropName.OPERATION_ID]
+        if operation_id.startswith(DELETE_PREFIX):
+            model_name = operation_id[len(DELETE_PREFIX):]
+            if model_name in self._definitions:
+                return model_name
+        return None
 
     def _get_model_name_for_post_put_requests(self, params):
         model_name = None
