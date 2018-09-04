@@ -55,3 +55,12 @@ In order to run the unit tests:
 Integration tests are written in a form of playbooks and are usually run with `ansible-test` utility command from Ansible repository. As this project is created outside Ansible, it 
 does not have utils to run the tests. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be 
 run as usual playbooks.
+
+### Debugging
+
+1. Add `log_path` with path to log file in `ansible.cfg`
+2. Run `ansible-playbook` with `-vvvv`
+    ```
+    $ ansible-playbook samples/network_object.yml -vvvv
+    ```
+3. The log file will contain additional information(REST etc.)

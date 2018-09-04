@@ -47,6 +47,13 @@ API_SPEC_PATH = '/apispec/ngfw.json'
 TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
 
+try:
+    from __main__ import display
+except ImportError:
+    from ansible.utils.display import Display
+
+    display = Display()
+
 
 class HttpApi(HttpApiBase):
     def __init__(self, connection):
@@ -77,10 +84,14 @@ class HttpApi(HttpApiBase):
         else:
             raise AnsibleConnectionFailure('Username and password are required for login in absence of refresh token')
 
+        url = self._get_api_token_path()
+        self._display(HTTPMethod.POST, 'login', url)
+
         dummy, response_data = self.connection.send(
-            self._get_api_token_path(), json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
+            url, json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
         )
-        response = self._response_to_json(response_data.getvalue())
+
+        response = self._response_to_json(self._get_response_value(response_data))
 
         try:
             self.refresh_token = response['refresh_token']
@@ -95,8 +106,13 @@ class HttpApi(HttpApiBase):
             'access_token': self.access_token,
             'token_to_revoke': self.refresh_token
         }
+
+        url = self._get_api_token_path()
+
+        self._display(HTTPMethod.POST, 'logout', url)
+
         self.connection.send(
-            self._get_api_token_path(), json.dumps(auth_payload), method=HTTPMethod.POST,
+            url, json.dumps(auth_payload), method=HTTPMethod.POST,
             headers=self._authorized_headers()
         )
         self.refresh_token = None
@@ -110,26 +126,37 @@ class HttpApi(HttpApiBase):
         url = construct_url_path(url_path, path_params, query_params)
         data = json.dumps(body_params) if body_params else None
         try:
+            self._display(http_method, 'url', url)
+            if data:
+                self._display(http_method, 'data', data)
+
             response, response_data = self.connection.send(
                 url, data, method=http_method,
                 headers=self._authorized_headers()
             )
+
+            value = self._get_response_value(response_data)
+            self._display(http_method, 'response', value)
+
             return {
                 ResponseParams.SUCCESS: True,
                 ResponseParams.STATUS_CODE: response.getcode(),
-                ResponseParams.RESPONSE: self._response_to_json(response_data.getvalue())
+                ResponseParams.RESPONSE: self._response_to_json(value)
             }
         # Being invoked via JSON-RPC, this method does not serialize and pass HTTPError correctly to the method caller.
         # Thus, in order to handle non-200 responses, we need to wrap them into a simple structure and pass explicitly.
         except HTTPError as e:
+            error_msg = e.read()
+            self._display(http_method, 'error', error_msg)
             return {
                 ResponseParams.SUCCESS: False,
                 ResponseParams.STATUS_CODE: e.code,
-                ResponseParams.RESPONSE: self._response_to_json(e.read())
+                ResponseParams.RESPONSE: self._response_to_json(error_msg)
             }
 
     def upload_file(self, from_path, to_url):
         url = construct_url_path(to_url)
+        self._display(HTTPMethod.POST, 'upload', url)
         with open(from_path, 'rb') as src_file:
             rf = RequestField('fileToUpload', src_file.read(), os.path.basename(src_file.name))
             rf.make_multipart()
@@ -140,10 +167,13 @@ class HttpApi(HttpApiBase):
             headers['Content-Length'] = len(body)
 
             dummy, response_data = self.connection.send(url, data=body, method=HTTPMethod.POST, headers=headers)
-            return self._response_to_json(response_data.getvalue())
+            value = self._get_response_value(response_data)
+            self._display(HTTPMethod.POST, 'upload:response', value)
+            return self._response_to_json(value)
 
     def download_file(self, from_url, to_path, path_params=None):
         url = construct_url_path(from_url, path_params=path_params)
+        self._display(HTTPMethod.GET, 'download', url)
         response, response_data = self.connection.send(
             url, data=None, method=HTTPMethod.GET,
             headers=self._authorized_headers()
@@ -155,6 +185,7 @@ class HttpApi(HttpApiBase):
 
         with open(to_path, "wb") as output_file:
             output_file.write(response_data.getvalue())
+        self._display(HTTPMethod.GET, 'downloaded', to_path)
 
     def handle_httperror(self, exc):
         if exc.code == TOKEN_EXPIRATION_STATUS_CODE or exc.code == UNAUTHORIZED_STATUS_CODE:
@@ -169,13 +200,19 @@ class HttpApi(HttpApiBase):
         headers['Authorization'] = 'Bearer %s' % self.access_token
         return headers
 
+    def _display(self, http_method, title, msg=''):
+        display.vvvv('REST:{0}:{1}:{2}\n{3}'.format(http_method, self.connection._url, title, msg))
+
+    @staticmethod
+    def _get_response_value(response_data):
+        return to_text(response_data.getvalue())
+
     @staticmethod
     def _get_api_token_path():
         return os.environ.get(API_TOKEN_PATH_ENV_VAR, DEFAULT_API_TOKEN_PATH)
 
     @staticmethod
-    def _response_to_json(response_data):
-        response_text = to_text(response_data)
+    def _response_to_json(response_text):
         try:
             return json.loads(response_text) if response_text else {}
         # JSONDecodeError only available on Python 3.5+
