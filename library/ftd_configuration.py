@@ -19,8 +19,22 @@
 #
 
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
+
+class _Operation:
+    ADD = 'add'
+    EDIT = 'edit'
+    GET_ALL = 'get'
+
+
+class _OperationNamePrefix:
+    ADD = 'add'
+    EDIT = 'edit'
+    DELETE = 'delete'
+    UPSERT = 'upsert'
+
+
+__metaclass__ = type
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
@@ -111,17 +125,22 @@ def is_put_request(operation_spec):
 
 def is_add_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('add') and is_post_request(operation_spec)
+    return operation_name.startswith(_OperationNamePrefix.ADD) and is_post_request(operation_spec)
 
 
 def is_edit_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('edit') and is_put_request(operation_spec)
+    return operation_name.startswith(_OperationNamePrefix.EDIT) and is_put_request(operation_spec)
 
 
 def is_delete_operation(operation_name, operation_spec):
     # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-    return operation_name.startswith('delete') and operation_spec[OperationField.METHOD] == HTTPMethod.DELETE
+    return operation_name.startswith(_OperationNamePrefix.DELETE) and operation_spec[
+        OperationField.METHOD] == HTTPMethod.DELETE
+
+
+def is_upsert_operation(operation_name):
+    return operation_name.startswith(_OperationNamePrefix.UPSERT)
 
 
 def validate_params(connection, op_name, query_params, path_params, data, op_spec):
@@ -146,7 +165,7 @@ def validate_params(connection, op_name, query_params, path_params, data, op_spe
         raise ValidationError(report)
 
 
-def is_find_by_filter_operation(operation_name, operation_spec, params):
+def is_find_by_filter_operation(operation_name, operation_spec, filters):
     """
     Checks whether the called operation is 'find by filter'. This operation fetches all objects and finds
     the matching ones by the given filter. As filtering is done on the client side, this operation should be used
@@ -156,13 +175,97 @@ def is_find_by_filter_operation(operation_name, operation_spec, params):
     :type operation_name: str
     :param operation_spec: specification of the operation being called by the user
     :type operation_spec: dict
-    :param params: module parameters
+    :param filters: filters
     :return: True if called operation is find by filter, otherwise False
     :rtype: bool
     """
+    is_find_all = is_find_all_operation(operation_name, operation_spec)
+    return is_find_all and filters
+
+
+def is_find_all_operation(operation_name, operation_spec):
     is_get_list_operation = operation_name.startswith('get') and operation_name.endswith('List')
     is_get_method = operation_spec[OperationField.METHOD] == HTTPMethod.GET
-    return is_get_list_operation and is_get_method and params['filters']
+    return is_get_list_operation and is_get_method
+
+
+def upsert_object(connection, upsert_operations, data, query_params, path_params=None):
+    if path_params is None:
+        path_params = {}
+    try:
+        return add_object(connection, data, path_params, query_params, upsert_operations)
+    except FtdConfigurationError as e:
+        object_id = e.objectId
+        object_version = e.version
+        if object_id:
+            return edit_object(connection, data, object_id, object_version, path_params, query_params,
+                               upsert_operations)
+        else:
+            # TODO:2018-09-04:alexander.vorkov: raise an exception
+            pass
+
+    except Exception as e:
+        raise e
+
+
+def edit_object(connection, data, object_id, object_version, path_params, query_params, upsert_operations):
+    resource = BaseConfigurationResource(connection)
+    operation = upsert_operations[_Operation.EDIT]
+    op_name = operation[_UpsertSpec.OPERATION_NAME]
+    op_spec = operation[_UpsertSpec.SPEC]
+    url = operation[_UpsertSpec.SPEC][OperationField.URL]
+    path_params['objId'] = object_id
+    data['version'] = object_version
+    data['id'] = object_id
+    validate_params(connection, op_name, query_params, path_params, data, op_spec)
+    return resource.edit_object(url, data, path_params, query_params), resource
+
+
+def add_object(connection, data, path_params, query_params, upsert_operations):
+    resource = BaseConfigurationResource(connection)
+    operation = upsert_operations[_Operation.ADD]
+    op_name = operation[_UpsertSpec.OPERATION_NAME]
+    op_spec = operation[_UpsertSpec.SPEC]
+    url = operation[_UpsertSpec.SPEC][OperationField.URL]
+    validate_params(connection, op_name, query_params, path_params, data, op_spec)
+    return resource.add_object(url, data, path_params, query_params), resource
+
+
+class _UpsertSpec:
+    OPERATION_NAME = 'operation_name'
+    SPEC = 'spec'
+
+
+def get_operations_need_for_upsert_operation(operations):
+    amount_operations_need_for_upsert_operation = 3
+    upsert_operations = {}
+    for operation_name in operations:
+        operation_spec = operations[operation_name]
+        operation_type = None
+        if is_add_operation(operation_name, operation_spec):
+            operation_type = _Operation.ADD
+        elif is_edit_operation(operation_name, operation_spec):
+            operation_type = _Operation.EDIT
+        elif is_find_all_operation(operation_name, operation_spec):
+            operation_type = _Operation.GET_ALL
+
+        if operation_type:
+            upsert_operations[operation_type] = {
+                _UpsertSpec.OPERATION_NAME: operation_name,
+                _UpsertSpec.SPEC: operation_spec
+            }
+
+    upsert_operation_is_supported = len(upsert_operations.keys()) == amount_operations_need_for_upsert_operation
+
+    return upsert_operation_is_supported, upsert_operations
+
+
+def module_fail_invalid_operation(module, op_name):
+    module.fail_json(msg='Invalid operation name provided: %s' % op_name)
+
+
+def get_base_operation_name_from_upsert(op_name):
+    return _OperationNamePrefix.ADD + op_name[len(_OperationNamePrefix.UPSERT):]
 
 
 def main():
@@ -181,11 +284,30 @@ def main():
     connection = Connection(module._socket_path)
 
     op_name = params['operation']
+    data, query_params, path_params = params['data'], params['query_params'], params['path_params']
+    filters = params['filters']
+
+    try:
+        if is_upsert_operation(op_name):
+            base_operation = get_base_operation_name_from_upsert(op_name)
+            operations = connection.get_operations_spec(base_operation)
+            upsert_operation_is_supported, upsert_operations = get_operations_need_for_upsert_operation(operations)
+            if upsert_operation_is_supported:
+                resp, resource = upsert_object(connection, upsert_operations, data, query_params, path_params)
+                module.exit_json(changed=resource.config_changed, response=resp,
+                                 ansible_facts=construct_ansible_facts(resp, module.params))
+            else:
+                module_fail_invalid_operation(module, op_name)
+
+    except FtdConfigurationError as e:
+        module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e.msg))
+    except FtdServerError as e:
+        module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
+                             'Server response: %s' % (op_name, e.code, e.response))
+
     op_spec = connection.get_operation_spec(op_name)
     if op_spec is None:
-        module.fail_json(msg='Invalid operation name provided: %s' % op_name)
-
-    data, query_params, path_params = params['data'], params['query_params'], params['path_params']
+        module_fail_invalid_operation(module, op_name)
 
     try:
         validate_params(connection, op_name, query_params, path_params, data, op_spec)
@@ -206,7 +328,7 @@ def main():
         elif is_delete_operation(op_name, op_spec):
             resp = resource.delete_object(url, path_params)
         elif is_find_by_filter_operation(op_name, op_spec, params):
-            resp = resource.get_objects_by_filter(url, params['filters'], path_params,
+            resp = resource.get_objects_by_filter(url, filters, path_params,
                                                   query_params)
         else:
             resp = resource.send_request(url, op_spec[OperationField.METHOD], data,
@@ -216,7 +338,7 @@ def main():
         module.exit_json(changed=resource.config_changed, response=resp,
                          ansible_facts=construct_ansible_facts(resp, module.params))
     except FtdConfigurationError as e:
-        module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e))
+        module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e.msg))
     except FtdServerError as e:
         module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
                              'Server response: %s' % (op_name, e.code, e.response))

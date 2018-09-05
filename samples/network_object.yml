@@ -3,7 +3,7 @@
   tasks:
     - name: Create a HOST network object
       ftd_configuration:
-        operation: "addNetworkObject"
+        operation: "upsertNetworkObject"
         data:
           name: "Ansible-network-host"
           description: "From Ansible with love"
@@ -11,20 +11,22 @@
           value: "{{ host_ip }}"
           isSystemDefined: False
           type: "networkobject"
+          version: ''
 
     - name: Create a NETWORK network object
       ftd_configuration:
-        operation: "addNetworkObject"
+        operation: "upsertNetworkObject"
         data:
           name: "Ansible-network-network"
           description: "From Ansible with love"
           subType: "NETWORK"
           value: "{{ network_ip }}"
           type: "networkobject"
+          version: ''
 
     - name: Create a network group
       ftd_configuration:
-        operation: "addNetworkObjectGroup"
+        operation: "upsertNetworkObjectGroup"
         data:
           name: "Ansible-network-group"
           description: "From Ansible with love"
@@ -32,6 +34,7 @@
           objects:
             - "{{ networkobject_ansible_network_host }}"
             - "{{ networkobject_ansible_network_network }}"
+          version: ''
 
     - name: Update the HOST network object
       ftd_configuration:

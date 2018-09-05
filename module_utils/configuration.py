@@ -63,28 +63,21 @@ class BaseConfigurationResource(object):
         def is_duplicate_name_error(err):
             return err.code == UNPROCESSABLE_ENTITY_STATUS and DUPLICATE_NAME_ERROR_MESSAGE in str(err)
 
-        def update_existing_object(obj):
-            new_path_params = {} if path_params is None else path_params
-            new_path_params['objId'] = obj['id']
-            return self.send_request(url_path=url_path + '/{objId}',
-                                     http_method=HTTPMethod.PUT,
-                                     body_params=copy_identity_properties(obj, body_params),
-                                     path_params=new_path_params,
-                                     query_params=query_params)
-
         try:
             return self.send_request(url_path=url_path, http_method=HTTPMethod.POST, body_params=body_params,
                                      path_params=path_params, query_params=query_params)
         except FtdServerError as e:
+
             if is_duplicate_name_error(e):
                 existing_obj = self.get_object_by_name(url_path, body_params['name'], path_params)
+
                 if equal_objects(existing_obj, body_params):
                     return existing_obj
-                elif update_if_exists:
-                    return update_existing_object(existing_obj)
                 else:
                     raise FtdConfigurationError(
-                        'Cannot add new object. An object with the same name but different parameters already exists.')
+                        'Cannot add new object. An object with the same name but different parameters already exists.',
+                        existing_obj['id'] if existing_obj and 'id' in existing_obj else None,
+                        existing_obj['version'] if existing_obj and 'version' in existing_obj else None)
             else:
                 raise e
 
