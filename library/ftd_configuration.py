@@ -327,7 +327,7 @@ def main():
             resp = resource.edit_object(url, data, path_params, query_params)
         elif is_delete_operation(op_name, op_spec):
             resp = resource.delete_object(url, path_params)
-        elif is_find_by_filter_operation(op_name, op_spec, params):
+        elif is_find_by_filter_operation(op_name, op_spec, filters):
             resp = resource.get_objects_by_filter(url, filters, path_params,
                                                   query_params)
         else:

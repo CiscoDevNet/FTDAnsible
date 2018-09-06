@@ -59,7 +59,7 @@ class BaseConfigurationResource(object):
         )
         return [i for i in item_generator if match_filters(i)]
 
-    def add_object(self, url_path, body_params, path_params=None, query_params=None, update_if_exists=False):
+    def add_object(self, url_path, body_params, path_params=None, query_params=None):
         def is_duplicate_name_error(err):
             return err.code == UNPROCESSABLE_ENTITY_STATUS and DUPLICATE_NAME_ERROR_MESSAGE in str(err)
 
