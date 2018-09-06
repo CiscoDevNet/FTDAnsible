@@ -201,8 +201,7 @@ def upsert_object(connection, upsert_operations, data, query_params, path_params
             return edit_object(connection, data, object_id, object_version, path_params, query_params,
                                upsert_operations)
         else:
-            # TODO:2018-09-04:alexander.vorkov: raise an exception
-            pass
+            raise e
 
     except Exception as e:
         raise e
@@ -268,6 +267,51 @@ def get_base_operation_name_from_upsert(op_name):
     return _OperationNamePrefix.ADD + op_name[len(_OperationNamePrefix.UPSERT):]
 
 
+def crud_operation(connection, data, filters, module, op_name, path_params, query_params):
+    op_spec = connection.get_operation_spec(op_name)
+    if op_spec is None:
+        module_fail_invalid_operation(module, op_name)
+    try:
+        validate_params(connection, op_name, query_params, path_params, data, op_spec)
+    except ValidationError as e:
+        module.fail_json(msg=e.args[0])
+
+    if module.check_mode:
+        module.exit_json(changed=False)
+
+    resource = BaseConfigurationResource(connection)
+    url = op_spec[OperationField.URL]
+
+    if is_add_operation(op_name, op_spec):
+        resp = resource.add_object(url, data, path_params, query_params)
+    elif is_edit_operation(op_name, op_spec):
+        resp = resource.edit_object(url, data, path_params, query_params)
+    elif is_delete_operation(op_name, op_spec):
+        resp = resource.delete_object(url, path_params)
+    elif is_find_by_filter_operation(op_name, op_spec, filters):
+        resp = resource.get_objects_by_filter(url, filters, path_params,
+                                              query_params)
+    else:
+        resp = resource.send_request(url, op_spec[OperationField.METHOD], data,
+                                     path_params,
+                                     query_params)
+
+    module.exit_json(changed=resource.config_changed, response=resp,
+                     ansible_facts=construct_ansible_facts(resp, module.params))
+
+
+def upsert_operation(connection, data, module, op_name, path_params, query_params):
+    base_operation = get_base_operation_name_from_upsert(op_name)
+    operations = connection.get_operations_spec(base_operation)
+    upsert_operation_is_supported, upsert_operations = get_operations_need_for_upsert_operation(operations)
+    if upsert_operation_is_supported:
+        resp, resource = upsert_object(connection, upsert_operations, data, query_params, path_params)
+        module.exit_json(changed=resource.config_changed, response=resp,
+                         ansible_facts=construct_ansible_facts(resp, module.params))
+    else:
+        module_fail_invalid_operation(module, op_name)
+
+
 def main():
     fields = dict(
         operation=dict(type='str', required=True),
@@ -285,58 +329,13 @@ def main():
 
     op_name = params['operation']
     data, query_params, path_params = params['data'], params['query_params'], params['path_params']
-    filters = params['filters']
-
     try:
         if is_upsert_operation(op_name):
-            base_operation = get_base_operation_name_from_upsert(op_name)
-            operations = connection.get_operations_spec(base_operation)
-            upsert_operation_is_supported, upsert_operations = get_operations_need_for_upsert_operation(operations)
-            if upsert_operation_is_supported:
-                resp, resource = upsert_object(connection, upsert_operations, data, query_params, path_params)
-                module.exit_json(changed=resource.config_changed, response=resp,
-                                 ansible_facts=construct_ansible_facts(resp, module.params))
-            else:
-                module_fail_invalid_operation(module, op_name)
-
-    except FtdConfigurationError as e:
-        module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e.msg))
-    except FtdServerError as e:
-        module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
-                             'Server response: %s' % (op_name, e.code, e.response))
-
-    op_spec = connection.get_operation_spec(op_name)
-    if op_spec is None:
-        module_fail_invalid_operation(module, op_name)
-
-    try:
-        validate_params(connection, op_name, query_params, path_params, data, op_spec)
-    except ValidationError as e:
-        module.fail_json(msg=e.args[0])
-
-    try:
-        if module.check_mode:
-            module.exit_json(changed=False)
-
-        resource = BaseConfigurationResource(connection)
-        url = op_spec[OperationField.URL]
-
-        if is_add_operation(op_name, op_spec):
-            resp = resource.add_object(url, data, path_params, query_params)
-        elif is_edit_operation(op_name, op_spec):
-            resp = resource.edit_object(url, data, path_params, query_params)
-        elif is_delete_operation(op_name, op_spec):
-            resp = resource.delete_object(url, path_params)
-        elif is_find_by_filter_operation(op_name, op_spec, filters):
-            resp = resource.get_objects_by_filter(url, filters, path_params,
-                                                  query_params)
+            upsert_operation(connection, data, module, op_name, path_params, query_params)
         else:
-            resp = resource.send_request(url, op_spec[OperationField.METHOD], data,
-                                         path_params,
-                                         query_params)
+            filters = params['filters']
+            crud_operation(connection, data, filters, module, op_name, path_params, query_params)
 
-        module.exit_json(changed=resource.config_changed, response=resp,
-                         ansible_facts=construct_ansible_facts(resp, module.params))
     except FtdConfigurationError as e:
         module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e.msg))
     except FtdServerError as e:
