@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 
+import json
+
 import pytest
 from ansible.module_utils import basic
-import json
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
 from library import ftd_configuration
@@ -315,6 +316,31 @@ class TestFtdConfiguration(object):
             key_query_params: {
                 'invalid_type': [{'actually_value': 'test', 'expected_type': 'integer', 'path': 'f_integer'}],
                 'required': ['other_param']}}, 'failed': True}
+
+    def test_module_should_create_object_when_upsert_operation_and_object_does_not_exist(self):
+        assert False
+
+    # test when object exists but with different fields(except id)
+    def test_module_should_update_object_when_upsert_operation_and_object_exists(self):
+        assert False
+
+    # test when object exists and all fields have the same value
+    def test_module_should_not_update_object_when_upsert_operation_and_object_exists_with_the_same_fields(self):
+        assert False
+
+    def test_module_should_fail_when_upsert_operation_and_upsert_operation_is_not_supported(self):
+        assert False
+
+    # raise FtdConfigurationError exception
+    # when create operation raised FtdConfigurationError exception without id and version
+    def test_module_should_fail_when_upsert_operation_and_failed_create_without_id_and_version(self):
+        assert False
+
+    def test_module_should_fail_when_failed_update_operation(self):
+        assert False
+
+    def test_module_should_fail_when_invalid_data_for_create_operation(self):
+        assert False
 
     def _run_module(self, module_args):
         set_module_args(module_args)
