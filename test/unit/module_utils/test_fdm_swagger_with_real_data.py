@@ -71,6 +71,7 @@ class TestFdmSwagger(unittest.TestCase):
             if operation['modelName'] == '_File' and 'download' not in operation['url']:
                 self.fail('File type can be defined for download operation only')
 
-        assert sorted(['/api/fdm/v2/operational/deploy/{objId}', '/api/fdm/v2/action/upgrade']) == sorted(without_model_name)
+        assert sorted(['/api/fdm/v2/operational/deploy/{objId}', '/api/fdm/v2/action/upgrade']) == sorted(
+            without_model_name)
         assert sorted(self.fdm_data['model_operations'][None].keys()) == sorted(['deleteDeployment', 'startUpgrade'])
         assert expected_operations_counter == len(operations)

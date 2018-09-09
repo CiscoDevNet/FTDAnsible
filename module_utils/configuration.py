@@ -67,17 +67,20 @@ class BaseConfigurationResource(object):
             return self.send_request(url_path=url_path, http_method=HTTPMethod.POST, body_params=body_params,
                                      path_params=path_params, query_params=query_params)
         except FtdServerError as e:
-
             if is_duplicate_name_error(e):
                 existing_obj = self.get_object_by_name(url_path, body_params['name'], path_params)
 
-                if equal_objects(existing_obj, body_params):
-                    return existing_obj
+                if existing_obj is not None:
+                    if equal_objects(existing_obj, body_params):
+                        return existing_obj
+                    else:
+                        raise FtdConfigurationError(
+                            'Cannot add new object. '
+                            'An object with the same name but different parameters already exists.',
+                            existing_obj['id'] if existing_obj and 'id' in existing_obj else None,
+                            existing_obj['version'] if existing_obj and 'version' in existing_obj else None)
                 else:
-                    raise FtdConfigurationError(
-                        'Cannot add new object. An object with the same name but different parameters already exists.',
-                        existing_obj['id'] if existing_obj and 'id' in existing_obj else None,
-                        existing_obj['version'] if existing_obj and 'version' in existing_obj else None)
+                    raise e
             else:
                 raise e
 

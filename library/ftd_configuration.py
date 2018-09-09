@@ -271,10 +271,8 @@ def crud_operation(connection, data, filters, module, op_name, path_params, quer
     op_spec = connection.get_operation_spec(op_name)
     if op_spec is None:
         module_fail_invalid_operation(module, op_name)
-    try:
-        validate_params(connection, op_name, query_params, path_params, data, op_spec)
-    except ValidationError as e:
-        module.fail_json(msg=e.args[0])
+
+    validate_params(connection, op_name, query_params, path_params, data, op_spec)
 
     if module.check_mode:
         module.exit_json(changed=False)
@@ -341,7 +339,8 @@ def main():
     except FtdServerError as e:
         module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
                              'Server response: %s' % (op_name, e.code, e.response))
-
+    except ValidationError as e:
+        module.fail_json(msg=e.args[0])
 
 if __name__ == '__main__':
     main()
