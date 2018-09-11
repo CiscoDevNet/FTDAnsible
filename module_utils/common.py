@@ -38,10 +38,9 @@ class ResponseParams:
 
 
 class FtdConfigurationError(Exception):
-    def __init__(self, msg, object_id=None, version=None):
+    def __init__(self, msg, obj=None):
         self.msg = msg
-        self.objectId = object_id
-        self.version = version
+        self.obj = obj
 
 
 class FtdServerError(Exception):

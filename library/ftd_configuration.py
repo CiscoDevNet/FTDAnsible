@@ -107,12 +107,12 @@ try:
     from ansible.module_utils.configuration import BaseConfigurationResource
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
     from ansible.module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError
+        FtdServerError, copy_identity_properties
 except ImportError:
     from module_utils.configuration import BaseConfigurationResource
     from module_utils.fdm_swagger_client import OperationField, ValidationError
     from module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError
+        FtdServerError, copy_identity_properties
 
 
 def is_post_request(operation_spec):
@@ -195,10 +195,8 @@ def upsert_object(connection, upsert_operations, data, query_params, path_params
     try:
         return add_object(connection, data, path_params, query_params, upsert_operations)
     except FtdConfigurationError as e:
-        object_id = e.objectId
-        object_version = e.version
-        if object_id:
-            return edit_object(connection, data, object_id, object_version, path_params, query_params,
+        if e.obj:
+            return edit_object(connection, data, e.obj, path_params, query_params,
                                upsert_operations)
         else:
             raise e
@@ -207,15 +205,14 @@ def upsert_object(connection, upsert_operations, data, query_params, path_params
         raise e
 
 
-def edit_object(connection, data, object_id, object_version, path_params, query_params, upsert_operations):
+def edit_object(connection, data, existing_object, path_params, query_params, upsert_operations):
     resource = BaseConfigurationResource(connection)
     operation = upsert_operations[_Operation.EDIT]
     op_name = operation[_UpsertSpec.OPERATION_NAME]
     op_spec = operation[_UpsertSpec.SPEC]
     url = operation[_UpsertSpec.SPEC][OperationField.URL]
-    path_params['objId'] = object_id
-    data['version'] = object_version
-    data['id'] = object_id
+    path_params['objId'] = existing_object['id']
+    copy_identity_properties(existing_object, data)
     validate_params(connection, op_name, query_params, path_params, data, op_spec)
     return resource.edit_object(url, data, path_params, query_params), resource
 

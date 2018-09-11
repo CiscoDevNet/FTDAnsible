@@ -77,8 +77,7 @@ class BaseConfigurationResource(object):
                         raise FtdConfigurationError(
                             'Cannot add new object. '
                             'An object with the same name but different parameters already exists.',
-                            existing_obj['id'] if existing_obj and 'id' in existing_obj else None,
-                            existing_obj['version'] if existing_obj and 'version' in existing_obj else None)
+                            existing_obj)
                 else:
                     raise e
             else:
