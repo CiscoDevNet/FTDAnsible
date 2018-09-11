@@ -101,79 +101,8 @@ except ImportError:
         FtdServerError, copy_identity_properties
 
 
-# def upsert_object(connection, upsert_operations, data, query_params, path_params=None):
-#     if path_params is None:
-#         path_params = {}
-#     try:
-#         return add_object(connection, data, path_params, query_params, upsert_operations)
-#     except FtdConfigurationError as e:
-#         if e.obj:
-#             return edit_object(connection, data, e.obj, path_params, query_params,
-#                                upsert_operations)
-#         else:
-#             raise e
-#
-#     except Exception as e:
-#         raise e
-
-
-# def edit_object(connection, data, existing_object, path_params, query_params, upsert_operations):
-#     resource = BaseConfigurationResource(connection)
-#     operation = upsert_operations[_Operation.EDIT]
-#     op_name = operation[_UpsertSpec.OPERATION_NAME]
-#     op_spec = operation[_UpsertSpec.SPEC]
-#     url = operation[_UpsertSpec.SPEC][OperationField.URL]
-#     path_params['objId'] = existing_object['id']
-#     copy_identity_properties(existing_object, data)
-#     validate_params(connection, op_name, query_params, path_params, data, op_spec)
-#     return resource.edit_object(url, data, path_params, query_params), resource
-#
-#
-# def add_object(connection, data, path_params, query_params, upsert_operations):
-#     resource = BaseConfigurationResource(connection)
-#     operation = upsert_operations[_Operation.ADD]
-#     op_name = operation[_UpsertSpec.OPERATION_NAME]
-#     op_spec = operation[_UpsertSpec.SPEC]
-#     url = operation[_UpsertSpec.SPEC][OperationField.URL]
-#     validate_params(connection, op_name, query_params, path_params, data, op_spec)
-#     return resource.add_object(url, data, path_params, query_params), resource
-
-
-class _UpsertSpec:
-    OPERATION_NAME = 'operation_name'
-    SPEC = 'spec'
-
-
-# def get_operations_need_for_upsert_operation(operations):
-#     amount_operations_need_for_upsert_operation = 3
-#     upsert_operations = {}
-#     for operation_name in operations:
-#         operation_spec = operations[operation_name]
-#         operation_type = None
-#         if is_add_operation(operation_name, operation_spec):
-#             operation_type = _Operation.ADD
-#         elif is_edit_operation(operation_name, operation_spec):
-#             operation_type = _Operation.EDIT
-#         elif is_find_all_operation(operation_name, operation_spec):
-#             operation_type = _Operation.GET_ALL
-#
-#         if operation_type:
-#             upsert_operations[operation_type] = {
-#                 _UpsertSpec.OPERATION_NAME: operation_name,
-#                 _UpsertSpec.SPEC: operation_spec
-#             }
-#
-#     upsert_operation_is_supported = len(upsert_operations.keys()) == amount_operations_need_for_upsert_operation
-#
-#     return upsert_operation_is_supported, upsert_operations
-
-
 def module_fail_invalid_operation(module, op_name):
     module.fail_json(msg='Invalid operation name provided: %s' % op_name)
-
-
-# def get_base_operation_name_from_upsert(op_name):
-#     return _OperationNamePrefix.ADD + op_name[len(_OperationNamePrefix.UPSERT):]
 
 
 def crud_operation(resource, module, params, op_name):
@@ -196,16 +125,13 @@ def crud_operation(resource, module, params, op_name):
                      ansible_facts=construct_ansible_facts(resp, module.params))
 
 
-# def upsert_operation(connection, data, module, op_name, path_params, query_params):
-#     base_operation = get_base_operation_name_from_upsert(op_name)
-#     operations = connection.get_operations_spec(base_operation)
-#     upsert_operation_is_supported, upsert_operations = get_operations_need_for_upsert_operation(operations)
-#     if upsert_operation_is_supported:
-#         resp, resource = upsert_object(connection, upsert_operations, data, query_params, path_params)
-#         module.exit_json(changed=resource.config_changed, response=resp,
-#                          ansible_facts=construct_ansible_facts(resp, module.params))
-#     else:
-#         module_fail_invalid_operation(module, op_name)
+def upsert_operation(resource, module, params, op_name):
+    if resource.upsert_operation_is_supported(op_name):
+        resp = resource.upsert_object(op_name, params)
+        module.exit_json(changed=resource.config_changed, response=resp,
+                         ansible_facts=construct_ansible_facts(resp, module.params))
+    else:
+        module_fail_invalid_operation(module, op_name)
 
 
 def main():
@@ -226,8 +152,7 @@ def main():
     op_name = params['operation']
     try:
         if resource.is_upsert_operation(op_name):
-            pass
-            # upsert_operation(connection, data, module, op_name, path_params, query_params)
+            upsert_operation(resource, module, params, op_name)
         else:
             crud_operation(resource, module, params, op_name)
 

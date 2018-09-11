@@ -43,6 +43,11 @@ class _OperationNamePrefix:
     UPSERT = 'upsert'
 
 
+class _UpsertSpec:
+    OPERATION_NAME = 'operation_name'
+    SPEC = 'spec'
+
+
 class _Operation:
     ADD = 'add'
     EDIT = 'edit'
@@ -57,14 +62,21 @@ class BaseConfigurationResource(object):
     def __init__(self, conn, check_mode=False):
         self._conn = conn
         self.config_changed = False
-        self._spec_cache = {}
+        self._operation_spec_cache = {}
+        self._operations_spec_cache = {}
         self._check_mode = check_mode
 
     def get_operation_spec(self, operation_name):
-        if operation_name not in self._spec_cache:
-            self._spec_cache[operation_name] = self._conn.get_operation_spec(operation_name)
+        if operation_name not in self._operation_spec_cache:
+            self._operation_spec_cache[operation_name] = self._conn.get_operation_spec(operation_name)
 
-        return self._spec_cache[operation_name]
+        return self._operation_spec_cache[operation_name]
+
+    def get_operations_spec(self, operation_name):
+        if operation_name not in self._operation_spec_cache:
+            self._operations_spec_cache[operation_name] = self._conn.get_operations_spec(operation_name)
+
+        return self._operations_spec_cache[operation_name]
 
     def get_object_by_name(self, url_path, name, path_params=None):
         item_generator = iterate_over_pageable_resource(
@@ -108,7 +120,7 @@ class BaseConfigurationResource(object):
             return err.code == UNPROCESSABLE_ENTITY_STATUS and DUPLICATE_NAME_ERROR_MESSAGE in str(err)
 
         try:
-            return self.send_request(url_path=url, http_method=HTTPMethod.POST, body_params=data,
+            return self.send_request(url_path=url, http_method=method, body_params=data,
                                      path_params=path_params, query_params=query_params)
         except FtdServerError as e:
             if is_duplicate_name_error(e):
@@ -260,6 +272,59 @@ class BaseConfigurationResource(object):
         if self._check_mode:
             raise CheckModeException()
 
+    def upsert_operation_is_supported(self, op_name):
+        base_operation = _get_base_operation_name_from_upsert(op_name)
+        operations = self.get_operations_spec(base_operation)
+        amount_operations_need_for_upsert_operation = 3
+        amount_supported_operations = 0
+        for operation_name in operations:
+            if self.is_add_operation(operation_name) \
+                    or self.is_edit_operation(operation_name) \
+                    or self.is_find_all_operation(operation_name):
+                amount_supported_operations += 1
+
+        return amount_supported_operations == amount_operations_need_for_upsert_operation
+
+    def upsert_object(self, op_name, params):
+
+        base_operation = _get_base_operation_name_from_upsert(op_name)
+        upsert_operations = self.get_operations_spec(base_operation)
+
+        def get_operation_name(checker):
+            for operation_name in upsert_operations:
+                operation_spec = upsert_operations[operation_name]
+                if checker(operation_spec):
+                    return operation_name
+            raise FtdConfigurationError("Don't support upsert operation")
+
+        def edit_object(existing_object):
+            edit_op_name = get_operation_name(is_put_request)
+            _set_default(params, 'path_params', {})
+            _set_default(params, 'data', {})
+
+            params['path_params']['objId'] = existing_object['id']
+            copy_identity_properties(existing_object, params['data'])
+            return self.edit_object(edit_op_name, params)
+
+        def add_object():
+            add_op_name = get_operation_name(is_post_request)
+            return self.add_object(add_op_name, params)
+
+        try:
+            return add_object()
+        except FtdConfigurationError as e:
+            if e.obj:
+                return edit_object(e.obj)
+            else:
+                raise e
+        except Exception as e:
+            raise e
+
+
+def _set_default(params, field_name, value):
+    if field_name not in params or params[field_name] is None:
+        params[field_name] = value
+
 
 def is_post_request(operation_spec):
     return operation_spec[OperationField.METHOD] == HTTPMethod.POST
@@ -267,6 +332,10 @@ def is_post_request(operation_spec):
 
 def is_put_request(operation_spec):
     return operation_spec[OperationField.METHOD] == HTTPMethod.PUT
+
+
+def _get_base_operation_name_from_upsert(op_name):
+    return _OperationNamePrefix.ADD + op_name[len(_OperationNamePrefix.UPSERT):]
 
 
 def _get_user_params(params):

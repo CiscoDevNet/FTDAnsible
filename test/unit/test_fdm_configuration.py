@@ -353,12 +353,18 @@ class TestFtdConfiguration(object):
 
     def test_module_should_create_object_when_upsert_operation_and_object_does_not_exist(self, connection_mock):
         url = '/test'
-        connection_mock.get_operations_spec.return_value = {
-            'getObjectList': {'method': HTTPMethod.GET, 'url': url},
-            'addObject': {'method': HTTPMethod.POST, 'url': url},
-            'editObject': {'method': HTTPMethod.PUT, 'url': '/test/{objId}'},
-            'otherObjectOperation': {'method': HTTPMethod.GET, 'url': '/test/{objId}'}
-        }
+
+        operations = {'getObjectList': {'method': HTTPMethod.GET, 'url': url},
+                      'addObject': {'method': HTTPMethod.POST, 'url': url},
+                      'editObject': {'method': HTTPMethod.PUT, 'url': '/test/{objId}'},
+                      'otherObjectOperation': {'method': HTTPMethod.GET, 'url': '/test/{objId}'}}
+
+        def get_operation_spec(name):
+            return operations[name]
+
+        connection_mock.get_operation_spec = get_operation_spec
+
+        connection_mock.get_operations_spec.return_value = operations
         connection_mock.send_request.return_value = {
             ResponseParams.SUCCESS: True,
             ResponseParams.RESPONSE: ADD_RESPONSE
@@ -397,7 +403,7 @@ class TestFtdConfiguration(object):
                 assert url_path == url
                 assert body_params == params['data']
                 assert query_params is None
-                assert path_params == {}
+                assert path_params is None
                 return {
                     ResponseParams.SUCCESS: False,
                     ResponseParams.RESPONSE: DUPLICATE_NAME_ERROR_MESSAGE,
@@ -411,7 +417,7 @@ class TestFtdConfiguration(object):
                 if is_get_list_req:
                     assert body_params is None
                     assert query_params == {'filter': 'name:testObject', 'limit': 10, 'offset': 0}
-                    assert path_params == {}
+                    assert path_params is None
                 elif is_get_req:
                     assert body_params is None
                     assert query_params is None
@@ -435,12 +441,18 @@ class TestFtdConfiguration(object):
             else:
                 assert False
 
-        connection_mock.get_operations_spec.return_value = {
+        operations = {
             'getObjectList': {'method': HTTPMethod.GET, 'url': url},
             'addObject': {'method': HTTPMethod.POST, 'url': url},
             'editObject': {'method': HTTPMethod.PUT, 'url': url_with_id_templ},
             'otherObjectOperation': {'method': HTTPMethod.GET, 'url': url_with_id_templ}
         }
+
+        def get_operation_spec(name):
+            return operations[name]
+
+        connection_mock.get_operation_spec = get_operation_spec
+        connection_mock.get_operations_spec.return_value = operations
 
         connection_mock.send_request = request_handler
         result = self._run_module(params)
@@ -475,7 +487,7 @@ class TestFtdConfiguration(object):
                 assert url_path == url
                 assert body_params == params['data']
                 assert query_params is None
-                assert path_params == {}
+                assert path_params is None
                 return {
                     ResponseParams.SUCCESS: False,
                     ResponseParams.RESPONSE: DUPLICATE_NAME_ERROR_MESSAGE,
@@ -485,7 +497,7 @@ class TestFtdConfiguration(object):
                 assert url_path == url
                 assert body_params is None
                 assert query_params == {'filter': 'name:testObject', 'limit': 10, 'offset': 0}
-                assert path_params == {}
+                assert path_params is None
 
                 return {
                     ResponseParams.SUCCESS: True,
@@ -496,12 +508,18 @@ class TestFtdConfiguration(object):
             else:
                 assert False
 
-        connection_mock.get_operations_spec.return_value = {
+        operations = {
             'getObjectList': {'method': HTTPMethod.GET, 'url': url},
             'addObject': {'method': HTTPMethod.POST, 'url': url},
             'editObject': {'method': HTTPMethod.PUT, 'url': url_with_id_templ},
             'otherObjectOperation': {'method': HTTPMethod.GET, 'url': url_with_id_templ}
         }
+
+        def get_operation_spec(name):
+            return operations[name]
+
+        connection_mock.get_operation_spec = get_operation_spec
+        connection_mock.get_operations_spec.return_value = operations
 
         connection_mock.send_request = request_handler
         result = self._run_module(params)
@@ -547,7 +565,7 @@ class TestFtdConfiguration(object):
                 assert url_path == url
                 assert body_params == params['data']
                 assert query_params is None
-                assert path_params == {}
+                assert path_params is None
                 return {
                     ResponseParams.SUCCESS: False,
                     ResponseParams.RESPONSE: DUPLICATE_NAME_ERROR_MESSAGE,
@@ -557,7 +575,7 @@ class TestFtdConfiguration(object):
                 assert url_path == url
                 assert body_params is None
                 assert query_params == {'filter': 'name:testObject', 'limit': 10, 'offset': 0}
-                assert path_params == {}
+                assert path_params is None
 
                 return {
                     ResponseParams.SUCCESS: True,
@@ -568,13 +586,18 @@ class TestFtdConfiguration(object):
             else:
                 assert False
 
-        connection_mock.get_operations_spec.return_value = {
+        operations = {
             'getObjectList': {'method': HTTPMethod.GET, 'url': url},
             'addObject': {'method': HTTPMethod.POST, 'url': url},
             'editObject': {'method': HTTPMethod.PUT, 'url': url_with_id_templ},
             'otherObjectOperation': {'method': HTTPMethod.GET, 'url': url_with_id_templ}
         }
 
+        def get_operation_spec(name):
+            return operations[name]
+
+        connection_mock.get_operation_spec = get_operation_spec
+        connection_mock.get_operations_spec.return_value = operations
         connection_mock.send_request = request_handler
         result = self._run_module_with_fail_json(params)
 
@@ -605,7 +628,7 @@ class TestFtdConfiguration(object):
                 assert url_path == url
                 assert body_params == params['data']
                 assert query_params is None
-                assert path_params == {}
+                assert path_params is None
                 return {
                     ResponseParams.SUCCESS: False,
                     ResponseParams.RESPONSE: DUPLICATE_NAME_ERROR_MESSAGE,
@@ -619,7 +642,7 @@ class TestFtdConfiguration(object):
                 if is_get_list_req:
                     assert body_params is None
                     assert query_params == {'filter': 'name:testObject', 'limit': 10, 'offset': 0}
-                    assert path_params == {}
+                    assert path_params is None
                 elif is_get_req:
                     assert body_params is None
                     assert query_params is None
@@ -640,13 +663,18 @@ class TestFtdConfiguration(object):
             else:
                 assert False
 
-        connection_mock.get_operations_spec.return_value = {
+        operations = {
             'getObjectList': {'method': HTTPMethod.GET, 'url': url},
             'addObject': {'method': HTTPMethod.POST, 'url': url},
             'editObject': {'method': HTTPMethod.PUT, 'url': url_with_id_templ},
             'otherObjectOperation': {'method': HTTPMethod.GET, 'url': url_with_id_templ}
         }
 
+        def get_operation_spec(name):
+            return operations[name]
+
+        connection_mock.get_operation_spec = get_operation_spec
+        connection_mock.get_operations_spec.return_value = operations
         connection_mock.send_request = request_handler
         result = self._run_module_with_fail_json(params)
 
@@ -663,16 +691,20 @@ class TestFtdConfiguration(object):
             'register_as': 'test_var'
         }
 
-        error_msg = 'test error'
-
         connection_mock.send_request.assert_not_called()
 
-        connection_mock.get_operations_spec.return_value = {
+        operations = {
             'getObjectList': {'method': HTTPMethod.GET, 'url': 'sd'},
             'addObject': {'method': HTTPMethod.POST, 'url': 'sdf'},
             'editObject': {'method': HTTPMethod.PUT, 'url': 'sadf'},
             'otherObjectOperation': {'method': HTTPMethod.GET, 'url': 'sdfs'}
         }
+
+        def get_operation_spec(name):
+            return operations[name]
+
+        connection_mock.get_operation_spec = get_operation_spec
+        connection_mock.get_operations_spec.return_value = operations
 
         report = {
             'required': ['objects[0].type'],
