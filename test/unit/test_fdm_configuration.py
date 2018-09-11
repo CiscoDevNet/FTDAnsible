@@ -47,7 +47,12 @@ class TestFtdConfiguration(object):
         resource_instance.add_object.return_value = ADD_RESPONSE
         resource_instance.edit_object.return_value = EDIT_RESPONSE
         resource_instance.delete_object.return_value = DELETE_RESPONSE
-        resource_instance.send_request.return_value = ARBITRARY_RESPONSE
+        resource_instance.send_general_request.return_value = ARBITRARY_RESPONSE
+        resource_instance.is_upsert_operation.return_value = False
+        resource_instance.is_add_operation.return_value = False
+        resource_instance.is_edit_operation.return_value = False
+        resource_instance.is_delete_operation.return_value = False
+        resource_instance.is_find_by_filter_operation.return_value = False
         resource_instance.get_objects_by_filter.return_value = GET_BY_FILTER_RESPONSE
         return resource_instance
 
@@ -69,6 +74,7 @@ class TestFtdConfiguration(object):
         assert 'Invalid operation name provided: nonExistingOperation' in str(ex)
 
     def test_module_should_add_object_when_add_operation(self, connection_mock, resource_mock):
+        resource_mock.is_add_operation.return_value = True
         connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.POST,
             'url': '/object'
@@ -78,13 +84,19 @@ class TestFtdConfiguration(object):
             'operation': 'addObject',
             'data': {'name': 'testObject', 'type': 'object'}
         }
+        expected_params = copy.deepcopy(params)
+        expected_params.setdefault('query_params', None)
+        expected_params.setdefault('path_params', None)
+        expected_params.setdefault('register_as', None)
+        expected_params.setdefault('filters', None)
         result = self._run_module(params)
 
         assert ADD_RESPONSE == result['response']
-        resource_mock.add_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
-                                                    params['data'], None, None)
+        resource_mock.add_object.assert_called_with(params['operation'],
+                                                    expected_params)
 
     def test_module_should_edit_object_when_edit_operation(self, connection_mock, resource_mock):
+        resource_mock.is_edit_operation.return_value = True
         connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.PUT,
             'url': '/object/{objId}'
@@ -95,14 +107,19 @@ class TestFtdConfiguration(object):
             'data': {'id': '123', 'name': 'testObject', 'type': 'object'},
             'path_params': {'objId': '123'}
         }
+
+        expected_params = copy.deepcopy(params)
+        expected_params.setdefault('query_params', None)
+        expected_params.setdefault('register_as', None)
+        expected_params.setdefault('filters', None)
         result = self._run_module(params)
 
         assert EDIT_RESPONSE == result['response']
-        resource_mock.edit_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
-                                                     params['data'],
-                                                     params['path_params'], None)
+        resource_mock.edit_object.assert_called_with(params['operation'],
+                                                     expected_params)
 
     def test_module_should_delete_object_when_delete_operation(self, connection_mock, resource_mock):
+        resource_mock.is_delete_operation.return_value = True
         connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.DELETE,
             'url': '/object/{objId}'
@@ -112,13 +129,19 @@ class TestFtdConfiguration(object):
             'operation': 'deleteObject',
             'path_params': {'objId': '123'}
         }
+        expected_params = copy.deepcopy(params)
+        expected_params.setdefault('data', None)
+        expected_params.setdefault('query_params', None)
+        expected_params.setdefault('register_as', None)
+        expected_params.setdefault('filters', None)
         result = self._run_module(params)
 
         assert DELETE_RESPONSE == result['response']
-        resource_mock.delete_object.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
-                                                       params['path_params'])
+        resource_mock.delete_object.assert_called_with(params['operation'],
+                                                       expected_params)
 
     def test_module_should_get_objects_by_filter_when_find_by_filter_operation(self, connection_mock, resource_mock):
+        resource_mock.is_find_by_filter_operation.return_value = True
         connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.GET,
             'url': '/objects'
@@ -128,14 +151,18 @@ class TestFtdConfiguration(object):
             'operation': 'getObjectList',
             'filters': {'name': 'foo'}
         }
+        expected_params = copy.deepcopy(params)
+        expected_params.setdefault('data', None)
+        expected_params.setdefault('query_params', None)
+        expected_params.setdefault('register_as', None)
+        expected_params.setdefault('path_params', None)
         result = self._run_module(params)
 
         assert GET_BY_FILTER_RESPONSE == result['response']
-        resource_mock.get_objects_by_filter.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
-                                                               params['filters'],
-                                                               None, None)
+        resource_mock.get_objects_by_filter.assert_called_with(params['operation'],
+                                                               expected_params)
 
-    def test_module_should_send_request_when_arbitrary_operation(self, connection_mock, resource_mock):
+    def test_module_should_send_general_request_when_arbitrary_operation(self, connection_mock, resource_mock):
         connection_mock.get_operation_spec.return_value = {
             'method': HTTPMethod.GET,
             'url': '/object/status/{objId}'
@@ -145,16 +172,20 @@ class TestFtdConfiguration(object):
             'operation': 'checkStatus',
             'path_params': {'objId': '123'}
         }
+        expected_params = copy.deepcopy(params)
+        expected_params.setdefault('data', None)
+        expected_params.setdefault('query_params', None)
+        expected_params.setdefault('register_as', None)
+        expected_params.setdefault('filters', None)
         result = self._run_module(params)
 
         assert ARBITRARY_RESPONSE == result['response']
-        resource_mock.send_request.assert_called_with(connection_mock.get_operation_spec.return_value['url'],
-                                                      HTTPMethod.GET, None,
-                                                      params['path_params'], None)
+        resource_mock.send_general_request.assert_called_with(params['operation'],
+                                                              expected_params)
 
     def test_module_should_fail_when_operation_raises_configuration_error(self, connection_mock, resource_mock):
         connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
-        resource_mock.send_request.side_effect = FtdConfigurationError('Foo error.')
+        resource_mock.send_general_request.side_effect = FtdConfigurationError('Foo error.')
 
         result = self._run_module_with_fail_json({'operation': 'failure'})
         assert result['failed']
@@ -162,7 +193,7 @@ class TestFtdConfiguration(object):
 
     def test_module_should_fail_when_operation_raises_server_error(self, connection_mock, resource_mock):
         connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
-        resource_mock.send_request.side_effect = FtdServerError({'error': 'foo'}, 500)
+        resource_mock.send_general_request.side_effect = FtdServerError({'error': 'foo'}, 500)
 
         result = self._run_module_with_fail_json({'operation': 'failure'})
         assert result['failed']
@@ -551,7 +582,7 @@ class TestFtdConfiguration(object):
         assert 'Server returned an error trying to execute upsertObject operation. Status code: 422. ' \
                'Server response: Validation failed due to a duplicate name' == result['msg']
 
-    def test_module_should_fail_when_failed_update_operation(self, connection_mock):
+    def test_module_should_fail_when_upsert_operation_and_failed_update_operation(self, connection_mock):
         url = '/test'
         obj_id = '456'
         version = 'test_version'
@@ -624,7 +655,7 @@ class TestFtdConfiguration(object):
                'Status code: {1}. Server response: {2}'.format(params['operation'], error_code, error_msg) == result[
                    'msg']
 
-    def test_module_should_fail_when_invalid_data_for_create_operation(self, connection_mock):
+    def test_module_should_fail_when_upsert_operation_and_invalid_data_for_create_operation(self, connection_mock):
         new_value = '0000'
         params = {
             'operation': 'upsertObject',

@@ -16,35 +16,54 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import pytest
 from ansible.compat.tests import mock
 from ansible.compat.tests.mock import call, patch
 
 from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource
 
+try:
+    from ansible.module_utils.common import HTTPMethod
+except ImportError:
+    from module_utils.common import HTTPMethod
+
 
 class TestBaseConfigurationResource(object):
+    @pytest.fixture
+    def connection_mock(self, mocker):
+        connection_class_mock = mocker.patch('library.ftd_configuration.Connection')
+        connection_instance = connection_class_mock.return_value
+        connection_instance.validate_data.return_value = True, None
+        connection_instance.validate_query_params.return_value = True, None
+        connection_instance.validate_path_params.return_value = True, None
+
+        return connection_instance
 
     @patch.object(BaseConfigurationResource, 'send_request')
-    def test_get_objects_by_filter_with_multiple_filters(self, send_request_mock):
+    def test_get_objects_by_filter_with_multiple_filters(self, send_request_mock, connection_mock):
         objects = [
             {'name': 'obj1', 'type': 1, 'foo': {'bar': 'buzz'}},
             {'name': 'obj2', 'type': 1, 'foo': {'bar': 'buz'}},
             {'name': 'obj3', 'type': 2, 'foo': {'bar': 'buzz'}}
         ]
-        resource = BaseConfigurationResource(None)
+        connection_mock.get_operation_spec.return_value = {
+            'method': HTTPMethod.GET,
+            'url': '/object/'
+        }
+        resource = BaseConfigurationResource(connection_mock, False)
 
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
-        assert objects == resource.get_objects_by_filter('/objects', {})
+        assert objects == resource.get_objects_by_filter('test', {})
 
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
-        assert [objects[0]] == resource.get_objects_by_filter('/objects', {'name': 'obj1'})
+        assert [objects[0]] == resource.get_objects_by_filter('test', {'filters': {'name': 'obj1'}})
 
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
-        assert [objects[1]] == resource.get_objects_by_filter('/objects',
-                                                              {'type': 1, 'foo': {'bar': 'buz'}})
+        assert [objects[1]] == resource.get_objects_by_filter('test',
+                                                              {'filters': {'type': 1, 'foo': {'bar': 'buz'}}})
 
     @patch.object(BaseConfigurationResource, 'send_request')
-    def test_get_objects_by_filter_with_multiple_responses(self, send_request_mock):
+    def test_get_objects_by_filter_with_multiple_responses(self, send_request_mock, connection_mock):
         send_request_mock.side_effect = [
             {'items': [
                 {'name': 'obj1', 'type': 'foo'},
@@ -55,11 +74,15 @@ class TestBaseConfigurationResource(object):
             ]},
             {'items': []}
         ]
-
-        resource = BaseConfigurationResource(None)
+        connection_mock.get_operation_spec.return_value = {
+            'method': HTTPMethod.GET,
+            'url': '/object/'
+        }
+        resource = BaseConfigurationResource(connection_mock, False)
 
         assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == resource.get_objects_by_filter(
-            '/objects', {'type': 'foo'})
+            'test',
+            {'filters': {'type': 'foo'}})
 
 
 class TestIterateOverPageableResource(object):
