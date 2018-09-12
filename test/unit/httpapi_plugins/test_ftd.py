@@ -247,9 +247,9 @@ class TestFtdHttpApi(unittest.TestCase):
         response_data = BytesIO(response_text.encode() if response_text else ''.encode())
         return response_mock, response_data
 
-    def _expected_headers(self):
+    @staticmethod
+    def _expected_headers():
         return {
             'Accept': 'application/json',
-            'Authorization': 'Bearer %s' % self.ftd_plugin.access_token,
             'Content-Type': 'application/json'
         }
