@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'ansible-ftd'
-copyright = '2018, Cisco'
+copyright = '2018, Cisco and/or its affiliates'
 author = 'Cisco'
 
 # The short X.Y version

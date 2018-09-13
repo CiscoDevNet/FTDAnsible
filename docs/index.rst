@@ -3,18 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to ansible-ftd's documentation!
-=======================================
+FTD Ansible Documentation
+=========================
+
+A collection of Ansible modules that automate configuration and operational tasks on FTD devices.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   installation_guide
+   getting_started
+   common_examples
+   modules/index
+   models/index
+   operations/index
