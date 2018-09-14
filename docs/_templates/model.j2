@@ -1,0 +1,10 @@
+{{ model_name }}
+=========================
+
+{{ model_description }}
+
+Supported operations
+-----------------
+{% for operation in model_operations %}
+- {{ operation }}
+{% endfor %}
