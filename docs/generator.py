@@ -1,5 +1,7 @@
 import json
 import os
+from collections import namedtuple
+
 import re
 
 import argparse
@@ -12,53 +14,72 @@ from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+
 TEMPLATE_FOLDER = os.path.join(DIR_PATH, 'templates')
 MODEL_TEMPLATE = 'model.j2'
+OPERATION_TEMPLATE = 'operation.j2'
+
 MODELS_FOLDER = os.path.join(DIR_PATH, 'models')
+OPERATIONS_FOLDER = os.path.join(DIR_PATH, 'operations')
+INDEX_FILE = 'index.rst'
 
 TOKEN_PATH = '/api/fdm/v1/fdm/token'
 SPEC_PATH = '/apispec/ngfw.json'
 DOC_PATH = '/apispec/en-us/doc.json'
 
-INDEX_FILE_NAME = 'index.rst'
+ModelSpec = namedtuple('ModelSpec', 'name description operations')
+OperationSpec = namedtuple('OperationSpec', 'name description')
 
 
-def generate_model_index(api_spec, docs):
-    def clean_model_directory():
-        for file_name in os.listdir(MODELS_FOLDER):
-            if file_name != INDEX_FILE_NAME:
-                os.remove(os.path.join(MODELS_FOLDER, file_name))
+def camel_to_snake(text):
+    test_with_underscores = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', test_with_underscores).lower()
 
+
+def clean_generated_files(dir_path):
+    for file_name in os.listdir(dir_path):
+        if file_name != INDEX_FILE:
+            os.remove(os.path.join(dir_path, file_name))
+
+
+def generate_model_index(api_spec, docs, model_template):
     def group_operations_by_model():
         model_operations = {}
-        for operations_name, params in api_spec[SpecProp.OPERATIONS].items():
+        for operation_name, params in api_spec[SpecProp.OPERATIONS].items():
             model_name = params[OperationField.MODEL_NAME]
-            model_operations.setdefault(model_name, {})[operations_name] = params
+            model_operations.setdefault(model_name, {})[operation_name] = params
         return model_operations
 
-    clean_model_directory()
+    clean_generated_files(MODELS_FOLDER)
 
     operations_by_model = group_operations_by_model()
-    jinja_env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER), trim_blocks=True, lstrip_blocks=True,
-                            extensions=['jinja2.ext.do'])
-    jinja_env.filters['camel_to_snake'] = camel_to_snake
-    model_template = jinja_env.get_template(MODEL_TEMPLATE)
+    for model_name in operations_by_model.keys():
+        # delete operations used not to have a model, but the issue is fixed in
+        # https://github.com/CiscoDevNet/FTDAnsible/pull/21
+        if not model_name:
+            continue
 
-    for model_name in api_spec[SpecProp.MODELS].keys():
-        model_def = docs[SpecProp.DEFINITIONS].get(model_name)
-        model_operations = operations_by_model.get(model_name)
+        model_def = docs[SpecProp.DEFINITIONS].get(model_name, {})
+        model_spec = ModelSpec(
+            model_name,
+            model_def.get('description', ''),
+            operations_by_model.get(model_name)
+        )
+        with open('%s/%s.rst' % (MODELS_FOLDER, camel_to_snake(model_name)), "wb") as f:
+            f.write(model_template.render(
+                model=model_spec
+            ).encode('utf-8'))
 
-        if model_operations:
-            with open('%s/%s.rst' % (MODELS_FOLDER, camel_to_snake(model_name)), "wb") as f:
-                f.write(model_template.render(
-                    model_name=model_name,
-                    model_description=model_def['description'] if model_def else '',
-                    model_operations=model_operations.keys()
-                ).encode('utf-8'))
 
+def generate_operation_index(api_spec, docs, operation_template):
+    clean_generated_files(OPERATIONS_FOLDER)
 
-def generate_operation_index():
-    pass
+    for op_name, params in api_spec[SpecProp.OPERATIONS].items():
+        op_spec = OperationSpec(op_name, '')
+        with open('%s/%s.rst' % (OPERATIONS_FOLDER, camel_to_snake(op_name)), "wb") as f:
+            f.write(operation_template.render(
+                operation=op_spec
+            ).encode('utf-8'))
 
 
 def fetch_api_specs(hostname, username, password):
@@ -81,9 +102,11 @@ def fetch_api_specs(hostname, username, password):
     return api_spec, docs
 
 
-def camel_to_snake(text):
-    test_with_underscores = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', test_with_underscores).lower()
+def init_jinja_env():
+    env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER), trim_blocks=True, lstrip_blocks=True,
+                      extensions=['jinja2.ext.do'])
+    env.filters['camel_to_snake'] = camel_to_snake
+    return env
 
 
 def main():
@@ -93,8 +116,11 @@ def main():
     parser.add_argument('password', help='Password for the username')
     args = parser.parse_args()
 
+    env = init_jinja_env()
     api_spec, docs = fetch_api_specs(args.hostname, args.username, args.password)
-    generate_model_index(api_spec, docs)
+
+    generate_model_index(api_spec, docs, env.get_template(MODEL_TEMPLATE))
+    generate_operation_index(api_spec, docs, env.get_template(OPERATION_TEMPLATE))
 
 
 if __name__ == '__main__':

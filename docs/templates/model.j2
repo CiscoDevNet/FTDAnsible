@@ -1,20 +1,20 @@
-:ref:`model_index` » :ref:`{{ model_name | camel_to_snake }}`
+:ref:`model_index` » :ref:`{{ model.name | camel_to_snake }}`
 
-.. _{{ model_name | camel_to_snake }}:
+.. _{{ model.name | camel_to_snake }}:
 
-{{ model_name }}
-{% for n in range(model_name| length) %}={% endfor %}
+{{ model.name }}
+{% for n in range(model.name| length) %}={% endfor %}
 
-{% if model_description %}
+{% if model.description %}
 Description
 """""""""""
-{{ model_description }}
+{{ model.description }}
 {% endif %}
 
-{% if model_description %}
+{% if model.operations %}
 Supported operations
 """"""""""""""""""""
-{% for operation in model_operations %}
-- {{ operation }}
+{% for operation in model.operations %}
+- :ref:`{{ operation | camel_to_snake }}`
 {% endfor %}
 {% endif %}
