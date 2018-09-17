@@ -8,7 +8,7 @@
 {% if model.description %}
 Description
 """""""""""
-{{ model.description }}
+{{ model.description | e }}
 {% endif %}
 
 {% if model.operations %}

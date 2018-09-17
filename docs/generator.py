@@ -11,7 +11,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
-from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
+from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField, PropName, OperationParams
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -28,7 +28,7 @@ SPEC_PATH = '/apispec/ngfw.json'
 DOC_PATH = '/apispec/en-us/doc.json'
 
 ModelSpec = namedtuple('ModelSpec', 'name description operations')
-OperationSpec = namedtuple('OperationSpec', 'name description')
+OperationSpec = namedtuple('OperationSpec', 'name description path_params query_params')
 
 
 def camel_to_snake(text):
@@ -72,13 +72,28 @@ def generate_model_index(api_spec, docs, model_template):
 
 
 def generate_operation_index(api_spec, docs, operation_template):
+    def enrich_params_with_description(op_spec, op_docs):
+        param_descriptions = {p['name']: p['description'] for p in op_docs.get('parameters', {})}
+        for param_name, params_spec in op_spec[OperationField.PARAMETERS][OperationParams.PATH].items():
+            params_spec['description'] = param_descriptions.get(param_name, '')
+        for param_name, params_spec in op_spec[OperationField.PARAMETERS][OperationParams.QUERY].items():
+            params_spec['description'] = param_descriptions.get(param_name, '')
+        return op_spec
+
     clean_generated_files(OPERATIONS_FOLDER)
 
-    for op_name, params in api_spec[SpecProp.OPERATIONS].items():
-        op_spec = OperationSpec(op_name, '')
+    for op_name, op_spec in api_spec[SpecProp.OPERATIONS].items():
+        op_docs = docs[PropName.PATHS][op_spec[OperationField.URL][11:]][op_spec[OperationField.METHOD]]
+        op_spec = enrich_params_with_description(op_spec, op_docs)
+        operation = OperationSpec(
+            op_name,
+            op_docs.get('description', ''),
+            op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
+            op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
+        )
         with open('%s/%s.rst' % (OPERATIONS_FOLDER, camel_to_snake(op_name)), "wb") as f:
             f.write(operation_template.render(
-                operation=op_spec
+                operation=operation
             ).encode('utf-8'))
 
 
