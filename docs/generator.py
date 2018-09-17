@@ -12,7 +12,7 @@ from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-TEMPLATE_FOLDER = os.path.join(DIR_PATH, '_templates')
+TEMPLATE_FOLDER = os.path.join(DIR_PATH, 'templates')
 MODEL_TEMPLATE = 'model.j2'
 MODELS_FOLDER = os.path.join(DIR_PATH, 'models')
 
@@ -41,6 +41,7 @@ def generate_model_index(api_spec, docs):
     operations_by_model = group_operations_by_model()
     jinja_env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER), trim_blocks=True, lstrip_blocks=True,
                             extensions=['jinja2.ext.do'])
+    jinja_env.filters['camel_to_snake'] = camel_to_snake
     model_template = jinja_env.get_template(MODEL_TEMPLATE)
 
     for model_name in api_spec[SpecProp.MODELS].keys():
@@ -48,12 +49,12 @@ def generate_model_index(api_spec, docs):
         model_operations = operations_by_model.get(model_name)
 
         if model_operations:
-            with open('%s/%s.rst' % (MODELS_FOLDER, camel_to_snake(model_name)), "w") as f:
+            with open('%s/%s.rst' % (MODELS_FOLDER, camel_to_snake(model_name)), "wb") as f:
                 f.write(model_template.render(
                     model_name=model_name,
                     model_description=model_def['description'] if model_def else '',
                     model_operations=model_operations.keys()
-                ))
+                ).encode('utf-8'))
 
 
 def generate_operation_index():
