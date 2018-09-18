@@ -27,7 +27,7 @@ TOKEN_PATH = '/api/fdm/v2/fdm/token'
 SPEC_PATH = '/apispec/ngfw.json'
 DOC_PATH = '/apispec/en-us/doc.json'
 
-ModelSpec = namedtuple('ModelSpec', 'name description operations')
+ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description path_params query_params')
 
 
@@ -51,9 +51,11 @@ def generate_model_index(api_spec, model_template, include_models=None):
         if model_name is None or ignore_model:
             continue
 
+        model_api_spec = api_spec[SpecProp.MODELS].get(model_name, {})
         model_spec = ModelSpec(
             model_name,
-            api_spec[SpecProp.MODELS].get(model_name, {}).get(PropName.DESCRIPTION, ''),
+            model_api_spec.get(PropName.DESCRIPTION, ''),
+            model_api_spec.get(PropName.PROPERTIES, {}),
             operations.keys()
         )
         with open('%s/%s.rst' % (MODELS_FOLDER, camel_to_snake(model_name)), "wb") as f:

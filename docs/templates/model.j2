@@ -18,3 +18,15 @@ Supported operations
 - :ref:`{{ operation | camel_to_snake }}`
 {% endfor %}
 {% endif %}
+
+{% if model.properties %}
+Model Properties
+""""""""""""""""
+.. csv-table::
+    :header: "Property", "Required", "Type", "Description"
+    :widths: 20, 10, 10, 50
+
+{% for property_name, property_spec in model.properties.items() %}
+    "{{ property_name }}", "{{ property_spec['required'] }}", "{{ property_spec['type'] }}", "{{ property_spec['description'] | e }}"
+{% endfor %}
+{% endif %}

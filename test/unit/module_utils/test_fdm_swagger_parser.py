@@ -204,7 +204,10 @@ class TestFdmSwaggerParser(unittest.TestCase):
         api_spec = copy.deepcopy(base)
         docs = {
             'definitions': {
-                'NetworkObject': {'description': 'Description for Network Object'}
+                'NetworkObject': {
+                    'description': 'Description for Network Object',
+                    'properties': {'name': 'Description for name field'}
+                }
             },
             'paths': {
                 '/object/networks': {
@@ -221,6 +224,9 @@ class TestFdmSwaggerParser(unittest.TestCase):
 
         assert 'Description for Network Object' == self.fdm_data['models']['NetworkObject']['description']
         assert '' == self.fdm_data['models']['NetworkObjectWrapper']['description']
+        network_properties = self.fdm_data['models']['NetworkObject']['properties']
+        assert '' == network_properties['id']['description']
+        assert 'Description for name field' == network_properties['name']['description']
 
         ops = self.fdm_data['operations']
         assert 'Description for getNetworkObjectList operation' == ops['getNetworkObjectList']['description']

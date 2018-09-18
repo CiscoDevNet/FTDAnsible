@@ -213,6 +213,8 @@ class FdmSwaggerParser:
         for model_name, model_def in definitions.items():
             model_docs = docs[SpecProp.DEFINITIONS].get(model_name, {})
             model_def[PropName.DESCRIPTION] = model_docs.get(PropName.DESCRIPTION, '')
+            for prop_name, prop_spec in model_def.get(PropName.PROPERTIES, {}).items():
+                prop_spec[PropName.DESCRIPTION] = model_docs.get(PropName.PROPERTIES, {}).get(prop_name, '')
         return definitions
 
     def _get_model_name(self, method, params):
