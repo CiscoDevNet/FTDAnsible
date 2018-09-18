@@ -200,6 +200,37 @@ class TestFdmSwaggerParser(unittest.TestCase):
         assert expected_operations == self.fdm_data['operations']
         assert {'NetworkObject': expected_operations} == self.fdm_data['model_operations']
 
+    def test_simple_object_with_documentation(self):
+        api_spec = copy.deepcopy(base)
+        docs = {
+            'definitions': {
+                'NetworkObject': {'description': 'Description for Network Object'}
+            },
+            'paths': {
+                '/object/networks': {
+                    'get': {
+                        'description': 'Description for getNetworkObjectList operation',
+                        'parameters': [{'name': 'offset', 'description': 'Description for offset field'}]
+                    },
+                    'post': {'description': 'Description for addNetworkObject operation'}
+                }
+            }
+        }
+
+        self.fdm_data = FdmSwaggerParser().parse_spec(api_spec, docs)
+
+        assert 'Description for Network Object' == self.fdm_data['models']['NetworkObject']['description']
+        assert '' == self.fdm_data['models']['NetworkObjectWrapper']['description']
+
+        ops = self.fdm_data['operations']
+        assert 'Description for getNetworkObjectList operation' == ops['getNetworkObjectList']['description']
+        assert 'Description for addNetworkObject operation' == ops['addNetworkObject']['description']
+        assert '' == ops['deleteNetworkObject']['description']
+
+        get_op_params = ops['getNetworkObjectList']['parameters']
+        assert 'Description for offset field' == get_op_params['query']['offset']['description']
+        assert '' == get_op_params['query']['limit']['description']
+
     def test_model_operations_should_contain_all_operations(self):
         data = {
             'basePath': '/v2/',

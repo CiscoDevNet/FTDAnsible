@@ -42,38 +42,27 @@ def clean_generated_files(dir_path):
             os.remove(os.path.join(dir_path, file_name))
 
 
-def generate_model_index(api_spec, docs, model_template, include_models=None):
+def generate_model_index(api_spec, model_template, include_models=None):
     clean_generated_files(MODELS_FOLDER)
 
     for model_name, operations in api_spec[SpecProp.MODEL_OPERATIONS].items():
-        model_def = docs[SpecProp.DEFINITIONS].get(model_name, {})
-        model_spec = ModelSpec(
-            model_name,
-            model_def.get('description', ''),
-            operations.keys()
-        )
-
         ignore_model = include_models and model_name not in include_models
         # TODO: investigate why some operations still have None model name
         if model_name is None or ignore_model:
             continue
 
+        model_spec = ModelSpec(
+            model_name,
+            api_spec[SpecProp.MODELS].get(model_name, {}).get(PropName.DESCRIPTION, ''),
+            operations.keys()
+        )
         with open('%s/%s.rst' % (MODELS_FOLDER, camel_to_snake(model_name)), "wb") as f:
             f.write(model_template.render(
                 model=model_spec
             ).encode('utf-8'))
 
 
-def generate_operation_index(api_spec, docs, operation_template, include_models=None):
-    def enrich_params_with_description(op_spec, op_docs):
-        param_descriptions = {p['name']: p['description'] for p in op_docs.get('parameters', {})}
-        if OperationField.PARAMETERS in op_spec:
-            for param_name, params_spec in op_spec[OperationField.PARAMETERS][OperationParams.PATH].items():
-                params_spec['description'] = param_descriptions.get(param_name, '')
-            for param_name, params_spec in op_spec[OperationField.PARAMETERS][OperationParams.QUERY].items():
-                params_spec['description'] = param_descriptions.get(param_name, '')
-        return op_spec
-
+def generate_operation_index(api_spec, operation_template, include_models=None):
     clean_generated_files(OPERATIONS_FOLDER)
 
     for op_name, op_spec in api_spec[SpecProp.OPERATIONS].items():
@@ -81,11 +70,9 @@ def generate_operation_index(api_spec, docs, operation_template, include_models=
         if ignore_op:
             continue
 
-        op_docs = docs[PropName.PATHS].get(op_spec[OperationField.URL][11:], {}).get(op_spec[OperationField.METHOD], {})
-        op_spec = enrich_params_with_description(op_spec, op_docs)
         operation = OperationSpec(
             op_name,
-            op_docs.get('description', ''),
+            op_spec.get(OperationField.DESCRIPTION),
             op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
             op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
         )
@@ -95,7 +82,7 @@ def generate_operation_index(api_spec, docs, operation_template, include_models=
             ).encode('utf-8'))
 
 
-def fetch_api_specs(hostname, username, password):
+def fetch_api_specs_with_docs(hostname, username, password):
     def request_token():
         resp = open_url(
             hostname + TOKEN_PATH,
@@ -110,10 +97,8 @@ def fetch_api_specs(hostname, username, password):
     headers['Authorization'] = 'Bearer %s' % request_token()['access_token']
 
     spec_resp = open_url(hostname + SPEC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
-    api_spec = FdmSwaggerParser().parse_spec(json.loads(to_text(spec_resp)))
     docs_resp = open_url(hostname + DOC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
-    docs = json.loads(to_text(docs_resp))
-    return api_spec, docs
+    return FdmSwaggerParser().parse_spec(json.loads(to_text(spec_resp)), json.loads(to_text(docs_resp)))
 
 
 def init_jinja_env():
@@ -132,10 +117,10 @@ def main():
     args = parser.parse_args()
 
     env = init_jinja_env()
-    api_spec, docs = fetch_api_specs(args.hostname, args.username, args.password)
+    api_spec = fetch_api_specs_with_docs(args.hostname, args.username, args.password)
 
-    generate_model_index(api_spec, docs, env.get_template(MODEL_TEMPLATE), args.models)
-    generate_operation_index(api_spec, docs, env.get_template(OPERATION_TEMPLATE), args.models)
+    generate_model_index(api_spec, env.get_template(MODEL_TEMPLATE), args.models)
+    generate_operation_index(api_spec, env.get_template(OPERATION_TEMPLATE), args.models)
 
 
 if __name__ == '__main__':

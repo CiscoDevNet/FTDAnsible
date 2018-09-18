@@ -29,6 +29,7 @@ class OperationField:
     METHOD = 'method'
     PARAMETERS = 'parameters'
     MODEL_NAME = 'modelName'
+    DESCRIPTION = 'description'
 
 
 class SpecProp:
@@ -53,6 +54,7 @@ class PropName:
     PROPERTIES = 'properties'
     RESPONSES = 'responses'
     NAME = 'name'
+    DESCRIPTION = 'description'
 
 
 class PropType:
@@ -91,12 +93,17 @@ class ValidationError(ValueError):
 
 class FdmSwaggerParser:
     _definitions = None
+    _base_path = None
 
-    def parse_spec(self, spec):
+    def parse_spec(self, spec, docs=None):
         """
-        This method simplifies a swagger format and also resolves a model name for each operation
-        :param spec: dict
-                    expect data in the swagger format see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
+        This method simplifies a swagger format, resolves a model name for each operation, and adds documentation for
+        each operation and model if it is provided.
+
+        :param spec: An API specification in the swagger format, see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
+        :type spec: dict
+        :param spec: A documentation map containing descriptions for models, operations and operation parameters.
+        :type docs: dict
         :rtype: dict
         :return:
         Ex.
@@ -144,13 +151,18 @@ class FdmSwaggerParser:
             }
         """
         self._definitions = spec[SpecProp.DEFINITIONS]
+        self._base_path = spec[PropName.BASE_PATH]
         operations = self._get_operations(spec)
-        config = {
+
+        if docs:
+            operations = self._enrich_operations_with_docs(operations, docs)
+            self._definitions = self._enrich_definitions_with_docs(self._definitions, docs)
+
+        return {
             SpecProp.MODELS: self._definitions,
             SpecProp.OPERATIONS: operations,
             SpecProp.MODEL_OPERATIONS: self._get_model_operations(operations)
         }
-        return config
 
     def _get_model_operations(self, operations):
         model_operations = {}
@@ -160,14 +172,13 @@ class FdmSwaggerParser:
         return model_operations
 
     def _get_operations(self, spec):
-        base_path = spec[PropName.BASE_PATH]
         paths_dict = spec[PropName.PATHS]
         operations_dict = {}
         for url, operation_params in paths_dict.items():
             for method, params in operation_params.items():
                 operation = {
                     OperationField.METHOD: method,
-                    OperationField.URL: base_path + url,
+                    OperationField.URL: self._base_path + url,
                     OperationField.MODEL_NAME: self._get_model_name(method, params)
                 }
                 if OperationField.PARAMETERS in params:
@@ -176,6 +187,33 @@ class FdmSwaggerParser:
                 operation_id = params[PropName.OPERATION_ID]
                 operations_dict[operation_id] = operation
         return operations_dict
+
+    def _enrich_operations_with_docs(self, operations, docs):
+        def get_operation_docs(op):
+            op_url = op[OperationField.URL][len(self._base_path):]
+            return docs[PropName.PATHS].get(op_url, {}).get(op[OperationField.METHOD], {})
+
+        for operation in operations.values():
+            operation_docs = get_operation_docs(operation)
+            operation[OperationField.DESCRIPTION] = operation_docs.get(PropName.DESCRIPTION, '')
+
+            if OperationField.PARAMETERS in operation:
+                param_descriptions = {p[PropName.NAME]: p[PropName.DESCRIPTION]
+                                      for p in operation_docs.get(OperationField.PARAMETERS, {})}
+
+                for param_name, params_spec in operation[OperationField.PARAMETERS][OperationParams.PATH].items():
+                    params_spec[OperationField.DESCRIPTION] = param_descriptions.get(param_name, '')
+
+                for param_name, params_spec in operation[OperationField.PARAMETERS][OperationParams.QUERY].items():
+                    params_spec[OperationField.DESCRIPTION] = param_descriptions.get(param_name, '')
+
+        return operations
+
+    def _enrich_definitions_with_docs(self, definitions, docs):
+        for model_name, model_def in definitions.items():
+            model_docs = docs[SpecProp.DEFINITIONS].get(model_name, {})
+            model_def[PropName.DESCRIPTION] = model_docs.get(PropName.DESCRIPTION, '')
+        return definitions
 
     def _get_model_name(self, method, params):
         if method == HTTPMethod.GET:
