@@ -20,7 +20,7 @@ SPEC_PATH = '/apispec/ngfw.json'
 DOC_PATH = '/apispec/en-us/doc.json'
 
 ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
-OperationSpec = namedtuple('OperationSpec', 'name description path_params query_params')
+OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
 
 
 class DocGenerator(object):
@@ -57,15 +57,22 @@ class DocGenerator(object):
 
             model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
             model_spec = ModelSpec(
-                model_name,
-                model_api_spec.get(PropName.DESCRIPTION, ''),
-                model_api_spec.get(PropName.PROPERTIES, {}),
-                operations.keys()
+                name=model_name,
+                description=model_api_spec.get(PropName.DESCRIPTION, ''),
+                properties=model_api_spec.get(PropName.PROPERTIES, {}),
+                operations=operations.keys()
             )
             model_content = self._jinja_env.get_template(self.MODEL_TEMPLATE).render(model=model_spec)
             self._write_generated_file(self.MODELS_FOLDER, model_name, model_content)
 
     def generate_operation_index(self, include_models=None):
+        def get_data_params(op):
+            if op[OperationField.METHOD] == HTTPMethod.POST or op[OperationField.METHOD] == HTTPMethod.PUT:
+                model_name = op[OperationField.MODEL_NAME]
+                model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+                return model_api_spec.get(PropName.PROPERTIES, {})
+            return {}
+
         self._clean_generated_files(self.OPERATIONS_FOLDER)
 
         for op_name, op_api_spec in self._api_spec[SpecProp.OPERATIONS].items():
@@ -74,13 +81,15 @@ class DocGenerator(object):
                 continue
 
             op_spec = OperationSpec(
-                op_name,
-                op_api_spec.get(OperationField.DESCRIPTION),
-                op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
-                op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
+                name=op_name,
+                description=op_api_spec.get(OperationField.DESCRIPTION),
+                model_name=op_api_spec[OperationField.MODEL_NAME],
+                path_params=op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
+                query_params=op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
+                data_params=get_data_params(op_api_spec)
             )
-            operation_content = self._jinja_env.get_template(self.MODEL_TEMPLATE).render(operation=op_spec)
-            self._write_generated_file(self.OPERATIONS_FOLDER, op_name, operation_content)
+            op_content = self._jinja_env.get_template(self.OPERATION_TEMPLATE).render(operation=op_spec)
+            self._write_generated_file(self.OPERATIONS_FOLDER, op_name, op_content)
 
     @staticmethod
     def _write_generated_file(dir_path, filename, content):

@@ -5,10 +5,26 @@
 {{ operation.name }}
 {% for n in range(operation.name| length) %}={% endfor %}
 
+{% if operation.model_name%}
+The :ref:`{{ operation.name | camel_to_snake }}` operation handles configuration related to :ref:`{{ operation.model_name | camel_to_snake }}` model.
+{% endif %}
+
 {% if operation.description %}
 Description
 """""""""""
 {{ operation.description | e }}
+{% endif %}
+
+{% if operation.data_params %}
+Data Parameters
+"""""""""""""""
+.. csv-table::
+    :header: "Parameter", "Required", "Type", "Description"
+    :widths: 20, 10, 10, 50
+
+{% for param_name, param_spec in operation.data_params.items() %}
+    "{{ param_name }}", "{{ param_spec['required'] }}", "{{ param_spec['type'] }}", "{{ param_spec['description'] | br_to_newline | e }}"
+{% endfor %}
 {% endif %}
 
 {% if operation.path_params %}
