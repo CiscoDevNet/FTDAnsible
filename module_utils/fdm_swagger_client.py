@@ -215,6 +215,7 @@ class FdmSwaggerParser:
             model_def[PropName.DESCRIPTION] = model_docs.get(PropName.DESCRIPTION, '')
             for prop_name, prop_spec in model_def.get(PropName.PROPERTIES, {}).items():
                 prop_spec[PropName.DESCRIPTION] = model_docs.get(PropName.PROPERTIES, {}).get(prop_name, '')
+                prop_spec[PropName.REQUIRED] = prop_name in model_def.get(PropName.REQUIRED, [])
         return definitions
 
     def _get_model_name(self, method, params):

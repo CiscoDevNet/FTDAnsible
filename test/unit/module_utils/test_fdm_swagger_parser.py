@@ -43,7 +43,7 @@ base = {
                                                                        "$ref": "#/definitions/FQDNDNSResolution"},
                                                      "id": {"type": "string"},
                                                      "type": {"type": "string", "default": "networkobject"}},
-                                      "required": ["subType", "type", "value"]},
+                                      "required": ["subType", "type", "value", "name"]},
                     "NetworkObjectWrapper": {
                         "allOf": [{"$ref": "#/definitions/NetworkObject"}, {"$ref": "#/definitions/LinksWrapper"}]}
                     },
@@ -226,7 +226,9 @@ class TestFdmSwaggerParser(unittest.TestCase):
         assert '' == self.fdm_data['models']['NetworkObjectWrapper']['description']
         network_properties = self.fdm_data['models']['NetworkObject']['properties']
         assert '' == network_properties['id']['description']
+        assert not network_properties['id']['required']
         assert 'Description for name field' == network_properties['name']['description']
+        assert network_properties['name']['required']
 
         ops = self.fdm_data['operations']
         assert 'Description for getNetworkObjectList operation' == ops['getNetworkObjectList']['description']

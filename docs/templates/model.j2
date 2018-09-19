@@ -24,7 +24,7 @@ Model Properties
 """"""""""""""""
 .. csv-table::
     :header: "Property", "Required", "Type", "Description"
-    :widths: 20, 10, 10, 50
+    :widths: 10, 10, 10, 70
 
 {% for property_name, property_spec in model.properties.items() %}
     "{{ property_name }}", "{{ property_spec['required'] }}", "{{ property_spec['type'] }}", "{{ property_spec['description'] | br_to_newline | e }}"
