@@ -107,6 +107,8 @@ def init_jinja_env():
     env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER), trim_blocks=True, lstrip_blocks=True,
                       extensions=['jinja2.ext.do'])
     env.filters['camel_to_snake'] = camel_to_snake
+    # TODO: find a proper way to convert HTML tags to reStructuredText format
+    env.filters['br_to_newline'] = lambda s: '| ' + s.replace('<br>', '\n    | ') if '<br>' in s else s
     return env
 
 
