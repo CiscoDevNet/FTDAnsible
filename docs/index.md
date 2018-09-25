@@ -1,5 +1,4 @@
-FTD Ansible Documentation
-=========================
+# FTD Ansible Documentation
 
 A collection of Ansible modules that automate configuration management and execution of operational tasks on
 Cisco Firepower Threat Defense (FTD) devices.
@@ -9,29 +8,25 @@ specification.
 
 FTD Ansible modules are powerful and easy to use:
 
-.. code-block:: yaml
-
-   - hosts: ftd_devices
-     connection: httpapi
-     tasks:
-       - name: Create a network
-         ftd_configuration:
-           operation: "addNetworkObject"
-           data:
+```yaml
+- hosts: ftd_devices
+  connection: httpapi
+  tasks:
+    - name: Create a network
+      ftd_configuration:
+          operation: "addNetworkObject"
+          data:
              name: "any-ipv4"
              subType: "NETWORK"
              value: "0.0.0.0/0"
              type: "networkobject"
+ ```
 
-Table of Contents
------------------
+## Table of Contents
 
-.. toctree::
-   :maxdepth: 1
-
-   installation_guide
-   getting_started
-   common_examples
-   modules/index
-   models/index
-   operations/index
+* [Installation Guide](installation_guide.md)
+* [Getting Started](getting_started.md)
+* [Common Examples](common_examples.md)
+* [Module Index](modules/index.md)
+* [Model Index](models/index.md)
+* [Operation Index](operations/index.md)
