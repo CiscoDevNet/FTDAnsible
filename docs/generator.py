@@ -30,7 +30,7 @@ class DocGenerator(object):
 
     MODEL_TEMPLATE = 'model.md.j2'
     OPERATION_TEMPLATE = 'operation.md.j2'
-    INDEX_FILE = 'index.md'
+    INDEX_TEMPLATE = 'index.md.j2'
 
     _api_spec = None
     _jinja_env = None
@@ -47,6 +47,7 @@ class DocGenerator(object):
     def generate_model_index(self, include_models=None):
         self._clean_generated_files(self.MODELS_FOLDER)
 
+        model_index = []
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
             ignore_model = include_models and model_name not in include_models
             # TODO: investigate why some operations still have None model name
@@ -62,6 +63,8 @@ class DocGenerator(object):
             )
             model_content = self._jinja_env.get_template(self.MODEL_TEMPLATE).render(model=model_spec)
             self._write_generated_file(self.MODELS_FOLDER, model_name, model_content)
+            model_index.append(model_name)
+        self._write_index_file(self.MODELS_FOLDER, 'Model', model_index)
 
     def generate_operation_index(self, include_models=None):
         def get_data_params(op):
@@ -73,6 +76,7 @@ class DocGenerator(object):
 
         self._clean_generated_files(self.OPERATIONS_FOLDER)
 
+        op_index = []
         for op_name, op_api_spec in self._api_spec[SpecProp.OPERATIONS].items():
             ignore_op = include_models and op_api_spec[OperationField.MODEL_NAME] not in include_models
             if ignore_op:
@@ -88,16 +92,24 @@ class DocGenerator(object):
             )
             op_content = self._jinja_env.get_template(self.OPERATION_TEMPLATE).render(operation=op_spec)
             self._write_generated_file(self.OPERATIONS_FOLDER, op_name, op_content)
+            op_index.append(op_name)
+        self._write_index_file(self.OPERATIONS_FOLDER, 'Operation', op_index)
 
     @staticmethod
     def _write_generated_file(dir_path, filename, content):
         with open('%s/%s.md' % (dir_path, camel_to_snake(filename)), "wb") as f:
             f.write(content.encode('utf-8'))
 
+    def _write_index_file(self, dir_path, index_name, index_list):
+        index_content = self._jinja_env.get_template(self.INDEX_TEMPLATE).render(
+            index_name=index_name,
+            index_list=index_list
+        )
+        self._write_generated_file(dir_path, 'index', index_content)
+
     def _clean_generated_files(self, dir_path):
         for file_name in os.listdir(dir_path):
-            if file_name != self.INDEX_FILE:
-                os.remove(os.path.join(dir_path, file_name))
+            os.remove(os.path.join(dir_path, file_name))
 
 
 def camel_to_snake(text):
