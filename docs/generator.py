@@ -28,9 +28,9 @@ class DocGenerator(object):
     MODELS_FOLDER = os.path.join(DIR_PATH, 'models')
     OPERATIONS_FOLDER = os.path.join(DIR_PATH, 'operations')
 
-    MODEL_TEMPLATE = 'model.j2'
-    OPERATION_TEMPLATE = 'operation.j2'
-    INDEX_FILE = 'index.rst'
+    MODEL_TEMPLATE = 'model.md.j2'
+    OPERATION_TEMPLATE = 'operation.md.j2'
+    INDEX_FILE = 'index.md'
 
     _api_spec = None
     _jinja_env = None
@@ -42,8 +42,6 @@ class DocGenerator(object):
     def _init_jinja_env(self):
         env = Environment(loader=FileSystemLoader(self.TEMPLATE_FOLDER), trim_blocks=True, lstrip_blocks=True)
         env.filters['camel_to_snake'] = camel_to_snake
-        # TODO: find a proper way to convert HTML tags to reStructuredText format
-        env.filters['br_to_newline'] = lambda s: '| ' + s.replace('<br>', '\n    | ') if '<br>' in s else s
         return env
 
     def generate_model_index(self, include_models=None):
@@ -93,7 +91,7 @@ class DocGenerator(object):
 
     @staticmethod
     def _write_generated_file(dir_path, filename, content):
-        with open('%s/%s.rst' % (dir_path, camel_to_snake(filename)), "wb") as f:
+        with open('%s/%s.md' % (dir_path, camel_to_snake(filename)), "wb") as f:
             f.write(content.encode('utf-8'))
 
     def _clean_generated_files(self, dir_path):
