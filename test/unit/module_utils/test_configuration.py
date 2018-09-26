@@ -39,7 +39,7 @@ class TestBaseConfigurationResource(object):
 
         return connection_instance
 
-    @patch.object(BaseConfigurationResource, 'send_request')
+    @patch.object(BaseConfigurationResource, '_send_request')
     def test_get_objects_by_filter_with_multiple_filters(self, send_request_mock, connection_mock):
         objects = [
             {'name': 'obj1', 'type': 1, 'foo': {'bar': 'buzz'}},
@@ -62,7 +62,7 @@ class TestBaseConfigurationResource(object):
         assert [objects[1]] == resource.get_objects_by_filter('test',
                                                               {'filters': {'type': 1, 'foo': {'bar': 'buz'}}})
 
-    @patch.object(BaseConfigurationResource, 'send_request')
+    @patch.object(BaseConfigurationResource, '_send_request')
     def test_get_objects_by_filter_with_multiple_responses(self, send_request_mock, connection_mock):
         send_request_mock.side_effect = [
             {'items': [

@@ -364,7 +364,7 @@ class TestFtdConfiguration(object):
 
         connection_mock.get_operation_spec = get_operation_spec
 
-        connection_mock.get_operations_spec.return_value = operations
+        connection_mock.get_operation_specs_by_model_name.return_value = operations
         connection_mock.send_request.return_value = {
             ResponseParams.SUCCESS: True,
             ResponseParams.RESPONSE: ADD_RESPONSE
@@ -452,7 +452,7 @@ class TestFtdConfiguration(object):
             return operations[name]
 
         connection_mock.get_operation_spec = get_operation_spec
-        connection_mock.get_operations_spec.return_value = operations
+        connection_mock.get_operation_specs_by_model_name.return_value = operations
 
         connection_mock.send_request = request_handler
         result = self._run_module(params)
@@ -519,7 +519,7 @@ class TestFtdConfiguration(object):
             return operations[name]
 
         connection_mock.get_operation_spec = get_operation_spec
-        connection_mock.get_operations_spec.return_value = operations
+        connection_mock.get_operation_specs_by_model_name.return_value = operations
 
         connection_mock.send_request = request_handler
         result = self._run_module(params)
@@ -531,8 +531,8 @@ class TestFtdConfiguration(object):
                        'test_var': expected_val
                    }} == result
 
-    def test_module_should_fail_when_upsert_operation_and_upsert_operation_is_not_supported(self, connection_mock):
-        connection_mock.get_operations_spec.return_value = {
+    def test_module_should_fail_when_upsert_operation_is_not_supported(self, connection_mock):
+        connection_mock.get_operation_specs_by_model_name.return_value = {
             'addObject': {'method': HTTPMethod.POST, 'url': '/test'},
             'editObject': {'method': HTTPMethod.PUT, 'url': '/test/{objId}'},
             'otherObjectOperation': {'method': HTTPMethod.GET, 'url': '/test/{objId}'}
@@ -597,7 +597,7 @@ class TestFtdConfiguration(object):
             return operations[name]
 
         connection_mock.get_operation_spec = get_operation_spec
-        connection_mock.get_operations_spec.return_value = operations
+        connection_mock.get_operation_specs_by_model_name.return_value = operations
         connection_mock.send_request = request_handler
         result = self._run_module_with_fail_json(params)
 
@@ -674,7 +674,7 @@ class TestFtdConfiguration(object):
             return operations[name]
 
         connection_mock.get_operation_spec = get_operation_spec
-        connection_mock.get_operations_spec.return_value = operations
+        connection_mock.get_operation_specs_by_model_name.return_value = operations
         connection_mock.send_request = request_handler
         result = self._run_module_with_fail_json(params)
 
@@ -704,7 +704,7 @@ class TestFtdConfiguration(object):
             return operations[name]
 
         connection_mock.get_operation_spec = get_operation_spec
-        connection_mock.get_operations_spec.return_value = operations
+        connection_mock.get_operation_specs_by_model_name.return_value = operations
 
         report = {
             'required': ['objects[0].type'],

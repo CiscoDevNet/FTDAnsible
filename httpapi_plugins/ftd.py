@@ -222,7 +222,7 @@ class HttpApi(HttpApiBase):
     def get_operation_spec(self, operation_name):
         return self.api_spec[SpecProp.OPERATIONS].get(operation_name, None)
 
-    def get_operations_spec(self, operation_name):
+    def get_operation_specs_by_model_name(self, operation_name):
         operation = self.get_operation_spec(operation_name)
         if operation:
             model_name = operation.get(OperationField.MODEL_NAME, None)

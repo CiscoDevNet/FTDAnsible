@@ -11,7 +11,6 @@
           value: "{{ host_ip }}"
           isSystemDefined: False
           type: "networkobject"
-          version: ''
 
     - name: Create a NETWORK network object
       ftd_configuration:
@@ -22,7 +21,6 @@
           subType: "NETWORK"
           value: "{{ network_ip }}"
           type: "networkobject"
-          version: ''
 
     - name: Create a network group
       ftd_configuration:
@@ -34,7 +32,6 @@
           objects:
             - "{{ networkobject_ansible_network_host }}"
             - "{{ networkobject_ansible_network_network }}"
-          version: ''
 
     - name: Update the HOST network object
       ftd_configuration:

@@ -18,6 +18,7 @@
 
 from functools import partial
 
+from ansible.module_utils.six import iteritems
 try:
     from ansible.module_utils.common import HTTPMethod, equal_objects, copy_identity_properties, FtdConfigurationError, \
         FtdServerError, ResponseParams
@@ -72,15 +73,15 @@ class BaseConfigurationResource(object):
 
         return self._operation_spec_cache[operation_name]
 
-    def get_operations_spec(self, operation_name):
+    def get_operation_specs_by_model_name(self, operation_name):
         if operation_name not in self._operation_spec_cache:
-            self._operations_spec_cache[operation_name] = self._conn.get_operations_spec(operation_name)
+            self._operations_spec_cache[operation_name] = self._conn.get_operation_specs_by_model_name(operation_name)
 
         return self._operations_spec_cache[operation_name]
 
     def get_object_by_name(self, url_path, name, path_params=None):
         item_generator = iterate_over_pageable_resource(
-            partial(self.send_request, url_path=url_path, http_method=HTTPMethod.GET, path_params=path_params),
+            partial(self._send_request, url_path=url_path, http_method=HTTPMethod.GET, path_params=path_params),
             {'filter': 'name:%s' % name}
         )
         # not all endpoints support filtering so checking name explicitly
@@ -97,13 +98,13 @@ class BaseConfigurationResource(object):
         url, method = _get_request_params_from_spec(op_spec)
 
         def match_filters(obj):
-            for k, v in filters.items():
+            for k, v in iteritems(filters):
                 if k not in obj or obj[k] != v:
                     return False
             return True
 
         item_generator = iterate_over_pageable_resource(
-            partial(self.send_request, url_path=url, http_method=method, path_params=path_params),
+            partial(self._send_request, url_path=url, http_method=method, path_params=path_params),
             query_params
         )
         return [i for i in item_generator if match_filters(i)]
@@ -120,7 +121,7 @@ class BaseConfigurationResource(object):
             return err.code == UNPROCESSABLE_ENTITY_STATUS and DUPLICATE_NAME_ERROR_MESSAGE in str(err)
 
         try:
-            return self.send_request(url_path=url, http_method=method, body_params=data,
+            return self._send_request(url_path=url, http_method=method, body_params=data,
                                      path_params=path_params, query_params=query_params)
         except FtdServerError as e:
             if is_duplicate_name_error(e):
@@ -151,7 +152,7 @@ class BaseConfigurationResource(object):
             return err.code == UNPROCESSABLE_ENTITY_STATUS and INVALID_UUID_ERROR_MESSAGE in str(err)
 
         try:
-            return self.send_request(url_path=url, http_method=method, path_params=path_params)
+            return self._send_request(url_path=url, http_method=method, path_params=path_params)
         except FtdServerError as e:
             if is_invalid_uuid_error(e):
                 return {'status': 'Referenced object does not exist'}
@@ -166,14 +167,14 @@ class BaseConfigurationResource(object):
         op_spec = self.get_operation_spec(operation_name)
         url, method = _get_request_params_from_spec(op_spec)
 
-        existing_object = self.send_request(url_path=url, http_method=HTTPMethod.GET, path_params=path_params)
+        existing_object = self._send_request(url_path=url, http_method=HTTPMethod.GET, path_params=path_params)
 
         if not existing_object:
             raise FtdConfigurationError('Referenced object does not exist')
         elif equal_objects(existing_object, data):
             return existing_object
         else:
-            return self.send_request(url_path=url, http_method=method, body_params=data,
+            return self._send_request(url_path=url, http_method=method, body_params=data,
                                      path_params=path_params, query_params=query_params)
 
     def send_general_request(self, operation_name, params):
@@ -184,11 +185,11 @@ class BaseConfigurationResource(object):
         op_spec = self.get_operation_spec(operation_name)
         url, method = _get_request_params_from_spec(op_spec)
 
-        return self.send_request(url, method, data,
+        return self._send_request(url, method, data,
                                  path_params,
                                  query_params)
 
-    def send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
+    def _send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         def raise_for_failure(resp):
             if not resp[ResponseParams.SUCCESS]:
                 raise FtdServerError(resp[ResponseParams.RESPONSE], resp[ResponseParams.STATUS_CODE])
@@ -236,11 +237,10 @@ class BaseConfigurationResource(object):
         :type operation_name: str
         :param operation_spec: specification of the operation being called by the user
         :type operation_spec: dict
-        :param filters: filters
+        :param params: params - params should contain 'filters'
         :return: True if called operation is find by filter, otherwise False
         :rtype: bool
         """
-        # TODO:2018-09-11:alexander.vorkov: update docs and add enum for the params
         filters = params['filters']
         is_find_all = self.is_find_all_operation(operation_name)
         return is_find_all and filters
@@ -274,7 +274,7 @@ class BaseConfigurationResource(object):
 
     def upsert_operation_is_supported(self, op_name):
         base_operation = _get_base_operation_name_from_upsert(op_name)
-        operations = self.get_operations_spec(base_operation)
+        operations = self.get_operation_specs_by_model_name(base_operation)
         amount_operations_need_for_upsert_operation = 3
         amount_supported_operations = 0
         for operation_name in operations:
@@ -288,7 +288,7 @@ class BaseConfigurationResource(object):
     def upsert_object(self, op_name, params):
 
         base_operation = _get_base_operation_name_from_upsert(op_name)
-        upsert_operations = self.get_operations_spec(base_operation)
+        upsert_operations = self.get_operation_specs_by_model_name(base_operation)
 
         def get_operation_name(checker):
             for operation_name in upsert_operations:
