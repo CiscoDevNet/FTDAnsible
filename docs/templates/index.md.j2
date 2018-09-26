@@ -1,5 +1,5 @@
 # {{ index_name }} Index
 
-{% for item in index_list %}
+{% for item in index_list | sort %}
 * [{{ item }}]({{ item | camel_to_snake }}.md)
 {% endfor %}
