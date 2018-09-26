@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "title": "Overview",
+      "items": [
+        {
+          "title": "Introduction to FTD Ansible",
+          "content": "intro.md"
+        },
+        {
+          "title": "Common Examples",
+          "content": "common_examples.md"
+        }
+      ]
+    },
+    {
+      "title": "Guides",
+      "items": [
+        {
+          "title": "Getting Started",
+          "content": "getting_started.md"
+        },
+        {
+          "title": "Installation Guide",
+          "content": "installation_guide.md"
+        }
+      ]
+    },
+    {
+      "title": "Models",
+      "type": "config",
+      "content": "models/config.json"
+    },
+    {
+      "title": "Operations",
+      "type": "config",
+      "content": "operations/config.json"
+    }
+  ]
+}

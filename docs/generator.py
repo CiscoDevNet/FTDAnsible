@@ -31,6 +31,10 @@ class DocGenerator(object):
     MODEL_TEMPLATE = 'model.md.j2'
     OPERATION_TEMPLATE = 'operation.md.j2'
     INDEX_TEMPLATE = 'index.md.j2'
+    CONFIG_TEMPLATE = 'config.json.j2'
+
+    MD_SUFFIX = '.md'
+    J2_SUFFIX = '.j2'
 
     _api_spec = None
     _jinja_env = None
@@ -62,9 +66,9 @@ class DocGenerator(object):
                 operations=operations.keys()
             )
             model_content = self._jinja_env.get_template(self.MODEL_TEMPLATE).render(model=model_spec)
-            self._write_generated_file(self.MODELS_FOLDER, model_name, model_content)
+            self._write_generated_file(self.MODELS_FOLDER, model_name + self.MD_SUFFIX, model_content)
             model_index.append(model_name)
-        self._write_index_file(self.MODELS_FOLDER, 'Model', model_index)
+        self._write_index_files(self.MODELS_FOLDER, 'Model', model_index)
 
     def generate_operation_index(self, include_models=None):
         def get_data_params(op):
@@ -91,23 +95,26 @@ class DocGenerator(object):
                 data_params=get_data_params(op_api_spec)
             )
             op_content = self._jinja_env.get_template(self.OPERATION_TEMPLATE).render(operation=op_spec)
-            self._write_generated_file(self.OPERATIONS_FOLDER, op_name, op_content)
+            self._write_generated_file(self.OPERATIONS_FOLDER, op_name + self.MD_SUFFIX, op_content)
             op_index.append(op_name)
-        self._write_index_file(self.OPERATIONS_FOLDER, 'Operation', op_index)
+        self._write_index_files(self.OPERATIONS_FOLDER, 'Operation', op_index)
 
     @staticmethod
     def _write_generated_file(dir_path, filename, content):
-        with open('%s/%s.md' % (dir_path, camel_to_snake(filename)), "wb") as f:
+        with open('%s/%s' % (dir_path, camel_to_snake(filename)), "wb") as f:
             f.write(content.encode('utf-8'))
 
-    def _write_index_file(self, dir_path, index_name, index_list):
-        index_content = self._jinja_env.get_template(self.INDEX_TEMPLATE).render(
-            index_name=index_name,
-            index_list=index_list
-        )
-        self._write_generated_file(dir_path, 'index', index_content)
+    def _write_index_files(self, dir_path, index_name, index_list):
+        index_data = {'index_name': index_name, 'index_list': index_list}
 
-    def _clean_generated_files(self, dir_path):
+        for template_name in [self.INDEX_TEMPLATE, self.CONFIG_TEMPLATE]:
+            template = self._jinja_env.get_template(template_name)
+            content = template.render(**index_data)
+            filename = template_name[:-len(self.J2_SUFFIX)]
+            self._write_generated_file(dir_path, filename, content)
+
+    @staticmethod
+    def _clean_generated_files(dir_path):
         for file_name in os.listdir(dir_path):
             os.remove(os.path.join(dir_path, file_name))
 
