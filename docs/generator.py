@@ -1,10 +1,9 @@
+import argparse
 import json
 import os
+import re
 from collections import namedtuple
 
-import re
-
-import argparse
 from ansible.module_utils._text import to_text
 from ansible.module_utils.urls import open_url
 from jinja2 import Environment, FileSystemLoader
@@ -13,9 +12,9 @@ from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField, PropName, OperationParams
 
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
-TOKEN_PATH = '/api/fdm/v1/fdm/token'
+TOKEN_PATH = '/api/fdm/v2/fdm/token'
 SPEC_PATH = '/apispec/ngfw.json'
 DOC_PATH = '/apispec/en-us/doc.json'
 
@@ -24,9 +23,8 @@ OperationSpec = namedtuple('OperationSpec', 'name description model_name path_pa
 
 
 class DocGenerator(object):
-    TEMPLATE_FOLDER = os.path.join(DIR_PATH, 'templates')
-    MODELS_FOLDER = os.path.join(DIR_PATH, 'docsite', 'models')
-    OPERATIONS_FOLDER = os.path.join(DIR_PATH, 'docsite', 'operations')
+    TEMPLATE_FOLDER = os.path.join(BASE_DIR_PATH, 'templates')
+    DOCSITE_DIR_PATH = os.path.join(BASE_DIR_PATH, 'docsite')
 
     MODEL_TEMPLATE = 'model.md.j2'
     OPERATION_TEMPLATE = 'operation.md.j2'
@@ -48,10 +46,13 @@ class DocGenerator(object):
         env.filters['camel_to_snake'] = camel_to_snake
         return env
 
-    def generate_model_index(self, include_models=None):
-        self._clean_generated_files(self.MODELS_FOLDER)
+    def generate_model_index(self, include_models=None, dest=None):
+        model_folder = os.path.join(dest if dest else self.DOCSITE_DIR_PATH, 'models')
+        self._clean_generated_files(model_folder)
 
         model_index = []
+        model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
+
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
             ignore_model = include_models and model_name not in include_models
             # TODO: investigate why some operations still have None model name
@@ -65,12 +66,13 @@ class DocGenerator(object):
                 properties=model_api_spec.get(PropName.PROPERTIES, {}),
                 operations=operations.keys()
             )
-            model_content = self._jinja_env.get_template(self.MODEL_TEMPLATE).render(model=model_spec)
-            self._write_generated_file(self.MODELS_FOLDER, model_name + self.MD_SUFFIX, model_content)
+            model_content = model_template.render(model=model_spec)
+            self._write_generated_file(model_folder, model_name + self.MD_SUFFIX, model_content)
             model_index.append(model_name)
-        self._write_index_files(self.MODELS_FOLDER, 'Model', model_index)
 
-    def generate_operation_index(self, include_models=None):
+        self._write_index_files(model_folder, 'Model', model_index)
+
+    def generate_operation_index(self, include_models=None, dest=None):
         def get_data_params(op):
             if op[OperationField.METHOD] == HTTPMethod.POST or op[OperationField.METHOD] == HTTPMethod.PUT:
                 model_name = op[OperationField.MODEL_NAME]
@@ -78,9 +80,12 @@ class DocGenerator(object):
                 return model_api_spec.get(PropName.PROPERTIES, {})
             return {}
 
-        self._clean_generated_files(self.OPERATIONS_FOLDER)
+        op_folder = os.path.join(dest if dest else self.DOCSITE_DIR_PATH, 'operations')
+        self._clean_generated_files(op_folder)
 
         op_index = []
+        op_template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
+
         for op_name, op_api_spec in self._api_spec[SpecProp.OPERATIONS].items():
             ignore_op = include_models and op_api_spec[OperationField.MODEL_NAME] not in include_models
             if ignore_op:
@@ -94,10 +99,11 @@ class DocGenerator(object):
                 query_params=op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
                 data_params=get_data_params(op_api_spec)
             )
-            op_content = self._jinja_env.get_template(self.OPERATION_TEMPLATE).render(operation=op_spec)
-            self._write_generated_file(self.OPERATIONS_FOLDER, op_name + self.MD_SUFFIX, op_content)
+            op_content = op_template.render(operation=op_spec)
+            self._write_generated_file(op_folder, op_name + self.MD_SUFFIX, op_content)
             op_index.append(op_name)
-        self._write_index_files(self.OPERATIONS_FOLDER, 'Operation', op_index)
+
+        self._write_index_files(op_folder, 'Operation', op_index)
 
     @staticmethod
     def _write_generated_file(dir_path, filename, content):
@@ -149,12 +155,13 @@ def main():
     parser.add_argument('username', type=str, help='FTD username that has access to Swagger docs')
     parser.add_argument('password', type=str, help='Password for the username')
     parser.add_argument('--models', type=str, nargs='+', help='A list of models to include in the docs', required=False)
+    parser.add_argument('--dest', type=str, help='An output directory for generated files', required=False)
     args = parser.parse_args()
 
     api_spec = fetch_api_specs_with_docs(args.hostname, args.username, args.password)
     doc_generator = DocGenerator(api_spec)
-    doc_generator.generate_model_index(args.models)
-    doc_generator.generate_operation_index(args.models)
+    doc_generator.generate_model_index(args.models, args.dest)
+    doc_generator.generate_operation_index(args.models, args.dest)
 
 
 if __name__ == '__main__':
