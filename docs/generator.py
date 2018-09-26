@@ -15,7 +15,7 @@ from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, Operatio
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
-TOKEN_PATH = '/api/fdm/v2/fdm/token'
+TOKEN_PATH = '/api/fdm/v1/fdm/token'
 SPEC_PATH = '/apispec/ngfw.json'
 DOC_PATH = '/apispec/en-us/doc.json'
 
@@ -25,8 +25,8 @@ OperationSpec = namedtuple('OperationSpec', 'name description model_name path_pa
 
 class DocGenerator(object):
     TEMPLATE_FOLDER = os.path.join(DIR_PATH, 'templates')
-    MODELS_FOLDER = os.path.join(DIR_PATH, 'models')
-    OPERATIONS_FOLDER = os.path.join(DIR_PATH, 'operations')
+    MODELS_FOLDER = os.path.join(DIR_PATH, 'docsite', 'models')
+    OPERATIONS_FOLDER = os.path.join(DIR_PATH, 'docsite', 'operations')
 
     MODEL_TEMPLATE = 'model.md.j2'
     OPERATION_TEMPLATE = 'operation.md.j2'
