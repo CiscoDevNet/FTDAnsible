@@ -19,6 +19,7 @@
 from functools import partial
 
 from ansible.module_utils.six import iteritems
+
 try:
     from ansible.module_utils.common import HTTPMethod, equal_objects, copy_identity_properties, FtdConfigurationError, \
         FtdServerError, ResponseParams
@@ -41,12 +42,6 @@ class _OperationNamePrefix:
     EDIT = 'edit'
     GET = 'get'
     DELETE = 'delete'
-    UPSERT = 'upsert'
-
-
-class _UpsertSpec:
-    OPERATION_NAME = 'operation_name'
-    SPEC = 'spec'
 
 
 class _Operation:
@@ -122,7 +117,7 @@ class BaseConfigurationResource(object):
 
         try:
             return self._send_request(url_path=url, http_method=method, body_params=data,
-                                     path_params=path_params, query_params=query_params)
+                                      path_params=path_params, query_params=query_params)
         except FtdServerError as e:
             if is_duplicate_name_error(e):
                 existing_obj = self.get_object_by_name(url, data['name'], path_params)
@@ -175,7 +170,7 @@ class BaseConfigurationResource(object):
             return existing_object
         else:
             return self._send_request(url_path=url, http_method=method, body_params=data,
-                                     path_params=path_params, query_params=query_params)
+                                      path_params=path_params, query_params=query_params)
 
     def send_general_request(self, operation_name, params):
         self.validate_params(operation_name, params)
@@ -186,8 +181,8 @@ class BaseConfigurationResource(object):
         url, method = _get_request_params_from_spec(op_spec)
 
         return self._send_request(url, method, data,
-                                 path_params,
-                                 query_params)
+                                  path_params,
+                                  query_params)
 
     def _send_request(self, url_path, http_method, body_params=None, path_params=None, query_params=None):
         def raise_for_failure(resp):
@@ -222,10 +217,6 @@ class BaseConfigurationResource(object):
         is_get_list_operation = operation_name.startswith(_OperationNamePrefix.GET) and operation_name.endswith('List')
         is_get_method = operation_spec[OperationField.METHOD] == HTTPMethod.GET
         return is_get_list_operation and is_get_method
-
-    @staticmethod
-    def is_upsert_operation(operation_name):
-        return operation_name.startswith(_OperationNamePrefix.UPSERT)
 
     def is_find_by_filter_operation(self, operation_name, params):
         """
@@ -272,54 +263,6 @@ class BaseConfigurationResource(object):
         if self._check_mode:
             raise CheckModeException()
 
-    def upsert_operation_is_supported(self, op_name):
-        base_operation = _get_base_operation_name_from_upsert(op_name)
-        operations = self.get_operation_specs_by_model_name(base_operation)
-        amount_operations_need_for_upsert_operation = 3
-        amount_supported_operations = 0
-        for operation_name in operations:
-            if self.is_add_operation(operation_name) \
-                    or self.is_edit_operation(operation_name) \
-                    or self.is_find_all_operation(operation_name):
-                amount_supported_operations += 1
-
-        return amount_supported_operations == amount_operations_need_for_upsert_operation
-
-    def upsert_object(self, op_name, params):
-
-        base_operation = _get_base_operation_name_from_upsert(op_name)
-        upsert_operations = self.get_operation_specs_by_model_name(base_operation)
-
-        def get_operation_name(checker):
-            for operation_name in upsert_operations:
-                operation_spec = upsert_operations[operation_name]
-                if checker(operation_spec):
-                    return operation_name
-            raise FtdConfigurationError("Don't support upsert operation")
-
-        def edit_object(existing_object):
-            edit_op_name = get_operation_name(is_put_request)
-            _set_default(params, 'path_params', {})
-            _set_default(params, 'data', {})
-
-            params['path_params']['objId'] = existing_object['id']
-            copy_identity_properties(existing_object, params['data'])
-            return self.edit_object(edit_op_name, params)
-
-        def add_object():
-            add_op_name = get_operation_name(is_post_request)
-            return self.add_object(add_op_name, params)
-
-        try:
-            return add_object()
-        except FtdConfigurationError as e:
-            if e.obj:
-                return edit_object(e.obj)
-            else:
-                raise e
-        except Exception as e:
-            raise e
-
 
 def _set_default(params, field_name, value):
     if field_name not in params or params[field_name] is None:
@@ -332,10 +275,6 @@ def is_post_request(operation_spec):
 
 def is_put_request(operation_spec):
     return operation_spec[OperationField.METHOD] == HTTPMethod.PUT
-
-
-def _get_base_operation_name_from_upsert(op_name):
-    return _OperationNamePrefix.ADD + op_name[len(_OperationNamePrefix.UPSERT):]
 
 
 def _get_user_params(params):

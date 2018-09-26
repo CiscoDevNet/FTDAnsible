@@ -125,15 +125,6 @@ def crud_operation(resource, module, params, op_name):
                      ansible_facts=construct_ansible_facts(resp, module.params))
 
 
-def upsert_operation(resource, module, params, op_name):
-    if resource.upsert_operation_is_supported(op_name):
-        resp = resource.upsert_object(op_name, params)
-        module.exit_json(changed=resource.config_changed, response=resp,
-                         ansible_facts=construct_ansible_facts(resp, module.params))
-    else:
-        module_fail_invalid_operation(module, op_name)
-
-
 def main():
     fields = dict(
         operation=dict(type='str', required=True),
@@ -151,10 +142,7 @@ def main():
     resource = BaseConfigurationResource(connection, module.check_mode)
     op_name = params['operation']
     try:
-        if resource.is_upsert_operation(op_name):
-            upsert_operation(resource, module, params, op_name)
-        else:
-            crud_operation(resource, module, params, op_name)
+        crud_operation(resource, module, params, op_name)
 
     except FtdConfigurationError as e:
         module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e.msg))
