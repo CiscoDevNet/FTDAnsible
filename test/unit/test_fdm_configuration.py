@@ -48,7 +48,6 @@ class TestFtdConfiguration(object):
         resource_instance.edit_object.return_value = EDIT_RESPONSE
         resource_instance.delete_object.return_value = DELETE_RESPONSE
         resource_instance.send_general_request.return_value = ARBITRARY_RESPONSE
-        resource_instance.is_upsert_operation.return_value = False
         resource_instance.is_add_operation.return_value = False
         resource_instance.is_edit_operation.return_value = False
         resource_instance.is_delete_operation.return_value = False

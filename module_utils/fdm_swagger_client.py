@@ -105,7 +105,7 @@ class FdmSwaggerParser:
                 'models':{
                     'model_name':{...},
                     ...
-                },,
+                },
                 'operations':{
                     'operation_name':{
                         'method': 'get', #post, put, delete
