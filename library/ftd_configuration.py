@@ -93,22 +93,18 @@ try:
     from ansible.module_utils.configuration import BaseConfigurationResource, CheckModeException
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
     from ansible.module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError, copy_identity_properties
+        FtdServerError
 except ImportError:
     from module_utils.configuration import BaseConfigurationResource, CheckModeException
     from module_utils.fdm_swagger_client import OperationField, ValidationError
     from module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError, copy_identity_properties
-
-
-def module_fail_invalid_operation(module, op_name):
-    module.fail_json(msg='Invalid operation name provided: %s' % op_name)
+        FtdServerError
 
 
 def crud_operation(resource, module, params, op_name):
     op_spec = resource.get_operation_spec(op_name)
     if op_spec is None:
-        module_fail_invalid_operation(module, op_name)
+        module.fail_json(msg='Invalid operation name provided: %s' % op_name)
 
     if resource.is_add_operation(op_name):
         resp = resource.add_object(op_name, params)

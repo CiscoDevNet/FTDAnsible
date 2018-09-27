@@ -81,13 +81,13 @@ class TestFtdConfiguration(object):
 
         params = {
             'operation': 'addObject',
-            'data': {'name': 'testObject', 'type': 'object'}
+            'data': {'name': 'testObject', 'type': 'object'},
+            'query_params': None,
+            'path_params': None,
+            'register_as': None,
+            'filters': None
         }
         expected_params = copy.deepcopy(params)
-        expected_params.setdefault('query_params', None)
-        expected_params.setdefault('path_params', None)
-        expected_params.setdefault('register_as', None)
-        expected_params.setdefault('filters', None)
         result = self._run_module(params)
 
         assert ADD_RESPONSE == result['response']
@@ -104,13 +104,13 @@ class TestFtdConfiguration(object):
         params = {
             'operation': 'editObject',
             'data': {'id': '123', 'name': 'testObject', 'type': 'object'},
-            'path_params': {'objId': '123'}
+            'path_params': {'objId': '123'},
+            'query_params': None,
+            'register_as': None,
+            'filters': None
         }
 
         expected_params = copy.deepcopy(params)
-        expected_params.setdefault('query_params', None)
-        expected_params.setdefault('register_as', None)
-        expected_params.setdefault('filters', None)
         result = self._run_module(params)
 
         assert EDIT_RESPONSE == result['response']
@@ -126,13 +126,13 @@ class TestFtdConfiguration(object):
 
         params = {
             'operation': 'deleteObject',
-            'path_params': {'objId': '123'}
+            'path_params': {'objId': '123'},
+            'query_params': None,
+            'data': None,
+            'register_as': None,
+            'filters': None
         }
         expected_params = copy.deepcopy(params)
-        expected_params.setdefault('data', None)
-        expected_params.setdefault('query_params', None)
-        expected_params.setdefault('register_as', None)
-        expected_params.setdefault('filters', None)
         result = self._run_module(params)
 
         assert DELETE_RESPONSE == result['response']
@@ -148,13 +148,14 @@ class TestFtdConfiguration(object):
 
         params = {
             'operation': 'getObjectList',
-            'filters': {'name': 'foo'}
+            'filters': {'name': 'foo'},
+            'query_params': None,
+            'data': None,
+            'path_params': None,
+            'register_as': None
         }
         expected_params = copy.deepcopy(params)
-        expected_params.setdefault('data', None)
-        expected_params.setdefault('query_params', None)
-        expected_params.setdefault('register_as', None)
-        expected_params.setdefault('path_params', None)
+
         result = self._run_module(params)
 
         assert GET_BY_FILTER_RESPONSE == result['response']
@@ -169,13 +170,13 @@ class TestFtdConfiguration(object):
 
         params = {
             'operation': 'checkStatus',
-            'path_params': {'objId': '123'}
+            'path_params': {'objId': '123'},
+            'query_params': None,
+            'data': None,
+            'register_as': None,
+            'filters': None
         }
         expected_params = copy.deepcopy(params)
-        expected_params.setdefault('data', None)
-        expected_params.setdefault('query_params', None)
-        expected_params.setdefault('register_as', None)
-        expected_params.setdefault('filters', None)
         result = self._run_module(params)
 
         assert ARBITRARY_RESPONSE == result['response']

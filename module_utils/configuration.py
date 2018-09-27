@@ -21,11 +21,11 @@ from functools import partial
 from ansible.module_utils.six import iteritems
 
 try:
-    from ansible.module_utils.common import HTTPMethod, equal_objects, copy_identity_properties, FtdConfigurationError, \
+    from ansible.module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
         FtdServerError, ResponseParams
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
 except ImportError:
-    from module_utils.common import HTTPMethod, equal_objects, copy_identity_properties, FtdConfigurationError, \
+    from module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
         FtdServerError, ResponseParams
     from module_utils.fdm_swagger_client import OperationField, ValidationError
 
@@ -42,12 +42,6 @@ class _OperationNamePrefix:
     EDIT = 'edit'
     GET = 'get'
     DELETE = 'delete'
-
-
-class _Operation:
-    ADD = 'add'
-    EDIT = 'edit'
-    GET_ALL = 'get'
 
 
 class CheckModeException(Exception):
@@ -253,7 +247,7 @@ class BaseConfigurationResource(object):
 
         validate(self._conn.validate_query_params, 'query_params', query_params)
         validate(self._conn.validate_path_params, 'path_params', path_params)
-        if is_post_request(op_spec):
+        if is_post_request(op_spec) or is_put_request(op_spec):
             validate(self._conn.validate_data, 'data', data)
 
         if report:
