@@ -16,6 +16,8 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import json
+
 import pytest
 from ansible.compat.tests import mock
 from ansible.compat.tests.mock import call, patch
@@ -24,8 +26,10 @@ from module_utils.configuration import iterate_over_pageable_resource, BaseConfi
 
 try:
     from ansible.module_utils.common import HTTPMethod
+    from ansible.module_utils.fdm_swagger_client import ValidationError
 except ImportError:
     from module_utils.common import HTTPMethod
+    from module_utils.fdm_swagger_client import ValidationError
 
 
 class TestBaseConfigurationResource(object):
@@ -83,6 +87,161 @@ class TestBaseConfigurationResource(object):
         assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == resource.get_objects_by_filter(
             'test',
             {'filters': {'type': 'foo'}})
+
+    def test_module_should_fail_if_validation_error_in_data(self, connection_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.POST, 'url': '/test'}
+        report = {
+            'required': ['objects[0].type'],
+            'invalid_type': [
+                {
+                    'path': 'objects[3].id',
+                    'expected_type': 'string',
+                    'actually_value': 1
+                }
+            ]
+        }
+        connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+
+        with pytest.raises(ValidationError) as e_info:
+            resource = BaseConfigurationResource(connection_mock, False)
+            resource.crud_operation('addTest', {'data': {}})
+
+        result = e_info.value.args[0]
+        key = 'Invalid data provided'
+        assert result[key]
+        result[key] = json.loads(result[key])
+        assert result == {key: {
+            'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+            'required': ['objects[0].type']
+        }}
+
+    def test_module_should_fail_if_validation_error_in_query_params(self, connection_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+        report = {
+            'required': ['objects[0].type'],
+            'invalid_type': [
+                {
+                    'path': 'objects[3].id',
+                    'expected_type': 'string',
+                    'actually_value': 1
+                }
+            ]
+        }
+        connection_mock.validate_query_params.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+
+        with pytest.raises(ValidationError) as e_info:
+            resource = BaseConfigurationResource(connection_mock, False)
+            resource.crud_operation('getTestList', {'data': {}})
+
+        result = e_info.value.args[0]
+
+        key = 'Invalid query_params provided'
+        assert result[key]
+        result[key] = json.loads(result[key])
+
+        assert result == {key: {
+            'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+            'required': ['objects[0].type']}}
+
+    def test_module_should_fail_if_validation_error_in_path_params(self, connection_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+        report = {
+            'path_params': {
+                'required': ['objects[0].type'],
+                'invalid_type': [
+                    {
+                        'path': 'objects[3].id',
+                        'expected_type': 'string',
+                        'actually_value': 1
+                    }
+                ]
+            }
+        }
+        connection_mock.validate_path_params.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
+
+        with pytest.raises(ValidationError) as e_info:
+            resource = BaseConfigurationResource(connection_mock, False)
+            resource.crud_operation('putTest', {'data': {}})
+
+        result = e_info.value.args[0]
+
+        key = 'Invalid path_params provided'
+        assert result[key]
+        result[key] = json.loads(result[key])
+
+        assert result == {key: {
+            'path_params': {
+                'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+                'required': ['objects[0].type']}}}
+
+    def test_module_should_fail_if_validation_error_in_all_params(self, connection_mock):
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.POST, 'url': '/test'}
+        report = {
+            'data': {
+                'required': ['objects[0].type'],
+                'invalid_type': [
+                    {
+                        'path': 'objects[3].id',
+                        'expected_type': 'string',
+                        'actually_value': 1
+                    }
+                ]
+            },
+            'path_params': {
+                'required': ['some_param'],
+                'invalid_type': [
+                    {
+                        'path': 'name',
+                        'expected_type': 'string',
+                        'actually_value': True
+                    }
+                ]
+            },
+            'query_params': {
+                'required': ['other_param'],
+                'invalid_type': [
+                    {
+                        'path': 'f_integer',
+                        'expected_type': 'integer',
+                        'actually_value': "test"
+                    }
+                ]
+            }
+        }
+        connection_mock.validate_data.return_value = (False, json.dumps(report['data'], sort_keys=True, indent=4))
+        connection_mock.validate_query_params.return_value = (False,
+                                                              json.dumps(report['query_params'], sort_keys=True,
+                                                                         indent=4))
+        connection_mock.validate_path_params.return_value = (False,
+                                                             json.dumps(report['path_params'], sort_keys=True,
+                                                                        indent=4))
+
+        with pytest.raises(ValidationError) as e_info:
+            resource = BaseConfigurationResource(connection_mock, False)
+            resource.crud_operation('putTest', {'data': {}})
+
+        result = e_info.value.args[0]
+
+        key_data = 'Invalid data provided'
+        assert result[key_data]
+        result[key_data] = json.loads(result[key_data])
+
+        key_path_params = 'Invalid path_params provided'
+        assert result[key_path_params]
+        result[key_path_params] = json.loads(result[key_path_params])
+
+        key_query_params = 'Invalid query_params provided'
+        assert result[key_query_params]
+        result[key_query_params] = json.loads(result[key_query_params])
+
+        assert result == {
+            key_data: {'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+                       'required': ['objects[0].type']},
+            key_path_params: {'invalid_type': [{'actually_value': True, 'expected_type': 'string', 'path': 'name'}],
+                              'required': ['some_param']},
+            key_query_params: {
+                'invalid_type': [{'actually_value': 'test', 'expected_type': 'integer', 'path': 'f_integer'}],
+                'required': ['other_param']}}
 
 
 class TestIterateOverPageableResource(object):

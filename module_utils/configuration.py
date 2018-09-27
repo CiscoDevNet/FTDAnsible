@@ -48,6 +48,12 @@ class CheckModeException(Exception):
     pass
 
 
+class FtdInvalidOperationNameError(Exception):
+    def __init__(self, operation_name):
+        super(FtdInvalidOperationNameError, self).__init__(operation_name)
+        self.operation_name = operation_name
+
+
 class BaseConfigurationResource(object):
     def __init__(self, conn, check_mode=False):
         self._conn = conn
@@ -55,6 +61,23 @@ class BaseConfigurationResource(object):
         self._operation_spec_cache = {}
         self._operations_spec_cache = {}
         self._check_mode = check_mode
+
+    def crud_operation(self, op_name, params):
+        op_spec = self.get_operation_spec(op_name)
+        if op_spec is None:
+            raise FtdInvalidOperationNameError(op_name)
+
+        if self.is_add_operation(op_name):
+            resp = self.add_object(op_name, params)
+        elif self.is_edit_operation(op_name):
+            resp = self.edit_object(op_name, params)
+        elif self.is_delete_operation(op_name):
+            resp = self.delete_object(op_name, params)
+        elif self.is_find_by_filter_operation(op_name, params):
+            resp = self.get_objects_by_filter(op_name, params)
+        else:
+            resp = self.send_general_request(op_name, params)
+        return resp
 
     def get_operation_spec(self, operation_name):
         if operation_name not in self._operation_spec_cache:
@@ -226,9 +249,8 @@ class BaseConfigurationResource(object):
         :return: True if called operation is find by filter, otherwise False
         :rtype: bool
         """
-        filters = params['filters']
         is_find_all = self.is_find_all_operation(operation_name)
-        return is_find_all and filters
+        return is_find_all and 'filters' in params and params['filters']
 
     def validate_params(self, operation_name, params):
         report = {}
