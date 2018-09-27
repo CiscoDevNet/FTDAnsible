@@ -1,9 +1,12 @@
 import argparse
+import importlib
 import json
 import os
 import re
+import sys
 from collections import namedtuple
 
+import yaml
 from ansible.module_utils._text import to_text
 from ansible.module_utils.urls import open_url
 from jinja2 import Environment, FileSystemLoader
@@ -20,14 +23,17 @@ DOC_PATH = '/apispec/en-us/doc.json'
 
 ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
+ModuleSpec = namedtuple('ModuleSpec', 'name short_description description params return_values examples')
 
 
 class DocGenerator(object):
     TEMPLATE_FOLDER = os.path.join(BASE_DIR_PATH, 'templates')
     DOCSITE_DIR_PATH = os.path.join(BASE_DIR_PATH, 'docsite')
+    LIBRARY_DIR_PATH = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
 
     MODEL_TEMPLATE = 'model.md.j2'
     OPERATION_TEMPLATE = 'operation.md.j2'
+    MODULE_TEMPLATE = 'module.md.j2'
     INDEX_TEMPLATE = 'index.md.j2'
     CONFIG_TEMPLATE = 'config.json.j2'
 
@@ -46,7 +52,7 @@ class DocGenerator(object):
         env.filters['camel_to_snake'] = camel_to_snake
         return env
 
-    def generate_model_index(self, include_models=None, dest=None):
+    def generate_model_docs(self, include_models=None, dest=None):
         model_folder = os.path.join(dest if dest else self.DOCSITE_DIR_PATH, 'models')
         self._clean_generated_files(model_folder)
 
@@ -72,7 +78,7 @@ class DocGenerator(object):
 
         self._write_index_files(model_folder, 'Model', model_index)
 
-    def generate_operation_index(self, include_models=None, dest=None):
+    def generate_operation_docs(self, include_models=None, dest=None):
         def get_data_params(op):
             if op[OperationField.METHOD] == HTTPMethod.POST or op[OperationField.METHOD] == HTTPMethod.PUT:
                 model_name = op[OperationField.MODEL_NAME]
@@ -104,6 +110,55 @@ class DocGenerator(object):
             op_index.append(op_name)
 
         self._write_index_files(op_folder, 'Operation', op_index)
+
+    def generate_module_docs(self, dest=None):
+        def to_text(text):
+            return ' '.join(text) if type(text) == list else text
+
+        def get_module_params(docs):
+            return {k: {
+                'description': to_text(v.get('description')),
+                'required': v.get('required', False),
+                'type': v.get('type', '')
+            } for k, v in docs.get('options', {}).items()}
+
+        def get_module_return_values(mod):
+            return_params = yaml.load(mod.RETURN)
+            return {k: {
+                'description': to_text(v.get('description')),
+                'returned': v.get('returned', ''),
+                'type': v.get('type', '')
+            } for k, v in return_params.items()}
+
+        module_folder = os.path.join(dest if dest else self.DOCSITE_DIR_PATH, 'modules')
+        self._clean_generated_files(module_folder)
+
+        module_index = []
+        module_template = self._jinja_env.get_template(self.MODULE_TEMPLATE)
+
+        # add the module folder to the Python path
+        sys.path.insert(0, self.LIBRARY_DIR_PATH)
+        for module_filename in os.listdir(self.LIBRARY_DIR_PATH):
+            if not module_filename.startswith('ftd_'):
+                continue
+
+            module_name = os.path.splitext(module_filename)[0]
+            module = importlib.import_module(module_name)
+
+            module_docs = yaml.load(module.DOCUMENTATION)
+            module_spec = ModuleSpec(
+                name=module_name,
+                short_description=to_text(module_docs.get('short_description')),
+                description=to_text(module_docs.get('description')),
+                params=get_module_params(module_docs),
+                return_values=get_module_return_values(module),
+                examples=module.EXAMPLES
+            )
+            module_content = module_template.render(module=module_spec)
+            self._write_generated_file(module_folder, module_name + self.MD_SUFFIX, module_content)
+            module_index.append(module_name)
+
+        self._write_index_files(module_folder, 'Module', module_index)
 
     @staticmethod
     def _write_generated_file(dir_path, filename, content):
@@ -160,8 +215,9 @@ def main():
 
     api_spec = fetch_api_specs_with_docs(args.hostname, args.username, args.password)
     doc_generator = DocGenerator(api_spec)
-    doc_generator.generate_model_index(args.models, args.dest)
-    doc_generator.generate_operation_index(args.models, args.dest)
+    doc_generator.generate_model_docs(args.models, args.dest)
+    doc_generator.generate_operation_docs(args.models, args.dest)
+    doc_generator.generate_module_docs(args.dest)
 
 
 if __name__ == '__main__':

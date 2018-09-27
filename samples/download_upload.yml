@@ -11,7 +11,7 @@
     - name: Upload disk file
       ftd_file_upload:
         operation: 'postuploaddiskfile'
-        fileToUpload: /tmp/test1.txt
+        file_to_upload: /tmp/test1.txt
         register_as: diskFile
 
     - name: Download disk file
