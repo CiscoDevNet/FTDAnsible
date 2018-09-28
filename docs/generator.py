@@ -31,6 +31,12 @@ ModuleSpec = namedtuple('ModuleSpec', 'name short_description description params
 
 
 class BaseDocGenerator(metaclass=ABCMeta):
+    """Abstract class for documentation generators that produce
+    docs from Jinja templates. Contains common methods for working
+    with templates, writing and cleaning doc files, etc. Subclasses
+    must implement `generate_doc_files` method.
+    """
+
     INDEX_TEMPLATE = 'index.md.j2'
     CONFIG_TEMPLATE = 'config.json.j2'
 
@@ -44,6 +50,13 @@ class BaseDocGenerator(metaclass=ABCMeta):
 
     @abstractmethod
     def generate_doc_files(self, dest_dir):
+        """
+        Generates documentation and writes it to files on the filesystem.
+        Must be implemented in the subclasses.
+
+        :param dest_dir: the base directory to write the doc files to
+        :return: None
+        """
         pass
 
     @staticmethod
@@ -67,6 +80,11 @@ class BaseDocGenerator(metaclass=ABCMeta):
 
 
 class ModelDocGenerator(BaseDocGenerator):
+    """Generates documentation for the models defined in the
+    Swagger specification. Documentation is written using
+    Markdown markup language.
+    """
+
     MODEL_TEMPLATE = 'model.md.j2'
 
     def __init__(self, template_dir, api_spec):
@@ -100,6 +118,11 @@ class ModelDocGenerator(BaseDocGenerator):
 
 
 class OperationDocGenerator(BaseDocGenerator):
+    """Generates documentation for the operations defined in the
+    Swagger specification. Documentation is written using
+    Markdown markup language.
+    """
+
     OPERATION_TEMPLATE = 'operation.md.j2'
 
     def __init__(self, template_dir, api_spec):
@@ -148,6 +171,11 @@ class OperationDocGenerator(BaseDocGenerator):
 
 
 class ModuleDocGenerator(BaseDocGenerator):
+    """Generates documentation for FTD Ansible modules. Content of
+    the docs is fetched directly from the `.py` files of Ansible
+    modules. Documentation is written using Markdown markup language.
+    """
+
     MODULE_TEMPLATE = 'module.md.j2'
 
     def __init__(self, template_dir, module_dir):
