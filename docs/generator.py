@@ -12,7 +12,7 @@ from ansible.module_utils.urls import open_url
 from jinja2 import Environment, FileSystemLoader
 
 from httpapi_plugins.ftd import BASE_HEADERS
-from module_utils.common import HTTPMethod
+from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField, PropName, OperationParams
 
 BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -79,12 +79,19 @@ class DocGenerator(object):
         self._write_index_files(model_folder, 'Model', model_index)
 
     def generate_operation_docs(self, include_models=None, dest=None):
-        def get_data_params(op):
-            if op[OperationField.METHOD] == HTTPMethod.POST or op[OperationField.METHOD] == HTTPMethod.PUT:
-                model_name = op[OperationField.MODEL_NAME]
-                model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-                return model_api_spec.get(PropName.PROPERTIES, {})
-            return {}
+        def get_data_params(op_name, op_spec):
+            op_method = op_spec[OperationField.METHOD]
+            if op_method != HTTPMethod.POST and op_method != HTTPMethod.PUT:
+                return {}
+
+            model_name = op_spec[OperationField.MODEL_NAME]
+            model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+            data_params = model_api_spec.get(PropName.PROPERTIES, {})
+
+            if op_name.startswith('add') and op_method == HTTPMethod.POST:
+                data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
+
+            return data_params
 
         op_folder = os.path.join(dest if dest else self.DOCSITE_DIR_PATH, 'operations')
         self._clean_generated_files(op_folder)
@@ -103,7 +110,7 @@ class DocGenerator(object):
                 model_name=op_api_spec[OperationField.MODEL_NAME],
                 path_params=op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
                 query_params=op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
-                data_params=get_data_params(op_api_spec)
+                data_params=get_data_params(op_name, op_api_spec)
             )
             op_content = op_template.render(operation=op_spec)
             self._write_generated_file(op_folder, op_name + self.MD_SUFFIX, op_content)
