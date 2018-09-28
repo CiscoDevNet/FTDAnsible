@@ -33,7 +33,7 @@ from urllib3 import encode_multipart_formdata
 from urllib3.fields import RequestField
 from ansible.module_utils.connection import ConnectionError
 
-from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, FdmSwaggerValidator, OperationField
+from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, FdmSwaggerValidator
 from module_utils.common import HTTPMethod, ResponseParams
 
 BASE_HEADERS = {
@@ -222,18 +222,11 @@ class HttpApi(HttpApiBase):
     def get_operation_spec(self, operation_name):
         return self.api_spec[SpecProp.OPERATIONS].get(operation_name, None)
 
-    def get_operation_specs_by_model_name(self, operation_name):
-        operation = self.get_operation_spec(operation_name)
-        if operation:
-            model_name = operation.get(OperationField.MODEL_NAME, None)
-            default_operation = {
-                operation_name: operation
-            }
-            if model_name:
-                return self.api_spec[SpecProp.MODEL_OPERATIONS].get(model_name, default_operation)
-            else:
-                return default_operation
-        return None
+    def get_operation_specs_by_model_name(self, model_name):
+        if model_name:
+            return self.api_spec[SpecProp.MODEL_OPERATIONS].get(model_name, None)
+        else:
+            return None
 
     def get_model_spec(self, model_name):
         return self.api_spec[SpecProp.MODELS].get(model_name, None)

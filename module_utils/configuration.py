@@ -18,7 +18,7 @@
 
 from functools import partial
 
-from ansible.module_utils.six import iteritems
+from ansible.module_utils.six import iteritems, viewitems
 
 try:
     from ansible.module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
@@ -59,7 +59,7 @@ class BaseConfigurationResource(object):
         self._conn = conn
         self.config_changed = False
         self._operation_spec_cache = {}
-        self._operations_spec_cache = {}
+        self._models_operations_specs_cache = {}
         self._check_mode = check_mode
 
     def crud_operation(self, op_name, params):
@@ -85,21 +85,23 @@ class BaseConfigurationResource(object):
 
         return self._operation_spec_cache[operation_name]
 
-    def get_operation_specs_by_model_name(self, operation_name):
+    def get_operation_specs_by_model_name(self, model_name):
+        if model_name not in self._models_operations_specs_cache:
+            self._models_operations_specs_cache[model_name] = self._conn.get_operation_specs_by_model_name(model_name)
+
+        return self._models_operations_specs_cache[model_name]
+
+    def set_operation_spec_if_not_cached(self, operation_name, spec):
         if operation_name not in self._operation_spec_cache:
-            self._operations_spec_cache[operation_name] = self._conn.get_operation_specs_by_model_name(operation_name)
+            self._operation_spec_cache[operation_name] = spec
 
-        return self._operations_spec_cache[operation_name]
+    def get_objects_by_filter(self, operation_name, params, get_one_item=False):
+        def transform_filter_param(params_):
+            return ';'.join(['%s:%s' % (key, val) for key, val in iteritems(params_)])
 
-    def get_object_by_name(self, url_path, name, path_params=None):
-        item_generator = iterate_over_pageable_resource(
-            partial(self._send_request, url_path=url_path, http_method=HTTPMethod.GET, path_params=path_params),
-            {'filter': 'name:%s' % name}
-        )
-        # not all endpoints support filtering so checking name explicitly
-        return next((item for item in item_generator if item['name'] == name), None)
+        def match_filters(filters_, obj_):
+            return viewitems(filters_) <= viewitems(obj_)
 
-    def get_objects_by_filter(self, operation_name, params):
         self.validate_params(operation_name, params)
         self.stop_if_check_mode()
 
@@ -108,18 +110,17 @@ class BaseConfigurationResource(object):
         data, query_params, path_params = _get_user_params(params)
         op_spec = self.get_operation_spec(operation_name)
         url, method = _get_request_params_from_spec(op_spec)
-
-        def match_filters(obj):
-            for k, v in iteritems(filters):
-                if k not in obj or obj[k] != v:
-                    return False
-            return True
+        if filters:
+            query_params['filters'] = transform_filter_param(filters)
 
         item_generator = iterate_over_pageable_resource(
             partial(self._send_request, url_path=url, http_method=method, path_params=path_params),
             query_params
         )
-        return [i for i in item_generator if match_filters(i)]
+        if get_one_item:
+            return next((i for i in item_generator if match_filters(filters, i)), None)
+        else:
+            return [i for i in item_generator if match_filters(filters, i)]
 
     def add_object(self, operation_name, params):
         self.validate_params(operation_name, params)
@@ -137,20 +138,39 @@ class BaseConfigurationResource(object):
                                       path_params=path_params, query_params=query_params)
         except FtdServerError as e:
             if is_duplicate_name_error(e):
-                existing_obj = self.get_object_by_name(url, data['name'], path_params)
-
-                if existing_obj is not None:
-                    if equal_objects(existing_obj, data):
-                        return existing_obj
-                    else:
-                        raise FtdConfigurationError(
-                            'Cannot add new object. '
-                            'An object with the same name but different parameters already exists.',
-                            existing_obj)
-                else:
-                    raise e
+                return self._check_if_the_same_object(op_spec, params, e)
             else:
                 raise e
+
+    def _check_if_the_same_object(self, op_spec, params, e):
+        model_name = op_spec[OperationField.MODEL_NAME]
+        find_operation = self._get_operation_name_for_find_operation(model_name)
+        if find_operation:
+            data = params['data']
+            if 'filter' not in params:
+                params['filter'] = {'name': data['name']}
+
+            existing_obj = self.get_objects_by_filter(find_operation, params, False)
+
+            if existing_obj is not None:
+                if equal_objects(existing_obj, data):
+                    return existing_obj
+                else:
+                    raise FtdConfigurationError(
+                        'Cannot add new object. '
+                        'An object with the same name but different parameters already exists.',
+                        existing_obj)
+
+        raise e
+
+    def _get_operation_name_for_find_operation(self, model_name):
+        operations = self.get_operation_specs_by_model_name(model_name)
+        if operations:
+            for op_name, spec in operations:
+                self.set_operation_spec_if_not_cached(op_name, spec)
+                if self.is_find_all_operation(op_name):
+                    return op_name
+        return None
 
     def delete_object(self, operation_name, params):
         self.validate_params(operation_name, params)
