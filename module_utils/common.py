@@ -39,6 +39,7 @@ class ResponseParams:
 
 class FtdConfigurationError(Exception):
     def __init__(self, msg, obj=None):
+        super(FtdConfigurationError, self).__init__(msg)
         self.msg = msg
         self.obj = obj
 

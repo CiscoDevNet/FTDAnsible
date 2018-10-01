@@ -96,48 +96,16 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 
 try:
-    from ansible.module_utils.configuration import BaseConfigurationResource, CheckModeException
+    from ansible.module_utils.configuration import BaseConfigurationResource, CheckModeException, \
+        FtdInvalidOperationNameError
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
     from ansible.module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError, copy_identity_properties
+        FtdServerError
 except ImportError:
-    from module_utils.configuration import BaseConfigurationResource, CheckModeException
+    from module_utils.configuration import BaseConfigurationResource, CheckModeException, FtdInvalidOperationNameError
     from module_utils.fdm_swagger_client import OperationField, ValidationError
     from module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError, copy_identity_properties
-
-
-def module_fail_invalid_operation(module, op_name):
-    module.fail_json(msg='Invalid operation name provided: %s' % op_name)
-
-
-def crud_operation(resource, module, params, op_name):
-    op_spec = resource.get_operation_spec(op_name)
-    if op_spec is None:
-        module_fail_invalid_operation(module, op_name)
-
-    if resource.is_add_operation(op_name):
-        resp = resource.add_object(op_name, params)
-    elif resource.is_edit_operation(op_name):
-        resp = resource.edit_object(op_name, params)
-    elif resource.is_delete_operation(op_name):
-        resp = resource.delete_object(op_name, params)
-    elif resource.is_find_by_filter_operation(op_name, params):
-        resp = resource.get_objects_by_filter(op_name, params)
-    else:
-        resp = resource.send_general_request(op_name, params)
-
-    module.exit_json(changed=resource.config_changed, response=resp,
-                     ansible_facts=construct_ansible_facts(resp, module.params))
-
-
-def upsert_operation(resource, module, params, op_name):
-    if resource.upsert_operation_is_supported(op_name):
-        resp = resource.upsert_object(op_name, params)
-        module.exit_json(changed=resource.config_changed, response=resp,
-                         ansible_facts=construct_ansible_facts(resp, module.params))
-    else:
-        module_fail_invalid_operation(module, op_name)
+        FtdServerError
 
 
 def main():
@@ -157,11 +125,11 @@ def main():
     resource = BaseConfigurationResource(connection, module.check_mode)
     op_name = params['operation']
     try:
-        if resource.is_upsert_operation(op_name):
-            upsert_operation(resource, module, params, op_name)
-        else:
-            crud_operation(resource, module, params, op_name)
-
+        resp = resource.crud_operation(op_name, params)
+        module.exit_json(changed=resource.config_changed, response=resp,
+                         ansible_facts=construct_ansible_facts(resp, module.params))
+    except FtdInvalidOperationNameError as e:
+        module.fail_json(msg='Invalid operation name provided: %s' % e.operation_name)
     except FtdConfigurationError as e:
         module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e.msg))
     except FtdServerError as e:

@@ -17,7 +17,7 @@
 #
 
 from ansible.module_utils.network.ftd.common import HTTPMethod
-from ansible.module_utils.six import integer_types, string_types
+from ansible.module_utils.six import integer_types, string_types, iteritems
 
 FILE_MODEL_NAME = '_File'
 SUCCESS_RESPONSE_CODE = '200'
@@ -112,7 +112,7 @@ class FdmSwaggerParser:
                 'models':{
                     'model_name':{...},
                     ...
-                },,
+                },
                 'operations':{
                     'operation_name':{
                         'method': 'get', #post, put, delete
@@ -166,7 +166,7 @@ class FdmSwaggerParser:
 
     def _get_model_operations(self, operations):
         model_operations = {}
-        for operations_name, params in operations.items():
+        for operations_name, params in iteritems(operations):
             model_name = params[OperationField.MODEL_NAME]
             model_operations.setdefault(model_name, {})[operations_name] = params
         return model_operations
@@ -174,8 +174,8 @@ class FdmSwaggerParser:
     def _get_operations(self, spec):
         paths_dict = spec[PropName.PATHS]
         operations_dict = {}
-        for url, operation_params in paths_dict.items():
-            for method, params in operation_params.items():
+        for url, operation_params in iteritems(paths_dict):
+            for method, params in iteritems(operation_params):
                 operation = {
                     OperationField.METHOD: method,
                     OperationField.URL: self._base_path + url,

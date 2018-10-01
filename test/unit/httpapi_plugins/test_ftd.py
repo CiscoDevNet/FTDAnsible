@@ -267,14 +267,15 @@ class TestFtdHttpApi(unittest.TestCase):
             }
         }
 
-        assert {'testOp1': operation1, 'testOp2': 'spec2'} == self.ftd_plugin.get_operations_spec('testOp1')
-        assert {'testOpModelNameIsNone': op_model_name_is_none} == self.ftd_plugin.get_operations_spec(
+        assert {'testOp1': operation1, 'testOp2': 'spec2'} == self.ftd_plugin.get_operation_specs_by_model_name(
+            'TestModel')
+        assert None is self.ftd_plugin.get_operation_specs_by_model_name(
             'testOpModelNameIsNone')
 
-        assert {'testOpWithoutModelName': op_without_model_name} == self.ftd_plugin.get_operations_spec(
+        assert None is self.ftd_plugin.get_operation_specs_by_model_name(
             'testOpWithoutModelName')
 
-        assert self.ftd_plugin.get_operations_spec('nonExistingOperation') is None
+        assert self.ftd_plugin.get_operation_specs_by_model_name('nonExistingOperation') is None
 
     @staticmethod
     def _connection_response(response, status=200):
