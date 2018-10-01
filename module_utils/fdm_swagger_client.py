@@ -429,7 +429,8 @@ class FdmSwaggerValidator:
             self._add_invalid_type_report(status, path, '', PropType.OBJECT, data)
             return None
 
-        self._check_required_fields(status, model[PropName.REQUIRED], data, path)
+        if PropName.REQUIRED in model:
+            self._check_required_fields(status, model[PropName.REQUIRED], data, path)
 
         model_properties = model[PropName.PROPERTIES]
         for prop in model_properties.keys():

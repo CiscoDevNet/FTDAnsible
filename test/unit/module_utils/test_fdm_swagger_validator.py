@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import copy
 import os
 import unittest
 
@@ -603,6 +603,15 @@ class TestFdmSwaggerValidator(unittest.TestCase):
             'value': '1.1.1.1'
         }
         valid, rez = FdmSwaggerValidator(mock_data).validate_data('getNetworkObjectList', data)
+        assert valid
+        assert rez is None
+
+    def test_pass_no_data_with_no_required_fields(self):
+        spec = copy.deepcopy(mock_data)
+        del spec['models']['NetworkObject']['required']
+
+        valid, rez = FdmSwaggerValidator(spec).validate_data('getNetworkObjectList', {})
+
         assert valid
         assert rez is None
 
