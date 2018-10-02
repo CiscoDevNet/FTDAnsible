@@ -120,27 +120,19 @@ class BaseConfigurationResource(object):
             return [i for i in item_generator if match_filters(filters, i)]
 
     def add_object(self, operation_name, params):
-        self.validate_params(operation_name, params)
-        self.stop_if_check_mode()
-
-        data, query_params, path_params = _get_user_params(params)
-        op_spec = self.get_operation_spec(operation_name)
-        url, method = _get_request_params_from_spec(op_spec)
-
         def is_duplicate_name_error(err):
             return err.code == UNPROCESSABLE_ENTITY_STATUS and DUPLICATE_NAME_ERROR_MESSAGE in str(err)
 
         try:
-            return self._send_request(url_path=url, http_method=method, body_params=data,
-                                      path_params=path_params, query_params=query_params)
+            return self.send_general_request(operation_name, params)
         except FtdServerError as e:
             if is_duplicate_name_error(e):
-                return self._check_if_the_same_object(op_spec, params, e)
+                return self._check_if_the_same_object(operation_name, params, e)
             else:
                 raise e
 
-    def _check_if_the_same_object(self, op_spec, params, e):
-        model_name = op_spec[OperationField.MODEL_NAME]
+    def _check_if_the_same_object(self, operation_name, params, e):
+        model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
         find_operation = self._get_find_all_operation_name(model_name)
         if find_operation:
             data = params['data']
@@ -167,18 +159,11 @@ class BaseConfigurationResource(object):
         return None
 
     def delete_object(self, operation_name, params):
-        self.validate_params(operation_name, params)
-        self.stop_if_check_mode()
-
-        _, query_params, path_params = _get_user_params(params)
-        op_spec = self.get_operation_spec(operation_name)
-        url, method = _get_request_params_from_spec(op_spec)
-
         def is_invalid_uuid_error(err):
             return err.code == UNPROCESSABLE_ENTITY_STATUS and INVALID_UUID_ERROR_MESSAGE in str(err)
 
         try:
-            return self._send_request(url_path=url, http_method=method, path_params=path_params)
+            return self.send_general_request(operation_name, params)
         except FtdServerError as e:
             if is_invalid_uuid_error(e):
                 return {'status': 'Referenced object does not exist'}
