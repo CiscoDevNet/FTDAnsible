@@ -116,7 +116,8 @@ class TestBaseConfigurationResource(object):
         }}
 
     def test_module_should_fail_if_validation_error_in_query_params(self, connection_mock):
-        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test',
+                                                           'returnMultipleItems': False}
         report = {
             'required': ['objects[0].type'],
             'invalid_type': [
@@ -144,7 +145,8 @@ class TestBaseConfigurationResource(object):
             'required': ['objects[0].type']}}
 
     def test_module_should_fail_if_validation_error_in_path_params(self, connection_mock):
-        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test'}
+        connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.GET, 'url': '/test',
+                                                           'returnMultipleItems': False}
         report = {
             'path_params': {
                 'required': ['objects[0].type'],
@@ -249,7 +251,7 @@ class TestIterateOverPageableResource(object):
     def test_iterate_over_pageable_resource_with_no_items(self):
         resource_func = mock.Mock(return_value={'items': []})
 
-        items = iterate_over_pageable_resource(resource_func)
+        items = iterate_over_pageable_resource(resource_func, {'query_params': {}})
 
         assert [] == list(items)
 
@@ -259,12 +261,12 @@ class TestIterateOverPageableResource(object):
             {'items': []},
         ])
 
-        items = iterate_over_pageable_resource(resource_func)
+        items = iterate_over_pageable_resource(resource_func, {'query_params': {}})
 
         assert ['foo', 'bar'] == list(items)
         resource_func.assert_has_calls([
-            call(query_params={'offset': 0, 'limit': 10}),
-            call(query_params={'offset': 10, 'limit': 10})
+            call(params={'query_params': {'offset': 0, 'limit': 10}}),
+            call(params={'query_params': {'offset': 10, 'limit': 10}})
         ])
 
     def test_iterate_over_pageable_resource_with_multiple_pages(self):
@@ -275,17 +277,17 @@ class TestIterateOverPageableResource(object):
             {'items': []},
         ])
 
-        items = iterate_over_pageable_resource(resource_func)
+        items = iterate_over_pageable_resource(resource_func, {'query_params': {}})
 
         assert ['foo', 'bar', 'buzz'] == list(items)
 
     def test_iterate_over_pageable_resource_should_preserve_query_params(self):
         resource_func = mock.Mock(return_value={'items': []})
 
-        items = iterate_over_pageable_resource(resource_func, {'filter': 'name:123'})
+        items = iterate_over_pageable_resource(resource_func, {'query_params': {'filter': 'name:123'}})
 
         assert [] == list(items)
-        resource_func.assert_called_once_with(query_params={'filter': 'name:123', 'offset': 0, 'limit': 10})
+        resource_func.assert_called_once_with(params={'query_params': {'filter': 'name:123', 'offset': 0, 'limit': 10}})
 
     def test_iterate_over_pageable_resource_should_preserve_limit(self):
         resource_func = mock.Mock(side_effect=[
@@ -293,12 +295,12 @@ class TestIterateOverPageableResource(object):
             {'items': []},
         ])
 
-        items = iterate_over_pageable_resource(resource_func, {'limit': 1})
+        items = iterate_over_pageable_resource(resource_func, {'query_params': {'limit': 1}})
 
         assert ['foo'] == list(items)
         resource_func.assert_has_calls([
-            call(query_params={'offset': 0, 'limit': 1}),
-            call(query_params={'offset': 1, 'limit': 1})
+            call(params={'query_params': {'offset': 0, 'limit': 1}}),
+            call(params={'query_params': {'offset': 1, 'limit': 1}})
         ])
 
     def test_iterate_over_pageable_resource_should_preserve_offset(self):
@@ -307,12 +309,12 @@ class TestIterateOverPageableResource(object):
             {'items': []},
         ])
 
-        items = iterate_over_pageable_resource(resource_func, {'offset': 3})
+        items = iterate_over_pageable_resource(resource_func, {'query_params': {'offset': 3}})
 
         assert ['foo'] == list(items)
         resource_func.assert_has_calls([
-            call(query_params={'offset': 3, 'limit': 10}),
-            call(query_params={'offset': 13, 'limit': 10})
+            call(params={'query_params': {'offset': 3, 'limit': 10}}),
+            call(params={'query_params': {'offset': 13, 'limit': 10}})
         ])
 
     def test_iterate_over_pageable_resource_should_pass_with_string_offset_and_limit(self):
@@ -321,10 +323,10 @@ class TestIterateOverPageableResource(object):
             {'items': []},
         ])
 
-        items = iterate_over_pageable_resource(resource_func, {'offset': '1', 'limit': '1'})
+        items = iterate_over_pageable_resource(resource_func, {'query_params': {'offset': '1', 'limit': '1'}})
 
         assert ['foo'] == list(items)
         resource_func.assert_has_calls([
-            call(query_params={'offset': '1', 'limit': '1'}),
-            call(query_params={'offset': 2, 'limit': '1'})
+            call(params={'query_params': {'offset': '1', 'limit': '1'}}),
+            call(params={'query_params': {'offset': 2, 'limit': '1'}})
         ])

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import copy
 from functools import partial
 
 from ansible.module_utils.six import iteritems, viewitems
@@ -99,20 +99,18 @@ class BaseConfigurationResource(object):
         def match_filters(filter_params, obj):
             return viewitems(filter_params) <= viewitems(obj)
 
-        self.validate_params(operation_name, params)
-        self.stop_if_check_mode()
-
-        data, query_params, path_params = _get_user_params(params)
-        op_spec = self.get_operation_spec(operation_name)
-        url, method = _get_request_params_from_spec(op_spec)
+        # copy required params to avoid mutation of passed `params` dict
+        get_list_params = {
+            'query_params': dict(params.get('query_params') or {}),
+            'path_params': dict(params.get('path_params') or {})
+        }
 
         filters = params.get('filters') or {}
         if filters:
-            query_params['filters'] = transform_filters_to_query_param(filters)
+            get_list_params['query_params']['filters'] = transform_filters_to_query_param(filters)
 
         item_generator = iterate_over_pageable_resource(
-            partial(self._send_request, url_path=url, http_method=method, path_params=path_params),
-            query_params
+            partial(self.send_general_request, operation_name=operation_name), get_list_params
         )
         if get_one_item:
             return next((i for i in item_generator if match_filters(filters, i)), None)
@@ -133,13 +131,13 @@ class BaseConfigurationResource(object):
 
     def _check_if_the_same_object(self, operation_name, params, e):
         model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
-        find_operation = self._get_find_all_operation_name(model_name)
-        if find_operation:
+        get_list_operation = self._find_get_list_operation(model_name)
+        if get_list_operation:
             data = params['data']
-            if 'filters' not in params:
+            if not params.get('params'):
                 params['filters'] = {'name': data['name']}
 
-            existing_obj = self.get_objects_by_filter(find_operation, params, True)
+            existing_obj = self.get_objects_by_filter(get_list_operation, params, True)
 
             if existing_obj is not None:
                 if equal_objects(existing_obj, data):
@@ -152,11 +150,13 @@ class BaseConfigurationResource(object):
 
         raise e
 
-    def _get_find_all_operation_name(self, model_name):
-        operations = self.get_operation_specs_by_model_name(model_name)
-        if operations:
-            return next((op_name for op_name in operations.keys() if self.is_find_all_operation(op_name)), None)
-        return None
+    def _find_get_list_operation(self, model_name):
+        operations = self.get_operation_specs_by_model_name(model_name) or {}
+        return next((op for op in operations.keys() if self.is_get_list_operation(op)), None)
+
+    def _find_get_operation(self, model_name):
+        operations = self.get_operation_specs_by_model_name(model_name) or {}
+        return next((op for op in operations.keys() if self.is_get_operation(op)), None)
 
     def delete_object(self, operation_name, params):
         def is_invalid_uuid_error(err):
@@ -171,30 +171,31 @@ class BaseConfigurationResource(object):
                 raise e
 
     def edit_object(self, operation_name, params):
-        self.validate_params(operation_name, params)
-        self.stop_if_check_mode()
+        data, _, path_params = _get_user_params(params)
 
-        data, query_params, path_params = _get_user_params(params)
-        op_spec = self.get_operation_spec(operation_name)
-        url, method = _get_request_params_from_spec(op_spec)
+        model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
+        get_operation = self._find_get_operation(model_name)
 
-        existing_object = self._send_request(url_path=url, http_method=HTTPMethod.GET, path_params=path_params)
+        existing_object = self.send_general_request(get_operation, {'path_params': path_params})
 
         if not existing_object:
             raise FtdConfigurationError('Referenced object does not exist')
         elif equal_objects(existing_object, data):
             return existing_object
         else:
-            return self._send_request(url_path=url, http_method=method, body_params=data,
-                                      path_params=path_params, query_params=query_params)
+            return self.send_general_request(operation_name, params)
 
     def send_general_request(self, operation_name, params):
+        def stop_if_check_mode():
+            if self._check_mode:
+                raise CheckModeException()
+
         self.validate_params(operation_name, params)
-        self.stop_if_check_mode()
+        stop_if_check_mode()
 
         data, query_params, path_params = _get_user_params(params)
         op_spec = self.get_operation_spec(operation_name)
-        url, method = _get_request_params_from_spec(op_spec)
+        url, method = op_spec[OperationField.URL], op_spec[OperationField.METHOD]
 
         return self._send_request(url, method, data, path_params, query_params)
 
@@ -226,11 +227,13 @@ class BaseConfigurationResource(object):
         return operation_name.startswith(_OperationNamePrefix.DELETE) and operation_spec[
             OperationField.METHOD] == HTTPMethod.DELETE
 
-    def is_find_all_operation(self, operation_name):
-        operation_spec = self.get_operation_spec(operation_name)
-        is_get_list_operation = operation_name.startswith(_OperationNamePrefix.GET) and operation_name.endswith('List')
-        is_get_method = operation_spec[OperationField.METHOD] == HTTPMethod.GET
-        return is_get_list_operation and is_get_method
+    def is_get_list_operation(self, operation_name):
+        op_spec = self.get_operation_spec(operation_name)
+        return op_spec[OperationField.METHOD] == HTTPMethod.GET and op_spec[OperationField.RETURN_MULTIPLE_ITEMS]
+
+    def is_get_operation(self, operation_name):
+        op_spec = self.get_operation_spec(operation_name)
+        return op_spec[OperationField.METHOD] == HTTPMethod.GET and not op_spec[OperationField.RETURN_MULTIPLE_ITEMS]
 
     def is_find_by_filter_operation(self, operation_name, params):
         """
@@ -246,8 +249,8 @@ class BaseConfigurationResource(object):
         :return: True if called operation is find by filter, otherwise False
         :rtype: bool
         """
-        is_find_all = self.is_find_all_operation(operation_name)
-        return is_find_all and 'filters' in params and params['filters']
+        is_get_list = self.is_get_list_operation(operation_name)
+        return is_get_list and 'filters' in params and params['filters']
 
     def validate_params(self, operation_name, params):
         report = {}
@@ -272,10 +275,6 @@ class BaseConfigurationResource(object):
         if report:
             raise ValidationError(report)
 
-    def stop_if_check_mode(self):
-        if self._check_mode:
-            raise CheckModeException()
-
 
 def _set_default(params, field_name, value):
     if field_name not in params or params[field_name] is None:
@@ -294,31 +293,29 @@ def _get_user_params(params):
     return params.get('data', {}), params.get('query_params', {}), params.get('path_params', {})
 
 
-def _get_request_params_from_spec(operation_spec):
-    return operation_spec[OperationField.URL], operation_spec[OperationField.METHOD]
-
-
-def iterate_over_pageable_resource(resource_func, query_params=None):
+def iterate_over_pageable_resource(resource_func, params):
     """
     A generator function that iterates over a resource that supports pagination and lazily returns present items
     one by one.
 
-    :param resource_func: function that receives `query_params` named argument and returns a page of objects
+    :param resource_func: function that receives `params` argument and returns a page of objects
     :type resource_func: callable
-    :param query_params: initial dictionary of query parameters that will be passed to the resource_func
-    :type query_params: dict
+    :param params: initial dictionary of parameters that will be passed to the resource_func.
+                   Should contain `query_params` inside.
+    :type params: dict
     :return: an iterator containing returned items
     :rtype: iterator of dict
     """
-    query_params = {} if query_params is None else dict(query_params)
-    query_params.setdefault('limit', DEFAULT_PAGE_SIZE)
-    query_params.setdefault('offset', DEFAULT_OFFSET)
+    # creating a copy not to mutate passed dict
+    params = copy.deepcopy(params)
+    params['query_params'].setdefault('limit', DEFAULT_PAGE_SIZE)
+    params['query_params'].setdefault('offset', DEFAULT_OFFSET)
 
-    result = resource_func(query_params=query_params)
+    result = resource_func(params=params)
     while result['items']:
         for item in result['items']:
             yield item
         # creating a copy not to mutate existing dict
-        query_params = dict(query_params)
-        query_params['offset'] = int(query_params['offset']) + int(query_params['limit'])
-        result = resource_func(query_params=query_params)
+        params = copy.deepcopy(params)
+        params['query_params']['offset'] = int(params['query_params']['offset']) + int(params['query_params']['limit'])
+        result = resource_func(params=params)
