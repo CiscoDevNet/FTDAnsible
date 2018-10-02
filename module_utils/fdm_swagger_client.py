@@ -29,6 +29,7 @@ class OperationField:
     METHOD = 'method'
     PARAMETERS = 'parameters'
     MODEL_NAME = 'modelName'
+    RETURN_MULTIPLE_ITEMS = 'returnMultipleItems'
 
 
 class SpecProp:
@@ -113,6 +114,7 @@ class FdmSwaggerParser:
                         'modelName': 'NetworkObject', # it is a link to the model from 'models'
                                                       # None - for a delete operation or we don't have information
                                                       # '_File' - if an endpoint works with files
+                        'returnMultipleItems': False, # shows if the operation returns a single item or an item list
                         'parameters': {
                             'path':{
                                 'param_name':{
@@ -168,7 +170,8 @@ class FdmSwaggerParser:
                 operation = {
                     OperationField.METHOD: method,
                     OperationField.URL: base_path + url,
-                    OperationField.MODEL_NAME: self._get_model_name(method, params)
+                    OperationField.MODEL_NAME: self._get_model_name(method, params),
+                    OperationField.RETURN_MULTIPLE_ITEMS: self._return_multiple_items(params)
                 }
                 if OperationField.PARAMETERS in params:
                     operation[OperationField.PARAMETERS] = self._get_rest_params(params[OperationField.PARAMETERS])
@@ -186,6 +189,20 @@ class FdmSwaggerParser:
             return self._get_model_name_from_delete_operation(params)
         else:
             return None
+
+    @staticmethod
+    def _return_multiple_items(op_params):
+        """
+        Defines if the operation returns one item or a list of items.
+
+        :param op_params: operation specification
+        :return: True if the operation returns a list of items, otherwise False
+        """
+        try:
+            schema = op_params[PropName.RESPONSES][SUCCESS_RESPONSE_CODE][PropName.SCHEMA]
+            return PropName.ITEMS in schema[PropName.PROPERTIES]
+        except KeyError:
+            return False
 
     def _get_model_name_from_delete_operation(self, params):
         operation_id = params[PropName.OPERATION_ID]

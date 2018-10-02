@@ -144,14 +144,16 @@ class TestFdmSwaggerParser(unittest.TestCase):
                             'type': 'string'
                         }
                     }
-                }
+                },
+                'returnMultipleItems': True
             },
             'addNetworkObject': {
                 'method': HTTPMethod.POST,
                 'url': '/api/fdm/v2/object/networks',
                 'modelName': 'NetworkObject',
                 'parameters': {'path': {},
-                               'query': {}}
+                               'query': {}},
+                'returnMultipleItems': False
             },
             'getNetworkObject': {
                 'method': HTTPMethod.GET,
@@ -165,7 +167,8 @@ class TestFdmSwaggerParser(unittest.TestCase):
                         }
                     },
                     'query': {}
-                }
+                },
+                'returnMultipleItems': False
             },
             'editNetworkObject': {
                 'method': HTTPMethod.PUT,
@@ -179,7 +182,8 @@ class TestFdmSwaggerParser(unittest.TestCase):
                         }
                     },
                     'query': {}
-                }
+                },
+                'returnMultipleItems': False
             },
             'deleteNetworkObject': {
                 'method': HTTPMethod.DELETE,
@@ -193,7 +197,8 @@ class TestFdmSwaggerParser(unittest.TestCase):
                         }
                     },
                     'query': {}
-                }
+                },
+                'returnMultipleItems': False
             }
         }
         assert sorted(['NetworkObject', 'NetworkObjectWrapper']) == sorted(self.fdm_data['models'].keys())
@@ -261,7 +266,8 @@ class TestFdmSwaggerParser(unittest.TestCase):
             'getSomeModelList': {
                 'method': HTTPMethod.GET,
                 'url': '/v2/path1',
-                'modelName': 'Model1'
+                'modelName': 'Model1',
+                'returnMultipleItems': True
             },
             'addSomeModel': {
                 'method': HTTPMethod.POST,
@@ -270,12 +276,14 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 'parameters': {
                     'path': {},
                     'query': {}
-                }
+                },
+                'returnMultipleItems': False
             },
             'getSomeModel': {
                 'method': HTTPMethod.GET,
                 'url': '/v2/path2/{id}',
-                'modelName': 'Model3'
+                'modelName': 'Model3',
+                'returnMultipleItems': False
             },
             'editSomeModel': {
                 'method': HTTPMethod.PUT,
@@ -284,17 +292,20 @@ class TestFdmSwaggerParser(unittest.TestCase):
                 'parameters': {
                     'path': {},
                     'query': {}
-                }
+                },
+                'returnMultipleItems': False
             },
             'deleteModel3': {
                 'method': HTTPMethod.DELETE,
                 'url': '/v2/path2/{id}',
-                'modelName': 'Model3'
+                'modelName': 'Model3',
+                'returnMultipleItems': False
             },
             'deleteNoneModel': {
                 'method': HTTPMethod.DELETE,
                 'url': '/v2/path3',
-                'modelName': None
+                'modelName': None,
+                'returnMultipleItems': False
             }
         }
 
