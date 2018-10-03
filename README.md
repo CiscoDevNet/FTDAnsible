@@ -64,3 +64,12 @@ run as usual playbooks.
     $ ansible-playbook samples/network_object.yml -vvvv
     ```
 3. The log file will contain additional information(REST etc.)
+
+## Docker
+
+```
+docker build -t ftd-ansible .
+
+docker run ftd-ansible ansible-playbook samples/network_object.yml
+
+```

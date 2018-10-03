@@ -1,12 +1,15 @@
-FROM python:3.6-slim
+FROM python:3.6
 
 COPY requirements.txt /
-
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /app
-WORKDIR /app
+COPY ./httpapi_plugins /ftd-ansible/httpapi_plugins
+COPY ./library /ftd-ansible/library
+COPY ./module_utils /ftd-ansible/module_utils
+COPY ./ansible.cfg /ftd-ansible/ansible.cfg
 
-ENV PYTHONPATH="$PYTHONPATH:/app"
+ENV PYTHONPATH="$PYTHONPATH:/ftd-ansible"
 
-CMD ["ansible-playbook", "--version"]
+WORKDIR /ftd-ansible/playbooks
+
+ENTRYPOINT ["ansible-playbook"]
