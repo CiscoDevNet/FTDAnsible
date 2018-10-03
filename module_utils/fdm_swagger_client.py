@@ -519,14 +519,25 @@ class FdmSwaggerValidator:
 
     @staticmethod
     def _is_correct_simple_types(expected_type, value):
+        def is_numeric_string(s):
+            try:
+                float(s)
+                return True
+            except ValueError:
+                return False
+
         if expected_type == PropType.STRING:
             return isinstance(value, string_types)
         elif expected_type == PropType.BOOLEAN:
             return isinstance(value, bool)
         elif expected_type == PropType.INTEGER:
-            return isinstance(value, integer_types) and not isinstance(value, bool)
+            is_integer = isinstance(value, integer_types) and not isinstance(value, bool)
+            is_digit_string = isinstance(value, string_types) and value.isdigit()
+            return is_integer or is_digit_string
         elif expected_type == PropType.NUMBER:
-            return isinstance(value, (integer_types, float)) and not isinstance(value, bool)
+            is_number = isinstance(value, (integer_types, float)) and not isinstance(value, bool)
+            is_numeric_string = isinstance(value, string_types) and is_numeric_string(value)
+            return is_number or is_numeric_string
         return False
 
     @staticmethod
