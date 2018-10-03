@@ -1,5 +1,5 @@
-requests==2.18.4
-git+https://github.com/ansible/ansible.git@devel#egg=ansible
+ansible==2.7.0rc4
+urllib3==1.23
 Jinja2==2.10
 pytest==3.6.2
 pytest-mock==1.10.0
