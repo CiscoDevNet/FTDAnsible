@@ -8,7 +8,7 @@
           name: "Ansible-network-host"
           description: "From Ansible with love"
           subType: "HOST"
-          value: "{{ access_rule_source_ip }}"
+          value: "128.123.129.108"
           type: "networkobject"
 
     - name: Find default access policy
