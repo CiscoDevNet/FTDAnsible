@@ -44,6 +44,13 @@ class _OperationNamePrefix:
     DELETE = 'delete'
 
 
+class ParamName:
+    QUERY_PARAMS = 'query_params'
+    PATH_PARAMS = 'path_params'
+    DATA = 'data'
+    FILTERS = 'filters'
+
+
 class CheckModeException(Exception):
     pass
 
@@ -99,15 +106,13 @@ class BaseConfigurationResource(object):
         def match_filters(filter_params, obj):
             return viewitems(filter_params) <= viewitems(obj)
 
+        _, query_params, path_params = _get_user_params(params)
         # copy required params to avoid mutation of passed `params` dict
-        get_list_params = {
-            'query_params': dict(params.get('query_params') or {}),
-            'path_params': dict(params.get('path_params') or {})
-        }
+        get_list_params = {ParamName.QUERY_PARAMS: dict(query_params), ParamName.PATH_PARAMS: dict(path_params)}
 
-        filters = params.get('filters') or {}
+        filters = params.get(ParamName.FILTERS) or {}
         if filters:
-            get_list_params['query_params']['filters'] = transform_filters_to_query_param(filters)
+            get_list_params[ParamName.QUERY_PARAMS][ParamName.FILTERS] = transform_filters_to_query_param(filters)
 
         item_generator = iterate_over_pageable_resource(
             partial(self.send_general_request, operation_name=operation_name), get_list_params
@@ -133,9 +138,9 @@ class BaseConfigurationResource(object):
         model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
         get_list_operation = self._find_get_list_operation(model_name)
         if get_list_operation:
-            data = params['data']
-            if not params.get('params'):
-                params['filters'] = {'name': data['name']}
+            data = params[ParamName.DATA]
+            if not params.get(ParamName.FILTERS):
+                params[ParamName.FILTERS] = {'name': data['name']}
 
             existing_obj = self.get_objects_by_filter(get_list_operation, params, True)
 
@@ -176,7 +181,7 @@ class BaseConfigurationResource(object):
         model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
         get_operation = self._find_get_operation(model_name)
 
-        existing_object = self.send_general_request(get_operation, {'path_params': path_params})
+        existing_object = self.send_general_request(get_operation, {ParamName.PATH_PARAMS: path_params})
 
         if not existing_object:
             raise FtdConfigurationError('Referenced object does not exist')
@@ -250,7 +255,7 @@ class BaseConfigurationResource(object):
         :rtype: bool
         """
         is_get_list = self.is_get_list_operation(operation_name)
-        return is_get_list and 'filters' in params and params['filters']
+        return is_get_list and ParamName.FILTERS in params and params[ParamName.FILTERS]
 
     def validate_params(self, operation_name, params):
         report = {}
@@ -267,10 +272,10 @@ class BaseConfigurationResource(object):
                 report[key] = str(e)
             return report
 
-        validate(self._conn.validate_query_params, 'query_params', query_params)
-        validate(self._conn.validate_path_params, 'path_params', path_params)
+        validate(self._conn.validate_query_params, ParamName.QUERY_PARAMS, query_params)
+        validate(self._conn.validate_path_params, ParamName.PATH_PARAMS, path_params)
         if is_post_request(op_spec) or is_put_request(op_spec):
-            validate(self._conn.validate_data, 'data', data)
+            validate(self._conn.validate_data, ParamName.DATA, data)
 
         if report:
             raise ValidationError(report)
@@ -290,7 +295,7 @@ def is_put_request(operation_spec):
 
 
 def _get_user_params(params):
-    return params.get('data', {}), params.get('query_params', {}), params.get('path_params', {})
+    return params.get(ParamName.DATA, {}), params.get(ParamName.QUERY_PARAMS, {}), params.get(ParamName.PATH_PARAMS, {})
 
 
 def iterate_over_pageable_resource(resource_func, params):
@@ -308,8 +313,8 @@ def iterate_over_pageable_resource(resource_func, params):
     """
     # creating a copy not to mutate passed dict
     params = copy.deepcopy(params)
-    params['query_params'].setdefault('limit', DEFAULT_PAGE_SIZE)
-    params['query_params'].setdefault('offset', DEFAULT_OFFSET)
+    params[ParamName.QUERY_PARAMS].setdefault('limit', DEFAULT_PAGE_SIZE)
+    params[ParamName.QUERY_PARAMS].setdefault('offset', DEFAULT_OFFSET)
 
     result = resource_func(params=params)
     while result['items']:
@@ -317,5 +322,6 @@ def iterate_over_pageable_resource(resource_func, params):
             yield item
         # creating a copy not to mutate existing dict
         params = copy.deepcopy(params)
-        params['query_params']['offset'] = int(params['query_params']['offset']) + int(params['query_params']['limit'])
+        query_params = params[ParamName.QUERY_PARAMS]
+        query_params['offset'] = int(query_params['offset']) + int(query_params['limit'])
         result = resource_func(params=params)
