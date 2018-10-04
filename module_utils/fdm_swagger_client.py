@@ -30,6 +30,7 @@ class OperationField:
     PARAMETERS = 'parameters'
     MODEL_NAME = 'modelName'
     DESCRIPTION = 'description'
+    RETURN_MULTIPLE_ITEMS = 'returnMultipleItems'
 
 
 class SpecProp:
@@ -120,6 +121,7 @@ class FdmSwaggerParser:
                         'modelName': 'NetworkObject', # it is a link to the model from 'models'
                                                       # None - for a delete operation or we don't have information
                                                       # '_File' - if an endpoint works with files
+                        'returnMultipleItems': False, # shows if the operation returns a single item or an item list
                         'parameters': {
                             'path':{
                                 'param_name':{
@@ -179,7 +181,8 @@ class FdmSwaggerParser:
                 operation = {
                     OperationField.METHOD: method,
                     OperationField.URL: self._base_path + url,
-                    OperationField.MODEL_NAME: self._get_model_name(method, params)
+                    OperationField.MODEL_NAME: self._get_model_name(method, params),
+                    OperationField.RETURN_MULTIPLE_ITEMS: self._return_multiple_items(params)
                 }
                 if OperationField.PARAMETERS in params:
                     operation[OperationField.PARAMETERS] = self._get_rest_params(params[OperationField.PARAMETERS])
@@ -227,6 +230,20 @@ class FdmSwaggerParser:
             return self._get_model_name_from_delete_operation(params)
         else:
             return None
+
+    @staticmethod
+    def _return_multiple_items(op_params):
+        """
+        Defines if the operation returns one item or a list of items.
+
+        :param op_params: operation specification
+        :return: True if the operation returns a list of items, otherwise False
+        """
+        try:
+            schema = op_params[PropName.RESPONSES][SUCCESS_RESPONSE_CODE][PropName.SCHEMA]
+            return PropName.ITEMS in schema[PropName.PROPERTIES]
+        except KeyError:
+            return False
 
     def _get_model_name_from_delete_operation(self, params):
         operation_id = params[PropName.OPERATION_ID]
@@ -500,7 +517,8 @@ class FdmSwaggerValidator:
             self._add_invalid_type_report(status, path, '', PropType.OBJECT, data)
             return None
 
-        self._check_required_fields(status, model[PropName.REQUIRED], data, path)
+        if PropName.REQUIRED in model:
+            self._check_required_fields(status, model[PropName.REQUIRED], data, path)
 
         model_properties = model[PropName.PROPERTIES]
         for prop in model_properties.keys():
@@ -543,14 +561,25 @@ class FdmSwaggerValidator:
 
     @staticmethod
     def _is_correct_simple_types(expected_type, value):
+        def is_numeric_string(s):
+            try:
+                float(s)
+                return True
+            except ValueError:
+                return False
+
         if expected_type == PropType.STRING:
             return isinstance(value, string_types)
         elif expected_type == PropType.BOOLEAN:
             return isinstance(value, bool)
         elif expected_type == PropType.INTEGER:
-            return isinstance(value, integer_types) and not isinstance(value, bool)
+            is_integer = isinstance(value, integer_types) and not isinstance(value, bool)
+            is_digit_string = isinstance(value, string_types) and value.isdigit()
+            return is_integer or is_digit_string
         elif expected_type == PropType.NUMBER:
-            return isinstance(value, (integer_types, float)) and not isinstance(value, bool)
+            is_number = isinstance(value, (integer_types, float)) and not isinstance(value, bool)
+            is_numeric_string = isinstance(value, string_types) and is_numeric_string(value)
+            return is_number or is_numeric_string
         return False
 
     @staticmethod
