@@ -122,30 +122,6 @@
           - updatedRuleObj['id'] == testRuleObj['id']
 
 
-#    - name: upsertAccessRule should update the existing rule when it exists
-#      ftd_configuration:
-#        operation: 'upsertAccessRule'
-#        data:
-#          ruleId: "{{ updatedRuleObj['ruleId'] }}"
-#          version: "{{ updatedRuleObj['version'] }}"
-#          name: "ansible-test-accessrule"
-#          type: "accessrule"
-#          destinationNetworks:
-#            - "{{ testNetworkObj }}"
-#          ruleAction: "PERMIT"
-#          eventLogAction: "LOG_BOTH"
-#        path_params:
-#          objId: "{{ updatedRuleObj['id'] }}"
-#          parentId: "default"
-#        register_as: "upsertedRuleObj"
-#      register: result
-#    - assert:
-#        that:
-#          - result.changed == true
-#          - upsertedRuleObj['id'] == testRuleObj['id']
-#          - upsertedRuleObj['ruleAction'] == "PERMIT"
-
-
     - name: deleteAccessRule should delete the rule
       ftd_configuration:
         operation: 'deleteAccessRule'

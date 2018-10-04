@@ -25,7 +25,7 @@ class TestFdmSwagger(unittest.TestCase):
         models = fdm_data['models']
         operations = fdm_data['operations']
 
-        invalid = []
+        invalid = set({})
         for operation in operations:
             model_name = operations[operation]['modelName']
             method = operations[operation]['method']
@@ -36,22 +36,22 @@ class TestFdmSwagger(unittest.TestCase):
                         valid, rez = validator.validate_data(operation, example)
                         assert valid
                     except Exception as e:
-                        invalid.append(model_name)
-        assert sorted(invalid) == sorted(['TCPPortObject', 'TCPPortObject',
-                                          'UDPPortObject', 'UDPPortObject', 'ICMPv4PortObject',
-                                          'ICMPv4PortObject', 'ICMPv6PortObject', 'ICMPv6PortObject',
-                                          'StandardAccessList', 'StandardAccessList',
-                                          'ExtendedAccessList', 'ExtendedAccessList',
-                                          'ASPathList', 'ASPathList',
-                                          'RouteMap', 'RouteMap',
-                                          'StandardCommunityList', 'StandardCommunityList',
-                                          'ExpandedCommunityList', 'ExpandedCommunityList',
-                                          'IPV4PrefixList', 'IPV4PrefixList',
-                                          'IPV6PrefixList', 'IPV6PrefixList',
-                                          'PolicyList', 'PolicyList',
-                                          'SyslogServer', 'SyslogServer',
-                                          'HAConfiguration',
-                                          'TestIdentitySource'])
+                        invalid.add(model_name)
+        assert invalid == set({'TCPPortObject',
+                               'UDPPortObject', 'ICMPv4PortObject',
+                               'ICMPv6PortObject',
+                               'StandardAccessList',
+                               'ExtendedAccessList',
+                               'ASPathList',
+                               'RouteMap',
+                               'StandardCommunityList',
+                               'ExpandedCommunityList',
+                               'IPV4PrefixList',
+                               'IPV6PrefixList',
+                               'PolicyList',
+                               'SyslogServer',
+                               'HAConfiguration',
+                               'TestIdentitySource'})
 
     def test_parse_all_data(self):
         self.fdm_data = FdmSwaggerParser().parse_spec(self.base_data)
@@ -65,11 +65,13 @@ class TestFdmSwagger(unittest.TestCase):
 
         for key in operations:
             operation = operations[key]
-            if not operation['modelName'] and (operation['method'] != 'delete'):
+            if not operation['modelName']:
                 without_model_name.append(operation['url'])
 
             if operation['modelName'] == '_File' and 'download' not in operation['url']:
                 self.fail('File type can be defined for download operation only')
 
-        assert ['/api/fdm/v2/action/upgrade'] == without_model_name
+        assert sorted(['/api/fdm/v2/operational/deploy/{objId}', '/api/fdm/v2/action/upgrade']) == sorted(
+            without_model_name)
+        assert sorted(self.fdm_data['model_operations'][None].keys()) == sorted(['deleteDeployment', 'startUpgrade'])
         assert expected_operations_counter == len(operations)

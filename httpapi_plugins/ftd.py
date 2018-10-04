@@ -209,6 +209,12 @@ class HttpApi(HttpApiBase):
     def get_operation_spec(self, operation_name):
         return self.api_spec[SpecProp.OPERATIONS].get(operation_name, None)
 
+    def get_operation_specs_by_model_name(self, model_name):
+        if model_name:
+            return self.api_spec[SpecProp.MODEL_OPERATIONS].get(model_name, None)
+        else:
+            return None
+
     def get_model_spec(self, model_name):
         return self.api_spec[SpecProp.MODELS].get(model_name, None)
 
