@@ -295,7 +295,8 @@ def is_put_request(operation_spec):
 
 
 def _get_user_params(params):
-    return params.get(ParamName.DATA, {}), params.get(ParamName.QUERY_PARAMS, {}), params.get(ParamName.PATH_PARAMS, {})
+    return params.get(ParamName.DATA) or {}, params.get(ParamName.QUERY_PARAMS) or {}, params.get(
+        ParamName.PATH_PARAMS) or {}
 
 
 def iterate_over_pageable_resource(resource_func, params):
