@@ -181,14 +181,14 @@ class BaseConfigurationResource(object):
         model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
         get_operation = self._find_get_operation(model_name)
 
-        existing_object = self.send_general_request(get_operation, {ParamName.PATH_PARAMS: path_params})
+        if get_operation:
+            existing_object = self.send_general_request(get_operation, {ParamName.PATH_PARAMS: path_params})
+            if not existing_object:
+                raise FtdConfigurationError('Referenced object does not exist')
+            elif equal_objects(existing_object, data):
+                return existing_object
 
-        if not existing_object:
-            raise FtdConfigurationError('Referenced object does not exist')
-        elif equal_objects(existing_object, data):
-            return existing_object
-        else:
-            return self.send_general_request(operation_name, params)
+        return self.send_general_request(operation_name, params)
 
     def send_general_request(self, operation_name, params):
         def stop_if_check_mode():
