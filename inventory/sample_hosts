@@ -1,0 +1,6 @@
+[all:vars]
+ansible_network_os=ftd
+
+[vftd]
+localhost ansible_user=admin ansible_password=123qwe ansible_httpapi_port=8585 ansible_httpapi_use_ssl=False
+10.89.21.213 ansible_user=admin ansible_password=123qwe ansible_httpapi_port=4343 ansible_httpapi_use_ssl=True ansible_httpapi_validate_certs=True
