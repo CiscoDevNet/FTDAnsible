@@ -41,9 +41,6 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Sphinx documentation
-docs/_build/
-
 # pyenv
 .python-version
 
