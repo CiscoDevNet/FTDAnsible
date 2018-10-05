@@ -1,62 +1,103 @@
 # FTD Ansible Modules
 
-## Common environment setup
-1. Create a virtual environment:
-`python3 -m venv venv`
+A collection of Ansible modules that automate configuration management 
+and execution of operational tasks on Cisco Firepower Threat Defense (FTD) devices.
 
-1. Activate the virtual environment:
-```. venv/bin/activate```
+_This file describes development and testing aspects. In case you are looking for 
+a client-facing documentation, please check [docsite](./docs/docsite) folder._
+
+## Installation Guide
+
+The project contains Ansible modules for managing device configuration ([`ftd_configuration.py`](./library/ftd_configuration.py)), 
+uploading ([`ftd_file_upload.py`](./library/ftd_file_upload.py)) and downloading
+([`ftd_file_download.py`](./library/ftd_file_download.py)) files. Sample playbooks are located in 
+the [`samples`](./samples) folder.
+
+### Running playbooks in Docker
+
+1. Build the Docker image:
+```
+docker build -t ftd-ansible .
+```
+
+1. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) 
+shows an example of inventory file.
+
+1. Run the playbook in Docker mounting playbook folder to `/ftd-ansible/playbooks` and inventory file to `/etc/ansible/hosts`:
+```
+docker run -v $(pwd)/samples:/ftd-ansible/playbooks -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts ftd-ansible network_object.yml
+```
+
+### Running playbooks locally 
+
+1. Create a virtual environment and activate it:
+```
+python3 -m venv venv
+. venv/bin/activate
+```
 
 1. Install dependencies:
 `pip install -r requirements.txt`
 
-1. Override `ansible_python_interpreter` to point to the local python in `group_vars/vftd/vars`.
-
-## Ansible Inventory
-Inventory is used to tell Ansible what hosts to run the tasks on. By default, this project uses the inventory from `inventory/development` file. You can either update this file with a list of desired hosts or create a new inventory file and specify it in `ansible.cfg`.
-
-## Ansible modules
-
-The project contains Ansible modules for managing device configuration (`library/ftd_configuration.py`), uploading (`library/ftd_file_upload.py`) and downloading (`library/ftd_file_download.py`) files.  
-
-Sample playbooks located in `samples` folder contain examples of their usage. To run the playbook:
- 
-1. Complete "Common environment setup" section;
-
+1. Update Python path to include the project's directory:
+```
+export PYTHONPATH=.:$PYTHONPATH
+```
+   
 1. Run the playbook:
-    ```
-    export PYTHONPATH=.:$PYTHONPATH
-    $ ansible-playbook samples/network_object.yml
-    ```
+``` 
+ansible-playbook samples/network_object.yml
+```
 
-## Testing
+## Unit Tests
 
-### Unit Tests
+The project contains unit tests for Ansible modules, HTTP API plugin and util files. They can be found 
+in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests
+in this project also rely on them and including Ansible test module to the Python path is required.
 
-The project contains unit tests for Ansible modules, HTTP API plugin and util files. They can be found in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests
-in this project also rely on them and including Ansible test module to the Python path is required to run them. When the project is
-developed further, modules and tests will be moved to the Ansible repository and this extra step will be no longer needed.
+### Running unit tests in Docker
 
-In order to run the unit tests: 
+1. Build the Docker image: 
+```
+docker build -t ftd-ansible-test test
+```
+By default, the Dockerfile clones `devel` branch of Ansible repository, but you can change it by adding
+`--build-arg ANSIBLE_BRANCH=$BRANCH_NAME` to the build command.
 
-1. Complete "Common environment setup" section;
+1. Run unit tests with: 
+```
+docker run -v $(pwd):/ftd-ansible ftd-ansible-test pytest test/
+```
+To run a single test, specify the filename at the end of command:
+```
+docker run -v $(pwd):/ftd-ansible ftd-ansible-test pytest test/unit/test_fdm_configuration.py
+```
+
+### Running unit tests locally
+
 1. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
+1. Install Ansible and test dependencies:
+```
+pip install $ANSIBLE_DIR/requirements.txt
+pip install test/requirements.txt
+```
 1. Add Ansible modules to the Python path:
-    ```
-    export PYTHONPATH=ANSIBLE_DIR/test:ANSIBLE_DIR/lib:$PYTHONPATH
-    ```
+```
+export PYTHONPATH=$PYTHONPATH:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
+```
 1. Run unit tests:
-    ```
-    pytest test/unit
-    ```
+```
+pytest test/unit
+```
     
-### Integration Tests
+## Integration Tests
 
-Integration tests are written in a form of playbooks and are usually run with `ansible-test` utility command from Ansible repository. As this project is created outside Ansible, it 
-does not have utils to run the tests. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be 
-run as usual playbooks.
+Integration tests are written in a form of playbooks and usually started with `ansible-test` command 
+from Ansible repository. As this project is created outside Ansible, it does not have utils to run 
+the tests. Thus, integration tests are written as sample playbooks with assertion and can be found 
+in the `samples` folder. They start with `test_` prefix and can be run as usual playbooks.
 
-### Debugging
+## Debugging
 
 1. Add `log_path` with path to log file in `ansible.cfg`
 2. Run `ansible-playbook` with `-vvvv`
@@ -64,12 +105,3 @@ run as usual playbooks.
     $ ansible-playbook samples/network_object.yml -vvvv
     ```
 3. The log file will contain additional information(REST etc.)
-
-## Docker
-
-```
-docker build -t ftd-ansible .
-
-docker run ftd-ansible ansible-playbook samples/network_object.yml
-
-```
