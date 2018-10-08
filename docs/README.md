@@ -11,11 +11,16 @@ template engine.
 
 ### Doc Generation for Models and Operations
 
-Docs for models and operations can be automatically generated from Swagger using the following command:
-```
-python generator.py SWAGGER_HOST_URL USERNAME PASSWORD
-```
-To generate docs for a few models only, use the `--models` parameter:
-```
-python generator.py SWAGGER_HOST_URL USERNAME PASSWORD --models MODEL1 MODEL2
-```
+Docs for models and operations can be automatically generated from Swagger specification.
+
+1. Complete ["Common environment setup"](../README.md#common-environment-setup) section;
+
+1. Generate docs by running command from the root project folder:
+    
+    ```
+    python -m docs.generator SWAGGER_HOST_URL USERNAME PASSWORD
+    ```
+    To generate docs for a few models only, use the `--models` parameter:
+    ```
+    python -m docs.generator SWAGGER_HOST_URL USERNAME PASSWORD --models MODEL1 MODEL2
+    ```
