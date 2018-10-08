@@ -3,6 +3,7 @@ import importlib
 import json
 import os
 import re
+import shutil
 import sys
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
@@ -18,7 +19,8 @@ from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, Operatio
 
 BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TEMPLATE_DIR = os.path.join(BASE_DIR_PATH, 'templates')
-DEFAULT_DOCSITE_DIR = os.path.join(BASE_DIR_PATH, 'docsite')
+DEFAULT_STATIC_DIR = os.path.join(BASE_DIR_PATH, 'static')
+DEFAULT_DIST_DIR = os.path.join(BASE_DIR_PATH, 'dist')
 DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
 
 TOKEN_PATH = '/api/fdm/v2/fdm/token'
@@ -60,12 +62,9 @@ class BaseDocGenerator(metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def _clean_generated_files(dir_path):
-        for file_name in os.listdir(dir_path):
-            os.remove(os.path.join(dir_path, file_name))
-
-    @staticmethod
     def _write_generated_file(dir_path, filename, content):
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
         with open('%s/%s' % (dir_path, camel_to_snake(filename)), "wb") as f:
             f.write(content.encode('utf-8'))
 
@@ -93,7 +92,6 @@ class ModelDocGenerator(BaseDocGenerator):
 
     def generate_doc_files(self, dest_dir, include_models=None):
         model_dir = os.path.join(dest_dir, 'models')
-        self._clean_generated_files(model_dir)
 
         model_index = []
         model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
@@ -131,7 +129,6 @@ class OperationDocGenerator(BaseDocGenerator):
 
     def generate_doc_files(self, dest_dir, include_models=None):
         op_dir = os.path.join(dest_dir, 'operations')
-        self._clean_generated_files(op_dir)
 
         op_index = []
         op_template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
@@ -184,7 +181,6 @@ class ModuleDocGenerator(BaseDocGenerator):
 
     def generate_doc_files(self, dest_dir):
         module_dir = os.path.join(dest_dir, 'modules')
-        self._clean_generated_files(module_dir)
 
         module_index = []
         module_template = self._jinja_env.get_template(self.MODULE_TEMPLATE)
@@ -261,25 +257,33 @@ def fetch_api_specs_with_docs(hostname, username, password):
 
 
 def main():
+    def prepare_dist_dir_with_static_docs():
+        if not os.path.exists(args.dist):
+            os.makedirs(args.dist)
+        else:
+            shutil.rmtree(args.dist)
+        shutil.copytree(DEFAULT_STATIC_DIR, args.dist)
+
     parser = argparse.ArgumentParser(description='Generates Ansible modules from Swagger documentation')
     parser.add_argument('hostname', type=str, help='Hostname where FTD can be accessed')
     parser.add_argument('username', type=str, help='FTD username that has access to Swagger docs')
     parser.add_argument('password', type=str, help='Password for the username')
     parser.add_argument('--models', type=str, nargs='+', help='A list of models to include in the docs', required=False)
-    parser.add_argument('--dest', type=str, help='An output directory for generated files', required=False,
-                        default=DEFAULT_DOCSITE_DIR)
+    parser.add_argument('--dist', type=str, help='An output directory for distribution files', required=False,
+                        default=DEFAULT_DIST_DIR)
     args = parser.parse_args()
 
     api_spec = fetch_api_specs_with_docs(args.hostname, args.username, args.password)
+    prepare_dist_dir_with_static_docs()
 
     model_generator = ModelDocGenerator(DEFAULT_TEMPLATE_DIR, api_spec)
-    model_generator.generate_doc_files(args.dest, args.models)
+    model_generator.generate_doc_files(args.dist, args.models)
 
     op_generator = OperationDocGenerator(DEFAULT_TEMPLATE_DIR, api_spec)
-    op_generator.generate_doc_files(args.dest, args.models)
+    op_generator.generate_doc_files(args.dist, args.models)
 
     module_generator = ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, DEFAULT_MODULE_DIR)
-    module_generator.generate_doc_files(args.dest)
+    module_generator.generate_doc_files(args.dist)
 
 
 if __name__ == '__main__':

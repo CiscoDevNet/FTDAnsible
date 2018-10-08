@@ -20,7 +20,13 @@ Docs for models and operations can be automatically generated from Swagger speci
     ```
     python -m docs.generator SWAGGER_HOST_URL USERNAME PASSWORD
     ```
-    To generate docs for a few models only, use the `--models` parameter:
+    To generate docs for a few models only, use `--models` parameter:
     ```
     python -m docs.generator SWAGGER_HOST_URL USERNAME PASSWORD --models MODEL1 MODEL2
     ```
+    To change the distribution folder (by default, `docs/dist` is the output directory), use `--dist` parameter. __The 
+    generator recursively removes all files from the distibution folder before generating the docs.__
+    ```
+    python -m docs.generator SWAGGER_HOST_URL USERNAME PASSWORD --dist /tmp/ftd-ansible-docs
+    ```
+    
