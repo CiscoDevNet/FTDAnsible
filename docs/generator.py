@@ -258,9 +258,7 @@ def fetch_api_specs_with_docs(hostname, username, password):
 
 def main():
     def prepare_dist_dir_with_static_docs():
-        if not os.path.exists(args.dist):
-            os.makedirs(args.dist)
-        else:
+        if os.path.exists(args.dist):
             shutil.rmtree(args.dist)
         shutil.copytree(DEFAULT_STATIC_DIR, args.dist)
 
