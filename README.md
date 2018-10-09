@@ -73,6 +73,19 @@ To run a single test, specify the filename at the end of command:
 docker run -v $(pwd):/ftd-ansible ftd-ansible-test pytest test/unit/test_fdm_configuration.py
 ```
 
+#### Troubleshooting
+
+```
+import file mismatch:
+imported module 'test.unit.module_utils.test_common' has this __file__ attribute: ...
+which is not the same as the test file we want to collect:
+  /ftd-ansible/test/unit/module_utils/test_common.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
+```
+
+In case you experience the following error while running the tests in Docker, remove compiled bytecode files files with 
+`find . -name "*.pyc" -type f -delete` command and try again.
+
 ### Running unit tests locally
 
 1. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
