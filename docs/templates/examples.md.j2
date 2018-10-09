@@ -13,19 +13,8 @@ domain name (FQDN) network for [Cisco DevNet](https://developer.cisco.com/) webs
 After creation, the network object is stored as an Ansible fact and can be accessed
 using `networkobject_ciscodevnetnetwork` variable. 
 
-```yaml
-- name: Create an FQDN network for Cisco DevNet
-  ftd_configuration:
-    operation: addNetworkObject
-    data:
-      name: CiscoDevNetNetwork
-      subType: FQDN
-      value: developer.cisco.com
-      isSystemDefined: false
-      type: networkobject
-      dnsResolution: IPV4_AND_IPV6
+{% include_playbook_tasks sample_dir + '/network_object.yml', ["Create an FQDN network for Cisco DevNet"] %}
 
-```
 ## Create a NetworkObjectGroup
 
 `NetworkObjectGroup` is a container object representing a group of networks.
@@ -39,29 +28,11 @@ created `NetworkObject`s. It is possible because every created object is stored 
 By default, the fact name for a new object is constructed as `$TYPE_$NAME`, but it can be reset by
 adding a `register_as` parameter to the task that creates the object.
 
-```yaml
-- name: Create an FQDN network for Cisco FTD
-  ftd_configuration:
-    operation: addNetworkObject
-    data:
-      name: CiscoFtdNetwork
-      subType: FQDN
-      value: ftd.cisco.com
-      isSystemDefined: false
-      type: networkobject
-      dnsResolution: IPV4_AND_IPV6
+{% include_playbook_tasks sample_dir + '/network_object.yml', [
+    "Create an FQDN network for Cisco FTD",
+    "Create a Cisco network group"
+] %}
 
-- name: Create a Cisco network group
-  ftd_configuration:
-    operation: addNetworkObjectGroup
-    data:
-      name: CiscoNetworkGroup
-      type: networkobjectgroup
-      objects:
-      - '{{ networkobject_ciscodevnetnetwork }}'
-      - '{{ networkobject_ciscoftdnetwork }}'
-
-```
 ## Create an AccessRule
 
 An `AccessRule` permits or denies traffic based on different parameters, such as a protocol,
@@ -70,21 +41,8 @@ a source or destination IP address, network, etc.
 The example shows how to create an `AccessRule` allowing traffic from the previously created
 `CiscoDevNetNetwork`.
 
-```yaml
-- name: Create an access rule allowing trafic from Cisco DevNet
-  ftd_configuration:
-    operation: addAccessRule
-    data:
-      name: AllowCiscoTraffic
-      type: accessrule
-      sourceNetworks:
-      - '{{ networkobject_ciscodevnetnetwork }}'
-      ruleAction: PERMIT
-      eventLogAction: LOG_BOTH
-    path_params:
-      parentId: default
+{% include_playbook_tasks sample_dir + '/access_rule.yml', ["Create an access rule allowing trafic from Cisco DevNet"] %}
 
-```
 ## Make a deployment
 
 Changes made on the FTD device are applied only after they get deployed. This example demonstrates
@@ -94,25 +52,4 @@ The first task starts a new deployment job and registers returned `DeploymentSta
 The next task polls the `DeploymentStatus` every 3 seconds until the job is completed. The last
 part verifies that the deployment is completed successfully. Otherwise, it stops the playbook with an error message.
 
-```yaml
-- name: Start deployment
-  ftd_configuration:
-    operation: addDeployment
-    register_as: deployment_job
-
-- name: Poll deployment status until the job is finished
-  ftd_configuration:
-    operation: getDeployment
-    path_params:
-      objId: '{{ deployment_job.id }}'
-    register_as: deployment_status
-  until: deployment_status.endTime != -1
-  retries: 100
-  delay: 3
-
-- name: Stop the playbook if the deployment failed
-  fail:
-    msg: 'Deployment failed. Status: {{ deployment_status.statusMessages }}'
-  when: deployment_status.state != 'DEPLOYED'
-
-```
+{% include_playbook_tasks sample_dir + '/deployment.yml' %}
