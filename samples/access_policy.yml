@@ -1,62 +1,58 @@
 - hosts: vftd
   connection: httpapi
   tasks:
-    - name: Create a network object
+    - name: Create an FQDN network for Cisco DevNet
       ftd_configuration:
-        operation: "addNetworkObject"
+        operation: addNetworkObject
         data:
-          name: "Ansible-network-host"
-          description: "From Ansible with love"
-          subType: "HOST"
-          value: "128.123.129.108"
-          type: "networkobject"
-
-    - name: Find default access policy
+          name: CiscoDevNetNetwork
+          subType: FQDN
+          value: developer.cisco.com
+          isSystemDefined: False
+          type: networkobject
+          dnsResolution: IPV4_AND_IPV6
+                  
+    - name: Create an access rule allowing trafic from Cisco DevNet
       ftd_configuration:
-        operation: "getAccessPolicyList"
-        filters:
-          name: "NGFW-Access-Policy"
-        register_as: "access_policies"
-
-    - name: Create an access rule
-      ftd_configuration:
-        operation: "addAccessRule"
+        operation: addAccessRule
         data:
-          name: "Ansible-accessrule"
-          type: "accessrule"
+          name: AllowCiscoTraffic
+          type: accessrule
           sourceNetworks:
-            - "{{ networkobject_ansible_network_host }}"
-          ruleAction: "PERMIT"
-          eventLogAction: "LOG_BOTH"
+            - '{{ networkobject_ciscodevnetnetwork }}'
+          ruleAction: PERMIT
+          eventLogAction: LOG_BOTH
         path_params:
-          parentId: "{{ access_policies[0]['id'] }}"
+          parentId: default
 
-    - name: Update the access rule
+    - name: Update the access rule to allow trafic from/to Cisco DevNet
       ftd_configuration:
-        operation: 'editAccessRule'
+        operation: editAccessRule
         data:
-          name: "Ansible-accessrule"
-          id: "{{ accessrule_ansible_accessrule['id'] }}"
-          ruleId: "{{ accessrule_ansible_accessrule['ruleId'] }}"
-          version: "{{ accessrule_ansible_accessrule['version'] }}"
-          type: "accessrule"
+          name: AllowCiscoTraffic
+          id: '{{ accessrule_allowciscotraffic.id }}'
+          ruleId: '{{ accessrule_allowciscotraffic.ruleId }}'
+          version: '{{ accessrule_allowciscotraffic.version }}'
+          type: accessrule
+          sourceNetworks:
+            - '{{ networkobject_ciscodevnetnetwork }}'
           destinationNetworks:
-            - "{{ networkobject_ansible_network_host }}"
-          ruleAction: "PERMIT"
-          eventLogAction: "LOG_BOTH"
+            - '{{ networkobject_ciscodevnetnetwork }}'
+          ruleAction: PERMIT
+          eventLogAction: LOG_BOTH
         path_params:
-          objId: "{{ accessrule_ansible_accessrule['id'] }}"
-          parentId: "{{ access_policies[0]['id'] }}"
+          objId: '{{ accessrule_allowciscotraffic.id }}'
+          parentId: default
 
-    - name: Delete an access rule
+    - name: Delete the access rule allowing trafic from/to Cisco DevNet
       ftd_configuration:
-        operation: 'deleteAccessRule'
+        operation: deleteAccessRule
         path_params:
-          objId: "{{ accessrule_ansible_accessrule['id'] }}"
-          parentId: "{{ access_policies[0]['id'] }}"
+          objId: '{{ accessrule_allowciscotraffic.id }}'
+          parentId: default
 
-    - name: Delete a network object
+    - name: Delete the FQDN network for Cisco DevNet
       ftd_configuration:
-        operation: 'deleteNetworkObject'
+        operation: deleteNetworkObject
         path_params:
-          objId: "{{ networkobject_ansible_network_host['id'] }}"
+          objId: '{{ networkobject_ciscodevnetnetwork.id }}'

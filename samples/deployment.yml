@@ -3,19 +3,20 @@
   tasks:
     - name: Start deployment
       ftd_configuration:
-        operation: "addDeployment"
-        register_as: "deploymentJob"
+        operation: addDeployment
+        register_as: deployment_job
 
     - name: Poll deployment status until the job is finished
       ftd_configuration:
-        operation: "getDeployment"
+        operation: getDeployment
         path_params:
-          objId: "{{ deploymentJob['id'] }}"
-        register_as: "deploymentStatus"
-      until: deploymentStatus['endTime'] != -1
+          objId: '{{ deployment_job.id }}'
+        register_as: deployment_status
+      until: deployment_status.endTime != -1
       retries: 100
       delay: 3
 
-    - fail:
-        msg: "Deployment failed. Status: {{ deploymentStatus['statusMessages'] }}"
-      when: deploymentStatus['state'] != 'DEPLOYED'
+    - name: Stop the playbook if the deployment failed
+      fail:
+        msg: 'Deployment failed. Status: {{ deployment_status.statusMessages }}'
+      when: deployment_status.state != 'DEPLOYED'

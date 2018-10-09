@@ -1,86 +1,80 @@
 - hosts: vftd
   connection: httpapi
   tasks:
-    - name: Create a HOST network object
+    - name: Create an FQDN network for Cisco DevNet
       ftd_configuration:
-        operation: "addNetworkObject"
+        operation: addNetworkObject
         data:
-          name: "Ansible-network-host"
-          description: "From Ansible with love"
-          subType: "HOST"
-          value: "130.51.181.228"
+          name: CiscoDevNetNetwork
+          subType: FQDN
+          value: developer.cisco.com
           isSystemDefined: False
-          type: "networkobject"
+          type: networkobject
+          dnsResolution: IPV4_AND_IPV6
 
-    - name: Create a NETWORK network object
+    - name: Create an FQDN network for Cisco FTD
       ftd_configuration:
-        operation: "addNetworkObject"
+        operation: addNetworkObject
         data:
-          name: "Ansible-network-network"
-          description: "From Ansible with love"
-          subType: "NETWORK"
-          value: "195.4.45.0/24"
-          type: "networkobject"
+          name: CiscoFtdNetwork
+          subType: FQDN
+          value: ftd.cisco.com
+          isSystemDefined: False
+          type: networkobject
+          dnsResolution: IPV4_AND_IPV6
 
-    - name: Create a network group
+    - name: Create a Cisco network group
       ftd_configuration:
-        operation: "addNetworkObjectGroup"
+        operation: addNetworkObjectGroup
         data:
-          name: "Ansible-network-group"
-          description: "From Ansible with love"
-          type: "networkobjectgroup"
+          name: CiscoNetworkGroup
+          type: networkobjectgroup
           objects:
-            - "{{ networkobject_ansible_network_host }}"
-            - "{{ networkobject_ansible_network_network }}"
+          - '{{ networkobject_ciscodevnetnetwork }}'
+          - '{{ networkobject_ciscoftdnetwork }}'
 
-    - name: Update the HOST network object
+    - name: Update the FQDN network for Cisco FTD
       ftd_configuration:
-        operation: 'editNetworkObject'
+        operation: editNetworkObject
         path_params:
-          objId: "{{ networkobject_ansible_network_host['id'] }}"
+          objId: '{{ networkobject_ciscoftdnetwork.id }}'
         data:
-          id: "{{ networkobject_ansible_network_host['id'] }}"
-          version: "{{ networkobject_ansible_network_host['version'] }}"
-          name: "Ansible-network-host"
-          description: "From Ansible with love. Version2"
-          value: "192.22.22.25"
-          subType: "HOST"
-          type: "networkobject"
+          id: '{{ networkobject_ciscoftdnetwork.id }}'
+          version: '{{ networkobject_ciscoftdnetwork.version }}'
+          name: CiscoFtdNetwork
+          description: Updated version
+          value: 192.22.22.25
+          subType: HOST
+          type: networkobject
 
-    - name: Refresh a NETWORK network object
+    - name: Update the Cisco network group by removing FTD network
       ftd_configuration:
-        operation: 'getNetworkObject'
+        operation: editNetworkObjectGroup
         path_params:
-          objId: "{{ networkobject_ansible_network_host['id'] }}"
-
-    - name: Update the network group
-      ftd_configuration:
-        operation: 'editNetworkObjectGroup'
-        path_params:
-          objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
+          objId: '{{ networkobjectgroup_cisconetworkgroup.id }}'
         data:
-          id: "{{ networkobjectgroup_ansible_network_group['id'] }}"
-          version: "{{ networkobjectgroup_ansible_network_group['version'] }}"
-          name: "Ansible-network-group"
-          description: "From Ansible with love. Version 2"
-          type: "networkobjectgroup"
+          id: '{{ networkobjectgroup_cisconetworkgroup.id }}'
+          version: '{{ networkobjectgroup_cisconetworkgroup.version }}'
+          name: CiscoNetworkGroup
+          type: networkobjectgroup
           objects:
-            - "{{ networkobject_ansible_network_network }}"
+            - '{{ networkobject_ciscodevnetnetwork }}'
 
-    - name: Delete a network group
+    - name: Delete the Cisco network group
       ftd_configuration:
-        operation: 'deleteNetworkObjectGroup'
+        operation: deleteNetworkObjectGroup
         path_params:
-          objId: "{{ networkobjectgroup_ansible_network_group['id'] }}"
+          objId: '{{ networkobjectgroup_cisconetworkgroup.id }}'
 
-    - name: Delete a HOST network object
+    - name: Delete the FQDN network for Cisco DevNet
       ftd_configuration:
-        operation: 'deleteNetworkObject'
+        operation: deleteNetworkObject
         path_params:
-          objId: "{{ networkobject_ansible_network_host['id'] }}"
+          objId: '{{ networkobject_ciscodevnetnetwork.id }}'
 
-    - name: Delete a NETWORK network object
+    - name: Delete the FQDN network for Cisco FTD
       ftd_configuration:
-        operation: 'deleteNetworkObject'
+        operation: deleteNetworkObject
         path_params:
-          objId: "{{ networkobject_ansible_network_network['id'] }}"
+          objId: '{{ networkobject_ciscoftdnetwork.id }}'
+

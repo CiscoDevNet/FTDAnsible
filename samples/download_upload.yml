@@ -3,20 +3,20 @@
   tasks:
     - name: Download pending changes
       ftd_file_download:
-        operation: 'getdownload'
+        operation: getdownload
         path_params:
-          objId: 'default'
+          objId: default
         destination: /tmp/
 
     - name: Upload disk file
       ftd_file_upload:
-        operation: 'postuploaddiskfile'
+        operation: postuploaddiskfile
         file_to_upload: /tmp/test1.txt
         register_as: diskFile
 
     - name: Download disk file
       ftd_file_download:
-        operation: 'getdownloaddiskfile'
+        operation: getdownloaddiskfile
         path_params:
-          objId: "{{ diskFile['id'] }}"
+          objId: '{{ diskFile.id }}'
         destination: /tmp/test2.txt

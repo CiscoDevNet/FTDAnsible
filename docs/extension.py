@@ -29,7 +29,8 @@ class IncludePlaybookTasks(Extension):
         if include:
             tasks = [t for t in tasks if t['name'] in include]
 
-        return YAML_CODE_TEMPLATE.format(ordered_dump(tasks, default_flow_style=False))
+        tasks_str = '\n'.join([ordered_dump([t], default_flow_style=False) for t in tasks])
+        return YAML_CODE_TEMPLATE.format(tasks_str)
 
     def parse(self, parser):
         def parse_arguments():
@@ -37,8 +38,6 @@ class IncludePlaybookTasks(Extension):
             # append task filters if any
             if parser.stream.skip_if('comma'):
                 args.append(parser.parse_expression())
-            else:
-                args.append(None)
             return args
 
         lineno = next(parser.stream).lineno
