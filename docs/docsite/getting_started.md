@@ -37,7 +37,7 @@ More examples can be found [here](./examples.md).
 ## Registering objects as Ansible facts
 
 In order to reuse objects in subsequent plays during an ansible-playbook run, they should be registered as variables. 
-FTD modules automatically register server responses as Ansible facts. Then, these facts can be used in the playbook as 
+FTD modules automatically register server responses as Ansible _facts_. Then, these _facts_ can be used in the playbook as 
 regular variables.
 
 By default, fact names are constructed as `{OBJECT_TYPE}_{LOWERCASE_OBJECT_NAME}`. For example, an `addNetworkObject` 
@@ -99,4 +99,34 @@ If you want to change the default naming convention, add a `register_as` paramet
 Facts are set on a host-by-host basis. When the playbook is run on multiple devices (hosts), facts are 
 visible in a context of a single device (host) only.
 
-## Understanding playbook's idempotency
+## Understanding operation's idempotency
+
+An operation is _idempotent_ if the result of running it once is exactly the same as the result of running it 
+multiple times. As Ansible requires modules to be idempotent, `ftd_configuration` complies with this requirement.
+
+Before executing the operation, `ftd_configuration` checks whether the desired final state is already achieved. 
+If yes, no actions are executed, and the operation finishes showing that the state is not changed. 
+
+For example, when running `addNetworkObject` operation multiple times without changing the play configuration, 
+only the first run results in `changed` status. Subsequent runs are finished with `ok` status.
+
+```
+$ ansible-playbook test.yml
+
+TASK [Create localhost network] *******************************************
+changed: [localhost]
+
+PLAY RECAP ****************************************************************
+localhost               : ok=1    changed=1    unreachable=0    failed=0
+
+$ ansible-playbook test.yml
+
+TASK [Create localhost network] *******************************************
+ok: [localhost]
+
+PLAY RECAP ****************************************************************
+localhost               : ok=1    changed=0    unreachable=0    failed=0
+``` 
+
+When playbook tasks are idempotent, the playbook itself must be idempotent too. Having idempotent playbook is 
+recommended, as it allows to re-run them safely.
