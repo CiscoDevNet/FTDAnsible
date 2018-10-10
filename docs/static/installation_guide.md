@@ -42,7 +42,7 @@ docker pull ciscodevnet/ftd-ansible
 docker run -v $(pwd)/samples:/ftd-ansible/playbooks -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts ciscodevnet/ftd-ansible test_playbook.yml
 ```
 
-# Creating Inventory
+## Creating Inventory
 
 [Ansible inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) contains information
 about systems where the playbooks should be run. You should create an inventory file with information about FTD
