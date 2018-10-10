@@ -8,7 +8,7 @@
           name: "Ansible-network-host"
           description: "From Ansible with love"
           subType: "HOST"
-          value: "{{ host_ip }}"
+          value: "130.51.181.228"
           isSystemDefined: False
           type: "networkobject"
 
@@ -19,7 +19,7 @@
           name: "Ansible-network-network"
           description: "From Ansible with love"
           subType: "NETWORK"
-          value: "{{ network_ip }}"
+          value: "195.4.45.0/24"
           type: "networkobject"
 
     - name: Create a network group
