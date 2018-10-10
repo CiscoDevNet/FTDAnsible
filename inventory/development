@@ -1,3 +1,0 @@
-[vftd]
-vftd-1 ansible_network_os=ftd ansible_host=localhost ansible_port=4200 ansible_httpapi_port=4200 ansible_httpapi_use_ssl=False
-vftd-2 ansible_network_os=ftd ansible_host=localhost ansible_port=4201 ansible_httpapi_port=4201 ansible_httpapi_use_ssl=False
