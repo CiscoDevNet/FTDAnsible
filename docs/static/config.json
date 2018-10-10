@@ -22,6 +22,11 @@
       ]
     },
     {
+      "title": "Modules",
+      "type": "config",
+      "content": "modules/config.json"
+    },
+    {
       "title": "Models",
       "type": "config",
       "content": "models/config.json"
