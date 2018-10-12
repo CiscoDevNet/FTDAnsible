@@ -7,7 +7,6 @@
         operation: 'getNetworkObjectList'
         query_params:
           offset: True
-          limit: '1'
           sort: 0
           filter: 1.1
       register: result
@@ -20,7 +19,6 @@
           - 'result.msg == {"Invalid query_params provided":
                             {"invalid_type": [
                                   {"actually_value": true, "expected_type": "integer", "path": "offset"},
-                                  {"actually_value": "1", "expected_type": "integer", "path": "limit"},
                                   {"actually_value": 0, "expected_type": "string", "path": "sort"},
                                   {"actually_value": 1.1, "expected_type": "string", "path": "filter"}]}}'
 
@@ -29,7 +27,7 @@
         operation: 'getNetworkObjectList'
         query_params:
           offset: 10
-          limit: 2
+          limit: '2'
           sort: 'name'
       register: result
     - assert:
@@ -130,7 +128,7 @@
         that:
           - 'result.changed == false'
           - 'result.failed == true'
-          - 'result.msg == {"Invalid data provided": {"required": ["subType", "type", "value"]}}'
+          - 'result.msg == {"Invalid data provided": {"required": ["name", "subType", "type", "value"]}}'
 
     - name: data should contain valid data
       ftd_configuration:
