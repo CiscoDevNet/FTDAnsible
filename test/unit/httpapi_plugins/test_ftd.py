@@ -17,7 +17,6 @@
 #
 
 import json
-import os
 
 from ansible.compat.tests import mock
 from ansible.compat.tests import unittest
@@ -184,6 +183,10 @@ class TestFtdHttpApi(unittest.TestCase):
 
     def test_handle_httperror_should_not_retry_on_non_auth_errors(self):
         assert not self.ftd_plugin.handle_httperror(HTTPError('http://testhost.com', 500, '', {}, None))
+
+    def test_handle_httperror_should_not_retry_when_ignoring_http_errors(self):
+        self.ftd_plugin._ignore_http_errors = True
+        assert not self.ftd_plugin.handle_httperror(HTTPError('http://testhost.com', 401, '', {}, None))
 
     @patch('os.path.isdir', mock.Mock(return_value=False))
     def test_download_file(self):
