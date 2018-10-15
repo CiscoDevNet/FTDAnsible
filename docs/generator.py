@@ -15,7 +15,8 @@ from jinja2 import Environment, FileSystemLoader
 
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
-from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField, PropName, OperationParams
+from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField, PropName, OperationParams, \
+    FILE_MODEL_NAME
 
 BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TEMPLATE_DIR = os.path.join(BASE_DIR_PATH, 'templates')
@@ -88,6 +89,8 @@ class ModelDocGenerator(BaseDocGenerator):
 
     MODEL_TEMPLATE = 'model.md.j2'
 
+    CUSTOM_MODEL_MAPPING = {FILE_MODEL_NAME: 'File'}
+
     def __init__(self, template_dir, api_spec):
         super().__init__(template_dir)
         self._api_spec = api_spec
@@ -99,6 +102,9 @@ class ModelDocGenerator(BaseDocGenerator):
         model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
 
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
+            if model_name in self.CUSTOM_MODEL_MAPPING:
+                model_name = self.CUSTOM_MODEL_MAPPING[model_name]
+
             ignore_model = include_models and model_name not in include_models
             if model_name is None or ignore_model:
                 continue
