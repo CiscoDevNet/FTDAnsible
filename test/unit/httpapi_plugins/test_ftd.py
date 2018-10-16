@@ -116,6 +116,15 @@ class TestFtdHttpApi(unittest.TestCase):
 
         assert 'Server returned response without token info during connection authentication' in str(res.exception)
 
+    def test_login_raises_exception_when_http_error(self):
+        self.connection_mock.send.side_effect = HTTPError('http://testhost.com', 400, '', {},
+                                                          StringIO('{"message": "Failed to authenticate user"}'))
+
+        with self.assertRaises(ConnectionError) as res:
+            self.ftd_plugin.login('foo', 'bar')
+
+        assert 'Failed to authenticate user' in str(res.exception)
+
     def test_logout_should_revoke_tokens(self):
         self.ftd_plugin.access_token = 'ACCESS_TOKEN_TO_REVOKE'
         self.ftd_plugin.refresh_token = 'REFRESH_TOKEN_TO_REVOKE'

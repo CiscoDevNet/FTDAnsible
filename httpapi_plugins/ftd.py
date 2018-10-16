@@ -112,7 +112,7 @@ class HttpApi(HttpApiBase):
         url = self._get_api_token_path()
         self._display(HTTPMethod.POST, 'login', url)
 
-        dummy, response_data = self._send_and_ignore_http_errors(
+        dummy, response_data = self._send_auth_request(
             url, json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
         )
 
@@ -137,14 +137,19 @@ class HttpApi(HttpApiBase):
 
         self._display(HTTPMethod.POST, 'logout', url)
 
-        self._send_and_ignore_http_errors(url, json.dumps(auth_payload), method=HTTPMethod.POST, headers=BASE_HEADERS)
+        self._send_auth_request(url, json.dumps(auth_payload), method=HTTPMethod.POST, headers=BASE_HEADERS)
         self.refresh_token = None
         self.access_token = None
 
-    def _send_and_ignore_http_errors(self, path, data, **kwargs):
+    def _send_auth_request(self, path, data, **kwargs):
         try:
             self._ignore_http_errors = True
             return self.connection.send(path, data, **kwargs)
+        except HTTPError as e:
+            # HttpApi connection does not read the error response from HTTPError, so we do it here and wrap it up in
+            # ConnectionError, so the actual error message is displayed to the user.
+            error_msg = json.loads(to_text(e.read()))
+            raise ConnectionError('Server returned an error during authentication request: %s' % error_msg)
         finally:
             self._ignore_http_errors = False
 
