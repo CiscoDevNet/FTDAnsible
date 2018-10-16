@@ -1,0 +1,55 @@
+# Examples
+
+Here are some examples that demonstrate how to use Ansible modules for common 
+operations on FTD devices. Hopefully, they will make the process of creating 
+your playbooks easier.
+
+## Create a NetworkObject
+
+This example demonstrates how to create a simple entity representing a network - 
+`NetworkObject`. The task creates a new object representing a fully qualified 
+domain name (FQDN) network for [Cisco DevNet](https://developer.cisco.com/) website.
+
+After creation, the network object is stored as an Ansible fact and can be accessed
+using `networkobject_ciscodevnetnetwork` variable. 
+
+{% include_playbook_tasks sample_dir + '/network_object.yml', ["Create an FQDN network for Cisco DevNet"] %}
+
+## Create a NetworkObjectGroup
+
+`NetworkObjectGroup` is a container object representing a group of networks.
+
+The first task creates an auxiliary `NetworkObject` for Cisco FTD. Then,
+a `NetworkObjectGroup`, consisting of two previously created networks,
+is created in the second task.
+
+Notice, that the second task, creating a `NetworkObjectGroup` object, references previously 
+created `NetworkObject`s. It is possible because every created object is stored as an Ansible fact.
+By default, the fact name for a new object is constructed as `$TYPE_$NAME`, but it can be reset by
+adding a `register_as` parameter to the task that creates the object.
+
+{% include_playbook_tasks sample_dir + '/network_object.yml', [
+    "Create an FQDN network for Cisco FTD",
+    "Create a Cisco network group"
+] %}
+
+## Create an AccessRule
+
+An `AccessRule` permits or denies traffic based on different parameters, such as a protocol,
+a source or destination IP address, network, etc.
+
+The example shows how to create an `AccessRule` allowing traffic from the previously created
+`CiscoDevNetNetwork`.
+
+{% include_playbook_tasks sample_dir + '/access_rule.yml', ["Create an access rule allowing trafic from Cisco DevNet"] %}
+
+## Make a deployment
+
+Changes made on the FTD device are applied only after they get deployed. This example demonstrates
+how to start a deployment job and make sure that it succeeds.
+
+The first task starts a new deployment job and registers returned `DeploymentStatus` as `deployment_job` Ansible fact.
+The next task polls the `DeploymentStatus` every 3 seconds until the job is completed. The last
+part verifies that the deployment is completed successfully. Otherwise, it stops the playbook with an error message.
+
+{% include_playbook_tasks sample_dir + '/deployment.yml' %}

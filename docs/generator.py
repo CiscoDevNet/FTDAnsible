@@ -15,10 +15,12 @@ from jinja2 import Environment, FileSystemLoader
 
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
-from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField, PropName, OperationParams
+from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField, PropName, OperationParams, \
+    FILE_MODEL_NAME
 
 BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TEMPLATE_DIR = os.path.join(BASE_DIR_PATH, 'templates')
+DEFAULT_SAMPLES_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'samples')
 DEFAULT_STATIC_DIR = os.path.join(BASE_DIR_PATH, 'static')
 DEFAULT_DIST_DIR = os.path.join(BASE_DIR_PATH, 'dist')
 DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
@@ -46,7 +48,8 @@ class BaseDocGenerator(metaclass=ABCMeta):
     J2_SUFFIX = '.j2'
 
     def __init__(self, template_dir):
-        env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True)
+        env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True,
+                          extensions=['extension.IncludePlaybookTasks'])
         env.filters['camel_to_snake'] = camel_to_snake
         self._jinja_env = env
 
@@ -86,6 +89,8 @@ class ModelDocGenerator(BaseDocGenerator):
 
     MODEL_TEMPLATE = 'model.md.j2'
 
+    CUSTOM_MODEL_MAPPING = {FILE_MODEL_NAME: 'File'}
+
     def __init__(self, template_dir, api_spec):
         super().__init__(template_dir)
         self._api_spec = api_spec
@@ -97,6 +102,9 @@ class ModelDocGenerator(BaseDocGenerator):
         model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
 
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
+            if model_name in self.CUSTOM_MODEL_MAPPING:
+                model_name = self.CUSTOM_MODEL_MAPPING[model_name]
+
             ignore_model = include_models and model_name not in include_models
             if model_name is None or ignore_model:
                 continue
@@ -232,6 +240,26 @@ class ModuleDocGenerator(BaseDocGenerator):
         } for k, v in return_params.items()}
 
 
+class ExampleDocGenerator(BaseDocGenerator):
+    """Generates documentation for examples. Task examples
+    are dynamically copied from real Ansible playbooks.
+    Documentation is written using Markdown markup language.
+    """
+
+    EXAMPLES_TEMPLATE = 'examples.md.j2'
+
+    def __init__(self, template_dir, sample_dir):
+        super().__init__(template_dir)
+        self._sample_dir = sample_dir
+
+    def generate_doc_files(self, dest_dir):
+        example_template = self._jinja_env.get_template(self.EXAMPLES_TEMPLATE)
+        example_content = example_template.render(sample_dir=self._sample_dir)
+
+        filename = self.EXAMPLES_TEMPLATE[:-len(self.J2_SUFFIX)]
+        self._write_generated_file(dest_dir, filename, example_content)
+
+
 def camel_to_snake(text):
     test_with_underscores = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', test_with_underscores).lower()
@@ -282,6 +310,9 @@ def main():
 
     module_generator = ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, DEFAULT_MODULE_DIR)
     module_generator.generate_doc_files(args.dist)
+
+    example_generator = ExampleDocGenerator(DEFAULT_TEMPLATE_DIR, DEFAULT_SAMPLES_DIR)
+    example_generator.generate_doc_files(args.dist)
 
 
 if __name__ == '__main__':
