@@ -17,7 +17,6 @@
 #
 
 import json
-import os
 
 from ansible.compat.tests import mock
 from ansible.compat.tests import unittest
@@ -117,6 +116,15 @@ class TestFtdHttpApi(unittest.TestCase):
 
         assert 'Server returned response without token info during connection authentication' in str(res.exception)
 
+    def test_login_raises_exception_when_http_error(self):
+        self.connection_mock.send.side_effect = HTTPError('http://testhost.com', 400, '', {},
+                                                          StringIO('{"message": "Failed to authenticate user"}'))
+
+        with self.assertRaises(ConnectionError) as res:
+            self.ftd_plugin.login('foo', 'bar')
+
+        assert 'Failed to authenticate user' in str(res.exception)
+
     def test_logout_should_revoke_tokens(self):
         self.ftd_plugin.access_token = 'ACCESS_TOKEN_TO_REVOKE'
         self.ftd_plugin.refresh_token = 'REFRESH_TOKEN_TO_REVOKE'
@@ -184,6 +192,10 @@ class TestFtdHttpApi(unittest.TestCase):
 
     def test_handle_httperror_should_not_retry_on_non_auth_errors(self):
         assert not self.ftd_plugin.handle_httperror(HTTPError('http://testhost.com', 500, '', {}, None))
+
+    def test_handle_httperror_should_not_retry_when_ignoring_http_errors(self):
+        self.ftd_plugin._ignore_http_errors = True
+        assert not self.ftd_plugin.handle_httperror(HTTPError('http://testhost.com', 401, '', {}, None))
 
     @patch('os.path.isdir', mock.Mock(return_value=False))
     def test_download_file(self):

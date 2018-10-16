@@ -86,6 +86,7 @@ class HttpApi(HttpApiBase):
         self.refresh_token = None
         self._api_spec = None
         self._api_validator = None
+        self._ignore_http_errors = False
 
     def login(self, username, password):
         def request_token_payload(username, password):
@@ -111,7 +112,7 @@ class HttpApi(HttpApiBase):
         url = self._get_api_token_path()
         self._display(HTTPMethod.POST, 'login', url)
 
-        dummy, response_data = self.connection.send(
+        dummy, response_data = self._send_auth_request(
             url, json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
         )
 
@@ -136,9 +137,21 @@ class HttpApi(HttpApiBase):
 
         self._display(HTTPMethod.POST, 'logout', url)
 
-        self.connection.send(url, json.dumps(auth_payload), method=HTTPMethod.POST, headers=BASE_HEADERS)
+        self._send_auth_request(url, json.dumps(auth_payload), method=HTTPMethod.POST, headers=BASE_HEADERS)
         self.refresh_token = None
         self.access_token = None
+
+    def _send_auth_request(self, path, data, **kwargs):
+        try:
+            self._ignore_http_errors = True
+            return self.connection.send(path, data, **kwargs)
+        except HTTPError as e:
+            # HttpApi connection does not read the error response from HTTPError, so we do it here and wrap it up in
+            # ConnectionError, so the actual error message is displayed to the user.
+            error_msg = json.loads(to_text(e.read()))
+            raise ConnectionError('Server returned an error during authentication request: %s' % error_msg)
+        finally:
+            self._ignore_http_errors = False
 
     def update_auth(self, response, response_data):
         # With tokens, authentication should not be checked and updated on each request
@@ -204,7 +217,8 @@ class HttpApi(HttpApiBase):
         self._display(HTTPMethod.GET, 'downloaded', to_path)
 
     def handle_httperror(self, exc):
-        if exc.code == TOKEN_EXPIRATION_STATUS_CODE or exc.code == UNAUTHORIZED_STATUS_CODE:
+        is_auth_related_code = exc.code == TOKEN_EXPIRATION_STATUS_CODE or exc.code == UNAUTHORIZED_STATUS_CODE
+        if not self._ignore_http_errors and is_auth_related_code:
             self.connection._auth = None
             self.login(self.connection.get_option('remote_user'), self.connection.get_option('password'))
             return True
