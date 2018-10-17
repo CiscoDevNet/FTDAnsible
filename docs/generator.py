@@ -182,6 +182,7 @@ class ModuleDocGenerator(BaseDocGenerator):
     """
 
     MODULE_TEMPLATE = 'module.md.j2'
+    MODULE_NAME_REGEX = r'^ftd_.*\.py$'
 
     def __init__(self, template_dir, module_dir):
         super().__init__(template_dir)
@@ -196,7 +197,7 @@ class ModuleDocGenerator(BaseDocGenerator):
         # add the module dir to the Python path
         sys.path.insert(0, self._module_dir)
         for module_filename in os.listdir(self._module_dir):
-            if not module_filename.startswith('ftd_'):
+            if not re.match(self.MODULE_NAME_REGEX, module_filename):
                 continue
 
             module_name = os.path.splitext(module_filename)[0]
