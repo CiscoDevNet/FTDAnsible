@@ -1,0 +1,19 @@
+- hosts: vftd
+  connection: httpapi
+  tasks:
+    - name: Create a NetworkObject based on host variables
+      ftd_configuration:
+        operation: addNetworkObject
+        data:
+          name: HostSpecificNetwork
+          subType: '{{ network_type }}'
+          value: '{{ network_value }}'
+          isSystemDefined: False
+          type: networkobject
+          dnsResolution: IPV4_AND_IPV6
+
+    - name: Delete the created NetworkObject
+      ftd_configuration:
+        operation: deleteNetworkObject
+        path_params:
+          objId: '{{ networkobject_hostspecificnetwork.id }}'

@@ -53,3 +53,27 @@ The next task polls the `DeploymentStatus` every 3 seconds until the job is comp
 part verifies that the deployment is completed successfully. Otherwise, it stops the playbook with an error message.
 
 {% include_playbook_tasks sample_dir + '/deployment.yml' %}
+
+## Use host and group variables
+
+Variables in Ansible allow making content of the playbook host- or group-specific. For example, to create a `NetworkObject`
+specific for each device, you can use the following task template with `network_type` and `network_value` variables:
+
+{% include_playbook_tasks sample_dir + '/network_object_with_host_vars.yml', ["Create a NetworkObject based on host variables"] %}
+
+There are multiple ways to [specify variables in Ansible](https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html).
+One option is to put them in the inventory file together with other host and group variables:
+
+```
+[vftd]
+localhost ... network_value=127.0.0.1
+10.89.21.213 ... network_value=130.51.181.225
+
+[vftd:vars]
+network_type=HOST
+```
+
+With the playbook and inventory shown above, Ansible will create a `HOST` network pointing to `127.0.0.1` on the
+`localhost` device, and another network for IP address `130.51.181.225` on device `10.89.21.213`.
+
+More information about variables in [Ansible documentation](https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html).
