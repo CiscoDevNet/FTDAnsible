@@ -69,3 +69,26 @@ Additionally, these __optional__ parameters can be used:
 * `ansible_httpapi_ftd_spec_path` - a URL for the Swagger specification on the FTD device (default URL is `/apispec/ngfw.json`);
 * `ansible_httpapi_use_ssl` - whether to connect using SSL (HTTPS) or not (HTTP);
 * `ansible_httpapi_validate_certs` - Whether to validate SSL certificates or not.
+
+### Using Vault
+
+To keep sensitive data (e.g., `ansible_password`) in encrypted files, rather than as plaintext in inventory files, use
+[Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html) feature.
+
+Vault can encrypt any file used by Ansible including `group_vars/` or `host_vars/` variables, variables 
+loaded by `include_vars` or `vars_files`, and variable files passed as `-e @file` argument to `ansible-playbook` command.
+
+To create an encrypted vault file, run the following command:
+```
+ansible-vault create secret
+```
+First, you will be prompted for a password, then the editor will be launched and once you are done, the encrypted file
+is created. To use the encrypted file in Ansible, add the `--ask-vault-pass` 
+to any `ansible` or `ansible-playbook` command:
+```
+ansible-playbook test_playbook.yml --ask-vault-pass -e @secret
+```
+
+More information about Vault can be found in Ansible Documentation:
+ * [Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html)
+ * [Using Vault in playbooks](https://docs.ansible.com/ansible/latest/user_guide/playbooks_vault.html) 
