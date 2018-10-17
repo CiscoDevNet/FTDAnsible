@@ -16,7 +16,8 @@ from jinja2 import Environment, FileSystemLoader
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField, PropName, OperationParams, \
-    FILE_MODEL_NAME
+    FILE_MODEL_NAME, QueryParams
+from module_utils.configuration import OperationNamePrefix, OperationChecker
 
 BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TEMPLATE_DIR = os.path.join(BASE_DIR_PATH, 'templates')
@@ -51,7 +52,7 @@ class BaseDocGenerator(metaclass=ABCMeta):
 
     def __init__(self, template_dir):
         env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True,
-                          extensions=['extension.IncludePlaybookTasks'])
+                          extensions=['docs.extension.IncludePlaybookTasks'])
         env.filters['camel_to_snake'] = camel_to_snake
         env.filters['escape_md_symbols'] = lambda s: s.replace('[', '&#91;').replace(']', '&#93;') \
             .replace('|', '&#124;')
@@ -287,6 +288,75 @@ def fetch_api_specs_with_docs(hostname, username, password):
     return FdmSwaggerParser().parse_spec(json.loads(to_text(spec_resp)), json.loads(to_text(docs_resp)))
 
 
+class ApiSpecAutocomplete(object):
+    """Allow us to extend API spec with custom actions implemented at Module level.
+
+    Should be extended with _check_and_generate_<operation_type>_specs methods - each of which can extend api spec
+    with specific operation types.
+    The following methods should be called in case of 'api_spec' update required
+        _add_operation_to_model_spec
+        _add_operation_to_operations_spec
+    """
+    UPSERT_DEFAUL_FILTER_COMMENT = " Default filtering for Upsert operation is done by name."
+
+    def __init__(self, api_spec):
+        self._api_spec = api_spec
+        self._operation_checker = OperationChecker
+
+
+    def _add_operation_to_model_spec(self, model_name, op_name, op_spec):
+        self._api_spec[SpecProp.MODEL_OPERATIONS][model_name][op_name] = op_spec
+
+    def _add_operation_to_operations_spec(self, op_name, op_spec):
+        self._api_spec[SpecProp.OPERATIONS][op_name] = op_spec
+
+    def _generate_upsert_spec(self, operations, model_name, add_operantion, list_operation):
+        op_spec = dict(operations[add_operantion])
+        base_filter_spec = dict(operations[list_operation][OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER])
+
+        def property_for_filtering_is_present(model_spec, prop_name):
+            """Check that required property is present in the model spec."""
+            return model_spec[PropName.PROPERTIES].get(prop_name)
+
+        if property_for_filtering_is_present(model_spec=self._api_spec[SpecProp.MODELS][model_name],
+                                             prop_name=PropName.NAME):
+            base_filter_spec[PropName.DESCRIPTION] += self.UPSERT_DEFAUL_FILTER_COMMENT
+        else:
+            base_filter_spec[PropName.REQUIRED] = True
+
+        op_spec[OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER] = base_filter_spec
+
+        return op_spec
+
+    def _check_and_generate_upsert_specs(self, model_name, operations):
+        """Update api spec if upsert action is applicable to model."""
+        # We assume that Upsert and Add actions signature will be same for the moment
+        if not model_name:
+            # Some actions will have no model - we can't do upsert for them.
+            return
+
+        add_operantion = OperationNamePrefix.ADD + model_name
+        list_operation = OperationNamePrefix.GET + model_name + 'List'
+
+        if self._operation_checker.is_upsert_operation_is_supported(operations):
+            op_name = OperationNamePrefix.UPSERT + model_name
+            op_spec = self._generate_upsert_spec(operations, model_name, add_operantion, list_operation)
+
+            self._add_operation_to_model_spec(
+                model_name=model_name,
+                op_name=op_name,
+                op_spec=op_spec
+            )
+            self._add_operation_to_operations_spec(
+                op_name=op_name,
+                op_spec=op_spec
+            )
+
+    def lookup_and_complete(self):
+        for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
+            self._check_and_generate_upsert_specs(model_name, operations)
+
+
 def main():
     def prepare_dist_dir_with_static_docs():
         if os.path.exists(args.dist):
@@ -304,6 +374,9 @@ def main():
 
     api_spec = fetch_api_specs_with_docs(args.hostname, args.username, args.password)
     prepare_dist_dir_with_static_docs()
+
+    spec_autocomplete = ApiSpecAutocomplete(api_spec)
+    spec_autocomplete.lookup_and_complete()
 
     model_generator = ModelDocGenerator(DEFAULT_TEMPLATE_DIR, api_spec)
     model_generator.generate_doc_files(args.dist, args.models)

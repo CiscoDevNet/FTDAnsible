@@ -3,7 +3,7 @@
   tasks:
     - name: Create an FQDN network for Cisco DevNet
       ftd_configuration:
-        operation: addNetworkObject
+        operation: upsertNetworkObject
         data:
           name: CiscoDevNetNetwork
           subType: FQDN
@@ -14,7 +14,7 @@
 
     - name: Create an FQDN network for Cisco FTD
       ftd_configuration:
-        operation: addNetworkObject
+        operation: upsertNetworkObject
         data:
           name: CiscoFtdNetwork
           subType: FQDN
@@ -25,7 +25,7 @@
 
     - name: Create a Cisco network group
       ftd_configuration:
-        operation: addNetworkObjectGroup
+        operation: upsertNetworkObjectGroup
         data:
           name: CiscoNetworkGroup
           type: networkobjectgroup

@@ -38,7 +38,7 @@ author: "Cisco Systems, Inc."
 options:
   operation:
     description:
-      - The name of the operation to execute. Commonly, the operation starts with 'add', 'edit', 'get'
+      - The name of the operation to execute. Commonly, the operation starts with 'add', 'edit', 'get', 'upsert'
        or 'delete' verbs, but can have an arbitrary name too.
     required: true
     type: string
@@ -125,7 +125,11 @@ def main():
     resource = BaseConfigurationResource(connection, module.check_mode)
     op_name = params['operation']
     try:
-        resp = resource.crud_operation(op_name, params)
+        if resource.is_upsert_operation(op_name):
+            resp = resource.upsert_object(op_name, params)
+        else:
+            resp = resource.crud_operation(op_name, params)
+
         module.exit_json(changed=resource.config_changed, response=resp,
                          ansible_facts=construct_ansible_facts(resp, module.params))
     except FtdInvalidOperationNameError as e:
