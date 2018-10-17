@@ -42,6 +42,36 @@ docker pull ciscodevnet/ftd-ansible
 docker run -v $(pwd)/samples:/ftd-ansible/playbooks -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts ciscodevnet/ftd-ansible test_playbook.yml
 ```
 
+### Using source code
+
+Not only do you need to have the most recent updates, but also feel eager to experiment with the source code? Then, 
+follow the development setup and clone out [Git repository](https://github.com/CiscoDevNet/FTDAnsible).  
+
+1. Clone the FTDAnsible repository:
+```
+git clone https://github.com/CiscoDevNet/FTDAnsible.git
+```
+
+1. Create a virtual environment and activate it:
+```
+cd FTDAnsible
+python3 -m venv venv
+. venv/bin/activate
+```
+
+1. Install dependencies and update Python path to include the project's directory:
+```
+pip install -r requirements.txt
+export PYTHONPATH=.:$PYTHONPATH
+```
+
+1. [Create](#creating-inventory) an inventory file for FTD devices;
+   
+1. Run the playbook:
+``` 
+ansible-playbook test_playbook.yml
+```
+
 ## Creating Inventory
 
 [Ansible inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) contains information
