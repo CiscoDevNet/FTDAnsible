@@ -33,6 +33,8 @@ ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
 ModuleSpec = namedtuple('ModuleSpec', 'name short_description description params return_values examples')
 
+CUSTOM_MODEL_MAPPING = {FILE_MODEL_NAME: 'File'}
+
 
 class BaseDocGenerator(metaclass=ABCMeta):
     """Abstract class for documentation generators that produce
@@ -89,8 +91,6 @@ class ModelDocGenerator(BaseDocGenerator):
 
     MODEL_TEMPLATE = 'model.md.j2'
 
-    CUSTOM_MODEL_MAPPING = {FILE_MODEL_NAME: 'File'}
-
     def __init__(self, template_dir, api_spec):
         super().__init__(template_dir)
         self._api_spec = api_spec
@@ -102,23 +102,21 @@ class ModelDocGenerator(BaseDocGenerator):
         model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
 
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
-            if model_name in self.CUSTOM_MODEL_MAPPING:
-                model_name = self.CUSTOM_MODEL_MAPPING[model_name]
-
             ignore_model = include_models and model_name not in include_models
             if model_name is None or ignore_model:
                 continue
 
             model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+            displayed_model_name = CUSTOM_MODEL_MAPPING.get(model_name, model_name)
             model_spec = ModelSpec(
-                name=model_name,
+                name=displayed_model_name,
                 description=model_api_spec.get(PropName.DESCRIPTION, ''),
                 properties=model_api_spec.get(PropName.PROPERTIES, {}),
                 operations=operations.keys()
             )
             model_content = model_template.render(model=model_spec)
-            self._write_generated_file(model_dir, model_name + self.MD_SUFFIX, model_content)
-            model_index.append(model_name)
+            self._write_generated_file(model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
+            model_index.append(displayed_model_name)
 
         self._write_index_files(model_dir, 'Model', model_index)
 
@@ -146,10 +144,12 @@ class OperationDocGenerator(BaseDocGenerator):
             if ignore_op:
                 continue
 
+            model_name = op_api_spec[OperationField.MODEL_NAME]
+            displayed_model_name = CUSTOM_MODEL_MAPPING.get(model_name, model_name)
             op_spec = OperationSpec(
                 name=op_name,
                 description=op_api_spec.get(OperationField.DESCRIPTION),
-                model_name=op_api_spec[OperationField.MODEL_NAME],
+                model_name=displayed_model_name,
                 path_params=op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
                 query_params=op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
                 data_params=self._get_data_params(op_name, op_api_spec)
