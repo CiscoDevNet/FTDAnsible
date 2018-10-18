@@ -53,6 +53,8 @@ class BaseDocGenerator(metaclass=ABCMeta):
         env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True,
                           extensions=['extension.IncludePlaybookTasks'])
         env.filters['camel_to_snake'] = camel_to_snake
+        env.filters['escape_md_symbols'] = lambda s: s.replace('[', '&#91;').replace(']', '&#93;') \
+            .replace('|', '&#124;')
         self._jinja_env = env
 
     @abstractmethod
