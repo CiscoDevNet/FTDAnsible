@@ -44,6 +44,10 @@ class _OperationNamePrefix:
     DELETE = 'delete'
 
 
+class QueryParams:
+    FILTER = 'filter'
+
+
 class ParamName:
     QUERY_PARAMS = 'query_params'
     PATH_PARAMS = 'path_params'
@@ -112,7 +116,7 @@ class BaseConfigurationResource(object):
 
         filters = params.get(ParamName.FILTERS) or {}
         if filters:
-            get_list_params[ParamName.QUERY_PARAMS][ParamName.FILTERS] = transform_filters_to_query_param(filters)
+            get_list_params[ParamName.QUERY_PARAMS][QueryParams.FILTER] = transform_filters_to_query_param(filters)
 
         item_generator = iterate_over_pageable_resource(
             partial(self.send_general_request, operation_name=operation_name), get_list_params
