@@ -109,6 +109,16 @@ class TestBaseConfigurationResource(object):
         assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == resource.get_objects_by_filter(
             'test',
             {ParamName.FILTERS: {'type': 'foo'}})
+        send_request_mock.assert_has_calls(
+            [
+                mock.call('/object/', 'get', {}, {},
+                          {QueryParams.FILTER: "type:foo", 'limit': 10, 'offset': 0}),
+                mock.call('/object/', 'get', {}, {},
+                          {QueryParams.FILTER: "type:foo", 'limit': 10, 'offset': 10}),
+                mock.call('/object/', 'get', {}, {},
+                          {QueryParams.FILTER: "type:foo", 'limit': 10, 'offset': 20})
+            ]
+        )
 
     def test_module_should_fail_if_validation_error_in_data(self, connection_mock):
         connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.POST, 'url': '/test'}
