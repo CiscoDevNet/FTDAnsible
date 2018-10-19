@@ -52,10 +52,11 @@ follow the development setup and clone out [Git repository](https://github.com/C
 git clone https://github.com/CiscoDevNet/FTDAnsible.git
 ```
 
-1. Create a virtual environment and activate it:
+1. Make sure that Python version [supported by Ansible](#dependency-requirements) is installed, and create 
+a virtual environment:
 ```
 cd FTDAnsible
-python3 -m venv venv
+python -m venv venv
 . venv/bin/activate
 ```
 
