@@ -22,7 +22,7 @@ import pytest
 from ansible.compat.tests import mock
 from ansible.compat.tests.mock import call, patch
 
-from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource
+from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource, ParamName
 
 try:
     from ansible.module_utils.common import HTTPMethod
@@ -60,11 +60,11 @@ class TestBaseConfigurationResource(object):
         assert objects == resource.get_objects_by_filter('test', {})
 
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
-        assert [objects[0]] == resource.get_objects_by_filter('test', {'filters': {'name': 'obj1'}})
+        assert [objects[0]] == resource.get_objects_by_filter('test', {ParamName.FILTERS: {'name': 'obj1'}})
 
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
         assert [objects[1]] == resource.get_objects_by_filter('test',
-                                                              {'filters': {'type': 1, 'foo': {'bar': 'buz'}}})
+                                                              {ParamName.FILTERS: {'type': 1, 'foo': {'bar': 'buz'}}})
 
     @patch.object(BaseConfigurationResource, '_send_request')
     def test_get_objects_by_filter_with_multiple_responses(self, send_request_mock, connection_mock):
@@ -86,7 +86,7 @@ class TestBaseConfigurationResource(object):
 
         assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == resource.get_objects_by_filter(
             'test',
-            {'filters': {'type': 'foo'}})
+            {ParamName.FILTERS: {'type': 'foo'}})
 
     def test_module_should_fail_if_validation_error_in_data(self, connection_mock):
         connection_mock.get_operation_spec.return_value = {'method': HTTPMethod.POST, 'url': '/test'}

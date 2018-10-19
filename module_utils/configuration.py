@@ -48,7 +48,7 @@ class ParamName:
     QUERY_PARAMS = 'query_params'
     PATH_PARAMS = 'path_params'
     DATA = 'data'
-    FILTERS = 'filters'
+    FILTERS = 'filter'
 
 
 class CheckModeException(Exception):
@@ -250,7 +250,7 @@ class BaseConfigurationResource(object):
         :type operation_name: str
         :param operation_spec: specification of the operation being called by the user
         :type operation_spec: dict
-        :param params: params - params should contain 'filters'
+        :param params: params - params should contain 'filter'
         :return: True if called operation is find by filter, otherwise False
         :rtype: bool
         """
