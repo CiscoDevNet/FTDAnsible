@@ -5,7 +5,7 @@ _{{ module.short_description if module.short_description }}_
 
 {% if module.description %}
 ## Description
-{{ module.description }}
+{{ module.description | escape_md_symbols }}
 {% endif %}
 
 {% if module.params %}
@@ -13,7 +13,7 @@ _{{ module.short_description if module.short_description }}_
 | Parameter | Required | Type | Description |
 | --------- | -------- | ---- | ----------- |
 {% for param_name, param_spec in module.params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description }} |
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}
 
@@ -22,7 +22,7 @@ _{{ module.short_description if module.short_description }}_
 | Value | Returned | Type | Description |
 | ----- | -------- | ---- | ----------- |
 {% for value_name, value_spec in module.return_values.items() %}
-| {{ value_name }} | {{ value_spec.returned }} | {{ value_spec.type }} | {{ value_spec.description }} |
+| {{ value_name }} | {{ value_spec.returned }} | {{ value_spec.type }} | {{ value_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}
 

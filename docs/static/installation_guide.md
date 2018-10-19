@@ -42,6 +42,37 @@ docker pull ciscodevnet/ftd-ansible
 docker run -v $(pwd)/samples:/ftd-ansible/playbooks -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts ciscodevnet/ftd-ansible test_playbook.yml
 ```
 
+### Using source code
+
+Not only do you need to have the most recent updates, but also feel eager to experiment with the source code? Then, 
+follow the development setup and clone out [Git repository](https://github.com/CiscoDevNet/FTDAnsible).  
+
+1. Clone the FTDAnsible repository:
+```
+git clone https://github.com/CiscoDevNet/FTDAnsible.git
+```
+
+1. Make sure that Python version [supported by Ansible](#dependency-requirements) is installed, and create 
+a virtual environment:
+```
+cd FTDAnsible
+python -m venv venv
+. venv/bin/activate
+```
+
+1. Install dependencies and update Python path to include the project's directory:
+```
+pip install -r requirements.txt
+export PYTHONPATH=.:$PYTHONPATH
+```
+
+1. [Create](#creating-inventory) an inventory file for FTD devices;
+   
+1. Run the playbook:
+``` 
+ansible-playbook test_playbook.yml
+```
+
 ## Creating Inventory
 
 [Ansible inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) contains information
@@ -69,3 +100,26 @@ Additionally, these __optional__ parameters can be used:
 * `ansible_httpapi_ftd_spec_path` - a URL for the Swagger specification on the FTD device (default URL is `/apispec/ngfw.json`);
 * `ansible_httpapi_use_ssl` - whether to connect using SSL (HTTPS) or not (HTTP);
 * `ansible_httpapi_validate_certs` - Whether to validate SSL certificates or not.
+
+### Using Vault
+
+To keep sensitive data (e.g., `ansible_password`) in encrypted files, rather than as plaintext in inventory files, use
+[Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html) feature.
+
+Vault can encrypt any file used by Ansible including `group_vars/` or `host_vars/` variables, variables 
+loaded by `include_vars` or `vars_files`, and variable files passed as `-e @file` argument to `ansible-playbook` command.
+
+To create an encrypted vault file, run the following command:
+```
+ansible-vault create secret
+```
+First, you will be prompted for a password, then the editor will be launched and once you are done, the encrypted file
+is created. To use the encrypted file in Ansible, add the `--ask-vault-pass` 
+to any `ansible` or `ansible-playbook` command:
+```
+ansible-playbook test_playbook.yml --ask-vault-pass -e @secret
+```
+
+More information about Vault can be found in Ansible Documentation:
+ * [Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html)
+ * [Using Vault in playbooks](https://docs.ansible.com/ansible/latest/user_guide/playbooks_vault.html) 

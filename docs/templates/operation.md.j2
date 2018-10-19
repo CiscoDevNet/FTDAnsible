@@ -8,7 +8,7 @@ The [{{ operation.name }}]({{ operation.name | camel_to_snake }}.md) operation h
 
 {% if operation.description %}
 ## Description
-{{ operation.description }}
+{{ operation.description | escape_md_symbols }}
 {% endif %}
 
 {% if operation.data_params %}
@@ -16,7 +16,7 @@ The [{{ operation.name }}]({{ operation.name | camel_to_snake }}.md) operation h
 | Parameter | Required | Type | Description |
 | --------- | -------- | ---- | ----------- |
 {% for param_name, param_spec in operation.data_params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description }} |
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}
 
@@ -25,7 +25,7 @@ The [{{ operation.name }}]({{ operation.name | camel_to_snake }}.md) operation h
 | Parameter | Required | Type | Description |
 | --------- | -------- | ---- | ----------- |
 {% for param_name, param_spec in operation.path_params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description }} |
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}
 
@@ -34,7 +34,7 @@ The [{{ operation.name }}]({{ operation.name | camel_to_snake }}.md) operation h
 | Parameter | Required | Type | Description |
 | --------- | -------- | ---- | ----------- |
 {% for param_name, param_spec in operation.query_params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description }} |
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}
 

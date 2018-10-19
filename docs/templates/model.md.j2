@@ -4,7 +4,7 @@
 
 {% if model.description %}
 ## Description
-{{ model.description }}
+{{ model.description | escape_md_symbols }}
 {% endif %}
 
 {% if model.operations %}
@@ -19,6 +19,6 @@
 | Property | Required | Type | Description |
 | -------- | -------- | ---- | ----------- |
 {% for property_name, property_spec in model.properties.items() %}
-| {{ property_name }} | {{ property_spec.required }} | {{ property_spec.type }} | {{ property_spec.description }} |
+| {{ property_name }} | {{ property_spec.required }} | {{ property_spec.type }} | {{ property_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}
