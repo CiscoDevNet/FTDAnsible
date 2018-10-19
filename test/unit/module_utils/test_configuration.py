@@ -22,7 +22,7 @@ import pytest
 from ansible.compat.tests import mock
 from ansible.compat.tests.mock import call, patch
 
-from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource, ParamName
+from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource, ParamName, QueryParams
 
 try:
     from ansible.module_utils.common import HTTPMethod
@@ -58,13 +58,35 @@ class TestBaseConfigurationResource(object):
 
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
         assert objects == resource.get_objects_by_filter('test', {})
+        send_request_mock.assert_has_calls(
+            [
+                mock.call('/object/', 'get', {}, {}, {'limit': 10, 'offset': 0}),
+                mock.call('/object/', 'get', {}, {}, {'limit': 10, 'offset': 10})
+            ]
+        )
 
+        send_request_mock.reset_mock()
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
         assert [objects[0]] == resource.get_objects_by_filter('test', {ParamName.FILTERS: {'name': 'obj1'}})
+        send_request_mock.assert_has_calls(
+            [
+                mock.call('/object/', 'get', {}, {}, {QueryParams.FILTER: 'name:obj1', 'limit': 10, 'offset': 0}),
+                mock.call('/object/', 'get', {}, {}, {QueryParams.FILTER: 'name:obj1', 'limit': 10, 'offset': 10})
+            ]
+        )
 
+        send_request_mock.reset_mock()
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
         assert [objects[1]] == resource.get_objects_by_filter('test',
                                                               {ParamName.FILTERS: {'type': 1, 'foo': {'bar': 'buz'}}})
+        send_request_mock.assert_has_calls(
+            [
+                mock.call('/object/', 'get', {}, {},
+                          {QueryParams.FILTER: "type:1;foo:{'bar': 'buz'}", 'limit': 10, 'offset': 0}),
+                mock.call('/object/', 'get', {}, {},
+                          {QueryParams.FILTER: "type:1;foo:{'bar': 'buz'}", 'limit': 10, 'offset': 10})
+            ]
+        )
 
     @patch.object(BaseConfigurationResource, '_send_request')
     def test_get_objects_by_filter_with_multiple_responses(self, send_request_mock, connection_mock):
