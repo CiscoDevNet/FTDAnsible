@@ -254,7 +254,7 @@ class BaseConfigurationResource(object):
         :type operation_name: str
         :param operation_spec: specification of the operation being called by the user
         :type operation_spec: dict
-        :param params: params - params should contain 'filter'
+        :param params: params - params should contain 'filters'
         :return: True if called operation is find by filter, otherwise False
         :rtype: bool
         """
