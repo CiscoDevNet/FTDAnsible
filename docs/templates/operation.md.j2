@@ -1,0 +1,65 @@
+[Operation Index](index.md) » [{{ operation.name }}]({{ operation.name | camel_to_snake }}.md)
+
+# {{ operation.name }}
+
+{% if operation.model_name%}
+The [{{ operation.name }}]({{ operation.name | camel_to_snake }}.md) operation handles configuration related to [{{ operation.model_name }}](../models/{{ operation.model_name | camel_to_snake }}.md) model.
+{% endif %}
+
+{% if operation.description %}
+## Description
+{{ operation.description | escape_md_symbols }}
+{% endif %}
+
+{% if operation.data_params %}
+## Data Parameters
+| Parameter | Required | Type | Description |
+| --------- | -------- | ---- | ----------- |
+{% for param_name, param_spec in operation.data_params.items() %}
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+{% endfor %}
+{% endif %}
+
+{% if operation.path_params %}
+## Path Parameters
+| Parameter | Required | Type | Description |
+| --------- | -------- | ---- | ----------- |
+{% for param_name, param_spec in operation.path_params.items() %}
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+{% endfor %}
+{% endif %}
+
+{% if operation.query_params %}
+## Query Parameters
+| Parameter | Required | Type | Description |
+| --------- | -------- | ---- | ----------- |
+{% for param_name, param_spec in operation.query_params.items() %}
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+{% endfor %}
+{% endif %}
+
+## Example
+```yaml
+- name: Execute '{{ operation.name }}' operation
+  ftd_configuration:
+    operation: "{{ operation.name }}"
+{% if operation.data_params %}
+    data:
+    {% for param_name in operation.data_params.keys() %}
+        {{ param_name }}: {{ '"{{ ' }}{{ param_name | camel_to_snake }}{{ ' }}"' }}
+    {% endfor %}
+{% endif %}
+{% if operation.path_params %}
+    path_params:
+    {% for param_name in operation.path_params.keys() %}
+        {{ param_name }}: {{ '"{{ ' }}{{ param_name | camel_to_snake }}{{ ' }}"' }}
+    {% endfor %}
+{% endif %}
+{% if operation.query_params %}
+    query_params:
+    {% for param_name in operation.query_params.keys() %}
+        {{ param_name }}: {{ '"{{ ' }}{{ param_name | camel_to_snake }}{{ ' }}"' }}
+    {% endfor %}
+{% endif %}
+
+```

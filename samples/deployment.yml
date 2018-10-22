@@ -1,0 +1,22 @@
+- hosts: vftd
+  connection: httpapi
+  tasks:
+    - name: Start deployment
+      ftd_configuration:
+        operation: addDeployment
+        register_as: deployment_job
+
+    - name: Poll deployment status until the job is finished
+      ftd_configuration:
+        operation: getDeployment
+        path_params:
+          objId: '{{ deployment_job.id }}'
+        register_as: deployment_status
+      until: deployment_status.endTime != -1
+      retries: 100
+      delay: 3
+
+    - name: Stop the playbook if the deployment failed
+      fail:
+        msg: 'Deployment failed. Status: {{ deployment_status.statusMessages }}'
+      when: deployment_status.state != 'DEPLOYED'

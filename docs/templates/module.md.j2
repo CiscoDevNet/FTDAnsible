@@ -1,0 +1,34 @@
+[Module Index](index.md) » [{{ module.name }}]({{ module.name | camel_to_snake }}.md)
+
+# {{ module.name }}
+_{{ module.short_description if module.short_description }}_
+
+{% if module.description %}
+## Description
+{{ module.description | escape_md_symbols }}
+{% endif %}
+
+{% if module.params %}
+## Parameters
+| Parameter | Required | Type | Description |
+| --------- | -------- | ---- | ----------- |
+{% for param_name, param_spec in module.params.items() %}
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+{% endfor %}
+{% endif %}
+
+{% if module.return_values %}
+## Return Values
+| Value | Returned | Type | Description |
+| ----- | -------- | ---- | ----------- |
+{% for value_name, value_spec in module.return_values.items() %}
+| {{ value_name }} | {{ value_spec.returned }} | {{ value_spec.type }} | {{ value_spec.description | escape_md_symbols }} |
+{% endfor %}
+{% endif %}
+
+{% if module.examples %}
+## Examples
+```yaml
+{{ module.examples }}
+```
+{% endif %}

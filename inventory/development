@@ -1,3 +1,0 @@
-[vftd]
-vftd-1 ip_address=localhost port=4200 protocol=http
-vftd-2 ip_address=localhost port=4201 protocol=http

@@ -1,0 +1,27 @@
+# Introduction to FTD Ansible
+
+A collection of Ansible modules that automate configuration management and execution of operational tasks on
+Cisco Firepower Threat Defense (FTD) devices. Currently, three Ansible modules are available: 
+
+* [`ftd_configuration`](modules/ftd_configuration.md) - manages configuration;
+* [`ftd_file_download`](modules/ftd_file_download.md) - downloads files;
+* [`ftd_file_upload`](modules/ftd_file_upload.md) - uploads files.
+
+FTD modules allow executing any API operations in form of Ansible plays. The modules configure virtual and 
+physical devices by sending HTTPS calls formatted according to the REST API specification.
+
+A simple example of creating a network with the [`ftd_configuration`](modules/ftd_configuration.md) module looks like this:
+
+```yaml
+- hosts: ftd_devices
+  connection: httpapi
+  tasks:
+    - name: Create a network
+      ftd_configuration:
+          operation: "addNetworkObject"
+          data:
+             name: "any-ipv4"
+             subType: "NETWORK"
+             value: "0.0.0.0/0"
+             type: "networkobject"
+ ```

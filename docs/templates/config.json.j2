@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "title": "{{ index_name }} Index",
+      "content": "index.md"
+    }{{ "," if index_list }}
+{% for item in index_list | sort %}
+    {
+      "title": "{{ item }}",
+      "content": "{{ item | camel_to_snake }}.md"
+    }{{ "," if not loop.last }}
+{% endfor %}
+  ]
+}

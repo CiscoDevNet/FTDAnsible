@@ -1,0 +1,120 @@
+- hosts: vftd
+  connection: httpapi
+
+  tasks:
+    - name: addNetworkObject should create a new network
+      ftd_configuration:
+        operation: 'addNetworkObject'
+        data:
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "HOST"
+          value: "192.22.22.24"
+          type: "networkobject"
+        register_as: "testObj"
+      register: result
+    - assert:
+        that:
+          - result.changed == true
+          - testObj['name'] == "ansible-test-network"
+          - testObj['subType'] == "HOST"
+
+
+    - name: addNetworkObject should NOT create a network when the network with the same name exists
+      ftd_configuration:
+        operation: 'addNetworkObject'
+        data:
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "HOST"
+          value: "192.22.22.24"
+          type: "networkobject"
+        register_as: "sameTestObj"
+      register: result
+    - assert:
+        that:
+          - result.changed == false
+          - sameTestObj['id'] == testObj['id']
+          - sameTestObj['name'] == "ansible-test-network"
+
+
+    - name: addNetworkObject should raise an error when the network with the same name but different params exists
+      ftd_configuration:
+        operation: 'addNetworkObject'
+        data:
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "NETWORK"
+          value: "192.22.22.24/12"
+          type: "networkobject"
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - result.changed == false
+          - result.failed == true
+          - "'An object with the same name but different parameters already exists' in result.msg"
+
+    - name: editNetworkObject should update the existing network
+      ftd_configuration:
+        operation: 'editNetworkObject'
+        path_params:
+          objId: "{{ testObj['id'] }}"
+        data:
+          version: "{{ testObj['version'] }}"
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "NETWORK"
+          value: "192.168.2.0/24"
+          type: "networkobject"
+        register_as: "updatedTestObj"
+      register: result
+    - assert:
+        that:
+          - result.changed == true
+          - updatedTestObj['id'] == testObj['id']
+          - updatedTestObj['subType'] == "NETWORK"
+          - updatedTestObj['value'] == "192.168.2.0/24"
+
+
+    - name: editNetworkObject should NOT update the network if there are no changes
+      ftd_configuration:
+        operation: 'editNetworkObject'
+        path_params:
+          objId: "{{ updatedTestObj['id'] }}"
+        data:
+          version: "{{ updatedTestObj['version'] }}"
+          name: "ansible-test-network"
+          description: "Ansible Integration tests in action"
+          subType: "NETWORK"
+          value: "192.168.2.0/24"
+          type: "networkobject"
+        register_as: "updatedTestObj"
+      register: result
+    - assert:
+        that:
+          - result.changed == false
+          - updatedTestObj['id'] == testObj['id']
+
+
+    - name: deleteNetworkObject should delete the network
+      ftd_configuration:
+        operation: 'deleteNetworkObject'
+        path_params:
+          objId: "{{ testObj['id'] }}"
+      register: result
+    - assert:
+        that:
+          - result.changed == true
+
+
+    - name: deleteNetworkObject should silently pass when the referenced network does not exist
+      ftd_configuration:
+        operation: 'deleteNetworkObject'
+        path_params:
+          objId: "{{ testObj['id'] }}"
+      register: result
+    - assert:
+        that:
+          - result.changed == false
+          - "'Referenced object does not exist' in result.response.status"
