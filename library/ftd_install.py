@@ -10,7 +10,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: install_ftd
+module: ftd_install
 short_description: Configure FTD devices
 version_added: "2.7"
 author: "Cisco Systems, Inc."
@@ -57,7 +57,7 @@ options:
 
 EXAMPLES = """
 - name: install ftd
-  install_ftd:
+  ftd_install:
     ip: '192.168.0.156'
     netmask: '255.255.255.0'
     gateway: '192.168.0.254'

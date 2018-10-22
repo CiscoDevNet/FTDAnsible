@@ -2,7 +2,7 @@
   connection: local
   tasks:
   - name: install ftd
-    install_ftd:
+    ftd_install:
       ip: '192.168.0.156'
       netmask: '255.255.255.0'
       gateway: '192.168.0.254'
