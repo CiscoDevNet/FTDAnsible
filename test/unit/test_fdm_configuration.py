@@ -32,8 +32,7 @@ class TestFtdConfiguration(object):
     def resource_mock(self, mocker):
         resource_class_mock = mocker.patch('library.ftd_configuration.BaseConfigurationResource')
         resource_instance = resource_class_mock.return_value
-        resource_instance.is_upsert_operation.return_value = False
-        return resource_instance.crud_operation
+        return resource_instance.execute_operation
 
     def test_module_should_fail_when_ftd_invalid_operation_name_error(self, resource_mock):
         operation_name = 'test name'

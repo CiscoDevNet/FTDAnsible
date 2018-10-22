@@ -142,6 +142,12 @@ class BaseConfigurationResource(object):
         self._check_mode = check_mode
         self._operation_checker = OperationChecker
 
+    def execute_operation(self, op_name, params):
+        if self._operation_checker.is_upsert_operation(op_name):
+            return self.upsert_object(op_name, params)
+        else:
+            return self.crud_operation(op_name, params)
+
     def crud_operation(self, op_name, params):
         op_spec = self.get_operation_spec(op_name)
         if op_spec is None:
@@ -238,9 +244,6 @@ class BaseConfigurationResource(object):
                         existing_obj)
 
         raise e
-
-    def is_upsert_operation(self, operation_name):
-        return self._operation_checker.is_upsert_operation(operation_name)
 
     def _find_get_list_operation(self, model_name):
         operations = self.get_operation_specs_by_model_name(model_name) or {}
