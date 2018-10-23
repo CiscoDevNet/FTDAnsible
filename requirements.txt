@@ -1,3 +1,5 @@
+--extra-index-url http://kick-pypi.cisco.com/kick/prod/
+--trusted-host kick-pypi.cisco.com
+kick-external
 ansible==2.7.0
 urllib3==1.23
-http://kick-pypi.cisco.com/kick/prod/+f/fba/e301a5012c196/kick-external-0.4.tar.gz
