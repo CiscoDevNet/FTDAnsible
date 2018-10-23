@@ -380,9 +380,8 @@ class TestOperationCheckerClass(unittest.TestCase):
     def test_is_add_operation_positive(self):
         operation_name = OperationNamePrefix.ADD + "Object"
         operation_spec = {OperationField.METHOD: HTTPMethod.POST}
-        self.assertTrue(
-            self._checker.is_add_operation(operation_name, operation_spec)
-        )
+        assert self._checker.is_add_operation(operation_name, operation_spec)
+
 
     def test_is_add_operation_wrong_method_in_spec(self):
         operation_name = OperationNamePrefix.ADD + "Object"
@@ -401,9 +400,7 @@ class TestOperationCheckerClass(unittest.TestCase):
     def test_is_edit_operation_positive(self):
         operation_name = OperationNamePrefix.EDIT + "Object"
         operation_spec = {OperationField.METHOD: HTTPMethod.PUT}
-        self.assertTrue(
-            self._checker.is_edit_operation(operation_name, operation_spec)
-        )
+        assert self._checker.is_edit_operation(operation_name, operation_spec)
 
     def test_is_edit_operation_wrong_method_in_spec(self):
         operation_name = OperationNamePrefix.EDIT + "Object"
@@ -446,9 +443,7 @@ class TestOperationCheckerClass(unittest.TestCase):
             OperationField.METHOD: HTTPMethod.GET,
             OperationField.RETURN_MULTIPLE_ITEMS: True
         }
-        self.assertTrue(
-            self._checker.is_get_list_operation(operation_name, operation_spec)
-        )
+        assert self._checker.is_get_list_operation(operation_name, operation_spec)
 
     def test_is_get_list_operation_wrong_method_in_spec(self):
         operation_name = OperationNamePrefix.GET + "Object"
@@ -502,9 +497,7 @@ class TestOperationCheckerClass(unittest.TestCase):
 
     def test_is_upsert_operation_positive(self):
         operation_name = OperationNamePrefix.UPSERT + "Object"
-        self.assertTrue(
-            self._checker.is_upsert_operation(operation_name)
-        )
+        assert self._checker.is_upsert_operation(operation_name)
 
     def test_is_upsert_operation_with_wrong_operation_name(self):
         for op_type in [OperationNamePrefix.ADD, OperationNamePrefix.GET, OperationNamePrefix.EDIT,
@@ -559,16 +552,14 @@ class TestOperationCheckerClass(unittest.TestCase):
         is_edit_mock.side_effect = [1, 0, 0]
         is_get_list_mock.side_effect = [1, 0, 0]
 
-        self.assertTrue(
-            self._checker.is_upsert_operation_is_supported(operations_spec)
-        )
+        assert self._checker.is_upsert_operation_supported(operations_spec)
 
         is_add_mock.side_effect = [1, 0, 0]
         is_edit_mock.side_effect = [0, 1, 0]
         is_get_list_mock.side_effect = [0, 0, 0]
 
         self.assertFalse(
-            self._checker.is_upsert_operation_is_supported(operations_spec)
+            self._checker.is_upsert_operation_supported(operations_spec)
         )
 
         is_add_mock.side_effect = [1, 0, 0]
@@ -576,5 +567,5 @@ class TestOperationCheckerClass(unittest.TestCase):
         is_get_list_mock.side_effect = [1, 0, 0]
 
         self.assertFalse(
-            self._checker.is_upsert_operation_is_supported(operations_spec)
+            self._checker.is_upsert_operation_supported(operations_spec)
         )

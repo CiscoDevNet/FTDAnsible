@@ -48,15 +48,8 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         checker.side_effect = [1,
                                0, 1,
                                0, 0]
-        self.assertEqual(
-            operation_a,
-            self._resource._get_operation_name(checker, operations)
-        )
-
-        self.assertEqual(
-            operation_b,
-            self._resource._get_operation_name(checker, operations)
-        )
+        assert operation_a == self._resource._get_operation_name(checker, operations)
+        assert operation_b == self._resource._get_operation_name(checker, operations)
 
         self.assertRaises(
             FtdConfigurationError,
@@ -70,10 +63,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         params = mock.MagicMock()
         add_op_name = get_operation_mock.return_value
 
-        self.assertEqual(
-            add_object_mock.return_value,
-            self._resource._add_upserted_object(model_operations, params)
-        )
+        assert add_object_mock.return_value == self._resource._add_upserted_object(model_operations, params)
 
         get_operation_mock.assert_called_once_with(
             self._resource._operation_checker.is_add_operation,
@@ -94,10 +84,8 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
 
         result = self._resource._edit_upserted_object(model_operations, existing_object, params)
 
-        self.assertEqual(
-            result,
-            edit_object_mock.return_value
-        )
+        assert result == edit_object_mock.return_value
+
         _set_default_mock.assert_has_calls([
             mock.call(params, 'path_params', {}),
             mock.call(params, 'data', {})
@@ -116,19 +104,19 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         )
 
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
-    @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_is_supported")
+    @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
     @mock.patch("module_utils.configuration._extract_model_from_upsert_operation")
-    def test_upsert_operation_is_supported(self, extract_model_mock, is_upser_supported_mock, get_operation_spec_mock):
+    def test_is_upsert_operation_supported(self, extract_model_mock, is_upsert_supported_mock, get_operation_spec_mock):
         op_name = mock.MagicMock()
 
-        result = self._resource.upsert_operation_is_supported(op_name)
+        result = self._resource.is_upsert_operation_supported(op_name)
 
-        self.assertEqual(result, is_upser_supported_mock.return_value)
+        assert result == is_upsert_supported_mock.return_value
         extract_model_mock.assert_called_once_with(op_name)
         get_operation_spec_mock.assert_called_once_with(extract_model_mock.return_value)
-        is_upser_supported_mock.assert_called_once_with(get_operation_spec_mock.return_value)
+        is_upsert_supported_mock.assert_called_once_with(get_operation_spec_mock.return_value)
 
-    @mock.patch.object(BaseConfigurationResource, "upsert_operation_is_supported")
+    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -142,17 +130,14 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
 
         result = self._resource.upsert_object(op_name, params)
 
-        self.assertEqual(
-            result,
-            add_mock.return_value
-        )
+        assert result == add_mock.return_value
         is_upsert_supported_mock.assert_called_once_with(op_name)
         extract_model_mock.assert_called_once_with(op_name)
         get_operation_mock.assert_called_once_with(extract_model_mock.return_value)
         add_mock.assert_called_once_with(get_operation_mock.return_value, params)
         edit_mock.assert_not_called()
 
-    @mock.patch.object(BaseConfigurationResource, "upsert_operation_is_supported")
+    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -170,17 +155,14 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
 
         result = self._resource.upsert_object(op_name, params)
 
-        self.assertEqual(
-            result,
-            edit_mock.return_value
-        )
+        assert result == edit_mock.return_value
         is_upsert_supported_mock.assert_called_once_with(op_name)
         extract_model_mock.assert_called_once_with(op_name)
         get_operation_mock.assert_called_once_with(extract_model_mock.return_value)
         add_mock.assert_called_once_with(get_operation_mock.return_value, params)
         edit_mock.assert_called_once_with(get_operation_mock.return_value, error.obj,  params)
 
-    @mock.patch.object(BaseConfigurationResource, "upsert_operation_is_supported")
+    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -203,7 +185,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         add_mock.assert_not_called()
         edit_mock.assert_not_called()
 
-    @mock.patch.object(BaseConfigurationResource, "upsert_operation_is_supported")
+    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -231,7 +213,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         add_mock.assert_called_once_with(get_operation_mock.return_value, params)
         edit_mock.assert_called_once_with(get_operation_mock.return_value, error.obj, params)
 
-    @mock.patch.object(BaseConfigurationResource, "upsert_operation_is_supported")
+    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -405,7 +387,11 @@ class TestUpsertOperationFunctionalTests(object):
             'getObjectList': {'method': HTTPMethod.GET, 'url': url, 'modelName': 'Object', 'returnMultipleItems': True},
             'addObject': {'method': HTTPMethod.POST, 'modelName': 'Object', 'url': url},
             'editObject': {'method': HTTPMethod.PUT, 'modelName': 'Object', 'url': url_with_id_templ},
-            'otherObjectOperation': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url_with_id_templ, 'returnMultipleItems': False}
+            'otherObjectOperation': {
+                'method': HTTPMethod.GET,
+                'modelName': 'Object',
+                'url': url_with_id_templ,
+                'returnMultipleItems': False}
         }
 
         def get_operation_spec(name):
@@ -427,8 +413,8 @@ class TestUpsertOperationFunctionalTests(object):
                    }} == result
 
     # test when object exists and all fields have the same value
-    def test_module_should_not_update_object_when_upsert_operation_and_object_exists_with_the_same_fields(self,
-                                                                                                          connection_mock):
+    def test_module_should_not_update_object_when_upsert_operation_and_object_exists_with_the_same_fields(
+            self, connection_mock):
         url = '/test'
         url_with_id_templ = '{0}/{1}'.format(url, '{objId}')
 
@@ -484,7 +470,11 @@ class TestUpsertOperationFunctionalTests(object):
             'getObjectList': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url, 'returnMultipleItems': True},
             'addObject': {'method': HTTPMethod.POST, 'modelName': 'Object', 'url': url},
             'editObject': {'method': HTTPMethod.PUT, 'modelName': 'Object', 'url': url_with_id_templ},
-            'otherObjectOperation': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url_with_id_templ, 'returnMultipleItems': False}
+            'otherObjectOperation': {
+                'method': HTTPMethod.GET,
+                'modelName': 'Object',
+                'url': url_with_id_templ,
+                'returnMultipleItems': False}
         }
 
         def get_operation_spec(name):
@@ -507,7 +497,11 @@ class TestUpsertOperationFunctionalTests(object):
         connection_mock.get_operation_specs_by_model_name.return_value = {
             'addObject': {'method': HTTPMethod.POST, 'modelName': 'Object', 'url': '/test'},
             'editObject': {'method': HTTPMethod.PUT, 'modelName': 'Object', 'url': '/test/{objId}'},
-            'otherObjectOperation': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': '/test/{objId}', 'returnMultipleItems': False}
+            'otherObjectOperation': {
+                'method': HTTPMethod.GET,
+                'modelName': 'Object',
+                'url': '/test/{objId}',
+                'returnMultipleItems': False}
         }
         params = {
             'operation': 'upsertObject',
@@ -562,7 +556,11 @@ class TestUpsertOperationFunctionalTests(object):
             'getObjectList': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url, 'returnMultipleItems': True},
             'addObject': {'method': HTTPMethod.POST, 'modelName': 'Object', 'url': url},
             'editObject': {'method': HTTPMethod.PUT, 'modelName': 'Object', 'url': url_with_id_templ},
-            'otherObjectOperation': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url_with_id_templ, 'returnMultipleItems': False}
+            'otherObjectOperation': {
+                'method': HTTPMethod.GET,
+                'modelName': 'Object',
+                'url': url_with_id_templ,
+                'returnMultipleItems': False}
         }
 
         def get_operation_spec(name):
@@ -650,7 +648,11 @@ class TestUpsertOperationFunctionalTests(object):
             'getObjectList': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url, 'returnMultipleItems': True},
             'addObject': {'method': HTTPMethod.POST, 'modelName': 'Object', 'url': url},
             'editObject': {'method': HTTPMethod.PUT, 'modelName': 'Object', 'url': url_with_id_templ},
-            'otherObjectOperation': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url_with_id_templ, 'returnMultipleItems': False}
+            'otherObjectOperation': {
+                'method': HTTPMethod.GET,
+                'modelName': 'Object',
+                'url': url_with_id_templ,
+                'returnMultipleItems': False}
         }
 
         def get_operation_spec(name):
@@ -677,10 +679,18 @@ class TestUpsertOperationFunctionalTests(object):
         connection_mock.send_request.assert_not_called()
 
         operations = {
-            'getObjectList': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': 'sd', 'returnMultipleItems': True},
+            'getObjectList': {
+                'method': HTTPMethod.GET,
+                'modelName': 'Object',
+                'url': 'sd',
+                'returnMultipleItems': True},
             'addObject': {'method': HTTPMethod.POST, 'modelName': 'Object', 'url': 'sdf'},
             'editObject': {'method': HTTPMethod.PUT, 'modelName': 'Object', 'url': 'sadf'},
-            'otherObjectOperation': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': 'sdfs', 'returnMultipleItems': False}
+            'otherObjectOperation': {
+                'method': HTTPMethod.GET,
+                'modelName': 'Object',
+                'url': 'sdfs',
+                'returnMultipleItems': False}
         }
 
         def get_operation_spec(name):
@@ -781,7 +791,11 @@ class TestUpsertOperationFunctionalTests(object):
             'getObjectList': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url, 'returnMultipleItems': True},
             'addObject': {'method': HTTPMethod.POST, 'modelName': 'Object', 'url': url},
             'editObject': {'method': HTTPMethod.PUT, 'modelName': 'Object', 'url': url_with_id_templ},
-            'otherObjectOperation': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url_with_id_templ, 'returnMultipleItems': False}
+            'otherObjectOperation': {
+                'method': HTTPMethod.GET,
+                'modelName': 'Object',
+                'url': url_with_id_templ,
+                'returnMultipleItems': False}
         }
 
         def get_operation_spec(name):

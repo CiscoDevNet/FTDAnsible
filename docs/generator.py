@@ -303,7 +303,6 @@ class ApiSpecAutocomplete(object):
         self._api_spec = api_spec
         self._operation_checker = OperationChecker
 
-
     def _add_operation_to_model_spec(self, model_name, op_name, op_spec):
         self._api_spec[SpecProp.MODEL_OPERATIONS][model_name][op_name] = op_spec
 
@@ -312,7 +311,8 @@ class ApiSpecAutocomplete(object):
 
     def _generate_upsert_spec(self, operations, model_name, add_operantion, list_operation):
         op_spec = dict(operations[add_operantion])
-        base_filter_spec = dict(operations[list_operation][OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER])
+        base_filter_spec = dict(
+            operations[list_operation][OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER])
 
         def property_for_filtering_is_present(model_spec, prop_name):
             """Check that required property is present in the model spec."""
@@ -338,7 +338,7 @@ class ApiSpecAutocomplete(object):
         add_operantion = OperationNamePrefix.ADD + model_name
         list_operation = OperationNamePrefix.GET + model_name + 'List'
 
-        if self._operation_checker.is_upsert_operation_is_supported(operations):
+        if self._operation_checker.is_upsert_operation_supported(operations):
             op_name = OperationNamePrefix.UPSERT + model_name
             op_spec = self._generate_upsert_spec(operations, model_name, add_operantion, list_operation)
 

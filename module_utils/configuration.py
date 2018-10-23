@@ -120,7 +120,7 @@ class OperationChecker(object):
         return is_get_list and ParamName.FILTERS in params and params[ParamName.FILTERS]
 
     @classmethod
-    def is_upsert_operation_is_supported(cls, operations):
+    def is_upsert_operation_supported(cls, operations):
         amount_operations_need_for_upsert_operation = 3
         amount_supported_operations = 0
         for operation_name, operation_spec in operations.items():
@@ -333,10 +333,10 @@ class BaseConfigurationResource(object):
         if report:
             raise ValidationError(report)
 
-    def upsert_operation_is_supported(self, op_name):
+    def is_upsert_operation_supported(self, op_name):
         model_name = _extract_model_from_upsert_operation(op_name)
         operations = self.get_operation_specs_by_model_name(model_name)
-        return self._operation_checker.is_upsert_operation_is_supported(operations)
+        return self._operation_checker.is_upsert_operation_supported(operations)
 
     @staticmethod
     def _get_operation_name(checker, operations):
@@ -359,7 +359,7 @@ class BaseConfigurationResource(object):
         return self.edit_object(edit_op_name, params)
 
     def upsert_object(self, op_name, params):
-        if not self.upsert_operation_is_supported(op_name):
+        if not self.is_upsert_operation_supported(op_name):
             raise FtdInvalidOperationNameError(op_name)
 
         model_name = _extract_model_from_upsert_operation(op_name)
