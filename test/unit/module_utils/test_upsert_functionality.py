@@ -788,7 +788,7 @@ class TestUpsertOperationFunctionalTests(object):
 
     @staticmethod
     def _resource_execute_operation(params, connection):
-        resource = BaseConfigurationResource(connection, False)
+        resource = BaseConfigurationResource(connection)
         op_name = params['operation']
 
         resp = resource.execute_operation(op_name, params)
@@ -796,7 +796,6 @@ class TestUpsertOperationFunctionalTests(object):
         return resp
 
     def _resource_execute_operation_with_expected_failure(self, expected_exception_class, params, connection):
-
         with pytest.raises(expected_exception_class) as ex:
             self._resource_execute_operation(params, connection)
         # 'ex' here is the instance of '_pytest._code.code.ExceptionInfo' but not <expected_exception_class>
