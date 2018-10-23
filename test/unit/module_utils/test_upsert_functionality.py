@@ -788,7 +788,7 @@ class TestUpsertOperationFunctionalTests(object):
 
     @staticmethod
     def _resource_execute_operation(params, connection):
-        resource = BaseConfigurationResource(connection, False) # use resource mock here
+        resource = BaseConfigurationResource(connection, False)
         op_name = params['operation']
 
         resp = resource.execute_operation(op_name, params)
