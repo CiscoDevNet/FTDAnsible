@@ -17,10 +17,12 @@ try:
     from ansible.module_utils.common import FtdServerError, HTTPMethod, ResponseParams, FtdConfigurationError
     from ansible.module_utils.configuration import DUPLICATE_NAME_ERROR_MESSAGE, UNPROCESSABLE_ENTITY_STATUS, \
         MULTIPLE_DUPLICATES_FOUND_ERROR, BaseConfigurationResource, FtdInvalidOperationNameError, QueryParams
+    from ansible.module_utils.fdm_swagger_client import ValidationError
 except ImportError:
     from module_utils.common import FtdServerError, HTTPMethod, ResponseParams, FtdConfigurationError
     from module_utils.configuration import DUPLICATE_NAME_ERROR_MESSAGE, UNPROCESSABLE_ENTITY_STATUS, \
         MULTIPLE_DUPLICATES_FOUND_ERROR, BaseConfigurationResource, FtdInvalidOperationNameError, QueryParams
+    from module_utils.fdm_swagger_client import ValidationError
 
 
 ADD_RESPONSE = {'status': 'Object added'}
@@ -243,11 +245,6 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
 
 # functional tests below
 class TestUpsertOperationFunctionalTests(object):
-    module = ftd_configuration
-
-    @pytest.fixture(autouse=True)
-    def module_mock(self, mocker):
-        return mocker.patch.multiple(basic.AnsibleModule, exit_json=exit_json, fail_json=fail_json)
 
     @pytest.fixture(autouse=True)
     def connection_mock(self, mocker):
@@ -257,13 +254,6 @@ class TestUpsertOperationFunctionalTests(object):
         connection_instance.validate_query_params.return_value = True, None
         connection_instance.validate_path_params.return_value = True, None
         return connection_instance
-
-    @pytest.fixture
-    def resource_mock(self, mocker):
-        resource_class_mock = mocker.patch('library.ftd_configuration.BaseConfigurationResource')
-        resource_instance = resource_class_mock.return_value
-        resource_instance.is_upsert_operation.return_value = False
-        return resource_instance.crud_operation
 
     def test_module_should_create_object_when_upsert_operation_and_object_does_not_exist(self, connection_mock):
         url = '/test'
@@ -305,13 +295,15 @@ class TestUpsertOperationFunctionalTests(object):
             'path_params': {'objId': '123'},
             'register_as': 'test_var'
         }
-        result = self._run_module(params)
+
+        result = self._resource_execute_operation(params, connection=connection_mock)
+
         connection_mock.send_request.assert_called_once_with(url_path=url,
                                                              http_method=HTTPMethod.POST,
                                                              path_params=params['path_params'],
                                                              query_params={},
                                                              body_params=params['data'])
-        assert ADD_RESPONSE == result['response']
+        assert ADD_RESPONSE == result
 
     # test when object exists but with different fields(except id)
     def test_module_should_update_object_when_upsert_operation_and_object_exists(self, connection_mock):
@@ -401,16 +393,11 @@ class TestUpsertOperationFunctionalTests(object):
         connection_mock.get_operation_specs_by_model_name.return_value = operations
 
         connection_mock.send_request = request_handler
-        result = self._run_module(params)
-
         expected_val = {'name': 'testObject', 'value': new_value, 'type': 'object', 'id': obj_id, 'version': version}
 
-        assert {
-                   'changed': True,
-                   'response': expected_val,
-                   'ansible_facts': {
-                       'test_var': expected_val
-                   }} == result
+        result = self._resource_execute_operation(params, connection=connection_mock)
+
+        assert expected_val == result
 
     # test when object exists and all fields have the same value
     def test_module_should_not_update_object_when_upsert_operation_and_object_exists_with_the_same_fields(
@@ -482,16 +469,11 @@ class TestUpsertOperationFunctionalTests(object):
 
         connection_mock.get_operation_spec = get_operation_spec
         connection_mock.get_operation_specs_by_model_name.return_value = operations
-
         connection_mock.send_request = request_handler
-        result = self._run_module(params)
 
-        assert {
-                   'changed': False,
-                   'response': expected_val,
-                   'ansible_facts': {
-                       'test_var': expected_val
-                   }} == result
+        result = self._resource_execute_operation(params, connection=connection_mock)
+
+        assert expected_val == result
 
     def test_module_should_fail_when_upsert_operation_is_not_supported(self, connection_mock):
         connection_mock.get_operation_specs_by_model_name.return_value = {
@@ -503,17 +485,20 @@ class TestUpsertOperationFunctionalTests(object):
                 'url': '/test/{objId}',
                 'returnMultipleItems': False}
         }
+        operation_name = 'upsertObject'
         params = {
-            'operation': 'upsertObject',
+            'operation': operation_name ,
             'data': {'id': '123', 'name': 'testObject', 'type': 'object'},
             'path_params': {'objId': '123'},
             'register_as': 'test_var'
         }
-        result = self._run_module_with_fail_json(params)
+
+        result = self._resource_execute_operation_with_expected_failure(
+            expected_exception_class=FtdInvalidOperationNameError,
+            params=params, connection=connection_mock)
+
         connection_mock.send_request.assert_not_called()
-        assert {
-                   'msg': 'Invalid operation name provided: upsertObject',
-                   'failed': True} == result
+        assert operation_name == result.operation_name
 
     # when create operation raised FtdConfigurationError exception without id and version
     def test_module_should_fail_when_upsert_operation_and_failed_create_without_id_and_version(self, connection_mock):
@@ -569,11 +554,13 @@ class TestUpsertOperationFunctionalTests(object):
         connection_mock.get_operation_spec = get_operation_spec
         connection_mock.get_operation_specs_by_model_name.return_value = operations
         connection_mock.send_request = request_handler
-        result = self._run_module_with_fail_json(params)
 
-        assert result['failed']
-        assert 'Server returned an error trying to execute upsertObject operation. Status code: 422. ' \
-               'Server response: Validation failed due to a duplicate name' == result['msg']
+        result = self._resource_execute_operation_with_expected_failure(
+            expected_exception_class=FtdServerError,
+            params=params, connection=connection_mock)
+
+        assert result.code == 422
+        assert result.response == 'Validation failed due to a duplicate name'
 
     def test_module_should_fail_when_upsert_operation_and_failed_update_operation(self, connection_mock):
         url = '/test'
@@ -661,12 +648,13 @@ class TestUpsertOperationFunctionalTests(object):
         connection_mock.get_operation_spec = get_operation_spec
         connection_mock.get_operation_specs_by_model_name.return_value = operations
         connection_mock.send_request = request_handler
-        result = self._run_module_with_fail_json(params)
 
-        assert result['failed']
-        assert 'Server returned an error trying to execute {0} operation. ' \
-               'Status code: {1}. Server response: {2}'.format(params['operation'], error_code, error_msg) == result[
-                   'msg']
+        result = self._resource_execute_operation_with_expected_failure(
+            expected_exception_class=FtdServerError,
+            params=params, connection=connection_mock)
+
+        assert result.code == error_code
+        assert result.response == error_msg
 
     def test_module_should_fail_when_upsert_operation_and_invalid_data_for_create_operation(self, connection_mock):
         new_value = '0000'
@@ -710,32 +698,18 @@ class TestUpsertOperationFunctionalTests(object):
             ]
         }
         connection_mock.validate_data.return_value = (False, json.dumps(report, sort_keys=True, indent=4))
-
-        result = self._run_module_with_fail_json(params)
-
         key = 'Invalid data provided'
-        assert result['msg'][key]
-        result['msg'][key] = json.loads(result['msg'][key])
-        assert result == {
-            'msg':
-                {key: {
-                    'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
-                    'required': ['objects[0].type']
-                }},
-            'failed': True}
 
-    def _run_module(self, module_args):
-        set_module_args(module_args)
-        with pytest.raises(AnsibleExitJson) as ex:
-            self.module.main()
-        return ex.value.args[0]
+        result = self._resource_execute_operation_with_expected_failure(
+            expected_exception_class=ValidationError,
+            params=params, connection=connection_mock)
 
-    def _run_module_with_fail_json(self, module_args):
-        set_module_args(module_args)
-        with pytest.raises(AnsibleFailJson) as exc:
-            self.module.main()
-        result = exc.value.args[0]
-        return result
+        assert len(result.args) == 1
+        assert key in result.args[0]
+        assert json.loads(result.args[0][key]) == {
+                'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+                'required': ['objects[0].type']
+            }
 
     def test_module_should_fail_when_upsert_operation_and_few_objects_found_by_filter(self, connection_mock):
         url = '/test'
@@ -804,8 +778,28 @@ class TestUpsertOperationFunctionalTests(object):
         connection_mock.get_operation_spec = get_operation_spec
         connection_mock.get_operation_specs_by_model_name.return_value = operations
         connection_mock.send_request = request_handler
-        result = self._run_module_with_fail_json(params)
 
-        assert result['failed']
-        assert ('Failed to execute upsertObject operation because of the configuration error: {}'.format(
-            MULTIPLE_DUPLICATES_FOUND_ERROR)) == result['msg']
+        result = self._resource_execute_operation_with_expected_failure(
+            expected_exception_class=FtdConfigurationError,
+            params=params, connection=connection_mock)
+
+        assert result.msg is MULTIPLE_DUPLICATES_FOUND_ERROR
+        assert result.obj is None
+
+    @staticmethod
+    def _resource_execute_operation(params, connection):
+        resource = BaseConfigurationResource(connection, False) # use resource mock here
+        op_name = params['operation']
+
+        resp = resource.execute_operation(op_name, params)
+
+        return resp
+
+    def _resource_execute_operation_with_expected_failure(self, expected_exception_class, params, connection):
+
+        with pytest.raises(expected_exception_class) as ex:
+            self._resource_execute_operation(params, connection)
+        # 'ex' here is the instance of '_pytest._code.code.ExceptionInfo' but not <expected_exception_class>
+        # actual instance of <expected_exception_class> is in the value attribute of 'ex'. That's why we should return
+        # 'ex.value' here, so it can be checked in a test later.
+        return ex.value
