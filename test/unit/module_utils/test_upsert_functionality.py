@@ -8,10 +8,6 @@ import copy
 import unittest
 
 from ansible.compat.tests import mock
-from ansible.module_utils import basic
-from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
-
-from library import ftd_configuration
 
 try:
     from ansible.module_utils.common import FtdServerError, HTTPMethod, ResponseParams, FtdConfigurationError
@@ -598,7 +594,7 @@ class TestUpsertOperationFunctionalTests(object):
 
                 if is_get_list_req:
                     assert body_params == {}
-                    #FIXME(119vik): this check added due to issue with iterate_over_pageable_resource function
+                    # FIXME(119vik): this check added due to issue with iterate_over_pageable_resource function
                     assert (
                             query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0} or
                             query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 10})
