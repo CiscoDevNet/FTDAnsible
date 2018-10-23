@@ -3,8 +3,6 @@ from __future__ import absolute_import
 import pytest
 import json
 import copy
-
-
 import unittest
 
 from ansible.compat.tests import mock
