@@ -523,7 +523,7 @@ def iterate_over_pageable_resource(resource_func, params):
     params[ParamName.QUERY_PARAMS].setdefault('offset', DEFAULT_OFFSET)
 
     result = resource_func(params=params)
-    # FIXME(119vik): In case for request with  offset=0 and limit=10 - 5 items will be returned one more request will be
+    # TODO(119vik): In case for request with  offset=0 and limit=10 - 5 items will be returned one more request will be
     # sent to check if more items present with offset=10 and limit=10
     while result['items']:
         for item in result['items']:
