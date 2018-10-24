@@ -521,15 +521,23 @@ def iterate_over_pageable_resource(resource_func, params):
     params = copy.deepcopy(params)
     params[ParamName.QUERY_PARAMS].setdefault('limit', DEFAULT_PAGE_SIZE)
     params[ParamName.QUERY_PARAMS].setdefault('offset', DEFAULT_OFFSET)
+    limit = int(params[ParamName.QUERY_PARAMS]['limit'])
 
-    result = resource_func(params=params)
-    # TODO(119vik): In case for request with  offset=0 and limit=10 - 5 items will be returned one more request will be
-    # sent to check if more items present with offset=10 and limit=10
-    while result['items']:
+    def response_is_not_fulfilled(items_in_response,  items_expected):
+        return items_in_response != items_expected
+
+    while True:
+        result = resource_func(params=params)
+
         for item in result['items']:
             yield item
+
+        if response_is_not_fulfilled(len(result['items']), limit):
+            # No sense to send another query to the server in case we got fewer items then was defined as the limit in
+            # the request
+            break
+
         # creating a copy not to mutate existing dict
         params = copy.deepcopy(params)
         query_params = params[ParamName.QUERY_PARAMS]
-        query_params['offset'] = int(query_params['offset']) + int(query_params['limit'])
-        result = resource_func(params=params)
+        query_params['offset'] = int(query_params['offset']) + limit
