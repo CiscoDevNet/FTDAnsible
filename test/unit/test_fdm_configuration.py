@@ -7,21 +7,13 @@ from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFa
 from library import ftd_configuration
 
 try:
-    from ansible.module_utils.common import FtdConfigurationError, FtdServerError, HTTPMethod, ResponseParams
-    from ansible.module_utils.configuration import DUPLICATE_NAME_ERROR_MESSAGE, UNPROCESSABLE_ENTITY_STATUS, \
-        FtdInvalidOperationNameError, CheckModeException
+    from ansible.module_utils.common import FtdConfigurationError, FtdServerError
+    from ansible.module_utils.configuration import FtdInvalidOperationNameError, CheckModeException
     from ansible.module_utils.fdm_swagger_client import ValidationError
 except ImportError:
-    from module_utils.common import FtdConfigurationError, FtdServerError, HTTPMethod, ResponseParams
-    from module_utils.configuration import DUPLICATE_NAME_ERROR_MESSAGE, UNPROCESSABLE_ENTITY_STATUS, \
-        FtdInvalidOperationNameError, CheckModeException
+    from module_utils.common import FtdConfigurationError, FtdServerError
+    from module_utils.configuration import FtdInvalidOperationNameError, CheckModeException
     from module_utils.fdm_swagger_client import ValidationError
-
-ADD_RESPONSE = {'status': 'Object added'}
-EDIT_RESPONSE = {'status': 'Object edited'}
-DELETE_RESPONSE = {'status': 'Object deleted'}
-GET_BY_FILTER_RESPONSE = [{'name': 'foo', 'description': 'bar'}]
-ARBITRARY_RESPONSE = {'status': 'Arbitrary request sent'}
 
 
 class TestFtdConfiguration(object):
@@ -34,14 +26,13 @@ class TestFtdConfiguration(object):
     @pytest.fixture(autouse=True)
     def connection_mock(self, mocker):
         connection_class_mock = mocker.patch('library.ftd_configuration.Connection')
-        connection_instance = connection_class_mock.return_value
-
-        return connection_instance
+        return connection_class_mock.return_value
 
     @pytest.fixture
     def resource_mock(self, mocker):
         resource_class_mock = mocker.patch('library.ftd_configuration.BaseConfigurationResource')
-        return resource_class_mock.return_value.crud_operation
+        resource_instance = resource_class_mock.return_value
+        return resource_instance.execute_operation
 
     def test_module_should_fail_when_ftd_invalid_operation_name_error(self, resource_mock):
         operation_name = 'test name'

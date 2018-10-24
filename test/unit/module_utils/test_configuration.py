@@ -17,19 +17,21 @@
 #
 
 import json
+import unittest
 
 import pytest
 from ansible.compat.tests import mock
 from ansible.compat.tests.mock import call, patch
 
-from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource, ParamName, QueryParams
+from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource, \
+    OperationChecker, OperationNamePrefix, ParamName, QueryParams
 
 try:
     from ansible.module_utils.common import HTTPMethod
-    from ansible.module_utils.fdm_swagger_client import ValidationError
+    from ansible.module_utils.fdm_swagger_client import ValidationError, OperationField
 except ImportError:
     from module_utils.common import HTTPMethod
-    from module_utils.fdm_swagger_client import ValidationError
+    from module_utils.fdm_swagger_client import ValidationError, OperationField
 
 
 class TestBaseConfigurationResource(object):
@@ -57,7 +59,9 @@ class TestBaseConfigurationResource(object):
         resource = BaseConfigurationResource(connection_mock, False)
 
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
-        assert objects == resource.get_objects_by_filter('test', {})
+        # resource.get_objects_by_filter returns generator so to be able compare generated list with expected list
+        # we need evaluate it.
+        assert objects == list(resource.get_objects_by_filter('test', {}))
         send_request_mock.assert_has_calls(
             [
                 mock.call('/object/', 'get', {}, {}, {'limit': 10, 'offset': 0}),
@@ -67,7 +71,9 @@ class TestBaseConfigurationResource(object):
 
         send_request_mock.reset_mock()
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
-        assert [objects[0]] == resource.get_objects_by_filter('test', {ParamName.FILTERS: {'name': 'obj1'}})
+        # resource.get_objects_by_filter returns generator so to be able compare generated list with expected list
+        # we need evaluate it.
+        assert [objects[0]] == list(resource.get_objects_by_filter('test', {ParamName.FILTERS: {'name': 'obj1'}}))
         send_request_mock.assert_has_calls(
             [
                 mock.call('/object/', 'get', {}, {}, {QueryParams.FILTER: 'name:obj1', 'limit': 10, 'offset': 0}),
@@ -77,8 +83,12 @@ class TestBaseConfigurationResource(object):
 
         send_request_mock.reset_mock()
         send_request_mock.side_effect = [{'items': objects}, {'items': []}]
-        assert [objects[1]] == resource.get_objects_by_filter('test',
-                                                              {ParamName.FILTERS: {'type': 1, 'foo': {'bar': 'buz'}}})
+        # resource.get_objects_by_filter returns generator so to be able compare generated list with expected list
+        # we need evaluate it.
+        assert [objects[1]] == list(resource.get_objects_by_filter(
+            'test',
+            {ParamName.FILTERS: {'type': 1, 'foo': {'bar': 'buz'}}}))
+
         send_request_mock.assert_has_calls(
             [
                 mock.call('/object/', 'get', {}, {},
@@ -105,10 +115,12 @@ class TestBaseConfigurationResource(object):
             'url': '/object/'
         }
         resource = BaseConfigurationResource(connection_mock, False)
-
-        assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == resource.get_objects_by_filter(
-            'test',
-            {ParamName.FILTERS: {'type': 'foo'}})
+        # resource.get_objects_by_filter returns generator so to be able compare generated list with expected list
+        # we need evaluate it.
+        assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == list(
+            resource.get_objects_by_filter(
+                'test',
+                {ParamName.FILTERS: {'type': 'foo'}}))
         send_request_mock.assert_has_calls(
             [
                 mock.call('/object/', 'get', {}, {},
@@ -362,3 +374,172 @@ class TestIterateOverPageableResource(object):
             call(params={'query_params': {'offset': '1', 'limit': '1'}}),
             call(params={'query_params': {'offset': 2, 'limit': '1'}})
         ])
+
+
+class TestOperationCheckerClass(unittest.TestCase):
+    def setUp(self):
+        self._checker = OperationChecker
+
+    def test_is_add_operation_positive(self):
+        operation_name = OperationNamePrefix.ADD + "Object"
+        operation_spec = {OperationField.METHOD: HTTPMethod.POST}
+        assert self._checker.is_add_operation(operation_name, operation_spec)
+
+
+    def test_is_add_operation_wrong_method_in_spec(self):
+        operation_name = OperationNamePrefix.ADD + "Object"
+        operation_spec = {OperationField.METHOD: HTTPMethod.GET}
+        assert not self._checker.is_add_operation(operation_name, operation_spec)
+
+    def test_is_add_operation_negative_wrong_operation_name(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {OperationField.METHOD: HTTPMethod.POST}
+        assert not self._checker.is_add_operation(operation_name, operation_spec)
+
+    def test_is_edit_operation_positive(self):
+        operation_name = OperationNamePrefix.EDIT + "Object"
+        operation_spec = {OperationField.METHOD: HTTPMethod.PUT}
+        assert self._checker.is_edit_operation(operation_name, operation_spec)
+
+    def test_is_edit_operation_wrong_method_in_spec(self):
+        operation_name = OperationNamePrefix.EDIT + "Object"
+        operation_spec = {OperationField.METHOD: HTTPMethod.GET}
+        assert not self._checker.is_edit_operation(operation_name, operation_spec)
+
+    def test_is_edit_operation_negative_wrong_operation_name(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {OperationField.METHOD: HTTPMethod.PUT}
+        assert not self._checker.is_edit_operation(operation_name, operation_spec)
+
+    def test_is_delete_operation_positive(self):
+        operation_name = OperationNamePrefix.DELETE + "Object"
+        operation_spec = {OperationField.METHOD: HTTPMethod.DELETE}
+        self.assertTrue(
+            self._checker.is_delete_operation(operation_name, operation_spec)
+        )
+
+    def test_is_delete_operation_wrong_method_in_spec(self):
+        operation_name = OperationNamePrefix.DELETE + "Object"
+        operation_spec = {OperationField.METHOD: HTTPMethod.GET}
+        assert not self._checker.is_delete_operation(operation_name, operation_spec)
+
+    def test_is_delete_operation_negative_wrong_operation_name(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {OperationField.METHOD: HTTPMethod.DELETE}
+        assert not self._checker.is_delete_operation(operation_name, operation_spec)
+
+    def test_is_get_list_operation_positive(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {
+            OperationField.METHOD: HTTPMethod.GET,
+            OperationField.RETURN_MULTIPLE_ITEMS: True
+        }
+        assert self._checker.is_get_list_operation(operation_name, operation_spec)
+
+    def test_is_get_list_operation_wrong_method_in_spec(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {
+            OperationField.METHOD: HTTPMethod.POST,
+            OperationField.RETURN_MULTIPLE_ITEMS: True
+        }
+        assert not self._checker.is_get_list_operation(operation_name, operation_spec)
+
+    def test_is_get_list_operation_does_not_return_list(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {
+            OperationField.METHOD: HTTPMethod.GET,
+            OperationField.RETURN_MULTIPLE_ITEMS: False
+        }
+        assert not self._checker.is_get_list_operation(operation_name, operation_spec)
+
+    def test_is_get_operation_positive(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {
+            OperationField.METHOD: HTTPMethod.GET,
+            OperationField.RETURN_MULTIPLE_ITEMS: False
+        }
+        self.assertTrue(
+            self._checker.is_get_operation(operation_name, operation_spec)
+        )
+
+    def test_is_get_operation_wrong_method_in_spec(self):
+        operation_name = OperationNamePrefix.ADD + "Object"
+        operation_spec = {
+            OperationField.METHOD: HTTPMethod.POST,
+            OperationField.RETURN_MULTIPLE_ITEMS: False
+        }
+        assert not self._checker.is_get_operation(operation_name, operation_spec)
+
+    def test_is_get_operation_negative_when_returns_multiple(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {
+            OperationField.METHOD: HTTPMethod.GET,
+            OperationField.RETURN_MULTIPLE_ITEMS: True
+        }
+        assert not self._checker.is_get_operation(operation_name, operation_spec)
+
+    def test_is_upsert_operation_positive(self):
+        operation_name = OperationNamePrefix.UPSERT + "Object"
+        assert self._checker.is_upsert_operation(operation_name)
+
+    def test_is_upsert_operation_with_wrong_operation_name(self):
+        for op_type in [OperationNamePrefix.ADD, OperationNamePrefix.GET, OperationNamePrefix.EDIT,
+                        OperationNamePrefix.DELETE]:
+            operation_name = op_type + "Object"
+            assert not self._checker.is_upsert_operation(operation_name)
+
+    def test_is_find_by_filter_operation(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {
+            OperationField.METHOD: HTTPMethod.GET,
+            OperationField.RETURN_MULTIPLE_ITEMS: True
+        }
+        params = {ParamName.FILTERS: 1}
+        self.assertTrue(
+            self._checker.is_find_by_filter_operation(
+                operation_name, params, operation_spec
+            )
+        )
+
+    def test_is_find_by_filter_operation_negative_when_filters_empty(self):
+        operation_name = OperationNamePrefix.GET + "Object"
+        operation_spec = {
+            OperationField.METHOD: HTTPMethod.GET,
+            OperationField.RETURN_MULTIPLE_ITEMS: True
+        }
+        params = {ParamName.FILTERS: None}
+        assert not self._checker.is_find_by_filter_operation(
+            operation_name, params, operation_spec
+        )
+
+        params = {}
+        assert not self._checker.is_find_by_filter_operation(
+                operation_name, params, operation_spec
+            )
+
+    @patch.object(OperationChecker, "is_add_operation")
+    @patch.object(OperationChecker, "is_edit_operation")
+    @patch.object(OperationChecker, "is_get_list_operation")
+    def test_is_upsert_operation_supported_operation(self, is_add_mock, is_edit_mock, is_get_list_mock):
+        operations_spec = {
+            'add': 1,
+            'edit': 1,
+            'getList': 1
+        }
+        is_add_mock.side_effect = [1, 0, 0]
+        is_edit_mock.side_effect = [1, 0, 0]
+        is_get_list_mock.side_effect = [1, 0, 0]
+
+        assert self._checker.is_upsert_operation_supported(operations_spec)
+
+        is_add_mock.side_effect = [1, 0, 0]
+        is_edit_mock.side_effect = [0, 1, 0]
+        is_get_list_mock.side_effect = [0, 0, 0]
+
+        assert not self._checker.is_upsert_operation_supported(operations_spec)
+
+        is_add_mock.side_effect = [1, 0, 0]
+        is_edit_mock.side_effect = [0, 0, 0]
+        is_get_list_mock.side_effect = [1, 0, 0]
+
+        assert not self._checker.is_upsert_operation_supported(operations_spec)
