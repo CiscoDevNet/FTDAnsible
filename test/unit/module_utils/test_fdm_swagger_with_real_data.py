@@ -17,7 +17,7 @@ class TestFdmSwagger(unittest.TestCase):
 
     def init_mock_data(self):
         with open(os.path.join(TEST_DATA_FOLDER, 'ngfw_with_ex.json'), 'rb') as f:
-            self.base_data = json.load(f)
+            self.base_data = json.loads(f.read().decode('utf-8'))
 
     def test_with_all_data(self):
         fdm_data = FdmSwaggerParser().parse_spec(self.base_data)
