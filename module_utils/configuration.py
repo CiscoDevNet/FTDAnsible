@@ -75,30 +75,90 @@ class OperationChecker(object):
 
     @classmethod
     def is_add_operation(cls, operation_name, operation_spec):
+        """
+        Check if operation defined with 'operation_name' is add object operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is add object operation, otherwise False
+        :rtype: bool
+        """
         # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
         return operation_name.startswith(OperationNamePrefix.ADD) and is_post_request(operation_spec)
 
     @classmethod
     def is_edit_operation(cls, operation_name, operation_spec):
+        """
+        Check if operation defined with 'operation_name' is edit object operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is edit object operation, otherwise False
+        :rtype: bool
+        """
         # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
         return operation_name.startswith(OperationNamePrefix.EDIT) and is_put_request(operation_spec)
 
     @classmethod
     def is_delete_operation(cls, operation_name, operation_spec):
+        """
+        Check if operation defined with 'operation_name' is delete object operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is delete object operation, otherwise False
+        :rtype: bool
+        """
         # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-        return operation_name.startswith(OperationNamePrefix.DELETE) and operation_spec[
-            OperationField.METHOD] == HTTPMethod.DELETE
+        return operation_name.startswith(OperationNamePrefix.DELETE) \
+            and operation_spec[OperationField.METHOD] == HTTPMethod.DELETE
 
     @classmethod
     def is_get_list_operation(cls, operation_name, operation_spec):
-        return operation_spec[OperationField.METHOD] == HTTPMethod.GET and operation_spec[OperationField.RETURN_MULTIPLE_ITEMS]
+        """
+        Check if operation defined with 'operation_name' is get list of objects operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is get a list of objects operation, otherwise False
+        :rtype: bool
+        """
+        return operation_spec[OperationField.METHOD] == HTTPMethod.GET \
+            and operation_spec[OperationField.RETURN_MULTIPLE_ITEMS]
 
     @classmethod
     def is_get_operation(cls, operation_name, operation_spec):
-        return operation_spec[OperationField.METHOD] == HTTPMethod.GET and not operation_spec[OperationField.RETURN_MULTIPLE_ITEMS]
+        """
+        Check if operation defined with 'operation_name' is get objects operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is get object operation, otherwise False
+        :rtype: bool
+        """
+        return operation_spec[OperationField.METHOD] == HTTPMethod.GET \
+            and not operation_spec[OperationField.RETURN_MULTIPLE_ITEMS]
 
     @classmethod
     def is_upsert_operation(cls, operation_name):
+        """
+        Check if operation defined with 'operation_name' is upsert objects operation according to 'operation_name'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :return: True if the called operation is upsert object operation, otherwise False
+        :rtype: bool
+        """
         return operation_name.startswith(OperationNamePrefix.UPSERT)
 
     @classmethod
@@ -113,7 +173,7 @@ class OperationChecker(object):
         :param operation_spec: specification of the operation being called by the user
         :type operation_spec: dict
         :param params: params - params should contain 'filters'
-        :return: True if called operation is find by filter, otherwise False
+        :return: True if the called operation is find by filter, otherwise False
         :rtype: bool
         """
         is_get_list = cls.is_get_list_operation(operation_name, operation_spec)
@@ -121,6 +181,14 @@ class OperationChecker(object):
 
     @classmethod
     def is_upsert_operation_supported(cls, operations):
+        """
+        Checks if all operations required for upsert object operation are defined in 'operations'.
+
+        :param operations: specification of the operations supported by model
+        :type operations: dict
+        :return: True if all criteria required to provide requested called operation are satisfied, otherwise False
+        :rtype: bool
+        """
         amount_operations_need_for_upsert_operation = 3
         amount_supported_operations = 0
         for operation_name, operation_spec in operations.items():
@@ -143,12 +211,33 @@ class BaseConfigurationResource(object):
         self._operation_checker = OperationChecker
 
     def execute_operation(self, op_name, params):
+        """
+        Allow user request execution of simple operations(natively supported by API provider) as well as complex
+        operations(operations that are implemented as a set of simple operations).
+
+        :param op_name: name of the operation being called by the user
+        :type op_name: str
+        :param params: definition of the params that operation should be executed with
+        :type params: dict
+        :return: Result of the operation being executed
+        :rtype: dict
+        """
         if self._operation_checker.is_upsert_operation(op_name):
             return self.upsert_object(op_name, params)
         else:
             return self.crud_operation(op_name, params)
 
     def crud_operation(self, op_name, params):
+        """
+        Allow user request execution of simple operations(natively supported by API provider) only.
+
+        :param op_name: name of the operation being called by the user
+        :type op_name: str
+        :param params: definition of the params that operation should be executed with
+        :type params: dict
+        :return: Result of the operation being executed
+        :rtype: dict
+        """
         op_spec = self.get_operation_spec(op_name)
         if op_spec is None:
             raise FtdInvalidOperationNameError(op_name)
@@ -334,6 +423,14 @@ class BaseConfigurationResource(object):
             raise ValidationError(report)
 
     def is_upsert_operation_supported(self, op_name):
+        """
+        Checks if all operations required for upsert object operation are defined in 'operations'.
+
+        :param op_name: upsert operation name
+        :type op_name: str
+        :return: True if all criteria required to provide requested called operation are satisfied, otherwise False
+        :rtype: bool
+        """
         model_name = _extract_model_from_upsert_operation(op_name)
         operations = self.get_operation_specs_by_model_name(model_name)
         return self._operation_checker.is_upsert_operation_supported(operations)
@@ -359,6 +456,18 @@ class BaseConfigurationResource(object):
         return self.edit_object(edit_op_name, params)
 
     def upsert_object(self, op_name, params):
+        """
+        The wrapper on top of add object operation, get a list of objects and edit object operations that implement
+        upsert object operation. As a result, the object will be created if the object does not exist, if a single
+        object exists with requested 'params' this object will be updated otherwise, Exception will be raised.
+
+        :param op_name: upsert operation name
+        :type op_name: str
+        :param params: params that upsert operation should be executed with
+        :type params: dict
+        :return: upserted object representation
+        :rtype: dict
+        """
         if not self.is_upsert_operation_supported(op_name):
             raise FtdInvalidOperationNameError(op_name)
 
