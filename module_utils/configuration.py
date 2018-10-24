@@ -105,7 +105,7 @@ class BaseConfigurationResource(object):
 
     def get_objects_by_filter(self, operation_name, params, get_one_item=False):
         def transform_filters_to_query_param(filter_params):
-            return ';'.join(['%s:%s' % (key, val) for key, val in iteritems(filter_params)])
+            return ';'.join(['%s:%s' % (key, val) for key, val in sorted(iteritems(filter_params))])
 
         def match_filters(filter_params, obj):
             return viewitems(filter_params) <= viewitems(obj)

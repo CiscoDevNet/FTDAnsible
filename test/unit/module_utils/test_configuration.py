@@ -82,9 +82,9 @@ class TestBaseConfigurationResource(object):
         send_request_mock.assert_has_calls(
             [
                 mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "type:1;foo:{'bar': 'buz'}", 'limit': 10, 'offset': 0}),
+                          {QueryParams.FILTER: "foo:{'bar': 'buz'};type:1", 'limit': 10, 'offset': 0}),
                 mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "type:1;foo:{'bar': 'buz'}", 'limit': 10, 'offset': 10})
+                          {QueryParams.FILTER: "foo:{'bar': 'buz'};type:1", 'limit': 10, 'offset': 10})
             ]
         )
 
