@@ -27,10 +27,10 @@ from module_utils.configuration import iterate_over_pageable_resource, BaseConfi
     OperationChecker, OperationNamePrefix, ParamName, QueryParams
 
 try:
-    from ansible.module_utils.common import HTTPMethod, FtdUnexpectedThirdPartyResponse
+    from ansible.module_utils.common import HTTPMethod, FtdUnexpectedResponse
     from ansible.module_utils.fdm_swagger_client import ValidationError, OperationField
 except ImportError:
-    from module_utils.common import HTTPMethod, FtdUnexpectedThirdPartyResponse
+    from module_utils.common import HTTPMethod, FtdUnexpectedResponse
     from module_utils.fdm_swagger_client import ValidationError, OperationField
 
 
@@ -399,7 +399,7 @@ class TestIterateOverPageableResource(object):
             {'items': []},
         ])
 
-        with pytest.raises(FtdUnexpectedThirdPartyResponse):
+        with pytest.raises(FtdUnexpectedResponse):
             list(iterate_over_pageable_resource(resource_func, {'query_params': {'offset': '1', 'limit': '1'}}))
 
         resource_func.assert_has_calls([

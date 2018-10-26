@@ -54,7 +54,7 @@ class FtdServerError(Exception):
         self.code = code
 
 
-class FtdUnexpectedThirdPartyResponse(Exception):
+class FtdUnexpectedResponse(Exception):
     """The exception to be raised in case of unexpected responses from 3d parties."""
     pass
 

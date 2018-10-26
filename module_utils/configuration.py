@@ -22,11 +22,11 @@ from ansible.module_utils.six import iteritems, viewitems
 
 try:
     from ansible.module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
-        FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedThirdPartyResponse
+        FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedResponse
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
 except ImportError:
     from module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
-        FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedThirdPartyResponse
+        FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedResponse
     from module_utils.fdm_swagger_client import OperationField, ValidationError
 
 DEFAULT_PAGE_SIZE = 10
@@ -529,8 +529,8 @@ def iterate_over_pageable_resource(resource_func, params):
         elif items_in_response < items_expected:
             return True
 
-        raise FtdUnexpectedThirdPartyResponse(
-            "Get List of Objects Response from the server contains more objects then requested. "
+        raise FtdUnexpectedResponse(
+            "Get List of Objects Response from the server contains more objects than requested. "
             "There are {} item(s) in the response while {} was(ere) requested".format(items_in_response, items_expected)
         )
 
