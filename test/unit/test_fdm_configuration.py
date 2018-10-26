@@ -7,11 +7,11 @@ from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFa
 from library import ftd_configuration
 
 try:
-    from ansible.module_utils.common import FtdConfigurationError, FtdServerError
+    from ansible.module_utils.common import FtdConfigurationError, FtdServerError, FtdUnexpectedThirdPartyResponse
     from ansible.module_utils.configuration import FtdInvalidOperationNameError, CheckModeException
     from ansible.module_utils.fdm_swagger_client import ValidationError
 except ImportError:
-    from module_utils.common import FtdConfigurationError, FtdServerError
+    from module_utils.common import FtdConfigurationError, FtdServerError, FtdUnexpectedThirdPartyResponse
     from module_utils.configuration import FtdInvalidOperationNameError, CheckModeException
     from module_utils.fdm_swagger_client import ValidationError
 
@@ -70,6 +70,16 @@ class TestFtdConfiguration(object):
         resource_mock.side_effect = ValidationError(msg)
 
         result = self._run_module_with_fail_json({'operation': operation_name})
+        assert result['failed']
+        assert msg == result['msg']
+
+    def test_module_should_fail_when_unexpected_server_response(self, resource_mock):
+        operation_name = 'test name'
+        msg = 'Foo error.'
+        resource_mock.side_effect = FtdUnexpectedThirdPartyResponse(msg)
+
+        result = self._run_module_with_fail_json({'operation': operation_name})
+
         assert result['failed']
         assert msg == result['msg']
 

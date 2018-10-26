@@ -22,11 +22,11 @@ from ansible.module_utils.six import iteritems, viewitems
 
 try:
     from ansible.module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
-        FtdServerError, ResponseParams, copy_identity_properties
+        FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedThirdPartyResponse
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
 except ImportError:
     from module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
-        FtdServerError, ResponseParams, copy_identity_properties
+        FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedThirdPartyResponse
     from module_utils.fdm_swagger_client import OperationField, ValidationError
 
 DEFAULT_PAGE_SIZE = 10
@@ -523,8 +523,16 @@ def iterate_over_pageable_resource(resource_func, params):
     params[ParamName.QUERY_PARAMS].setdefault('offset', DEFAULT_OFFSET)
     limit = int(params[ParamName.QUERY_PARAMS]['limit'])
 
-    def response_is_not_fulfilled(items_in_response,  items_expected):
-        return items_in_response != items_expected
+    def received_less_items_than_requested(items_in_response, items_expected):
+        if items_in_response == items_expected:
+            return False
+        elif items_in_response < items_expected:
+            return True
+
+        raise FtdUnexpectedThirdPartyResponse(
+            "Get List of Objects Response from the server contains more objects then requested. "
+            "There are {} item(s) in the response while {} was(ere) requested".format(items_in_response, items_expected)
+        )
 
     while True:
         result = resource_func(params=params)
@@ -532,9 +540,7 @@ def iterate_over_pageable_resource(resource_func, params):
         for item in result['items']:
             yield item
 
-        if response_is_not_fulfilled(len(result['items']), limit):
-            # No sense to send another query to the server in case we got fewer items then was defined as the limit in
-            # the request
+        if received_less_items_than_requested(len(result['items']), limit):
             break
 
         # creating a copy not to mutate existing dict

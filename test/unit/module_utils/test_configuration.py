@@ -27,10 +27,10 @@ from module_utils.configuration import iterate_over_pageable_resource, BaseConfi
     OperationChecker, OperationNamePrefix, ParamName, QueryParams
 
 try:
-    from ansible.module_utils.common import HTTPMethod
+    from ansible.module_utils.common import HTTPMethod, FtdUnexpectedThirdPartyResponse
     from ansible.module_utils.fdm_swagger_client import ValidationError, OperationField
 except ImportError:
-    from module_utils.common import HTTPMethod
+    from module_utils.common import HTTPMethod, FtdUnexpectedThirdPartyResponse
     from module_utils.fdm_swagger_client import ValidationError, OperationField
 
 
@@ -391,6 +391,19 @@ class TestIterateOverPageableResource(object):
         resource_func.assert_has_calls([
             call(params={'query_params': {'offset': '1', 'limit': '1'}}),
             call(params={'query_params': {'offset': 2, 'limit': '1'}})
+        ])
+
+    def test_iterate_over_pageable_resource_raises_exception_when_server_returned_more_items_than_requested(self):
+        resource_func = mock.Mock(side_effect=[
+            {'items': ['foo', 'redundant_bar']},
+            {'items': []},
+        ])
+
+        with pytest.raises(FtdUnexpectedThirdPartyResponse):
+            list(iterate_over_pageable_resource(resource_func, {'query_params': {'offset': '1', 'limit': '1'}}))
+
+        resource_func.assert_has_calls([
+            call(params={'query_params': {'offset': '1', 'limit': '1'}})
         ])
 
 
