@@ -27,10 +27,10 @@ from module_utils.configuration import iterate_over_pageable_resource, BaseConfi
     OperationChecker, OperationNamePrefix, ParamName, QueryParams
 
 try:
-    from ansible.module_utils.common import HTTPMethod
+    from ansible.module_utils.common import HTTPMethod, FtdUnexpectedResponse
     from ansible.module_utils.fdm_swagger_client import ValidationError, OperationField
 except ImportError:
-    from module_utils.common import HTTPMethod
+    from module_utils.common import HTTPMethod, FtdUnexpectedResponse
     from module_utils.fdm_swagger_client import ValidationError, OperationField
 
 
@@ -64,8 +64,7 @@ class TestBaseConfigurationResource(object):
         assert objects == list(resource.get_objects_by_filter('test', {}))
         send_request_mock.assert_has_calls(
             [
-                mock.call('/object/', 'get', {}, {}, {'limit': 10, 'offset': 0}),
-                mock.call('/object/', 'get', {}, {}, {'limit': 10, 'offset': 10})
+                mock.call('/object/', 'get', {}, {}, {'limit': 10, 'offset': 0})
             ]
         )
 
@@ -76,8 +75,7 @@ class TestBaseConfigurationResource(object):
         assert [objects[0]] == list(resource.get_objects_by_filter('test', {ParamName.FILTERS: {'name': 'obj1'}}))
         send_request_mock.assert_has_calls(
             [
-                mock.call('/object/', 'get', {}, {}, {QueryParams.FILTER: 'name:obj1', 'limit': 10, 'offset': 0}),
-                mock.call('/object/', 'get', {}, {}, {QueryParams.FILTER: 'name:obj1', 'limit': 10, 'offset': 10})
+                mock.call('/object/', 'get', {}, {}, {QueryParams.FILTER: 'name:obj1', 'limit': 10, 'offset': 0})
             ]
         )
 
@@ -92,9 +90,7 @@ class TestBaseConfigurationResource(object):
         send_request_mock.assert_has_calls(
             [
                 mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "foo:{'bar': 'buz'};type:1", 'limit': 10, 'offset': 0}),
-                mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "foo:{'bar': 'buz'};type:1", 'limit': 10, 'offset': 10})
+                          {QueryParams.FILTER: "foo:{'bar': 'buz'};type:1", 'limit': 10, 'offset': 0})
             ]
         )
 
@@ -115,20 +111,40 @@ class TestBaseConfigurationResource(object):
             'url': '/object/'
         }
         resource = BaseConfigurationResource(connection_mock, False)
-        # resource.get_objects_by_filter returns generator so to be able compare generated list with expected list
-        # we need evaluate it.
-        assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == list(
-            resource.get_objects_by_filter(
-                'test',
-                {ParamName.FILTERS: {'type': 'foo'}}))
+        assert [{'name': 'obj1', 'type': 'foo'}] == list(resource.get_objects_by_filter(
+            'test',
+            {ParamName.FILTERS: {'type': 'foo'}}))
         send_request_mock.assert_has_calls(
             [
                 mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "type:foo", 'limit': 10, 'offset': 0}),
+                          {QueryParams.FILTER: "type:foo", 'limit': 10, 'offset': 0})
+            ]
+        )
+
+        send_request_mock.reset_mock()
+        send_request_mock.side_effect = [
+            {'items': [
+                {'name': 'obj1', 'type': 'foo'},
+                {'name': 'obj2', 'type': 'bar'}
+            ]},
+            {'items': [
+                {'name': 'obj3', 'type': 'foo'}
+            ]},
+            {'items': []}
+        ]
+        resp = list(resource.get_objects_by_filter(
+            'test',
+            {
+                ParamName.FILTERS: {'type': 'foo'},
+                ParamName.QUERY_PARAMS: {'limit':2 }
+            }))
+        assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == resp
+        send_request_mock.assert_has_calls(
+            [
                 mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "type:foo", 'limit': 10, 'offset': 10}),
+                          {QueryParams.FILTER: "type:foo", 'limit': 2, 'offset': 0}),
                 mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "type:foo", 'limit': 10, 'offset': 20})
+                          {QueryParams.FILTER: "type:foo", 'limit': 2, 'offset': 2})
             ]
         )
 
@@ -309,20 +325,24 @@ class TestIterateOverPageableResource(object):
 
         assert ['foo', 'bar'] == list(items)
         resource_func.assert_has_calls([
-            call(params={'query_params': {'offset': 0, 'limit': 10}}),
-            call(params={'query_params': {'offset': 10, 'limit': 10}})
+            call(params={'query_params': {'offset': 0, 'limit': 10}})
         ])
 
     def test_iterate_over_pageable_resource_with_multiple_pages(self):
-        resource_func = mock.Mock(side_effect=[
+        objects = [
             {'items': ['foo']},
             {'items': ['bar']},
             {'items': ['buzz']},
             {'items': []},
-        ])
+        ]
+        resource_func = mock.Mock(side_effect=objects)
 
         items = iterate_over_pageable_resource(resource_func, {'query_params': {}})
+        assert ['foo'] == list(items)
 
+        resource_func.reset_mock()
+        resource_func = mock.Mock(side_effect=objects)
+        items = iterate_over_pageable_resource(resource_func, {'query_params': {'limit': 1}})
         assert ['foo', 'bar', 'buzz'] == list(items)
 
     def test_iterate_over_pageable_resource_should_preserve_query_params(self):
@@ -343,8 +363,7 @@ class TestIterateOverPageableResource(object):
 
         assert ['foo'] == list(items)
         resource_func.assert_has_calls([
-            call(params={'query_params': {'offset': 0, 'limit': 1}}),
-            call(params={'query_params': {'offset': 1, 'limit': 1}})
+            call(params={'query_params': {'offset': 0, 'limit': 1}})
         ])
 
     def test_iterate_over_pageable_resource_should_preserve_offset(self):
@@ -358,7 +377,6 @@ class TestIterateOverPageableResource(object):
         assert ['foo'] == list(items)
         resource_func.assert_has_calls([
             call(params={'query_params': {'offset': 3, 'limit': 10}}),
-            call(params={'query_params': {'offset': 13, 'limit': 10}})
         ])
 
     def test_iterate_over_pageable_resource_should_pass_with_string_offset_and_limit(self):
@@ -373,6 +391,19 @@ class TestIterateOverPageableResource(object):
         resource_func.assert_has_calls([
             call(params={'query_params': {'offset': '1', 'limit': '1'}}),
             call(params={'query_params': {'offset': 2, 'limit': '1'}})
+        ])
+
+    def test_iterate_over_pageable_resource_raises_exception_when_server_returned_more_items_than_requested(self):
+        resource_func = mock.Mock(side_effect=[
+            {'items': ['foo', 'redundant_bar']},
+            {'items': []},
+        ])
+
+        with pytest.raises(FtdUnexpectedResponse):
+            list(iterate_over_pageable_resource(resource_func, {'query_params': {'offset': '1', 'limit': '1'}}))
+
+        resource_func.assert_has_calls([
+            call(params={'query_params': {'offset': '1', 'limit': '1'}})
         ])
 
 

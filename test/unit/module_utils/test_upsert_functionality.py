@@ -332,24 +332,12 @@ class TestUpsertOperationFunctionalTests(object):
 
                 if is_get_list_req:
                     assert body_params == {}
-                    # FIXME(119vik): this check added due to issue with iterate_over_pageable_resource function
-                    assert (
-                            query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0} or
-                            query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 10})
+                    assert query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0}
                     assert path_params == {}
                 elif is_get_req:
                     assert body_params == {}
                     assert query_params == {}
                     assert path_params == {'objId': obj_id}
-
-                #FIXME(119vik): this part added to prevent client from fetching new records
-                if query_params and query_params['offset'] > 0:
-                    return {
-                        ResponseParams.SUCCESS: True,
-                        ResponseParams.RESPONSE: {
-                            'items': []
-                        }
-                    }
 
                 return {
                     ResponseParams.SUCCESS: True,
@@ -423,20 +411,8 @@ class TestUpsertOperationFunctionalTests(object):
             elif http_method == HTTPMethod.GET:
                 assert url_path == url
                 assert body_params == {}
-                # FIXME(119vik): this check added due to issue with iterate_over_pageable_resource function
-                assert (
-                        query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0} or
-                        query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 10})
+                assert query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0}
                 assert path_params == {}
-
-                # FIXME(119vik): this part added to prevent client from fetching new records
-                if query_params and query_params['offset'] > 0:
-                    return {
-                        ResponseParams.SUCCESS: True,
-                        ResponseParams.RESPONSE: {
-                            'items': []
-                        }
-                    }
 
                 return {
                     ResponseParams.SUCCESS: True,
@@ -592,23 +568,11 @@ class TestUpsertOperationFunctionalTests(object):
 
                 if is_get_list_req:
                     assert body_params == {}
-                    # FIXME(119vik): this check added due to issue with iterate_over_pageable_resource function
-                    assert (
-                            query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0} or
-                            query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 10})
+                    assert query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0}
                 elif is_get_req:
                     assert body_params == {}
                     assert query_params == {}
                     assert path_params == {'objId': obj_id}
-
-                # FIXME(119vik): this part added to prevent client from fetching new records
-                if query_params and query_params['offset'] > 0:
-                    return {
-                        ResponseParams.SUCCESS: True,
-                        ResponseParams.RESPONSE: {
-                            'items': []
-                        }
-                    }
 
                 return {
                     ResponseParams.SUCCESS: True,
@@ -730,21 +694,8 @@ class TestUpsertOperationFunctionalTests(object):
             elif http_method == HTTPMethod.GET:
                 assert url_path == url
                 assert body_params == {}
-                # FIXME(119vik): this check added due to issue with iterate_over_pageable_resource function
-                assert (
-                        query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0} or
-                        query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 10})
-
+                assert query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0}
                 assert path_params == {}
-
-                # FIXME(119vik): this part added to prevent client from fetching new records
-                if query_params and query_params['offset'] > 0:
-                    return {
-                        ResponseParams.SUCCESS: True,
-                        ResponseParams.RESPONSE: {
-                            'items': []
-                        }
-                    }
 
                 return {
                     ResponseParams.SUCCESS: True,

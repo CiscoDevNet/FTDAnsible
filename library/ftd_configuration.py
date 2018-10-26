@@ -100,12 +100,12 @@ try:
         FtdInvalidOperationNameError
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
     from ansible.module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError
+        FtdServerError, FtdUnexpectedResponse
 except ImportError:
     from module_utils.configuration import BaseConfigurationResource, CheckModeException, FtdInvalidOperationNameError
     from module_utils.fdm_swagger_client import OperationField, ValidationError
     from module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError
+        FtdServerError, FtdUnexpectedResponse
 
 
 def main():
@@ -135,9 +135,10 @@ def main():
     except FtdServerError as e:
         module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
                              'Server response: %s' % (op_name, e.code, e.response))
+    except FtdUnexpectedResponse as e:
+        module.fail_json(msg=e.args[0])
     except ValidationError as e:
         module.fail_json(msg=e.args[0])
-
     except CheckModeException:
         module.exit_json(changed=False)
 
