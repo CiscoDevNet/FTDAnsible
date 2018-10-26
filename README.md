@@ -102,7 +102,32 @@ export PYTHONPATH=$PYTHONPATH:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
 ```
 pytest test/unit
 ```
-    
+ 
+### Running tests with [TOX](https://tox.readthedocs.io/en/latest/) 
+**NOTE**: To be able to run tests with the specific version of Python using tox you need to have this version of Python installed locally  
+
+Install tox locally:
+```
+pip install tox
+```
+Check the list of currently supported environments:
+```
+tox -l
+```
+**NOTE**: environments with _-integration_ postfix preconfigured for integration tests:
+
+Setup `PYTHONPATH` as described in the previous section
+Run unit tests in virtualenvs using tox:
+```
+tox -e py27,py35,py36,py37
+```
+Run integration tests in virtualenvs using tox:
+```
+export REPORTS_DIR=<path to the folder where JUnit reports will be stored>
+tox -e py27-integration,py35-integration,py36-integration,py37-integration -- samples/network_object.yml -i inventory/sample_hosts
+```
+
+
 ## Integration Tests
 
 Integration tests are written in a form of playbooks and usually started with `ansible-test` command 
