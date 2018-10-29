@@ -32,8 +32,8 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         self._resource = BaseConfigurationResource(conn)
 
     def test_get_operation_name(self):
-        operation_a = mock.MagicMock()
-        operation_b = mock.MagicMock()
+        operation_a = "TESTOPERATION_1"
+        operation_b = "TESTOPERATION_2"
         checker = mock.MagicMock()
 
         operations = {
