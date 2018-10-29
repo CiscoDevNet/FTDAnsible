@@ -437,7 +437,7 @@ class BaseConfigurationResource(object):
 
     @staticmethod
     def _get_operation_name(checker, operations):
-        for operation_name, op_spec in sorted(iteritems(operations)):
+        for operation_name, op_spec in operations.items():
             if checker(operation_name, op_spec):
                 return operation_name
         raise FtdConfigurationError("Operation is not supported")
