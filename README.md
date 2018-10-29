@@ -3,9 +3,6 @@
 A collection of Ansible modules that automate configuration management 
 and execution of operational tasks on Cisco Firepower Threat Defense (FTD) devices.
 
-_This file describes development and testing aspects. In case you are looking for 
-a client-facing documentation, please check [FTD Ansible on DevNet](https://testing-developer.cisco.com/pubhub/docs/1644/new)._
-
 ## Installation Guide
 
 The project contains Ansible modules for managing device configuration ([`ftd_configuration.py`](./library/ftd_configuration.py)), 
