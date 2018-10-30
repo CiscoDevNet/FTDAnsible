@@ -35,7 +35,7 @@ class TestFdmSwagger(unittest.TestCase):
                     try:
                         valid, rez = validator.validate_data(operation, example)
                         assert valid
-                    except Exception as e:
+                    except Exception:
                         invalid.add(model_name)
         assert invalid == set({'TCPPortObject',
                                'UDPPortObject', 'ICMPv4PortObject',

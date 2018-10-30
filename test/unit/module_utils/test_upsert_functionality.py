@@ -139,7 +139,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
     @mock.patch("module_utils.configuration._extract_model_from_upsert_operation")
     def test_upsert_object_succesfully_edited(self, extract_model_mock, edit_mock, add_mock, get_operation_mock,
-                                             is_upsert_supported_mock):
+                                              is_upsert_supported_mock):
         op_name = mock.MagicMock()
         params = mock.MagicMock()
 
@@ -156,7 +156,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         extract_model_mock.assert_called_once_with(op_name)
         get_operation_mock.assert_called_once_with(extract_model_mock.return_value)
         add_mock.assert_called_once_with(get_operation_mock.return_value, params)
-        edit_mock.assert_called_once_with(get_operation_mock.return_value, error.obj,  params)
+        edit_mock.assert_called_once_with(get_operation_mock.return_value, error.obj, params)
 
     @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
@@ -164,7 +164,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
     @mock.patch("module_utils.configuration._extract_model_from_upsert_operation")
     def test_upsert_object_not_supported(self, extract_model_mock, edit_mock, add_mock, get_operation_mock,
-                                              is_upsert_supported_mock):
+                                         is_upsert_supported_mock):
         op_name = mock.MagicMock()
         params = mock.MagicMock()
 
@@ -187,7 +187,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
     @mock.patch("module_utils.configuration._extract_model_from_upsert_operation")
     def test_upsert_object_neither_added_nor_edited(self, extract_model_mock, edit_mock, add_mock, get_operation_mock,
-                                              is_upsert_supported_mock):
+                                                    is_upsert_supported_mock):
         op_name = mock.MagicMock()
         params = mock.MagicMock()
 
@@ -215,8 +215,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
     @mock.patch("module_utils.configuration._extract_model_from_upsert_operation")
     def test_upsert_object_with_fatal_error_during_add(self, extract_model_mock, edit_mock, add_mock,
-                                                    get_operation_mock,
-                                                    is_upsert_supported_mock):
+                                                       get_operation_mock, is_upsert_supported_mock):
         op_name = mock.MagicMock()
         params = mock.MagicMock()
 
@@ -271,7 +270,7 @@ class TestUpsertOperationFunctionalTests(object):
                 'modelName': 'Object',
                 'url': '/test/{objId}',
                 'returnMultipleItems': False
-        }}
+            }}
 
         def get_operation_spec(name):
             return operations[name]
@@ -457,7 +456,7 @@ class TestUpsertOperationFunctionalTests(object):
         }
         operation_name = 'upsertObject'
         params = {
-            'operation': operation_name ,
+            'operation': operation_name,
             'data': {'id': '123', 'name': 'testObject', 'type': 'object'},
             'path_params': {'objId': '123'},
             'register_as': 'test_var'
@@ -665,9 +664,9 @@ class TestUpsertOperationFunctionalTests(object):
         assert len(result.args) == 1
         assert key in result.args[0]
         assert json.loads(result.args[0][key]) == {
-                'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
-                'required': ['objects[0].type']
-            }
+            'invalid_type': [{'actually_value': 1, 'expected_type': 'string', 'path': 'objects[3].id'}],
+            'required': ['objects[0].type']
+        }
 
     def test_module_should_fail_when_upsert_operation_and_few_objects_found_by_filter(self, connection_mock):
         url = '/test'

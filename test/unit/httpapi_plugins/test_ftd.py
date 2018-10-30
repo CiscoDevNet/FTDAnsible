@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import json
 
 from ansible.compat.tests import mock
@@ -27,8 +26,9 @@ from ansible.module_utils.six import BytesIO, PY3, StringIO
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
 from httpapi_plugins.ftd import HttpApi
+
 from module_utils.common import HTTPMethod, ResponseParams
-from module_utils.fdm_swagger_client import SpecProp, FdmSwaggerParser
+from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp
 
 if PY3:
     BUILTINS_NAME = 'builtins'
@@ -275,7 +275,7 @@ class TestFtdHttpApi(unittest.TestCase):
         assert self.ftd_plugin.get_model_spec('NonExistingTestModel') is None
 
     @patch.object(FdmSwaggerParser, 'parse_spec')
-    def test_get_model_spec(self, parse_spec_mock):
+    def test_get_operation_spec_by_model_name(self, parse_spec_mock):
         self.connection_mock.send.return_value = self._connection_response(None)
         operation1 = {'modelName': 'TestModel'}
         op_model_name_is_none = {'modelName': None}

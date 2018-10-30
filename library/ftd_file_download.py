@@ -45,7 +45,7 @@ options:
   path_params:
     description:
       - Key-value pairs that should be sent as path parameters in a REST API call.
-    type: dict  
+    type: dict
   destination:
     description:
       - Absolute path of where to download the file to.
