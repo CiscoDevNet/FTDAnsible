@@ -34,22 +34,24 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
     def test_get_operation_name(self):
         operation_a = mock.MagicMock()
         operation_b = mock.MagicMock()
-        checker = mock.MagicMock()
+
+        def checker_wrapper(expected_object):
+            def checker(obj, *args, **kwargs):
+                return obj == expected_object
+
+            return checker
 
         operations = {
             operation_a: "spec",
             operation_b: "spec"
         }
 
-        checker.side_effect = [1,
-                               0, 1,
-                               0, 0]
-        assert operation_a == self._resource._get_operation_name(checker, operations)
-        assert operation_b == self._resource._get_operation_name(checker, operations)
+        assert operation_a == self._resource._get_operation_name(checker_wrapper(operation_a), operations)
+        assert operation_b == self._resource._get_operation_name(checker_wrapper(operation_b), operations)
 
         self.assertRaises(
             FtdConfigurationError,
-            self._resource._get_operation_name, checker, operations
+            self._resource._get_operation_name, checker_wrapper(None), operations
         )
 
     @mock.patch.object(BaseConfigurationResource, "_get_operation_name")
