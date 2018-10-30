@@ -123,7 +123,22 @@ Run integration tests in virtualenvs using tox:
 export REPORTS_DIR=<path to the folder where JUnit reports will be stored>
 tox -e py27-integration,py35-integration,py36-integration,py37-integration -- samples/network_object.yml -i inventory/sample_hosts
 ```
-
+### Running style check locally
+Install [Flake8](http://flake8.pycqa.org/en/latest/) locally:
+```
+pip install flake8
+```
+Flake8 configuration is defined in the `tox.ini` file :
+```
+[flake8] 
+ignore = E402 
+max-line-length = 160
+```
+Run Flake8 check:
+```
+flake8
+```
+Flake8 can be integrated  
 
 ## Integration Tests
 
