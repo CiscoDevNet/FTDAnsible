@@ -12,18 +12,21 @@ the [`samples`](./samples) folder.
 
 ### Running playbooks in Docker
 
-1. Build the Docker image:
-```
-docker build -t ftd-ansible .
-```
-
+1. Build the default Docker image:
+    ```
+    docker build -t ftd-ansible .
+    ```
+    **NOTE** The default image is based on the latest commit from the master branch of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
+1. You can build the custom Docker image:
+    ```
+    docker build -t ftd-ansible --build-arg PYTHON_VERSION=<2.7|3.5|3.6|3.7> FTD_ANSIBLE_VERSION=<tag name | branch name> .
+    ```
 1. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) 
 shows an example of inventory file.
-
 1. Run the playbook in Docker mounting playbook folder to `/ftd-ansible/playbooks` and inventory file to `/etc/ansible/hosts`:
-```
-docker run -v $(pwd)/samples:/ftd-ansible/playbooks -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts ftd-ansible network_object.yml
-```
+    ```
+    docker run -v $(pwd)/samples:/ftd-ansible/playbooks -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts ftd-ansible playbooks/network_object.yml
+    ```
 
 ### Running playbooks locally 
 
