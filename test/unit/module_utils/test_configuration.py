@@ -136,7 +136,7 @@ class TestBaseConfigurationResource(object):
             'test',
             {
                 ParamName.FILTERS: {'type': 'foo'},
-                ParamName.QUERY_PARAMS: {'limit':2 }
+                ParamName.QUERY_PARAMS: {'limit': 2}
             }))
         assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == resp
         send_request_mock.assert_has_calls(
@@ -416,7 +416,6 @@ class TestOperationCheckerClass(unittest.TestCase):
         operation_spec = {OperationField.METHOD: HTTPMethod.POST}
         assert self._checker.is_add_operation(operation_name, operation_spec)
 
-
     def test_is_add_operation_wrong_method_in_spec(self):
         operation_name = OperationNamePrefix.ADD + "Object"
         operation_spec = {OperationField.METHOD: HTTPMethod.GET}
@@ -545,8 +544,8 @@ class TestOperationCheckerClass(unittest.TestCase):
 
         params = {}
         assert not self._checker.is_find_by_filter_operation(
-                operation_name, params, operation_spec
-            )
+            operation_name, params, operation_spec
+        )
 
     @patch.object(OperationChecker, "is_add_operation")
     @patch.object(OperationChecker, "is_edit_operation")

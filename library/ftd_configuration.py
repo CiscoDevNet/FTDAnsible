@@ -98,13 +98,13 @@ from ansible.module_utils.connection import Connection
 try:
     from ansible.module_utils.configuration import BaseConfigurationResource, CheckModeException, \
         FtdInvalidOperationNameError
-    from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
-    from ansible.module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
+    from ansible.module_utils.fdm_swagger_client import ValidationError
+    from ansible.module_utils.common import construct_ansible_facts, FtdConfigurationError, \
         FtdServerError, FtdUnexpectedResponse
 except ImportError:
     from module_utils.configuration import BaseConfigurationResource, CheckModeException, FtdInvalidOperationNameError
-    from module_utils.fdm_swagger_client import OperationField, ValidationError
-    from module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
+    from module_utils.fdm_swagger_client import ValidationError
+    from module_utils.common import construct_ansible_facts, FtdConfigurationError, \
         FtdServerError, FtdUnexpectedResponse
 
 
