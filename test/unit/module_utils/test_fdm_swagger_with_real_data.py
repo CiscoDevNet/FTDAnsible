@@ -37,8 +37,9 @@ class TestFdmSwagger(unittest.TestCase):
                         assert valid
                     except Exception:
                         invalid.add(model_name)
-        assert invalid == set({'TCPPortObject',
-                               'UDPPortObject', 'ICMPv4PortObject',
+        assert invalid == set(['TCPPortObject',
+                               'UDPPortObject',
+                               'ICMPv4PortObject',
                                'ICMPv6PortObject',
                                'StandardAccessList',
                                'ExtendedAccessList',
@@ -51,7 +52,7 @@ class TestFdmSwagger(unittest.TestCase):
                                'PolicyList',
                                'SyslogServer',
                                'HAConfiguration',
-                               'TestIdentitySource'})
+                               'TestIdentitySource'])
 
     def test_parse_all_data(self):
         self.fdm_data = FdmSwaggerParser().parse_spec(self.base_data)

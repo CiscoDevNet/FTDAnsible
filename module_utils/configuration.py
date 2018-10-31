@@ -531,7 +531,7 @@ def iterate_over_pageable_resource(resource_func, params):
 
         raise FtdUnexpectedResponse(
             "Get List of Objects Response from the server contains more objects than requested. "
-            "There are {} item(s) in the response while {} was(ere) requested".format(items_in_response, items_expected)
+            "There are {0} item(s) in the response while {1} was(ere) requested".format(items_in_response, items_expected)
         )
 
     while True:
