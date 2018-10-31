@@ -105,14 +105,16 @@ class FdmSwaggerParser:
         This method simplifies a swagger format, resolves a model name for each operation, and adds documentation for
         each operation and model if it is provided.
 
-        :param spec: An API specification in the swagger format, see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
+        :param spec: An API specification in the swagger format, see
+            <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
         :type spec: dict
         :param spec: A documentation map containing descriptions for models, operations and operation parameters.
         :type docs: dict
         :rtype: dict
         :return:
         Ex.
-            The models field contains model definition from swagger see <#https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions>
+            The models field contains model definition from swagger see
+            <#https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions>
             {
                 'models':{
                     'model_name':{...},

@@ -49,17 +49,20 @@ base = {
                     },
     'paths': {
         "/object/networks": {
-            "get": {"tags": ["NetworkObject"], "operationId": "getNetworkObjectList",
-                    "responses": {"200": {"description": "", "schema": {"type": "object",
-                                                                        "title": "NetworkObjectList",
-                                                                        "properties": {"items": {
-                                                                            "type": "array",
-                                                                            "items": {
-                                                                                "$ref": "#/definitions/NetworkObjectWrapper"}},
-                                                                            "paging": {
-                                                                                "$ref": "#/definitions/Paging"}},
-                                                                        "required": ["items",
-                                                                                     "paging"]}}},
+            "get": {"tags": ["NetworkObject"],
+                    "operationId": "getNetworkObjectList",
+                    "responses": {
+                        "200": {
+                            "description": "",
+                            "schema": {"type": "object",
+                                       "title": "NetworkObjectList",
+                                       "properties": {
+                                           "items": {
+                                               "type": "array",
+                                               "items": {"$ref": "#/definitions/NetworkObjectWrapper"}},
+                                           "paging": {
+                                               "$ref": "#/definitions/Paging"}},
+                                       "required": ["items", "paging"]}}},
                     "parameters": [
                         {"name": "offset", "in": "query", "required": False, "type": "integer"},
                         {"name": "limit", "in": "query", "required": False, "type": "integer"},

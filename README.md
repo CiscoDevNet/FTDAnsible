@@ -128,17 +128,11 @@ Install [Flake8](http://flake8.pycqa.org/en/latest/) locally:
 ```
 pip install flake8
 ```
-Flake8 configuration is defined in the `tox.ini` file :
-```
-[flake8] 
-ignore = E402 
-max-line-length = 160
-```
 Run Flake8 check:
 ```
 flake8
 ```
-Flake8 can be integrated  
+Flake8 configuration is defined in the [tox config file](./tox.ini) file.
 
 ## Integration Tests
 
