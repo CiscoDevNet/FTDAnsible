@@ -26,7 +26,7 @@ DEFAULT_DIST_DIR = os.path.join(BASE_DIR_PATH, 'dist')
 DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
 
 SUPPORTED_VERSIONS = ['v2', 'v1']
-TOKEN_PATH_X = '/api/fdm/{}/fdm/token'
+TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
 
 SPEC_PATH = '/apispec/ngfw.json'
 DOC_PATH = '/apispec/en-us/doc.json'
@@ -254,7 +254,7 @@ def fetch_api_specs_with_docs(hostname, username, password):
 
     def get_token():
         for version in SUPPORTED_VERSIONS:
-            token_url = TOKEN_PATH_X.format(version)
+            token_url = TOKEN_PATH_TEMPLATE.format(version)
             try:
                 token = request_token(token_url)
             except urllib_error.HTTPError as e:
