@@ -7,6 +7,8 @@ import shutil
 import sys
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
+from urllib import error as urllib_error
+from http import HTTPStatus
 
 import yaml
 from ansible.module_utils._text import to_text
@@ -23,7 +25,9 @@ DEFAULT_STATIC_DIR = os.path.join(BASE_DIR_PATH, 'static')
 DEFAULT_DIST_DIR = os.path.join(BASE_DIR_PATH, 'dist')
 DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
 
-TOKEN_PATH = '/api/fdm/v2/fdm/token'
+SUPPORTED_VERSIONS = ['v2', 'v1']
+TOKEN_PATH_X = '/api/fdm/{}/fdm/token'
+
 SPEC_PATH = '/apispec/ngfw.json'
 DOC_PATH = '/apispec/en-us/doc.json'
 
@@ -238,9 +242,9 @@ def camel_to_snake(text):
 
 
 def fetch_api_specs_with_docs(hostname, username, password):
-    def request_token():
+    def request_token(token_url):
         resp = open_url(
-            hostname + TOKEN_PATH,
+            hostname + token_url,
             method=HTTPMethod.POST,
             data=json.dumps({'grant_type': 'password', 'username': username, 'password': password}),
             headers=BASE_HEADERS,
@@ -248,8 +252,19 @@ def fetch_api_specs_with_docs(hostname, username, password):
         ).read()
         return json.loads(to_text(resp))
 
+    def get_token():
+        for version in SUPPORTED_VERSIONS:
+            token_url = TOKEN_PATH_X.format(version)
+            try:
+                token = request_token(token_url)
+            except urllib_error.HTTPError as e:
+                if e.code != HTTPStatus.UNAUTHORIZED:
+                    raise
+            else:
+                return token
+
     headers = dict(BASE_HEADERS)
-    headers['Authorization'] = 'Bearer %s' % request_token()['access_token']
+    headers['Authorization'] = 'Bearer %s' % get_token()['access_token']
 
     spec_resp = open_url(hostname + SPEC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
     docs_resp = open_url(hostname + DOC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
