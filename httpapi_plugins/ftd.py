@@ -64,7 +64,8 @@ from module_utils.common import HTTPMethod, ResponseParams
 
 BASE_HEADERS = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'User-Agent': 'FTD Ansible'
 }
 
 TOKEN_EXPIRATION_STATUS_CODE = 408

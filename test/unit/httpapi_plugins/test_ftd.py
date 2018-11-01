@@ -37,7 +37,8 @@ else:
 
 EXPECTED_BASE_HEADERS = {
     'Accept': 'application/json',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'User-Agent': 'FTD Ansible'
 }
 
 
