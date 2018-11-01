@@ -272,7 +272,10 @@ class BaseConfigurationResource(object):
             return ';'.join(['%s:%s' % (key, val) for key, val in sorted(iteritems(filter_params))])
 
         def match_filters(filter_params, obj):
-            return viewitems(filter_params) <= viewitems(obj)
+            for k, v in iteritems(filter_params):
+                if k not in obj or obj[k] != v:
+                    return False
+            return True
 
         _, query_params, path_params = _get_user_params(params)
         # copy required params to avoid mutation of passed `params` dict
