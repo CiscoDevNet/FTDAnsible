@@ -19,7 +19,7 @@ the [`samples`](./samples) folder.
     ```
     docker build -t ftd-ansible .
     ```
-    **NOTE** The default image is based on the latest commit from the master branch of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
+    **NOTE** The default image is based on the release v0.1.0 of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
 1. You can build the custom Docker image:
     ```
     docker build -t ftd-ansible --build-arg PYTHON_VERSION=<2.7|3.5|3.6|3.7> FTD_ANSIBLE_VERSION=<tag name | branch name> .
