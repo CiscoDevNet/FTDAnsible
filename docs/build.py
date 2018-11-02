@@ -8,11 +8,11 @@ from urllib import error as urllib_error
 from ansible.module_utils._text import to_text
 from ansible.module_utils.urls import open_url
 
+from docs.enricher import ApiSpecAutocomplete
+from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, ExampleDocGenerator
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
-from module_utils.fdm_swagger_client import FdmSwaggerParser
-from .enricher import ApiSpecAutocomplete
-from .generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, ExampleDocGenerator
+from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
 
 BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TEMPLATE_DIR = os.path.join(BASE_DIR_PATH, 'templates')
@@ -50,12 +50,26 @@ def fetch_api_specs_with_docs(hostname, username, password):
             else:
                 return token
 
+    def fetch_ftd_version(spec, headers):
+        operation = spec[SpecProp.OPERATIONS]['getSystemInformation']
+
+        url = hostname + operation[OperationField.URL].format(objId='default')
+        resp = open_url(url, method=operation[OperationField.METHOD], headers=headers, validate_certs=False).read()
+        system_info = json.loads(to_text(resp))
+
+        build_version = system_info['softwareVersion']
+        ftd_version = build_version.split('-')[0]
+        return ftd_version
+
     headers = dict(BASE_HEADERS)
     headers['Authorization'] = 'Bearer %s' % get_token()['access_token']
 
     spec_resp = open_url(hostname + SPEC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
     docs_resp = open_url(hostname + DOC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
-    return FdmSwaggerParser().parse_spec(json.loads(to_text(spec_resp)), json.loads(to_text(docs_resp)))
+    api_spec = FdmSwaggerParser().parse_spec(json.loads(to_text(spec_resp)), json.loads(to_text(docs_resp)))
+    api_version = fetch_ftd_version(api_spec, headers)
+
+    return api_spec
 
 
 def main():
