@@ -7,7 +7,10 @@ RUN pip install --no-cache-dir -r /ansible/requirements.txt
 ENV PYTHONPATH="$PYTHONPATH:/ansible/lib:/ansible/test"
 
 COPY requirements.txt /
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install \
+    --no-cache-dir \
+    -c /ansible/test/runner/requirements/constraints.txt \
+    -r requirements.txt
 
 WORKDIR /ftd-ansible
 

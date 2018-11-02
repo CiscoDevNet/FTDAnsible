@@ -20,13 +20,23 @@ RUN wget https://github.com/ansible/ansible/archive/${ANSIBLE_BRANCH}.tar.gz && 
     tar -xvf ${ANSIBLE_BRANCH}.tar.gz && \
     mv `find ./ -maxdepth 1 -type d -name '*ansible-*'` /ansible
 
-# INSTALL PYTHON REQUIREMENTS
+# INSTALL ANSIBLE REQUIREMENTS
 RUN python2.6 /usr/local/bin/pip install pycparser==2.18 cryptography==2.0 && \
     python2.6 /usr/local/bin/pip install \
     --disable-pip-version-check \
     -c /ansible/test/runner/requirements/constraints.txt \
     -r /ansible/test/runner/requirements/units.txt
 
+# INSTALL FTD-ANSIBLE REQUIREMENTS
+COPY requirements.txt /
+RUN python2.6 /usr/local/bin/pip install \
+    --disable-pip-version-check \
+    --no-cache-dir \
+    -c /ansible/test/runner/requirements/constraints.txt \
+    -r requirements.txt
+
+
+# SETUP ENV
 ENV PYTHONPATH="$PYTHONPATH:/ansible/lib:/ansible/test"
 WORKDIR /ftd-ansible
 CMD ["pytest", "--version"]
