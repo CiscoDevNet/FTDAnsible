@@ -18,7 +18,7 @@
 import copy
 from functools import partial
 
-from ansible.module_utils.six import iteritems, viewitems
+from ansible.module_utils.six import iteritems
 
 try:
     from ansible.module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
@@ -534,7 +534,8 @@ def iterate_over_pageable_resource(resource_func, params):
 
         raise FtdUnexpectedResponse(
             "Get List of Objects Response from the server contains more objects than requested. "
-            "There are {0} item(s) in the response while {1} was(ere) requested".format(items_in_response, items_expected)
+            "There are {0} item(s) in the response while {1} was(ere) requested".format(
+                items_in_response, items_expected)
         )
 
     while True:
