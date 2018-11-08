@@ -155,3 +155,4 @@ in the `samples` folder. They start with `test_` prefix and can be run as usual 
     $ ansible-playbook samples/network_object.yml -vvvv
     ```
 3. The log file will contain additional information(REST etc.)
+
