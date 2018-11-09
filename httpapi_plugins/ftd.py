@@ -50,6 +50,8 @@ import json
 import os
 import re
 
+from ansible import __version__ as ansible_version
+
 from ansible.module_utils.basic import to_text
 from ansible.errors import AnsibleConnectionFailure
 from ansible.module_utils.six.moves.urllib.error import HTTPError
@@ -64,7 +66,8 @@ from module_utils.common import HTTPMethod, ResponseParams
 
 BASE_HEADERS = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'User-Agent': 'FTD Ansible/%s' % ansible_version
 }
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
