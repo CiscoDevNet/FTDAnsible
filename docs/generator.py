@@ -33,13 +33,14 @@ class BaseDocGenerator(metaclass=ABCMeta):
     MD_SUFFIX = '.md'
     J2_SUFFIX = '.j2'
 
-    def __init__(self, template_dir):
+    def __init__(self, template_dir, template_ctx):
         env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True,
                           extensions=['docs.extension.IncludePlaybookTasks'])
         env.filters['camel_to_snake'] = camel_to_snake
         env.filters['escape_md_symbols'] = lambda s: s.replace('[', '&#91;').replace(']', '&#93;') \
             .replace('|', '&#124;')
         self._jinja_env = env
+        self._template_ctx = template_ctx
 
     @abstractmethod
     def generate_doc_files(self, dest_dir):
@@ -64,7 +65,7 @@ class BaseDocGenerator(metaclass=ABCMeta):
 
         for template_name in [self.INDEX_TEMPLATE, self.CONFIG_TEMPLATE]:
             template = self._jinja_env.get_template(template_name)
-            content = template.render(**index_data)
+            content = template.render(**index_data, **self._template_ctx)
             filename = template_name[:-len(self.J2_SUFFIX)]
             self._write_generated_file(dir_path, filename, content)
 
@@ -77,8 +78,8 @@ class ModelDocGenerator(BaseDocGenerator):
 
     MODEL_TEMPLATE = 'model.md.j2'
 
-    def __init__(self, template_dir, api_spec):
-        super().__init__(template_dir)
+    def __init__(self, template_dir, template_ctx, api_spec):
+        super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
 
     def generate_doc_files(self, dest_dir, include_models=None):
@@ -100,7 +101,7 @@ class ModelDocGenerator(BaseDocGenerator):
                 properties=model_api_spec.get(PropName.PROPERTIES, {}),
                 operations=operations.keys()
             )
-            model_content = model_template.render(model=model_spec)
+            model_content = model_template.render(model=model_spec, **self._template_ctx)
             self._write_generated_file(model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
             model_index.append(displayed_model_name)
 
@@ -115,8 +116,8 @@ class OperationDocGenerator(BaseDocGenerator):
 
     OPERATION_TEMPLATE = 'operation.md.j2'
 
-    def __init__(self, template_dir, api_spec):
-        super().__init__(template_dir)
+    def __init__(self, template_dir, template_ctx, api_spec):
+        super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
 
     def generate_doc_files(self, dest_dir, include_models=None):
@@ -140,7 +141,7 @@ class OperationDocGenerator(BaseDocGenerator):
                 query_params=op_api_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
                 data_params=self._get_data_params(op_name, op_api_spec)
             )
-            op_content = op_template.render(operation=op_spec)
+            op_content = op_template.render(operation=op_spec, **self._template_ctx)
             self._write_generated_file(op_dir, op_name + self.MD_SUFFIX, op_content)
             op_index.append(op_name)
 
@@ -170,8 +171,8 @@ class ModuleDocGenerator(BaseDocGenerator):
     MODULE_TEMPLATE = 'module.md.j2'
     MODULE_NAME_REGEX = r'^ftd_.*\.py$'
 
-    def __init__(self, template_dir, module_dir):
-        super().__init__(template_dir)
+    def __init__(self, template_dir, template_ctx, module_dir):
+        super().__init__(template_dir, template_ctx)
         self._module_dir = module_dir
 
     def generate_doc_files(self, dest_dir):
@@ -198,7 +199,7 @@ class ModuleDocGenerator(BaseDocGenerator):
                 return_values=self._get_module_return_values(module),
                 examples=module.EXAMPLES
             )
-            module_content = module_template.render(module=module_spec)
+            module_content = module_template.render(module=module_spec, **self._template_ctx)
             self._write_generated_file(module_dir, module_name + self.MD_SUFFIX, module_content)
             module_index.append(module_name)
 
@@ -238,10 +239,9 @@ class StaticDocGenerator(BaseDocGenerator):
     Documentation is written using Markdown markup language.
     """
 
-    def __init__(self, template_dir, template_context):
-        super().__init__(template_dir)
+    def __init__(self, template_dir, template_ctx):
+        super().__init__(template_dir, template_ctx)
         self._template_dir = template_dir
-        self._template_ctx = template_context
 
     def generate_doc_files(self, dest_dir):
         for filename in os.listdir(self._template_dir):

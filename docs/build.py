@@ -21,27 +21,32 @@ DEFAULT_SAMPLES_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'samples')
 DEFAULT_DIST_DIR = os.path.join(BASE_DIR_PATH, 'dist')
 DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
 
-SUPPORTED_VERSIONS = ['v2', 'v1']
-TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
 
-SPEC_PATH = '/apispec/ngfw.json'
-DOC_PATH = '/apispec/en-us/doc.json'
+class FtdApiClient(object):
+    SUPPORTED_VERSIONS = ['v2', 'v1']
+    TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
 
+    SPEC_PATH = '/apispec/ngfw.json'
+    DOC_PATH = '/apispec/en-us/doc.json'
 
-def fetch_api_specs_with_docs(hostname, username, password):
-    def request_token(token_url):
-        resp = open_url(
-            hostname + token_url,
-            method=HTTPMethod.POST,
-            data=json.dumps({'grant_type': 'password', 'username': username, 'password': password}),
-            headers=BASE_HEADERS,
-            validate_certs=False
-        ).read()
-        return json.loads(to_text(resp))
+    def __init__(self, hostname, username, password):
+        self._hostname = hostname
+        token_info = self._authorize(username, password)
+        self._auth_headers = self._construct_auth_headers(token_info)
 
-    def get_token():
-        for version in SUPPORTED_VERSIONS:
-            token_url = TOKEN_PATH_TEMPLATE.format(version)
+    def _authorize(self, username, password):
+        def request_token(url):
+            resp = open_url(
+                url,
+                method=HTTPMethod.POST,
+                data=json.dumps({'grant_type': 'password', 'username': username, 'password': password}),
+                headers=BASE_HEADERS,
+                validate_certs=False
+            ).read()
+            return json.loads(to_text(resp))
+
+        for version in self.SUPPORTED_VERSIONS:
+            token_url = self._hostname + self.TOKEN_PATH_TEMPLATE.format(version)
             try:
                 token = request_token(token_url)
             except urllib_error.HTTPError as e:
@@ -50,26 +55,31 @@ def fetch_api_specs_with_docs(hostname, username, password):
             else:
                 return token
 
-    def fetch_ftd_version(spec, headers):
-        operation = spec[SpecProp.OPERATIONS]['getSystemInformation']
+    @staticmethod
+    def _construct_auth_headers(token_info):
+        headers = dict(BASE_HEADERS)
+        headers['Authorization'] = 'Bearer %s' % token_info['access_token']
+        return headers
 
-        url = hostname + operation[OperationField.URL].format(objId='default')
-        resp = open_url(url, method=operation[OperationField.METHOD], headers=headers, validate_certs=False).read()
-        system_info = json.loads(to_text(resp))
+    def fetch_api_specs(self):
+        spec = self._send_request(self.SPEC_PATH, HTTPMethod.GET)
+        doc = self._send_request(self.DOC_PATH, HTTPMethod.GET)
+        return FdmSwaggerParser().parse_spec(spec, doc)
+
+    def fetch_ftd_version(self, spec):
+        operation = spec[SpecProp.OPERATIONS]['getSystemInformation']
+        url_path = operation[OperationField.URL].format(objId='default')
+
+        system_info = self._send_request(url_path, operation[OperationField.METHOD])
 
         build_version = system_info['softwareVersion']
         ftd_version = build_version.split('-')[0]
         return ftd_version
 
-    headers = dict(BASE_HEADERS)
-    headers['Authorization'] = 'Bearer %s' % get_token()['access_token']
-
-    spec_resp = open_url(hostname + SPEC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
-    docs_resp = open_url(hostname + DOC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
-    api_spec = FdmSwaggerParser().parse_spec(json.loads(to_text(spec_resp)), json.loads(to_text(docs_resp)))
-    ftd_version = fetch_ftd_version(api_spec, headers)
-
-    return api_spec, ftd_version
+    def _send_request(self, url_path, method):
+        url = self._hostname + url_path
+        response = open_url(url, method=method, headers=self._auth_headers, validate_certs=False).read()
+        return json.loads(to_text(response))
 
 
 def main():
@@ -86,23 +96,18 @@ def main():
                         default=DEFAULT_DIST_DIR)
     args = parser.parse_args()
 
-    api_spec, ftd_version = fetch_api_specs_with_docs(args.hostname, args.username, args.password)
-    clean_dist_dir()
-
+    api_client = FtdApiClient(args.hostname, args.username, args.password)
+    api_spec = api_client.fetch_api_specs()
     spec_autocomplete = ApiSpecAutocomplete(api_spec)
     spec_autocomplete.lookup_and_complete()
 
-    model_generator = ModelDocGenerator(DEFAULT_TEMPLATE_DIR, api_spec)
-    model_generator.generate_doc_files(args.dist, args.models)
+    clean_dist_dir()
 
-    op_generator = OperationDocGenerator(DEFAULT_TEMPLATE_DIR, api_spec)
-    op_generator.generate_doc_files(args.dist, args.models)
-
-    module_generator = ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, DEFAULT_MODULE_DIR)
-    module_generator.generate_doc_files(args.dist)
-
-    static_generator = StaticDocGenerator(STATIC_TEMPLATE_DIR, dict(sample_dir=DEFAULT_SAMPLES_DIR, ftd_version=ftd_version))
-    static_generator.generate_doc_files(args.dist)
+    template_ctx = dict(ftd_version=api_client.fetch_ftd_version(api_spec), sample_dir=DEFAULT_SAMPLES_DIR)
+    ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+    OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+    ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
+    StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
 
 
 if __name__ == '__main__':
