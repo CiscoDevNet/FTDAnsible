@@ -23,6 +23,11 @@ DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
 
 
 class FtdApiClient(object):
+    """
+    A client that helps to interact with FTD device and takes care of authentication
+    and token-related aspects.
+    """
+
     SUPPORTED_VERSIONS = ['v2', 'v1']
     TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
 
@@ -62,11 +67,25 @@ class FtdApiClient(object):
         return headers
 
     def fetch_api_specs(self):
+        """
+        Downloads an API specification for FTD device, parses it, and enriches with documentation.
+
+        :return: a documented API specification containing operation and model definitions for FTD device
+        :rtype: dict
+        """
         spec = self._send_request(self.SPEC_PATH, HTTPMethod.GET)
         doc = self._send_request(self.DOC_PATH, HTTPMethod.GET)
         return FdmSwaggerParser().parse_spec(spec, doc)
 
     def fetch_ftd_version(self, spec):
+        """
+        Fetches FTD software version currently installed on the device.
+
+        :param spec: an API specification for FTD device
+        :type spec: dict
+        :return: an FTD version being deployed on the device
+        :rtype: str
+        """
         operation = spec[SpecProp.OPERATIONS]['getSystemInformation']
         url_path = operation[OperationField.URL].format(objId='default')
 
@@ -83,31 +102,41 @@ class FtdApiClient(object):
 
 
 def main():
+    def parse_args():
+        parser = argparse.ArgumentParser(description='Generates Ansible modules from Swagger documentation')
+        parser.add_argument('hostname', type=str, help='Hostname where FTD can be accessed')
+        parser.add_argument('username', type=str, help='FTD username that has access to Swagger docs')
+        parser.add_argument('password', type=str, help='Password for the username')
+        parser.add_argument('--models', type=str, nargs='+', help='A list of models to include in the docs', required=False)
+        parser.add_argument('--dist', type=str, help='An output directory for distribution files', required=False,
+                            default=DEFAULT_DIST_DIR)
+        return parser.parse_args()
+
+    def fetch_api_spec_and_version():
+        api_client = FtdApiClient(args.hostname, args.username, args.password)
+
+        api_spec = api_client.fetch_api_specs()
+        spec_autocomplete = ApiSpecAutocomplete(api_spec)
+        spec_autocomplete.lookup_and_complete()
+
+        ftd_version = api_client.fetch_ftd_version(api_spec)
+        return api_spec, ftd_version
+
     def clean_dist_dir():
         if os.path.exists(args.dist):
             shutil.rmtree(args.dist)
 
-    parser = argparse.ArgumentParser(description='Generates Ansible modules from Swagger documentation')
-    parser.add_argument('hostname', type=str, help='Hostname where FTD can be accessed')
-    parser.add_argument('username', type=str, help='FTD username that has access to Swagger docs')
-    parser.add_argument('password', type=str, help='Password for the username')
-    parser.add_argument('--models', type=str, nargs='+', help='A list of models to include in the docs', required=False)
-    parser.add_argument('--dist', type=str, help='An output directory for distribution files', required=False,
-                        default=DEFAULT_DIST_DIR)
-    args = parser.parse_args()
+    def generate_docs():
+        template_ctx = dict(ftd_version=ftd_version, sample_dir=DEFAULT_SAMPLES_DIR)
+        ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+        OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+        ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
+        StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
 
-    api_client = FtdApiClient(args.hostname, args.username, args.password)
-    api_spec = api_client.fetch_api_specs()
-    spec_autocomplete = ApiSpecAutocomplete(api_spec)
-    spec_autocomplete.lookup_and_complete()
-
+    args = parse_args()
+    api_spec, ftd_version = fetch_api_spec_and_version()
     clean_dist_dir()
-
-    template_ctx = dict(ftd_version=api_client.fetch_ftd_version(api_spec), sample_dir=DEFAULT_SAMPLES_DIR)
-    ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-    OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-    ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
-    StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
+    generate_docs()
 
 
 if __name__ == '__main__':
