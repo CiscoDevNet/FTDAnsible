@@ -5,6 +5,8 @@ from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
 import re
+from shutil import copyfile
+
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
@@ -225,24 +227,34 @@ class ModuleDocGenerator(BaseDocGenerator):
         } for k, v in return_params.items()}
 
 
-class ExampleDocGenerator(BaseDocGenerator):
-    """Generates documentation for examples. Task examples
-    are dynamically copied from real Ansible playbooks.
+class StaticDocGenerator(BaseDocGenerator):
+    """Generates documentation for static pages (e.g., "Introduction" or "Installation Guide")
+    from Jinja templates. Templates might include simple expressions (e.g., to include variables
+    or examples), so context is provided to the template engine when rendering the output.
+
+    Template files must have `j2` file extension. Other files are copied to the output folder as is
+    without being rendered by the template engine.
+
     Documentation is written using Markdown markup language.
     """
 
-    EXAMPLES_TEMPLATE = 'examples.md.j2'
-
-    def __init__(self, template_dir, sample_dir):
+    def __init__(self, template_dir, template_context):
         super().__init__(template_dir)
-        self._sample_dir = sample_dir
+        self._template_dir = template_dir
+        self._template_ctx = template_context
 
     def generate_doc_files(self, dest_dir):
-        example_template = self._jinja_env.get_template(self.EXAMPLES_TEMPLATE)
-        example_content = example_template.render(sample_dir=self._sample_dir)
+        for filename in os.listdir(self._template_dir):
+            if filename.endswith(self.J2_SUFFIX):
+                self._generate_from_template(dest_dir, filename)
+            else:
+                copyfile(os.path.join(self._template_dir, filename), os.path.join(dest_dir, filename))
 
-        filename = self.EXAMPLES_TEMPLATE[:-len(self.J2_SUFFIX)]
-        self._write_generated_file(dest_dir, filename, example_content)
+    def _generate_from_template(self, dest_dir, filename):
+        template = self._jinja_env.get_template(filename)
+        content = template.render(**self._template_ctx)
+        output_filename = filename[:-len(self.J2_SUFFIX)]
+        self._write_generated_file(dest_dir, output_filename, content)
 
 
 def camel_to_snake(text):

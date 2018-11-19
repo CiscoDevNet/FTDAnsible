@@ -9,15 +9,15 @@ from ansible.module_utils._text import to_text
 from ansible.module_utils.urls import open_url
 
 from docs.enricher import ApiSpecAutocomplete
-from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, ExampleDocGenerator
+from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
 
 BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TEMPLATE_DIR = os.path.join(BASE_DIR_PATH, 'templates')
+STATIC_TEMPLATE_DIR = os.path.join(DEFAULT_TEMPLATE_DIR, 'static')
 DEFAULT_SAMPLES_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'samples')
-DEFAULT_STATIC_DIR = os.path.join(BASE_DIR_PATH, 'static')
 DEFAULT_DIST_DIR = os.path.join(BASE_DIR_PATH, 'dist')
 DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
 
@@ -67,16 +67,15 @@ def fetch_api_specs_with_docs(hostname, username, password):
     spec_resp = open_url(hostname + SPEC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
     docs_resp = open_url(hostname + DOC_PATH, method=HTTPMethod.GET, headers=headers, validate_certs=False).read()
     api_spec = FdmSwaggerParser().parse_spec(json.loads(to_text(spec_resp)), json.loads(to_text(docs_resp)))
-    api_version = fetch_ftd_version(api_spec, headers)
+    ftd_version = fetch_ftd_version(api_spec, headers)
 
-    return api_spec
+    return api_spec, ftd_version
 
 
 def main():
-    def prepare_dist_dir_with_static_docs():
+    def clean_dist_dir():
         if os.path.exists(args.dist):
             shutil.rmtree(args.dist)
-        shutil.copytree(DEFAULT_STATIC_DIR, args.dist)
 
     parser = argparse.ArgumentParser(description='Generates Ansible modules from Swagger documentation')
     parser.add_argument('hostname', type=str, help='Hostname where FTD can be accessed')
@@ -87,8 +86,8 @@ def main():
                         default=DEFAULT_DIST_DIR)
     args = parser.parse_args()
 
-    api_spec = fetch_api_specs_with_docs(args.hostname, args.username, args.password)
-    prepare_dist_dir_with_static_docs()
+    api_spec, ftd_version = fetch_api_specs_with_docs(args.hostname, args.username, args.password)
+    clean_dist_dir()
 
     spec_autocomplete = ApiSpecAutocomplete(api_spec)
     spec_autocomplete.lookup_and_complete()
@@ -102,8 +101,8 @@ def main():
     module_generator = ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, DEFAULT_MODULE_DIR)
     module_generator.generate_doc_files(args.dist)
 
-    example_generator = ExampleDocGenerator(DEFAULT_TEMPLATE_DIR, DEFAULT_SAMPLES_DIR)
-    example_generator.generate_doc_files(args.dist)
+    static_generator = StaticDocGenerator(STATIC_TEMPLATE_DIR, dict(sample_dir=DEFAULT_SAMPLES_DIR, ftd_version=ftd_version))
+    static_generator.generate_doc_files(args.dist)
 
 
 if __name__ == '__main__':
