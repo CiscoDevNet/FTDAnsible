@@ -9,7 +9,7 @@ from ansible.module_utils._text import to_text
 from ansible.module_utils.urls import open_url
 
 from docs.enricher import ApiSpecAutocomplete
-from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator
+from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator, ResourceDocGenerator
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
@@ -116,8 +116,8 @@ def main():
         api_client = FtdApiClient(args.hostname, args.username, args.password)
 
         api_spec = api_client.fetch_api_specs()
-        spec_autocomplete = ApiSpecAutocomplete(api_spec)
-        spec_autocomplete.lookup_and_complete()
+        # spec_autocomplete = ApiSpecAutocomplete(api_spec)
+        # spec_autocomplete.lookup_and_complete()
 
         ftd_version = api_client.fetch_ftd_version(api_spec)
         return api_spec, ftd_version
@@ -128,10 +128,11 @@ def main():
 
     def generate_docs():
         template_ctx = dict(ftd_version=ftd_version, sample_dir=DEFAULT_SAMPLES_DIR)
-        ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-        OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-        ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
-        StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
+        ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+        # ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+        # OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+        # ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
+        # StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
 
     args = parse_args()
     api_spec, ftd_version = fetch_api_spec_and_version()

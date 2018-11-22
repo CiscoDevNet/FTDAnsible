@@ -1,0 +1,11 @@
+# {{ name }}
+
+{% if description %}
+## Description
+{{ description | escape_md_symbols }}
+{% endif %}
+
+## HTTP request
+```
+{{ method | upper }} {{ url }}
+```

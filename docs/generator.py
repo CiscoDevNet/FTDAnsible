@@ -257,6 +257,63 @@ class StaticDocGenerator(BaseDocGenerator):
         self._write_generated_file(dest_dir, output_filename, content)
 
 
+class ResourceDocGenerator(BaseDocGenerator):
+    """Generates documentation for the HTTP resources defined in the
+    Swagger specification. Describes available endpoints with their methods,
+    models, query/body/path parameters, etc.
+    Documentation is written using Markdown markup language.
+    """
+
+    OPERATION_TEMPLATE = 'resource_operation.md.j2'
+    OVERVIEW_TEMPLATE = 'resource_overview.md.j2'
+    CONFIG_TEMPLATE = 'resource_config.json.j2'
+
+    def __init__(self, template_dir, template_ctx, api_spec):
+        super().__init__(template_dir, template_ctx)
+        self._api_spec = api_spec
+
+    def generate_doc_files(self, dest_dir, include_models=None):
+
+        # TODO:2018-11-22:anton.nikulin: Group operations as in API explorer, not on model name.
+        for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
+            ignore_model = include_models and model_name not in include_models
+            if model_name is None or ignore_model:
+                continue
+
+            output_dir = os.path.join(dest_dir, 'resources', model_name)
+            # model_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+            self._generate_overview_docs(model_name, operations, output_dir)
+            self._generate_config_json(operations, output_dir)
+            self._generate_operation_docs(operations, output_dir)
+
+    def _generate_operation_docs(self, operations, dest_dir):
+        template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
+
+        for op_name, op_spec in operations.items():
+            op_content = template.render(
+                name=op_name,
+                description=op_spec.get(OperationField.DESCRIPTION),
+                method=op_spec.get(OperationField.METHOD),
+                url=op_spec.get(OperationField.URL),
+                **self._template_ctx
+            )
+            self._write_generated_file(dest_dir, op_name + self.MD_SUFFIX, op_content)
+
+    def _generate_overview_docs(self, model_name, operations, dest_dir):
+        template = self._jinja_env.get_template(self.OVERVIEW_TEMPLATE)
+        content = template.render(
+            name=model_name,
+            operations=operations.keys(),
+            **self._template_ctx
+        )
+        self._write_generated_file(dest_dir, 'overview.md', content)
+
+    def _generate_config_json(self, operations, dest_dir):
+        template = self._jinja_env.get_template(self.CONFIG_TEMPLATE)
+        content = template.render(operations=operations.keys(), **self._template_ctx)
+        self._write_generated_file(dest_dir, 'config.json', content)
+
+
 def camel_to_snake(text):
     test_with_underscores = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', test_with_underscores).lower()

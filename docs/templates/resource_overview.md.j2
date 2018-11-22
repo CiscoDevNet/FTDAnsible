@@ -1,0 +1,8 @@
+# {{ name }}
+
+{% if operations %}
+## Supported operations
+{% for operation in operations | sort %}
+* [{{ operation }}]({{ operation | camel_to_snake }}.md)
+{% endfor %}
+{% endif %}

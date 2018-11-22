@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "title": "Overview",
+      "content": "overview.md"
+    }{{ "," if operations }}
+{% for operation in operations | sort %}
+    {
+      "title": "{{ operation }}",
+      "content": "{{ operation | camel_to_snake }}.md"
+    }{{ "," if not loop.last }}
+{% endfor %}
+  ]
+}
