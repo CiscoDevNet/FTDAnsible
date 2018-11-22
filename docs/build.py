@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import shutil
+from enum import Enum
 from http import HTTPStatus
 from urllib import error as urllib_error
 
@@ -101,12 +102,24 @@ class FtdApiClient(object):
         return json.loads(to_text(response))
 
 
+class DocType(Enum):
+    """
+    Defines documentation type: `ftd_ansible` stands for docs describing FTD Ansible modules,
+    `ftd_api` corresponds to docs containing HTTP API endpoints with urls, methods, etc.
+    """
+    ftd_ansible = 'ftd-ansible'
+    ftd_api = 'ftd-api'
+
+
 def main():
     def parse_args():
-        parser = argparse.ArgumentParser(description='Generates Ansible modules from Swagger documentation')
+        parser = argparse.ArgumentParser(description='Generates docs for FTD based on Swagger documentation')
         parser.add_argument('hostname', type=str, help='Hostname where FTD can be accessed')
         parser.add_argument('username', type=str, help='FTD username that has access to Swagger docs')
         parser.add_argument('password', type=str, help='Password for the username')
+        parser.add_argument('--doctype', type=DocType,
+                            help='Documentation type to generate (either for FTD Ansible modules or FTD API endpoints)',
+                            default=DocType.ftd_ansible, choices=list(DocType), required=False)
         parser.add_argument('--models', type=str, nargs='+', help='A list of models to include in the docs', required=False)
         parser.add_argument('--dist', type=str, help='An output directory for distribution files', required=False,
                             default=DEFAULT_DIST_DIR)
@@ -114,10 +127,11 @@ def main():
 
     def fetch_api_spec_and_version():
         api_client = FtdApiClient(args.hostname, args.username, args.password)
-
         api_spec = api_client.fetch_api_specs()
-        # spec_autocomplete = ApiSpecAutocomplete(api_spec)
-        # spec_autocomplete.lookup_and_complete()
+
+        if args.doctype == DocType.ftd_ansible:
+            spec_autocomplete = ApiSpecAutocomplete(api_spec)
+            spec_autocomplete.lookup_and_complete()
 
         ftd_version = api_client.fetch_ftd_version(api_spec)
         return api_spec, ftd_version
@@ -128,11 +142,13 @@ def main():
 
     def generate_docs():
         template_ctx = dict(ftd_version=ftd_version, sample_dir=DEFAULT_SAMPLES_DIR)
-        ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-        # ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-        # OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-        # ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
-        # StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
+        if args.doctype == DocType.ftd_ansible:
+            ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+            OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+            ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
+            StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
+        elif args.doctype == DocType.ftd_api:
+            ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
 
     args = parse_args()
     api_spec, ftd_version = fetch_api_spec_and_version()
