@@ -111,7 +111,28 @@ class ModelDocGenerator(BaseDocGenerator):
         self._write_index_files(model_dir, 'Model', model_index)
 
 
-class OperationDocGenerator(BaseDocGenerator):
+class OperationDocGenerationMixin(object):
+
+    @staticmethod
+    def _get_display_model_name(model_name):
+        return CUSTOM_MODEL_MAPPING.get(model_name, model_name)
+
+    def _get_data_params(self, op_name, op_spec):
+        op_method = op_spec[OperationField.METHOD]
+        if op_method != HTTPMethod.POST and op_method != HTTPMethod.PUT:
+            return {}
+
+        model_name = op_spec[OperationField.MODEL_NAME]
+        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+        data_params = model_api_spec.get(PropName.PROPERTIES, {})
+
+        if op_name.startswith('add') and op_method == HTTPMethod.POST:
+            data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
+
+        return data_params
+
+
+class OperationDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
     """Generates documentation for the operations defined in the
     Swagger specification. Documentation is written using
     Markdown markup language.
@@ -135,7 +156,7 @@ class OperationDocGenerator(BaseDocGenerator):
                 continue
 
             model_name = op_api_spec[OperationField.MODEL_NAME]
-            displayed_model_name = CUSTOM_MODEL_MAPPING.get(model_name, model_name)
+            displayed_model_name = self._get_display_model_name(model_name)
             op_spec = OperationSpec(
                 name=op_name,
                 description=op_api_spec.get(OperationField.DESCRIPTION),
@@ -149,20 +170,6 @@ class OperationDocGenerator(BaseDocGenerator):
             op_index.append(op_name)
 
         self._write_index_files(op_dir, 'Operation', op_index)
-
-    def _get_data_params(self, op_name, op_spec):
-        op_method = op_spec[OperationField.METHOD]
-        if op_method != HTTPMethod.POST and op_method != HTTPMethod.PUT:
-            return {}
-
-        model_name = op_spec[OperationField.MODEL_NAME]
-        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-        data_params = model_api_spec.get(PropName.PROPERTIES, {})
-
-        if op_name.startswith('add') and op_method == HTTPMethod.POST:
-            data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
-
-        return data_params
 
 
 class ModuleDocGenerator(BaseDocGenerator):
@@ -260,7 +267,7 @@ class StaticDocGenerator(BaseDocGenerator):
         self._write_generated_file(dest_dir, output_filename, content)
 
 
-class ResourceDocGenerator(BaseDocGenerator):
+class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
     """Generates documentation for the HTTP resources defined in the
     Swagger specification. Describes available endpoints with their methods,
     models, query/body/path parameters, etc.
@@ -277,26 +284,27 @@ class ResourceDocGenerator(BaseDocGenerator):
         self._models_being_described = []
 
     @staticmethod
-    def _get_display_model_name(model_name):
-        # TODO(119Vik): mode to base class
-        return CUSTOM_MODEL_MAPPING.get(model_name, model_name)
+    def model_should_be_ignored(model_name, include_models):
+        return model_name is None or (include_models and model_name not in include_models)
 
     def generate_doc_files(self, dest_dir, include_models=None):
         # TODO:2018-11-22:anton.nikulin: Group operations as in API explorer, not on model name.
+        base_dest_dir = os.path.join(dest_dir, "resources")
+
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
-            ignore_model = include_models and model_name not in include_models
-            if model_name is None or ignore_model:
+            if self.model_should_be_ignored(model_name, include_models):
                 continue
+
             display_name = self._get_display_model_name(model_name)
-            output_dir = os.path.join(dest_dir, 'resources', display_name)
+            output_dir = os.path.join(base_dest_dir , display_name)
             # model_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
             self._generate_overview_docs(model_name, operations, output_dir)
             self._generate_config_json(operations, output_dir)
             self._generate_operation_docs(operations, output_dir)
+            # add model to the list of models being processed so it can be added to index config file later
             self._models_being_described.append(display_name)
 
-        config_file_name = os.path.join(dest_dir, "resources", "config.json")
-        self._generate_resources_config_file(config_file_name)
+        self._generate_resources_config_file(base_dest_dir)
 
     def _generate_operation_docs(self, operations, dest_dir):
         template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
@@ -318,21 +326,6 @@ class ResourceDocGenerator(BaseDocGenerator):
 
             self._write_generated_file(dest_dir, op_name + self.MD_SUFFIX, op_content)
 
-    def _get_data_params(self, op_name, op_spec):
-        # TODO(119Vik): move to base class. For now it's duplicate of OperationDocGenerator._get_data_params
-        op_method = op_spec[OperationField.METHOD]
-        if op_method != HTTPMethod.POST and op_method != HTTPMethod.PUT:
-            return {}
-
-        model_name = op_spec[OperationField.MODEL_NAME]
-        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-        data_params = model_api_spec.get(PropName.PROPERTIES, {})
-
-        if op_name.startswith('add') and op_method == HTTPMethod.POST:
-            data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
-
-        return data_params
-
     def _generate_overview_docs(self, model_name, operations, dest_dir):
         template = self._jinja_env.get_template(self.OVERVIEW_TEMPLATE)
         model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
@@ -350,7 +343,8 @@ class ResourceDocGenerator(BaseDocGenerator):
         content = template.render(operations=operations.keys(), **self._template_ctx)
         self._write_generated_file(dest_dir, 'config.json', content)
 
-    def _generate_resources_config_file(self, config_file_name):
+    def _generate_resources_config_file(self, base_dest_dir):
+        config_file_name = os.path.join(base_dest_dir, "config.json")
         self._models_being_described.sort()
         config = {
             "items": [
