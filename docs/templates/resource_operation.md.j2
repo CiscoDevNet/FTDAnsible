@@ -1,6 +1,6 @@
 # {{ name }}
-
 {% if description %}
+
 ## Description
 {{ description | escape_md_symbols }}
 {% endif %}
@@ -8,4 +8,37 @@
 ## HTTP request
 ```
 {{ method | upper }} {{ url }}
+```
+{% if data_params %}
+
+## Data Parameters
+| Parameter | Required | Type | Description |
+| --------- | -------- | ---- | ----------- |
+{% for param_name, param_spec in data_params.items() %}
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+{% endfor %}
+{% endif %}
+{% if path_params %}
+
+## Path Parameters
+| Parameter | Required | Type | Description |
+| --------- | -------- | ---- | ----------- |
+{% for param_name, param_spec in path_params.items() %}
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+{% endfor %}
+{% endif %}
+{% if query_params %}
+
+## Query Parameters
+| Parameter | Required | Type | Description |
+| --------- | -------- | ---- | ----------- |
+{% for param_name, param_spec in query_params.items() %}
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+{% endfor %}
+{% endif %}
+
+## Example
+
+```
+{{ curl_sample }}
 ```

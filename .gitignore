@@ -57,4 +57,5 @@ env.bak/
 venv.bak/
 
 # Doc distribution folder
-doc/dist
+docs/dist
+docs/api-dist

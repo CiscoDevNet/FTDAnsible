@@ -1,6 +1,7 @@
 import importlib
 import os
 import sys
+import json
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
@@ -12,6 +13,8 @@ from jinja2 import Environment, FileSystemLoader
 
 from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
 from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME
+from httpapi_plugins.ftd import BASE_HEADERS
+from docs import swagger_ui_curlify
 
 ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
@@ -271,39 +274,73 @@ class ResourceDocGenerator(BaseDocGenerator):
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
+        self._models_being_described = []
+
+    @staticmethod
+    def _get_display_model_name(model_name):
+        # TODO(119Vik): mode to base class
+        return CUSTOM_MODEL_MAPPING.get(model_name, model_name)
 
     def generate_doc_files(self, dest_dir, include_models=None):
-
         # TODO:2018-11-22:anton.nikulin: Group operations as in API explorer, not on model name.
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
             ignore_model = include_models and model_name not in include_models
             if model_name is None or ignore_model:
                 continue
-
-            output_dir = os.path.join(dest_dir, 'resources', model_name)
+            display_name = self._get_display_model_name(model_name)
+            output_dir = os.path.join(dest_dir, 'resources', display_name)
             # model_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
             self._generate_overview_docs(model_name, operations, output_dir)
             self._generate_config_json(operations, output_dir)
             self._generate_operation_docs(operations, output_dir)
+            self._models_being_described.append(display_name)
+
+        config_file_name = os.path.join(dest_dir, "resources", "config.json")
+        self._generate_resources_config_file(config_file_name)
 
     def _generate_operation_docs(self, operations, dest_dir):
         template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
 
         for op_name, op_spec in operations.items():
+            data_params = self._get_data_params(op_name, op_spec)
             op_content = template.render(
                 name=op_name,
                 description=op_spec.get(OperationField.DESCRIPTION),
                 method=op_spec.get(OperationField.METHOD),
                 url=op_spec.get(OperationField.URL),
+                path_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
+                query_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
+                data_params=data_params,
+                curl_sample=swagger_ui_curlify.curlify(
+                    op_spec, data_params, self._api_spec[SpecProp.MODELS], BASE_HEADERS),
                 **self._template_ctx
             )
+
             self._write_generated_file(dest_dir, op_name + self.MD_SUFFIX, op_content)
+
+    def _get_data_params(self, op_name, op_spec):
+        # TODO(119Vik): move to base class. For now it's duplicate of OperationDocGenerator._get_data_params
+        op_method = op_spec[OperationField.METHOD]
+        if op_method != HTTPMethod.POST and op_method != HTTPMethod.PUT:
+            return {}
+
+        model_name = op_spec[OperationField.MODEL_NAME]
+        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+        data_params = model_api_spec.get(PropName.PROPERTIES, {})
+
+        if op_name.startswith('add') and op_method == HTTPMethod.POST:
+            data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
+
+        return data_params
 
     def _generate_overview_docs(self, model_name, operations, dest_dir):
         template = self._jinja_env.get_template(self.OVERVIEW_TEMPLATE)
+        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
         content = template.render(
-            name=model_name,
+            name=self._get_display_model_name(model_name),
             operations=operations.keys(),
+            description=model_api_spec.get(PropName.DESCRIPTION, {}),
+            properties=model_api_spec.get(PropName.PROPERTIES, {}),
             **self._template_ctx
         )
         self._write_generated_file(dest_dir, 'overview.md', content)
@@ -312,6 +349,21 @@ class ResourceDocGenerator(BaseDocGenerator):
         template = self._jinja_env.get_template(self.CONFIG_TEMPLATE)
         content = template.render(operations=operations.keys(), **self._template_ctx)
         self._write_generated_file(dest_dir, 'config.json', content)
+
+    def _generate_resources_config_file(self, config_file_name):
+        self._models_being_described.sort()
+        config = {
+            "items": [
+                {
+                    "title": model_name,
+                    "type": "config",
+                    "content": "{}/config.json".format(model_name)
+                }
+                for model_name in self._models_being_described
+            ]
+        }
+        with open(config_file_name, "w+") as resource_config_file:
+            json.dump(config, resource_config_file, indent=4)
 
 
 def camel_to_snake(text):
