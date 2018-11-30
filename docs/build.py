@@ -10,7 +10,8 @@ from ansible.module_utils._text import to_text
 from ansible.module_utils.urls import open_url
 
 from docs.enricher import ApiSpecAutocomplete
-from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator, ResourceDocGenerator
+from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator, \
+    ResourceDocGenerator, ResourceModelDocGenerator
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
@@ -149,6 +150,7 @@ def main():
             StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
         elif args.doctype == DocType.ftd_api:
             ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+            ResourceModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
 
     args = parse_args()
     api_spec, ftd_version = fetch_api_spec_and_version()

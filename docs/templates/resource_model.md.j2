@@ -1,18 +1,16 @@
-# {{ model.name }}
-
 {% if model.description %}
 ## Description
 {{ model.description | escape_md_symbols }}
 {% endif %}
-
 {% if model.operations %}
+
 ## Supported Operations
 {% for operation in model.operations %}
-* [{{ operation['name'] }}](../operations/{{ operation['name'] | camel_to_snake }}.md)
+* [{{ operation["name"] }}](../resources/{{ operation["tag"] }}/{{ operation["name"] | camel_to_snake }}.md)
 {% endfor %}
 {% endif %}
-
 {% if model.properties %}
+
 ## Model Properties
 | Property | Required | Type | Description |
 | -------- | -------- | ---- | ----------- |

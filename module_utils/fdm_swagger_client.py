@@ -31,6 +31,7 @@ class OperationField:
     MODEL_NAME = 'modelName'
     DESCRIPTION = 'description'
     RETURN_MULTIPLE_ITEMS = 'returnMultipleItems'
+    TAGS = "tags"
 
 
 class SpecProp:
@@ -188,7 +189,8 @@ class FdmSwaggerParser:
                     OperationField.METHOD: method,
                     OperationField.URL: self._base_path + url,
                     OperationField.MODEL_NAME: self._get_model_name(method, params),
-                    OperationField.RETURN_MULTIPLE_ITEMS: self._return_multiple_items(params)
+                    OperationField.RETURN_MULTIPLE_ITEMS: self._return_multiple_items(params),
+                    OperationField.TAGS: params.get(OperationField.TAGS, [])
                 }
                 if OperationField.PARAMETERS in params:
                     operation[OperationField.PARAMETERS] = self._get_rest_params(params[OperationField.PARAMETERS])

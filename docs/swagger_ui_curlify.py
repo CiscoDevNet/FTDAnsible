@@ -60,7 +60,7 @@ def curlify(op_spec, data_params, full_spec, base_headers):
         "curl",
         "-X",
         http_method,
-        "'https://{{host}}:{{port}}{}'".format(op_spec.get("url"))
+        '"https://${{HOST}}:${{PORT}}{}"'.format(op_spec.get("url"))
     ]
 
     for h, v in base_headers.items():

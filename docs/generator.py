@@ -63,8 +63,15 @@ class BaseDocGenerator(metaclass=ABCMeta):
         with open('%s/%s' % (dir_path, camel_to_snake(filename)), "wb") as f:
             f.write(content.encode('utf-8'))
 
+    @staticmethod
+    def _get_index_data(index_name, index_list):
+        return {
+            'index_name': index_name,
+            'index_list': index_list
+        }
+
     def _write_index_files(self, dir_path, index_name, index_list):
-        index_data = {'index_name': index_name, 'index_list': index_list}
+        index_data = self._get_index_data(index_name, index_list)
 
         for template_name in [self.INDEX_TEMPLATE, self.CONFIG_TEMPLATE]:
             template = self._jinja_env.get_template(template_name)
@@ -102,7 +109,12 @@ class ModelDocGenerator(BaseDocGenerator):
                 name=displayed_model_name,
                 description=model_api_spec.get(PropName.DESCRIPTION, ''),
                 properties=model_api_spec.get(PropName.PROPERTIES, {}),
-                operations=operations.keys()
+                operations=[
+                    {
+                        "name": op_name,
+                        "tag": op_spec[OperationField.TAGS][0]
+                    } for op_name, op_spec in operations.items()
+                ]
             )
             model_content = model_template.render(model=model_spec, **self._template_ctx)
             self._write_generated_file(model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
@@ -117,14 +129,17 @@ class OperationDocGenerationMixin(object):
     def _get_display_model_name(model_name):
         return CUSTOM_MODEL_MAPPING.get(model_name, model_name)
 
+    def _get_model_properties(self, model_name):
+        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+        return model_api_spec.get(PropName.PROPERTIES, {})
+
     def _get_data_params(self, op_name, op_spec):
         op_method = op_spec[OperationField.METHOD]
         if op_method != HTTPMethod.POST and op_method != HTTPMethod.PUT:
             return {}
 
         model_name = op_spec[OperationField.MODEL_NAME]
-        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-        data_params = model_api_spec.get(PropName.PROPERTIES, {})
+        data_params = self._get_model_properties(model_name)
 
         if op_name.startswith('add') and op_method == HTTPMethod.POST:
             data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
@@ -267,6 +282,17 @@ class StaticDocGenerator(BaseDocGenerator):
         self._write_generated_file(dest_dir, output_filename, content)
 
 
+class ResourceModelDocGenerator(ModelDocGenerator):
+
+    """Slightly customised ModelDoc generation class. Required for generation of FTD API Documentation"""
+
+    MODEL_TEMPLATE = 'resource_model.md.j2'
+
+    @staticmethod
+    def _get_index_data(index_name, index_list):
+        return {'index_list': index_list}
+
+
 class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
     """Generates documentation for the HTTP resources defined in the
     Swagger specification. Describes available endpoints with their methods,
@@ -281,28 +307,35 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
-        self._models_being_described = []
+        self._tags_being_described = []
 
     @staticmethod
     def model_should_be_ignored(model_name, include_models):
         return model_name is None or (include_models and model_name not in include_models)
 
+    @staticmethod
+    def _get_tag_operations(operations):
+        tag_operations = {}
+        for operations_name, params in operations.items():
+            tag_name = params[OperationField.TAGS][0]
+            tag_operations.setdefault(tag_name, {})[operations_name] = params
+
+        return tag_operations
+
     def generate_doc_files(self, dest_dir, include_models=None):
-        # TODO:2018-11-22:anton.nikulin: Group operations as in API explorer, not on model name.
         base_dest_dir = os.path.join(dest_dir, "resources")
+        tag_operations = self._get_tag_operations(self._api_spec[SpecProp.OPERATIONS])
 
-        for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
-            if self.model_should_be_ignored(model_name, include_models):
-                continue
+        for tag_name, operations in tag_operations.items():
+            display_name = self._get_display_model_name(tag_name)
+            output_dir = os.path.join(base_dest_dir, display_name)
 
-            display_name = self._get_display_model_name(model_name)
-            output_dir = os.path.join(base_dest_dir , display_name)
             # model_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-            self._generate_overview_docs(model_name, operations, output_dir)
+            self._generate_overview_docs(tag_name, operations, output_dir)
             self._generate_config_json(operations, output_dir)
             self._generate_operation_docs(operations, output_dir)
             # add model to the list of models being processed so it can be added to index config file later
-            self._models_being_described.append(display_name)
+            self._tags_being_described.append(display_name)
 
         self._generate_resources_config_file(base_dest_dir)
 
@@ -326,14 +359,14 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
 
             self._write_generated_file(dest_dir, op_name + self.MD_SUFFIX, op_content)
 
-    def _generate_overview_docs(self, model_name, operations, dest_dir):
+    def _generate_overview_docs(self, tag_name, operations, dest_dir):
         template = self._jinja_env.get_template(self.OVERVIEW_TEMPLATE)
-        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+        # model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
         content = template.render(
-            name=self._get_display_model_name(model_name),
+            # name=self._get_display_model_name(tag_name),
             operations=operations.keys(),
-            description=model_api_spec.get(PropName.DESCRIPTION, {}),
-            properties=model_api_spec.get(PropName.PROPERTIES, {}),
+            # description=model_api_spec.get(PropName.DESCRIPTION, {}),
+            # properties=model_api_spec.get(PropName.PROPERTIES, {}),
             **self._template_ctx
         )
         self._write_generated_file(dest_dir, 'overview.md', content)
@@ -345,16 +378,22 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
 
     def _generate_resources_config_file(self, base_dest_dir):
         config_file_name = os.path.join(base_dest_dir, "config.json")
-        self._models_being_described.sort()
+        self._tags_being_described.sort()
+        items = [{
+            "title": "Model Index",
+            "content": "../models/index.md"
+        }]
+        items += [
+            {
+                "title": model_name,
+                "type": "config",
+                "content": "{}/config.json".format(model_name)
+            }
+            for model_name in self._tags_being_described
+        ]
+
         config = {
-            "items": [
-                {
-                    "title": model_name,
-                    "type": "config",
-                    "content": "{}/config.json".format(model_name)
-                }
-                for model_name in self._models_being_described
-            ]
+            "items": items
         }
         with open(config_file_name, "w+") as resource_config_file:
             json.dump(config, resource_config_file, indent=4)
