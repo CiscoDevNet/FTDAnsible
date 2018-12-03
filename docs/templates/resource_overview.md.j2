@@ -10,7 +10,7 @@
 
 ## Supported operations
 {% for operation in operations | sort %}
-* [{{ operation }}]({{ operation | camel_to_snake }}.md)
+* [{{ operation | split_operation_names }}]({{ operation | camel_to_snake }}.md)
 {% endfor %}
 {% endif %}
 {% if properties %}
@@ -19,6 +19,6 @@
 | Property | Required | Type | Description |
 | -------- | -------- | ---- | ----------- |
 {% for property_name, property_spec in properties.items() %}
-| {{ property_name }} | {{ property_spec.required }} | {{ property_spec.type }} | {{ property_spec.description | escape_md_symbols }} |
+| {{ property_name }} | {{ property_spec.required }} | {{ property_spec.type }} <td colspan=3>  {{ property_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}

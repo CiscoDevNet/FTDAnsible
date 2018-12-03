@@ -15,6 +15,7 @@ from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
 from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME
 from httpapi_plugins.ftd import BASE_HEADERS
 from docs import swagger_ui_curlify
+from docs import swagger_ui_bravado
 
 ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
@@ -40,6 +41,7 @@ class BaseDocGenerator(metaclass=ABCMeta):
         env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True,
                           extensions=['docs.extension.IncludePlaybookTasks'])
         env.filters['camel_to_snake'] = camel_to_snake
+        env.filters['split_operation_names'] = split_operation_names
         env.filters['escape_md_symbols'] = lambda s: s.replace('[', '&#91;').replace(']', '&#93;') \
             .replace('|', '&#124;')
         self._jinja_env = env
@@ -354,6 +356,9 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
                 data_params=data_params,
                 curl_sample=swagger_ui_curlify.curlify(
                     op_spec, data_params, self._api_spec[SpecProp.MODELS], BASE_HEADERS),
+                bravado_sample=swagger_ui_bravado.generate_sample(
+                    op_name, op_spec, data_params, self._api_spec[SpecProp.MODELS]
+                ),
                 **self._template_ctx
             )
 
@@ -385,11 +390,11 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
         }]
         items += [
             {
-                "title": model_name,
+                "title": split_operation_names(tag_name),
                 "type": "config",
-                "content": "{}/config.json".format(model_name)
+                "content": "{}/config.json".format(tag_name)
             }
-            for model_name in self._tags_being_described
+            for tag_name in self._tags_being_described
         ]
 
         config = {
@@ -402,3 +407,7 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
 def camel_to_snake(text):
     test_with_underscores = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', test_with_underscores).lower()
+
+
+def split_operation_names(text):
+    return re.sub('([a-z0-9])([A-Z])', r'\1 \2', text)

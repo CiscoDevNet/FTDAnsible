@@ -1,12 +1,10 @@
-# {{ name }}
 {% if description %}
-
 ## Description
 {{ description | escape_md_symbols }}
 {% endif %}
 
 ## HTTP request
-```
+```url
 {{ method | upper }} {{ url }}
 ```
 {% if data_params %}
@@ -15,7 +13,7 @@
 | Parameter | Required | Type | Description |
 | --------- | -------- | ---- | ----------- |
 {% for param_name, param_spec in data_params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} <td colspan=3> {{ param_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}
 {% if path_params %}
@@ -24,7 +22,7 @@
 | Parameter | Required | Type | Description |
 | --------- | -------- | ---- | ----------- |
 {% for param_name, param_spec in path_params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} <td colspan=3> {{ param_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}
 {% if query_params %}
@@ -33,12 +31,14 @@
 | Parameter | Required | Type | Description |
 | --------- | -------- | ---- | ----------- |
 {% for param_name, param_spec in query_params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} <td colspan=3> {{ param_spec.description | escape_md_symbols }} |
 {% endfor %}
 {% endif %}
 
 ## Example
-
-```
+```bash
 {{ curl_sample }}
+```
+```python
+{{ bravado_sample }}
 ```

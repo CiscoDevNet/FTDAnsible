@@ -153,6 +153,24 @@ def main():
             ResourceModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
 
     args = parse_args()
+#############################################
+    # fc = FtdApiClient(args.hostname, args.username, args.password)
+    # from bravado.requests_client import RequestsClient
+    # from bravado.client import SwaggerClient
+    # http_client = RequestsClient()
+    # http_client.ssl_verify = False
+    # http_client.set_api_key(
+    #     fc._hostname.split(":")[1].replace("//", ""),
+    #     fc._auth_headers['Authorization'],
+    #     param_name='Authorization',
+    #     param_in='header'
+    # )
+    # client = SwaggerClient.from_url(
+    #     '{}/apispec/ngfw.json'.format(fc._hostname),
+    #     http_client=http_client
+    # )
+    # import ipdb;ipdb.set_trace()
+#############################################
     api_spec, ftd_version = fetch_api_spec_and_version()
     clean_dist_dir()
     generate_docs()

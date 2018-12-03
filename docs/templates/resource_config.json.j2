@@ -6,7 +6,7 @@
     }{{ "," if operations }}
 {% for operation in operations | sort %}
     {
-      "title": "{{ operation }}",
+      "title": "{{ operation | split_operation_names }}",
       "content": "{{ operation | camel_to_snake }}.md"
     }{{ "," if not loop.last }}
 {% endfor %}
