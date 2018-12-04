@@ -420,10 +420,39 @@ class ErrorsDocGenerator(BaseDocGenerator):
 
     def generate_doc_files(self, dest_dir, errors_codes):
         template = self._jinja_env.get_template(self.ERRORS_TEMPLATE)
-        errors_content = template .render(error_types=errors_codes, **self._template_ctx)
+        errors_content = template.render(error_types=errors_codes, **self._template_ctx)
         error_codes_file = "error_codes" + self.MD_SUFFIX
         self._write_generated_file(dest_dir, error_codes_file, errors_content)
         return error_codes_file
+
+
+class APIIntroductionDocGenerator(BaseDocGenerator):
+
+    """Introduction pages for FTD API documentation generation """
+
+    INTRO_TEMPLATE = 'intro.md.j2'
+    AUTH_TEMPLATE = 'auth.md.j2'
+    DEPLOY_TEMPLATE = 'deploy_config.md.j2'
+    TEMPLATES_TO_RENDER = [INTRO_TEMPLATE, AUTH_TEMPLATE, DEPLOY_TEMPLATE]
+    DEST_DIR = "introduction"
+
+    def __init__(self, template_dir, template_ctx, api_version):
+        super().__init__(template_dir, template_ctx)
+        self._api_version = api_version
+
+    @staticmethod
+    def _get_index_data(index_name, index_list):
+        return {'index_list': index_list}
+
+    def generate_doc_files(self, dest_dir):
+        introduction_dir = os.path.join(dest_dir, self.DEST_DIR )
+        for template_name in self.TEMPLATES_TO_RENDER:
+            template = self._jinja_env.get_template(template_name)
+            page_content = template.render(
+                api_version=self._api_version,
+                **self._template_ctx)
+            filename = template_name[:-len(self.J2_SUFFIX)]
+            self._write_generated_file(introduction_dir, filename, page_content)
 
 
 def camel_to_snake(text):

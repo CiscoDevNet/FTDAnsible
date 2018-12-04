@@ -11,7 +11,7 @@ from ansible.module_utils.urls import open_url
 
 from docs.enricher import ApiSpecAutocomplete
 from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator, \
-    ResourceDocGenerator, ResourceModelDocGenerator, ErrorsDocGenerator
+    ResourceDocGenerator, ResourceModelDocGenerator, ErrorsDocGenerator, APIIntroductionDocGenerator
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
@@ -41,6 +41,7 @@ class FtdApiClient(object):
         self._hostname = hostname
         token_info = self._authorize(username, password)
         self._auth_headers = self._construct_auth_headers(token_info)
+        self._api_version = None
 
     def _authorize(self, username, password):
         def request_token(url):
@@ -61,7 +62,11 @@ class FtdApiClient(object):
                 if e.code != HTTPStatus.UNAUTHORIZED:
                     raise
             else:
+                self._api_version = version
                 return token
+
+    def get_api_version(self):
+        return self._api_version
 
     @staticmethod
     def _construct_auth_headers(token_info):
@@ -170,6 +175,8 @@ def main():
             ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec, errors_codes_file)\
                 .generate_doc_files(args.dist, args.models)
             ResourceModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+            APIIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_version=api_client.get_api_version())\
+                .generate_doc_files(args.dist)
 
     args = parse_args()
 
