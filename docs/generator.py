@@ -445,7 +445,7 @@ class APIIntroductionDocGenerator(BaseDocGenerator):
         return {'index_list': index_list}
 
     def generate_doc_files(self, dest_dir):
-        introduction_dir = os.path.join(dest_dir, self.DEST_DIR )
+        introduction_dir = os.path.join(dest_dir, self.DEST_DIR)
         for template_name in self.TEMPLATES_TO_RENDER:
             template = self._jinja_env.get_template(template_name)
             page_content = template.render(
