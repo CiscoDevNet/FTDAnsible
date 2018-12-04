@@ -1,5 +1,5 @@
-| Category <td colspan=2> Code <td colspan=3>  Message |
-| -------- <td colspan=2> ---- <td colspan=3> -------- |
+| Category | Code |     | Message |
+| -------- | ---- | --- |-------- |
 {% for error_type, errors in error_types.items() %}
 {% for error in errors %}
 | {{ error_type }} <td colspan=2> {{ error['code'] }} <td colspan=3> {{ error['message'] }}|
