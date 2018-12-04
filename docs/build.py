@@ -39,8 +39,8 @@ class FtdApiClient(object):
 
     def __init__(self, hostname, username, password):
         self._hostname = hostname
-        token_info = self._authorize(username, password)
         self._api_version = None
+        token_info = self._authorize(username, password)
         self._auth_headers = self._construct_auth_headers(token_info)
 
     def _authorize(self, username, password):

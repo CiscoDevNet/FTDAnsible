@@ -61,7 +61,7 @@ curl -X POST \
         "grant_type": "password", 
         "username": "admin", 
         "password": "Admin123" 
-    }' https://ftd.example.com/api/fdm/v2/fdm/token
+    }' https://ftd.example.com/api/fdm/{{ api_version }}/fdm/token
 ```
 
 #### Step 3
@@ -131,7 +131,7 @@ For example, the following requests a custom token for api-client that expires i
 
 #### Step 2
 
-Use POST https://<i>server</i>/api/fdm/v2/fdm/token to obtain the access token.
+Use POST https://<i>server</i>/api/fdm/{{ api_version }}/fdm/token to obtain the access token.
 
 For example, the **curl** command would look like the following:
 ```bash
@@ -145,7 +145,7 @@ curl -X POST \
     "desired_refresh_expires_in": 3000, 
     "desired_subject": "api-client", 
     "desired_refresh_count": 3  
-  }' https://ftd.example.com/api/fdm/v2/fdm/token
+  }' https://ftd.example.com/api/fdm/{{ api_version }}/fdm/token
 ```
 
 #### Step 3
@@ -179,7 +179,7 @@ For example, a **curl** command to perform GET /object/networks might look like 
 curl -k -X GET \
     -H 'Accept: application/json' \
     -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.yJpYXQiOjE1MDI4MzU5OTEsInN1YiI6ImFwaS1jbGllbnQiLCJqdGkiOiJjOWIxYzdjYi04MjA4LTExZTctYTgxYy02YmY0NzY3ZmRmZGUiLCJuYmYiOjE1MDI4MzU5OTEsImV4cCI6MTUwMjgzODM5MSwicmVmcmVzaFRva2VuRXhwaXJlc0F0IjoxNTAyODM4OTkxMzMxLCJ0b2tlblR5cGUiOiJKV1RfQWNjZXNzIiwib3JpZ2luIjoiY3VzdG9tIn0.9IVzLjGffVQffHAWdrNkrYfvuO6TgpJ7Zi_z3RYubN8' \  
-    https://ftd.example.com/api/fdm/v2/object/networks
+    https://ftd.example.com/api/fdm/{{ api_version }}/object/networks
 ```
 
 >**Note** When you use the API Explorer to try out methods and resources, the **curl** command shown does not include the **Authorization: Bearer** header. However, you must add this header when making calls from your API client.
@@ -210,7 +210,7 @@ For example:
 ```
 
 #### Step 2
-Use POST https://<i>server</i>/api/fdm/v2/fdm/token to obtain the refreshed access token.
+Use POST https://<i>server</i>/api/fdm/{{ api_version }}/fdm/token to obtain the refreshed access token.
 
 For example, the **curl** command would look like the following:
 
@@ -221,7 +221,7 @@ curl -X POST \
     -d '{ 
        "grant_type": "refresh_token", 
        "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MDI4MzU5OTEsInN1YiI6ImFwaS1jbGllbnQiLCJqdGkiOiJjOWIxYzdjYi04MjA4LTExZTctYTgxYy02YmY0NzY3ZmRmZGUiLCJuYmYiOjE1MDI4MzU5OTEsImV4cCI6MTUwMjgzODk5MSwiYWNjZXNzVG9rZW5FeHBpcmVzQXQiOjE1MDI4MzgzOTEzMzEsInJlZnJlc2hDb3VudCI6MywidG9rZW5UeXBlIjoiSldUX1JlZnJlc2giLCJvcmlnaW4iOiJjdXN0b20ifQ.qseqjg3Uo183YvfN_77iJZELEqwpWw5AbKAqAnCIcSA" 
-     }' https://ftd.example.com/api/fdm/v2/fdm/token
+     }' https://ftd.example.com/api/fdm/{{ api_version }}/fdm/token
 ```
 
 #### Step 3
@@ -282,7 +282,7 @@ For example:
 
 #### Step 2
 
-Use POST https://<i>server</i>/api/fdm/v2/fdm/token to revoke the access token.
+Use POST https://<i>server</i>/api/fdm/{{ api_version }}/fdm/token to revoke the access token.
 
 For example, the **curl** command would look like the following:
 ```bash
@@ -293,7 +293,7 @@ curl -X POST \
         "grant_type": "revoke_token", 
         "access_token": "eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MDI5MDQzMjQsInN1YiI6ImFkbWluIiwianRpIjoiZTMzNGIxOWYtODJhNy0xMWU3LWE4MWMtNGQ3NzY2ZTExMzVkIiwibmJmIjoxNTAyOTA0MzI0LCJleHAiOjE1MDI5MDYxMjQsInJlZnJlc2hUb2tlbkV4cGlyZXNBdCI6MTUwMjkwNjcyNDExMiwidG9rZW5UeXBlIjoiSldUX0FjY2VzcyIsIm9yaWdpbiI6InBhc3N3b3JkIn0.OVZBT9yVZc4zxZfZiiLH4SZcFclaHyCPbZJC_Gyd5FE", 
         "custom_token_subject_to_revoke": "api-client" 
-    }' https://ftd.example.com/api/fdm/v2/fdm/token
+    }' https://ftd.example.com/api/fdm/{{ api_version }}/fdm/token
 ```
 
 #### Step 3
