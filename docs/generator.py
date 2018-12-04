@@ -306,11 +306,10 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
     OVERVIEW_TEMPLATE = 'resource_overview.md.j2'
     CONFIG_TEMPLATE = 'resource_config.json.j2'
 
-    def __init__(self, template_dir, template_ctx, api_spec, errors_codes_file):
+    def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
         self._tags_being_described = []
-        self._errors_codes_file = errors_codes_file
 
     @staticmethod
     def model_should_be_ignored(model_name, include_models):
@@ -388,13 +387,11 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
         items = [{
             "title": "Model Index",
             "content": "../models/index.md"
-        }]
-
-        if self._errors_codes_file:
-            items.append({
+        },
+        {
                 "title": "Error Codes",
-                "content": "../" + self._errors_codes_file
-            })
+                "content": "../error_codes.md"
+        }]
 
         items += [
             {

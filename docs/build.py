@@ -168,11 +168,12 @@ def main():
                 errors_codes = api_client.fetch_error_codes()
             except Exception as e:
                 # All FTD versions before 6.4 will not have such documents
-                errors_codes_file = None
+                pass
             else:
-                errors_codes_file = ErrorsDocGenerator(
+                ErrorsDocGenerator(
                     DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist, errors_codes)
-            ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec, errors_codes_file)\
+
+            ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
                 .generate_doc_files(args.dist, args.models)
             ResourceModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
             APIIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_version=api_client.get_api_version())\
