@@ -461,4 +461,6 @@ def camel_to_snake(text):
 
 
 def split_operation_names(text):
-    return re.sub('([a-z0-9])([A-Z])', r'\1 \2', text)
+    replace_regexp = r'\1 \2'
+    updated_text = re.sub('(.)([A-Z][a-z]+)', replace_regexp, text)
+    return re.sub('([a-z0-9])([A-Z])', replace_regexp, updated_text)
