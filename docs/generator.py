@@ -392,7 +392,7 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
 
         if self._errors_codes_file:
             items.append({
-                "title": "Error codes",
+                "title": "Error Codes",
                 "content": "../" + self._errors_codes_file
             })
 
