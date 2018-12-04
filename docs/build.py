@@ -11,7 +11,7 @@ from ansible.module_utils.urls import open_url
 
 from docs.enricher import ApiSpecAutocomplete
 from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator, \
-    ResourceDocGenerator, ResourceModelDocGenerator
+    ResourceDocGenerator, ResourceModelDocGenerator, ErrorsDocGenerator
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
@@ -35,6 +35,7 @@ class FtdApiClient(object):
 
     SPEC_PATH = '/apispec/ngfw.json'
     DOC_PATH = '/apispec/en-us/doc.json'
+    ERRORS_PATH = '/apispec/customErrorCode.json'
 
     def __init__(self, hostname, username, password):
         self._hostname = hostname
@@ -78,6 +79,16 @@ class FtdApiClient(object):
         spec = self._send_request(self.SPEC_PATH, HTTPMethod.GET)
         doc = self._send_request(self.DOC_PATH, HTTPMethod.GET)
         return FdmSwaggerParser().parse_spec(spec, doc)
+
+    def fetch_error_codes(self):
+        """
+        Downloads an API Error codes specification for FTD device.
+
+        :return: a documented API specification containing error codes definitions for FTD device
+        :rtype: dict
+        """
+        spec = self._send_request(self.ERRORS_PATH, HTTPMethod.GET)
+        return spec
 
     def fetch_ftd_version(self, spec):
         """
@@ -126,8 +137,7 @@ def main():
                             default=DEFAULT_DIST_DIR)
         return parser.parse_args()
 
-    def fetch_api_spec_and_version():
-        api_client = FtdApiClient(args.hostname, args.username, args.password)
+    def fetch_api_spec_and_version(api_client):
         api_spec = api_client.fetch_api_specs()
 
         if args.doctype == DocType.ftd_ansible:
@@ -149,29 +159,23 @@ def main():
             ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
             StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
         elif args.doctype == DocType.ftd_api:
-            ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+            try:
+                errors_codes = api_client.fetch_error_codes()
+            except Exception as e:
+                # All FTD versions before 6.4 will not have such documents
+                errors_codes_file = None
+            else:
+                errors_codes_file = ErrorsDocGenerator(
+                    DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist, errors_codes)
+            ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec, errors_codes_file)\
+                .generate_doc_files(args.dist, args.models)
             ResourceModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
 
     args = parse_args()
-#############################################
-    # fc = FtdApiClient(args.hostname, args.username, args.password)
-    # from bravado.requests_client import RequestsClient
-    # from bravado.client import SwaggerClient
-    # http_client = RequestsClient()
-    # http_client.ssl_verify = False
-    # http_client.set_api_key(
-    #     fc._hostname.split(":")[1].replace("//", ""),
-    #     fc._auth_headers['Authorization'],
-    #     param_name='Authorization',
-    #     param_in='header'
-    # )
-    # client = SwaggerClient.from_url(
-    #     '{}/apispec/ngfw.json'.format(fc._hostname),
-    #     http_client=http_client
-    # )
-    # import ipdb;ipdb.set_trace()
-#############################################
-    api_spec, ftd_version = fetch_api_spec_and_version()
+
+    api_client = FtdApiClient(args.hostname, args.username, args.password)
+    api_spec, ftd_version = fetch_api_spec_and_version(api_client)
+
     clean_dist_dir()
     generate_docs()
 

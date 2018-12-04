@@ -306,10 +306,11 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
     OVERVIEW_TEMPLATE = 'resource_overview.md.j2'
     CONFIG_TEMPLATE = 'resource_config.json.j2'
 
-    def __init__(self, template_dir, template_ctx, api_spec):
+    def __init__(self, template_dir, template_ctx, api_spec, errors_codes_file):
         super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
         self._tags_being_described = []
+        self._errors_codes_file = errors_codes_file
 
     @staticmethod
     def model_should_be_ignored(model_name, include_models):
@@ -388,6 +389,13 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
             "title": "Model Index",
             "content": "../models/index.md"
         }]
+
+        if self._errors_codes_file:
+            items.append({
+                "title": "Error codes",
+                "content": "../" + self._errors_codes_file
+            })
+
         items += [
             {
                 "title": split_operation_names(tag_name),
@@ -402,6 +410,20 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
         }
         with open(config_file_name, "w+") as resource_config_file:
             json.dump(config, resource_config_file, indent=4)
+
+
+class ErrorsDocGenerator(BaseDocGenerator):
+
+    """Error Documentation is available """
+
+    ERRORS_TEMPLATE = 'api_errors_page.md.j2'
+
+    def generate_doc_files(self, dest_dir, errors_codes):
+        template = self._jinja_env.get_template(self.ERRORS_TEMPLATE)
+        errors_content = template .render(error_types=errors_codes, **self._template_ctx)
+        error_codes_file = "error_codes" + self.MD_SUFFIX
+        self._write_generated_file(dest_dir, error_codes_file, errors_content)
+        return error_codes_file
 
 
 def camel_to_snake(text):
