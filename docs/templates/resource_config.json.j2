@@ -2,7 +2,7 @@
   "items": [
 {% for operation in operations | sort %}
     {
-      "title": "{{ operation | split_operation_names }}",
+      "title": "{{ operation }}",
       "content": "{{ operation | camel_to_snake }}.md"
     }{{ "," if not loop.last }}
 {% endfor %}

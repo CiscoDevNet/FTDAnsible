@@ -10,7 +10,7 @@
 
 ## Supported operations
 {% for operation in operations | sort %}
-* [{{ operation | split_operation_names }}]({{ operation | camel_to_snake }}.md)
+* [{{ operation }}]({{ operation | camel_to_snake }}.md)
 {% endfor %}
 {% endif %}
 {% if properties %}

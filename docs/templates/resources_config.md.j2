@@ -6,7 +6,7 @@
         },
     {% for tag_name in tags_being_described %}
         {
-            "title": "{{ tag_name | split_operation_names }}",
+            "title": "{{ tag_name }}",
             "type": "config",
             "content": "{{ tag_name }}/config.json"
         }{{ "," if not loop.last }}
