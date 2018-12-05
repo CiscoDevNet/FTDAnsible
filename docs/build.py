@@ -166,7 +166,7 @@ def main():
         elif args.doctype == DocType.ftd_api:
             try:
                 errors_codes = api_client.fetch_error_codes()
-            except Exception as e:
+            except json.decoder.JSONDecodeError:
                 # All FTD versions before 6.4 will not have such documents
                 pass
             else:
