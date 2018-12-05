@@ -58,4 +58,3 @@ venv.bak/
 
 # Doc distribution folder
 docs/dist
-docs/api-dist
