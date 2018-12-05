@@ -308,6 +308,7 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
     OPERATION_TEMPLATE = 'resource_operation.md.j2'
     OVERVIEW_TEMPLATE = 'resource_overview.md.j2'
     CONFIG_TEMPLATE = 'resource_config.json.j2'
+    RESOURCES_CONFIG_TEMPLATE = 'resources_config.md.j2'
 
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx)
@@ -387,31 +388,14 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
         self._write_generated_file(dest_dir, 'config.json', content)
 
     def _generate_resources_config_file(self, base_dest_dir):
-        config_file_name = os.path.join(base_dest_dir, "config.json")
         self._tags_being_described.sort()
-        items = [{
-            "title": "Model Index",
-            "content": "../models/index.md"
-        },
-        {
-                "title": "Error Codes",
-                "content": "../error_codes.md"
-        }]
 
-        items += [
-            {
-                "title": split_operation_names(tag_name),
-                "type": "config",
-                "content": "{}/config.json".format(tag_name)
-            }
-            for tag_name in self._tags_being_described
-        ]
-
-        config = {
-            "items": items
-        }
-        with open(config_file_name, "w+") as resource_config_file:
-            json.dump(config, resource_config_file, indent=4)
+        template = self._jinja_env.get_template(self.RESOURCES_CONFIG_TEMPLATE)
+        content = template.render(
+            tags_being_described=self._tags_being_described,
+            **self._template_ctx
+        )
+        self._write_generated_file(base_dest_dir, 'config.json', content)
 
 
 class ErrorsDocGenerator(BaseDocGenerator):
