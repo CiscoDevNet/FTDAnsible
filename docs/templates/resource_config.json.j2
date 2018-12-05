@@ -1,9 +1,5 @@
 {
   "items": [
-    {
-      "title": "Overview",
-      "content": "overview.md"
-    }{{ "," if operations }}
 {% for operation in operations | sort %}
     {
       "title": "{{ operation | split_operation_names }}",

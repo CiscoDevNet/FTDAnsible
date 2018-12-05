@@ -333,7 +333,8 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
             output_dir = os.path.join(base_dest_dir, display_name)
 
             # model_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-            self._generate_overview_docs(tag_name, operations, output_dir)
+            # TODO(119vik): Following method is not used for now. We need remove it after confirmation
+            # self._generate_overview_docs(tag_name, operations, output_dir)
             self._generate_config_json(operations, output_dir)
             self._generate_operation_docs(operations, output_dir)
             # add model to the list of models being processed so it can be added to index config file later
@@ -364,6 +365,7 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
 
             self._write_generated_file(dest_dir, op_name + self.MD_SUFFIX, op_content)
 
+    # TODO(119vik): Following method is not used for now. We need remove it after confirmation
     def _generate_overview_docs(self, tag_name, operations, dest_dir):
         template = self._jinja_env.get_template(self.OVERVIEW_TEMPLATE)
         # model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
