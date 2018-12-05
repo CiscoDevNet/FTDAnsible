@@ -78,8 +78,11 @@ class BaseDocGenerator(metaclass=ABCMeta):
         for template_name in [self.INDEX_TEMPLATE, self.CONFIG_TEMPLATE]:
             template = self._jinja_env.get_template(template_name)
             content = template.render(**index_data, **self._template_ctx)
-            filename = template_name[:-len(self.J2_SUFFIX)]
+            filename = self._get_file_name_from_template_name(template_name)
             self._write_generated_file(dir_path, filename, content)
+
+    def _get_file_name_from_template_name(self, template_name):
+        return template_name[:-len(self.J2_SUFFIX)]
 
 
 class ModelDocGenerator(BaseDocGenerator):
@@ -280,7 +283,7 @@ class StaticDocGenerator(BaseDocGenerator):
     def _generate_from_template(self, dest_dir, filename):
         template = self._jinja_env.get_template(filename)
         content = template.render(**self._template_ctx)
-        output_filename = filename[:-len(self.J2_SUFFIX)]
+        output_filename = self._get_file_name_from_template_name(filename)
         self._write_generated_file(dest_dir, output_filename, content)
 
 
@@ -415,12 +418,12 @@ class ErrorsDocGenerator(BaseDocGenerator):
 
     """Error Documentation is available """
 
-    ERRORS_TEMPLATE = 'api_errors_page.md.j2'
+    ERRORS_TEMPLATE = 'error_codes.md.j2'
 
     def generate_doc_files(self, dest_dir, errors_codes):
         template = self._jinja_env.get_template(self.ERRORS_TEMPLATE)
         errors_content = template.render(error_types=errors_codes, **self._template_ctx)
-        error_codes_file = "error_codes" + self.MD_SUFFIX
+        error_codes_file = self._get_file_name_from_template_name(self.ERRORS_TEMPLATE)
         self._write_generated_file(dest_dir, error_codes_file, errors_content)
         return error_codes_file
 
@@ -450,7 +453,7 @@ class APIIntroductionDocGenerator(BaseDocGenerator):
             page_content = template.render(
                 api_version=self._api_version,
                 **self._template_ctx)
-            filename = template_name[:-len(self.J2_SUFFIX)]
+            filename = self._get_file_name_from_template_name(template_name)
             self._write_generated_file(introduction_dir, filename, page_content)
 
 
