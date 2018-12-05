@@ -416,7 +416,7 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
 
 class ErrorsDocGenerator(BaseDocGenerator):
 
-    """Error Documentation is available """
+    """Generates Page with FTD API native error codes description."""
 
     ERRORS_TEMPLATE = 'error_codes.md.j2'
 
