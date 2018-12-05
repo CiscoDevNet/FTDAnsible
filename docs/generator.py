@@ -361,7 +361,7 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
                 curl_sample=swagger_ui_curlify.curlify(
                     op_spec, data_params, self._api_spec[SpecProp.MODELS], BASE_HEADERS),
                 bravado_sample=swagger_ui_bravado.generate_sample(
-                    op_name, op_spec, data_params, self._api_spec[SpecProp.MODELS]
+                    op_name, op_spec, data_params, self._api_spec[SpecProp.MODELS], self._jinja_env
                 ),
                 **self._template_ctx
             )

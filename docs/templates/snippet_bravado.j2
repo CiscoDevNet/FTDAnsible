@@ -1,0 +1,21 @@
+from bravado.requests_client import RequestsClient
+from bravado.client import SwaggerClient
+
+HOST = 'ftd.example.com'
+AUTH_TOKEN = 'access_token'
+
+http_client = RequestsClient()
+http_client.ssl_verify = False
+http_client.set_api_key(
+     HOST,
+    'Bearer {}'.format(AUTH_TOKEN),
+    param_name='Authorization',
+    param_in='header'
+)
+client = SwaggerClient.from_url(
+    'https://{}/apispec/ngfw.json'.format(HOST),
+    http_client=http_client,
+    config={'validate_responses': False, 'validate_swagger_spec': False}
+)
+
+{{ var }} = client.{{ tag }}.{{ operation }}({{ opertaion_arguments }}).response().result
