@@ -3,7 +3,7 @@ Content of the file is just Python implementation of the curlify functionality i
 Original implementation: https://github.com/swagger-api/swagger-ui/blob/master/src/core/curlify.js
 """
 import json
-from . import body_generation
+from docs.snippets_generation import body_generator
 
 
 def curlify(op_spec, data_params, full_spec, base_headers):
@@ -22,7 +22,7 @@ def curlify(op_spec, data_params, full_spec, base_headers):
         curlified.append('{}--header "{}: {}" \\'.format(formatter, h, v))
 
     if data_params:
-        body = body_generation.body_generator(data_params, full_spec)
+        body = body_generator.body_generator(data_params, full_spec)
         curlified.append(
             "{}-d '{}' \\".format(
                 formatter,

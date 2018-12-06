@@ -21,9 +21,9 @@ def get_client(host, token):
     )
 
 
-def {{ operation | camel_to_snake }}(client{% for key in opertaion_arguments %}, {{ key | camel_to_snake }}{% endfor %}):
+def {{ operation | camel_to_snake }}(client{% for key in operation_arguments %}, {{ key | camel_to_snake }}{% endfor %}):
     return client.{{ tag }}.{{ operation }}(
-        {% for key in opertaion_arguments %}
+        {% for key in operation_arguments %}
         {{ key }}={{ key | camel_to_snake }}{{ "," if not loop.last }}
         {% endfor %}
     ).response().result
@@ -34,8 +34,8 @@ if __name__ == "__main__":
     token = "access_token"
     client = get_client(host, token)
 
-    {% for key, value in opertaion_arguments.items() %}
+    {% for key, value in operation_arguments.items() %}
     {{ key | camel_to_snake }} = {{ value }}
     {% endfor %}
 
-    {{ operation | camel_to_snake }}(client{% for key in opertaion_arguments %}, {{ key | camel_to_snake }}{% endfor %})
+    {{ operation | camel_to_snake }}(client{% for key in operation_arguments %}, {{ key | camel_to_snake }}{% endfor %})

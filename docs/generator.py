@@ -1,7 +1,6 @@
 import importlib
 import os
 import sys
-import json
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
@@ -14,8 +13,7 @@ from jinja2 import Environment, FileSystemLoader
 from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
 from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME
 from httpapi_plugins.ftd import BASE_HEADERS
-from docs import swagger_ui_curlify
-from docs import swagger_ui_bravado
+from docs.snippets_generation import swagger_ui_bravado, swagger_ui_curlify
 
 ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
