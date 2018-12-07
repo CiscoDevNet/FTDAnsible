@@ -11,7 +11,7 @@ from ansible.module_utils.urls import open_url
 
 from docs.enricher import ApiSpecAutocomplete
 from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator, \
-    ResourceDocGenerator, ResourceModelDocGenerator, ErrorsDocGenerator, ApiIntroductionDocGenerator
+    ResourceDocGenerator, ErrorsDocGenerator, ApiIntroductionDocGenerator
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField

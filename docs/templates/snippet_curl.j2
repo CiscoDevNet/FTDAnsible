@@ -1,0 +1,8 @@
+curl -X {{ http_method.upper() }} \
+{% for key, value in headers.items() %}
+    --header "{{ key }}: {{ value }}" \
+{% endfor %}
+{% if body %}
+    -d '{{ body | tojson(4) | replace("\n", "\n    ") }}' \
+{% endif %}
+    "https://${HOST}:${PORT}{{ url }}"

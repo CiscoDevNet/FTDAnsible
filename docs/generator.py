@@ -68,6 +68,10 @@ class BaseDocGenerator(object):
             'index_list': index_list
         }
 
+    @staticmethod
+    def model_should_be_ignored(model_name, include_models):
+        return model_name is None or (include_models and model_name not in include_models)
+
     def _write_index_files(self, dir_path, index_name, index_list):
         index_data = self._get_index_data(index_name, index_list)
 
@@ -100,8 +104,7 @@ class ModelDocGenerator(BaseDocGenerator):
         model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
 
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
-            ignore_model = include_models and model_name not in include_models
-            if model_name is None or ignore_model:
+            if self.model_should_be_ignored(model_name, include_models):
                 continue
 
             model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
@@ -169,6 +172,7 @@ class OperationDocGenerator(ApiSpecDocGenerator):
 
     OPERATION_TEMPLATE = 'operation.md.j2'
 
+
     def generate_doc_files(self, dest_dir, include_models=None):
         op_dir = os.path.join(dest_dir, 'operations')
 
@@ -176,8 +180,7 @@ class OperationDocGenerator(ApiSpecDocGenerator):
         op_template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
 
         for op_name, op_api_spec in self._api_spec[SpecProp.OPERATIONS].items():
-            ignore_op = include_models and op_api_spec[OperationField.MODEL_NAME] not in include_models
-            if ignore_op:
+            if self.model_should_be_ignored(op_api_spec[OperationField.MODEL_NAME], include_models):
                 continue
 
             model_name = op_api_spec[OperationField.MODEL_NAME]
@@ -300,17 +303,12 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
     """
 
     OPERATION_TEMPLATE = 'resource_operation.md.j2'
-    OVERVIEW_TEMPLATE = 'resource_overview.md.j2'
-    CONFIG_TEMPLATE = 'resource_config.json.j2'
+    CONFIG_TEMPLATE = 'config.json.j2'
     RESOURCES_CONFIG_TEMPLATE = 'resources_config.md.j2'
 
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx, api_spec)
         self._tags_being_described = []
-
-    @staticmethod
-    def model_should_be_ignored(model_name, include_models):
-        return model_name is None or (include_models and model_name not in include_models)
 
     @staticmethod
     def _get_tag_operations(operations):
@@ -329,24 +327,23 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
             display_name = self._get_display_model_name(tag_name)
             output_dir = os.path.join(base_dest_dir, display_name)
 
-            # model_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-            # TODO(119vik): Following method is not used for now. We need remove it after confirmation
-            # self._generate_overview_docs(tag_name, operations, output_dir)
             self._generate_config_json(operations, output_dir)
-            self._generate_operation_docs(operations, output_dir)
+            self._generate_operation_docs(operations, output_dir, include_models=include_models)
             # add model to the list of models being processed so it can be added to index config file later
             self._tags_being_described.append(display_name)
 
         self._generate_resources_config_file(base_dest_dir)
 
-    def _generate_operation_docs(self, operations, dest_dir):
+    def _generate_operation_docs(self, operations, dest_dir, include_models=None):
         template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
 
         for op_name, op_spec in operations.items():
+            model_name = self._get_model_name_from_op_spec(op_spec)
+            if self.model_should_be_ignored(model_name, include_models):
+                continue
+
             data_params = self._get_data_params(op_name, op_spec)
             data_params_are_present = self._data_params_are_present(op_spec)
-            model_name = self._get_model_name_from_op_spec(op_spec)
-
             op_content = template.render(
                 name=op_name,
                 description=op_spec.get(OperationField.DESCRIPTION),
@@ -355,8 +352,9 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
                 path_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
                 query_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
                 data_params=data_params,
-                curl_sample=swagger_ui_curlify.curlify(
-                    op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS], BASE_HEADERS),
+                curl_sample=swagger_ui_curlify.generate_sample(
+                    op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS], BASE_HEADERS,
+                    self._jinja_env),
                 bravado_sample=swagger_ui_bravado.generate_sample(
                     op_name, op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS],
                     self._jinja_env),
@@ -365,22 +363,9 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
 
             self._write_generated_file(dest_dir, op_name + self.MD_SUFFIX, op_content)
 
-    # TODO(119vik): Following method is not used for now. We need remove it after confirmation
-    def _generate_overview_docs(self, tag_name, operations, dest_dir):
-        template = self._jinja_env.get_template(self.OVERVIEW_TEMPLATE)
-        # model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-        content = template.render(
-            # name=self._get_display_model_name(tag_name),
-            operations=operations.keys(),
-            # description=model_api_spec.get(PropName.DESCRIPTION, {}),
-            # properties=model_api_spec.get(PropName.PROPERTIES, {}),
-            **self._template_ctx
-        )
-        self._write_generated_file(dest_dir, 'overview.md', content)
-
     def _generate_config_json(self, operations, dest_dir):
         template = self._jinja_env.get_template(self.CONFIG_TEMPLATE)
-        content = template.render(operations=operations.keys(), **self._template_ctx)
+        content = template.render(index_list=operations.keys(), **self._template_ctx)
         self._write_generated_file(dest_dir, 'config.json', content)
 
     def _generate_resources_config_file(self, base_dest_dir):
