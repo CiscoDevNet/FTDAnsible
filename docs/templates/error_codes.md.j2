@@ -1,0 +1,7 @@
+| Category | Code |     | Message |
+| -------- | ---- | --- |-------- |
+{% for error_type, errors in error_types.items() %}
+{% for error in errors %}
+| {{ error_type }} <td colspan=2> {{ error['code'] }} <td colspan=3> {{ error['message'] }}|
+{% endfor %}
+{% endfor %}

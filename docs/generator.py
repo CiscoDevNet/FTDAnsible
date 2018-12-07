@@ -1,7 +1,6 @@
 import importlib
 import os
 import sys
-from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
 import re
@@ -12,15 +11,15 @@ from jinja2 import Environment, FileSystemLoader
 
 from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
 from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME
+from httpapi_plugins.ftd import BASE_HEADERS
+from docs.snippets_generation import swagger_ui_bravado, swagger_ui_curlify
 
 ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
 ModuleSpec = namedtuple('ModuleSpec', 'name short_description description params return_values examples')
 
-CUSTOM_MODEL_MAPPING = {FILE_MODEL_NAME: 'File'}
 
-
-class BaseDocGenerator(metaclass=ABCMeta):
+class BaseDocGenerator(object):
     """Abstract class for documentation generators that produce
     docs from Jinja templates. Contains common methods for working
     with templates, writing and cleaning doc files, etc. Subclasses
@@ -37,12 +36,12 @@ class BaseDocGenerator(metaclass=ABCMeta):
         env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True,
                           extensions=['docs.extension.IncludePlaybookTasks'])
         env.filters['camel_to_snake'] = camel_to_snake
+        env.filters['split_operation_names'] = split_operation_names
         env.filters['escape_md_symbols'] = lambda s: s.replace('[', '&#91;').replace(']', '&#93;') \
             .replace('|', '&#124;')
         self._jinja_env = env
         self._template_ctx = template_ctx
 
-    @abstractmethod
     def generate_doc_files(self, dest_dir):
         """
         Generates documentation and writes it to files on the filesystem.
@@ -60,27 +59,78 @@ class BaseDocGenerator(metaclass=ABCMeta):
         with open('%s/%s' % (dir_path, camel_to_snake(filename)), "wb") as f:
             f.write(content.encode('utf-8'))
 
+    @staticmethod
+    def _get_index_data(index_name, index_list):
+        return {
+            'index_name': index_name,
+            'index_list': index_list
+        }
+
+    @staticmethod
+    def model_should_be_ignored(model_name, include_models):
+        return model_name is None or (include_models and model_name not in include_models)
+
     def _write_index_files(self, dir_path, index_name, index_list):
-        index_data = {'index_name': index_name, 'index_list': index_list}
+        index_data = self._get_index_data(index_name, index_list)
 
         for template_name in [self.INDEX_TEMPLATE, self.CONFIG_TEMPLATE]:
             template = self._jinja_env.get_template(template_name)
             content = template.render(**index_data, **self._template_ctx)
-            filename = template_name[:-len(self.J2_SUFFIX)]
+            filename = self._get_file_name_from_template_name(template_name)
             self._write_generated_file(dir_path, filename, content)
 
+    def _get_file_name_from_template_name(self, template_name):
+        return template_name[:-len(self.J2_SUFFIX)]
 
-class ModelDocGenerator(BaseDocGenerator):
+
+class ApiSpecDocGenerator(BaseDocGenerator):
+    """Abstract class for documentation generators that create documentation
+    pages based on API specification.
+    """
+
+    CUSTOM_MODEL_MAPPING = {FILE_MODEL_NAME: 'File'}
+
+    def __init__(self, template_dir, template_ctx, api_spec):
+        super().__init__(template_dir, template_ctx)
+        self._api_spec = api_spec
+
+    def _get_display_model_name(self, model_name):
+        return self.CUSTOM_MODEL_MAPPING.get(model_name, model_name)
+
+    @staticmethod
+    def _data_params_are_present(op_spec):
+        op_method = op_spec[OperationField.METHOD]
+        return op_method == HTTPMethod.POST or op_method == HTTPMethod.PUT
+
+    @staticmethod
+    def _get_model_name_from_op_spec(op_spec):
+        return op_spec[OperationField.MODEL_NAME]
+
+    def _get_model_properties(self, model_name):
+        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+        return model_api_spec.get(PropName.PROPERTIES, {})
+
+    def _get_data_params(self, op_name, op_spec):
+        op_method = op_spec[OperationField.METHOD]
+        if not self._data_params_are_present(op_spec):
+            return {}
+
+        model_name = self._get_model_name_from_op_spec(op_spec)
+        data_params = self._get_model_properties(model_name)
+
+        if op_name.startswith('add') and op_method == HTTPMethod.POST:
+            data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
+
+        return data_params
+
+
+class ModelDocGenerator(ApiSpecDocGenerator):
     """Generates documentation for the models defined in the
     Swagger specification. Documentation is written using
     Markdown markup language.
     """
 
     MODEL_TEMPLATE = 'model.md.j2'
-
-    def __init__(self, template_dir, template_ctx, api_spec):
-        super().__init__(template_dir, template_ctx)
-        self._api_spec = api_spec
 
     def generate_doc_files(self, dest_dir, include_models=None):
         model_dir = os.path.join(dest_dir, 'models')
@@ -89,17 +139,21 @@ class ModelDocGenerator(BaseDocGenerator):
         model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
 
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
-            ignore_model = include_models and model_name not in include_models
-            if model_name is None or ignore_model:
+            if self.model_should_be_ignored(model_name, include_models):
                 continue
 
             model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-            displayed_model_name = CUSTOM_MODEL_MAPPING.get(model_name, model_name)
+            displayed_model_name = self._get_display_model_name(model_name)
             model_spec = ModelSpec(
                 name=displayed_model_name,
                 description=model_api_spec.get(PropName.DESCRIPTION, ''),
                 properties=model_api_spec.get(PropName.PROPERTIES, {}),
-                operations=operations.keys()
+                operations=[
+                    {
+                        "name": op_name,
+                        "tag": op_spec[OperationField.TAGS][0]
+                    } for op_name, op_spec in operations.items()
+                ]
             )
             model_content = model_template.render(model=model_spec, **self._template_ctx)
             self._write_generated_file(model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
@@ -108,17 +162,13 @@ class ModelDocGenerator(BaseDocGenerator):
         self._write_index_files(model_dir, 'Model', model_index)
 
 
-class OperationDocGenerator(BaseDocGenerator):
+class OperationDocGenerator(ApiSpecDocGenerator):
     """Generates documentation for the operations defined in the
     Swagger specification. Documentation is written using
     Markdown markup language.
     """
 
     OPERATION_TEMPLATE = 'operation.md.j2'
-
-    def __init__(self, template_dir, template_ctx, api_spec):
-        super().__init__(template_dir, template_ctx)
-        self._api_spec = api_spec
 
     def generate_doc_files(self, dest_dir, include_models=None):
         op_dir = os.path.join(dest_dir, 'operations')
@@ -127,12 +177,11 @@ class OperationDocGenerator(BaseDocGenerator):
         op_template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
 
         for op_name, op_api_spec in self._api_spec[SpecProp.OPERATIONS].items():
-            ignore_op = include_models and op_api_spec[OperationField.MODEL_NAME] not in include_models
-            if ignore_op:
+            if self.model_should_be_ignored(op_api_spec[OperationField.MODEL_NAME], include_models):
                 continue
 
             model_name = op_api_spec[OperationField.MODEL_NAME]
-            displayed_model_name = CUSTOM_MODEL_MAPPING.get(model_name, model_name)
+            displayed_model_name = self._get_display_model_name(model_name)
             op_spec = OperationSpec(
                 name=op_name,
                 description=op_api_spec.get(OperationField.DESCRIPTION),
@@ -146,20 +195,6 @@ class OperationDocGenerator(BaseDocGenerator):
             op_index.append(op_name)
 
         self._write_index_files(op_dir, 'Operation', op_index)
-
-    def _get_data_params(self, op_name, op_spec):
-        op_method = op_spec[OperationField.METHOD]
-        if op_method != HTTPMethod.POST and op_method != HTTPMethod.PUT:
-            return {}
-
-        model_name = op_spec[OperationField.MODEL_NAME]
-        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-        data_params = model_api_spec.get(PropName.PROPERTIES, {})
-
-        if op_name.startswith('add') and op_method == HTTPMethod.POST:
-            data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
-
-        return data_params
 
 
 class ModuleDocGenerator(BaseDocGenerator):
@@ -253,10 +288,135 @@ class StaticDocGenerator(BaseDocGenerator):
     def _generate_from_template(self, dest_dir, filename):
         template = self._jinja_env.get_template(filename)
         content = template.render(**self._template_ctx)
-        output_filename = filename[:-len(self.J2_SUFFIX)]
+        output_filename = self._get_file_name_from_template_name(filename)
         self._write_generated_file(dest_dir, output_filename, content)
+
+
+class ResourceDocGenerator(ApiSpecDocGenerator):
+    """Generates documentation for the HTTP resources defined in the
+    Swagger specification. Describes available endpoints with their methods,
+    models, query/body/path parameters, etc.
+    Documentation is written using Markdown markup language.
+    """
+
+    OPERATION_TEMPLATE = 'resource_operation.md.j2'
+    CONFIG_TEMPLATE = 'config.json.j2'
+    RESOURCES_CONFIG_TEMPLATE = 'resources_config.json.j2'
+
+    def __init__(self, template_dir, template_ctx, api_spec):
+        super().__init__(template_dir, template_ctx, api_spec)
+        self._tags_being_described = []
+
+    @staticmethod
+    def _get_tag_operations(operations):
+        tag_operations = {}
+        for operations_name, params in operations.items():
+            tag_name = params[OperationField.TAGS][0]
+            tag_operations.setdefault(tag_name, {})[operations_name] = params
+
+        return tag_operations
+
+    def generate_doc_files(self, dest_dir, include_models=None):
+        base_dest_dir = os.path.join(dest_dir, "resources")
+        tag_operations = self._get_tag_operations(self._api_spec[SpecProp.OPERATIONS])
+
+        for tag_name, operations in tag_operations.items():
+            display_name = self._get_display_model_name(tag_name)
+            output_dir = os.path.join(base_dest_dir, display_name)
+
+            self._generate_config_json(operations, output_dir)
+            self._generate_operation_docs(operations, output_dir, include_models=include_models)
+            # add model to the list of models being processed so it can be added to index config file later
+            self._tags_being_described.append(display_name)
+
+        self._generate_resources_config_file(base_dest_dir)
+
+    def _generate_operation_docs(self, operations, dest_dir, include_models=None):
+        template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
+
+        for op_name, op_spec in operations.items():
+            model_name = self._get_model_name_from_op_spec(op_spec)
+            if self.model_should_be_ignored(model_name, include_models):
+                continue
+
+            data_params = self._get_data_params(op_name, op_spec)
+            data_params_are_present = self._data_params_are_present(op_spec)
+            op_content = template.render(
+                name=op_name,
+                description=op_spec.get(OperationField.DESCRIPTION),
+                method=op_spec.get(OperationField.METHOD),
+                url=op_spec.get(OperationField.URL),
+                path_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
+                query_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
+                data_params=data_params,
+                curl_sample=swagger_ui_curlify.generate_sample(
+                    op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS], BASE_HEADERS,
+                    self._jinja_env),
+                bravado_sample=swagger_ui_bravado.generate_sample(
+                    op_name, op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS],
+                    self._jinja_env),
+                **self._template_ctx
+            )
+
+            self._write_generated_file(dest_dir, op_name + self.MD_SUFFIX, op_content)
+
+    def _generate_config_json(self, operations, dest_dir):
+        template = self._jinja_env.get_template(self.CONFIG_TEMPLATE)
+        content = template.render(index_list=operations.keys(), **self._template_ctx)
+        self._write_generated_file(dest_dir, 'config.json', content)
+
+    def _generate_resources_config_file(self, base_dest_dir):
+        self._tags_being_described.sort()
+
+        template = self._jinja_env.get_template(self.RESOURCES_CONFIG_TEMPLATE)
+        content = template.render(
+            tags_being_described=self._tags_being_described,
+            **self._template_ctx
+        )
+        self._write_generated_file(base_dest_dir, 'config.json', content)
+
+
+class ErrorDocGenerator(BaseDocGenerator):
+    """Generates Page with FTD API native error codes description."""
+
+    ERRORS_TEMPLATE = 'error_codes.md.j2'
+
+    def generate_doc_files(self, dest_dir, errors_codes):
+        template = self._jinja_env.get_template(self.ERRORS_TEMPLATE)
+        errors_content = template.render(error_types=errors_codes, **self._template_ctx)
+        error_codes_file = self._get_file_name_from_template_name(self.ERRORS_TEMPLATE)
+        self._write_generated_file(dest_dir, error_codes_file, errors_content)
+        return error_codes_file
+
+
+class ApiIntroductionDocGenerator(BaseDocGenerator):
+    """Introduction pages for FTD API documentation generation """
+
+    INTRO_TEMPLATE = 'intro.md.j2'
+    AUTH_TEMPLATE = 'auth.md.j2'
+    DEPLOY_TEMPLATE = 'deploy_config.md.j2'
+    TEMPLATES_TO_RENDER = [INTRO_TEMPLATE, AUTH_TEMPLATE, DEPLOY_TEMPLATE]
+    DEST_DIR = "introduction"
+
+    @staticmethod
+    def _get_index_data(index_name, index_list):
+        return {'index_list': index_list}
+
+    def generate_doc_files(self, dest_dir):
+        introduction_dir = os.path.join(dest_dir, self.DEST_DIR)
+        for template_name in self.TEMPLATES_TO_RENDER:
+            template = self._jinja_env.get_template(template_name)
+            page_content = template.render(**self._template_ctx)
+            filename = self._get_file_name_from_template_name(template_name)
+            self._write_generated_file(introduction_dir, filename, page_content)
 
 
 def camel_to_snake(text):
     test_with_underscores = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', test_with_underscores).lower()
+
+
+def split_operation_names(text):
+    replace_regexp = r'\1 \2'
+    updated_text = re.sub('(.)([A-Z][a-z]+)', replace_regexp, text)
+    return re.sub('([a-z0-9])([A-Z])', replace_regexp, updated_text)

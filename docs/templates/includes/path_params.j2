@@ -1,0 +1,9 @@
+{% if path_params %}
+
+## Path Parameters
+| Parameter | Required | Type | Description |
+| --------- | -------- | ---- | ----------- |
+{% for param_name, param_spec in path_params.items() %}
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} <td colspan=3> {{ param_spec.description | escape_md_symbols }} |
+{% endfor %}
+{% endif %}
