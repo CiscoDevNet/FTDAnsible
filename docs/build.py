@@ -65,7 +65,8 @@ class FtdApiClient(object):
                 self._api_version = version
                 return token
 
-    def get_api_version(self):
+    @property
+    def api_version(self):
         return self._api_version
 
     @staticmethod
@@ -89,7 +90,7 @@ class FtdApiClient(object):
         """
         Downloads an API Error codes specification for FTD device.
 
-        :return: a documented API specification containing error codes definitions for FTD device
+        :return: a documented API specification containing error code definitions for FTD device
         :rtype: dict
         """
         spec = self._send_request(self.ERRORS_PATH, HTTPMethod.GET)
@@ -128,65 +129,71 @@ class DocType(Enum):
     ftd_api = 'ftd-api'
 
 
-def main():
-    def parse_args():
-        parser = argparse.ArgumentParser(description='Generates docs for FTD based on Swagger documentation')
-        parser.add_argument('hostname', type=str, help='Hostname where FTD can be accessed')
-        parser.add_argument('username', type=str, help='FTD username that has access to Swagger docs')
-        parser.add_argument('password', type=str, help='Password for the username')
-        parser.add_argument('--doctype', type=DocType,
-                            help='Documentation type to generate (either for FTD Ansible modules or FTD API endpoints)',
-                            default=DocType.ftd_ansible, choices=list(DocType), required=False)
-        parser.add_argument('--models', type=str, nargs='+', help='A list of models to include in the docs', required=False)
-        parser.add_argument('--dist', type=str, help='An output directory for distribution files', required=False,
-                            default=DEFAULT_DIST_DIR)
-        return parser.parse_args()
+def _parse_args():
+    parser = argparse.ArgumentParser(description='Generates docs for FTD based on Swagger documentation')
+    parser.add_argument('hostname', type=str, help='Hostname where FTD can be accessed')
+    parser.add_argument('username', type=str, help='FTD username that has access to Swagger docs')
+    parser.add_argument('password', type=str, help='Password for the username')
+    parser.add_argument('--doctype', type=DocType,
+                        help='Documentation type to generate (either for FTD Ansible modules or FTD API endpoints)',
+                        default=DocType.ftd_ansible, choices=list(DocType), required=False)
+    parser.add_argument('--models', type=str, nargs='+', help='A list of models to include in the docs', required=False)
+    parser.add_argument('--dist', type=str, help='An output directory for distribution files', required=False,
+                        default=DEFAULT_DIST_DIR)
+    return parser.parse_args()
 
-    def fetch_api_spec_and_version(api_client):
-        api_spec = api_client.fetch_api_specs()
 
-        if args.doctype == DocType.ftd_ansible:
-            spec_autocomplete = ApiSpecAutocomplete(api_spec)
-            spec_autocomplete.lookup_and_complete()
+def _fetch_api_spec_and_version(api_client, args):
+    api_spec = api_client.fetch_api_specs()
 
-        ftd_version = api_client.fetch_ftd_version(api_spec)
-        return api_spec, ftd_version
+    if args.doctype == DocType.ftd_ansible:
+        spec_autocomplete = ApiSpecAutocomplete(api_spec)
+        spec_autocomplete.lookup_and_complete()
 
-    def clean_dist_dir():
-        if os.path.exists(args.dist):
-            shutil.rmtree(args.dist)
+    ftd_version = api_client.fetch_ftd_version(api_spec)
+    return api_spec, ftd_version
 
-    def generate_docs():
-        template_ctx = dict(ftd_version=ftd_version, sample_dir=DEFAULT_SAMPLES_DIR)
-        if args.doctype == DocType.ftd_ansible:
-            ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-            OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-            ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
-            StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
-        elif args.doctype == DocType.ftd_api:
-            try:
-                errors_codes = api_client.fetch_error_codes()
-            except json.decoder.JSONDecodeError:
-                # All FTD versions before 6.4 will not have such documents
-                pass
-            else:
-                ErrorsDocGenerator(
-                    DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist, errors_codes)
 
-            ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
-                .generate_doc_files(args.dist, args.models)
-            ResourceModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-            APIIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_version=api_client.get_api_version())\
-                .generate_doc_files(args.dist)
+def _clean_dist_dir(args):
+    if os.path.exists(args.dist):
+        shutil.rmtree(args.dist)
 
-    args = parse_args()
 
-    api_client = FtdApiClient(args.hostname, args.username, args.password)
-    api_spec, ftd_version = fetch_api_spec_and_version(api_client)
+def _generate_ansible_docs(args, api_spec, template_ctx):
+    ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+    OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+    ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
+    StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
 
-    clean_dist_dir()
-    generate_docs()
+
+def _generate_ftd_api_docs(args, api_spec, template_ctx, api_version, errors_codes ):
+    ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+    ResourceModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+    APIIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_version).generate_doc_files(args.dist)
+    if errors_codes:
+        ErrorsDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist, errors_codes)
+
+
+def _generate_docs(args, api_client):
+    api_spec, ftd_version = _fetch_api_spec_and_version(api_client, args)
+    template_ctx = dict(ftd_version=ftd_version, sample_dir=DEFAULT_SAMPLES_DIR)
+
+    if args.doctype == DocType.ftd_ansible:
+        _generate_ansible_docs(args, api_spec, template_ctx)
+    elif args.doctype == DocType.ftd_api:
+        try:
+            errors_codes = api_client.fetch_error_codes()
+        except json.decoder.JSONDecodeError:
+            # All FTD versions before 6.4 will not have such documents
+            errors_codes = None
+
+        _generate_ftd_api_docs(args, api_spec, template_ctx, api_client.api_version, errors_codes)
 
 
 if __name__ == '__main__':
-    main()
+    arguments = _parse_args()
+    _clean_dist_dir(arguments)
+    _generate_docs(
+        arguments,
+        FtdApiClient(arguments.hostname, arguments.username, arguments.password)
+    )
