@@ -136,12 +136,21 @@ class OperationDocGenerationMixin(object):
         model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
         return model_api_spec.get(PropName.PROPERTIES, {})
 
+    @staticmethod
+    def _data_params_are_present(op_spec):
+        op_method = op_spec[OperationField.METHOD]
+        return op_method == HTTPMethod.POST or op_method == HTTPMethod.PUT
+
+    @staticmethod
+    def _get_model_name_from_op_spec(op_spec):
+        return op_spec[OperationField.MODEL_NAME]
+
     def _get_data_params(self, op_name, op_spec):
         op_method = op_spec[OperationField.METHOD]
-        if op_method != HTTPMethod.POST and op_method != HTTPMethod.PUT:
+        if not self._data_params_are_present(op_spec):
             return {}
 
-        model_name = op_spec[OperationField.MODEL_NAME]
+        model_name = self._get_model_name_from_op_spec(op_spec)
         data_params = self._get_model_properties(model_name)
 
         if op_name.startswith('add') and op_method == HTTPMethod.POST:
@@ -349,6 +358,9 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
 
         for op_name, op_spec in operations.items():
             data_params = self._get_data_params(op_name, op_spec)
+            data_params_are_present = self._data_params_are_present(op_spec)
+            model_name = self._get_model_name_from_op_spec(op_spec)
+
             op_content = template.render(
                 name=op_name,
                 description=op_spec.get(OperationField.DESCRIPTION),
@@ -358,10 +370,10 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
                 query_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
                 data_params=data_params,
                 curl_sample=swagger_ui_curlify.curlify(
-                    op_spec, data_params, self._api_spec[SpecProp.MODELS], BASE_HEADERS),
+                    op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS], BASE_HEADERS),
                 bravado_sample=swagger_ui_bravado.generate_sample(
-                    op_name, op_spec, data_params, self._api_spec[SpecProp.MODELS], self._jinja_env
-                ),
+                    op_name, op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS],
+                    self._jinja_env),
                 **self._template_ctx
             )
 
