@@ -1,7 +1,6 @@
 import importlib
 import os
 import sys
-from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
 import re
@@ -22,7 +21,7 @@ ModuleSpec = namedtuple('ModuleSpec', 'name short_description description params
 CUSTOM_MODEL_MAPPING = {FILE_MODEL_NAME: 'File'}
 
 
-class BaseDocGenerator(metaclass=ABCMeta):
+class BaseDocGenerator(object):
     """Abstract class for documentation generators that produce
     docs from Jinja templates. Contains common methods for working
     with templates, writing and cleaning doc files, etc. Subclasses
@@ -45,7 +44,6 @@ class BaseDocGenerator(metaclass=ABCMeta):
         self._jinja_env = env
         self._template_ctx = template_ctx
 
-    @abstractmethod
     def generate_doc_files(self, dest_dir):
         """
         Generates documentation and writes it to files on the filesystem.
@@ -126,15 +124,15 @@ class ModelDocGenerator(BaseDocGenerator):
         self._write_index_files(model_dir, 'Model', model_index)
 
 
-class OperationDocGenerationMixin(object):
+class ApiSpecDocGenerator(BaseDocGenerator):
+
+    def __init__(self, template_dir, template_ctx, api_spec):
+        super().__init__(template_dir, template_ctx)
+        self._api_spec = api_spec
 
     @staticmethod
     def _get_display_model_name(model_name):
         return CUSTOM_MODEL_MAPPING.get(model_name, model_name)
-
-    def _get_model_properties(self, model_name):
-        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-        return model_api_spec.get(PropName.PROPERTIES, {})
 
     @staticmethod
     def _data_params_are_present(op_spec):
@@ -144,6 +142,10 @@ class OperationDocGenerationMixin(object):
     @staticmethod
     def _get_model_name_from_op_spec(op_spec):
         return op_spec[OperationField.MODEL_NAME]
+
+    def _get_model_properties(self, model_name):
+        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+        return model_api_spec.get(PropName.PROPERTIES, {})
 
     def _get_data_params(self, op_name, op_spec):
         op_method = op_spec[OperationField.METHOD]
@@ -159,17 +161,13 @@ class OperationDocGenerationMixin(object):
         return data_params
 
 
-class OperationDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
+class OperationDocGenerator(ApiSpecDocGenerator):
     """Generates documentation for the operations defined in the
     Swagger specification. Documentation is written using
     Markdown markup language.
     """
 
     OPERATION_TEMPLATE = 'operation.md.j2'
-
-    def __init__(self, template_dir, template_ctx, api_spec):
-        super().__init__(template_dir, template_ctx)
-        self._api_spec = api_spec
 
     def generate_doc_files(self, dest_dir, include_models=None):
         op_dir = os.path.join(dest_dir, 'operations')
@@ -294,18 +292,7 @@ class StaticDocGenerator(BaseDocGenerator):
         self._write_generated_file(dest_dir, output_filename, content)
 
 
-class ResourceModelDocGenerator(ModelDocGenerator):
-
-    """Slightly customised ModelDoc generation class. Required for generation of FTD API Documentation"""
-
-    MODEL_TEMPLATE = 'resource_model.md.j2'
-
-    @staticmethod
-    def _get_index_data(index_name, index_list):
-        return {'index_list': index_list}
-
-
-class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
+class ResourceDocGenerator(ApiSpecDocGenerator):
     """Generates documentation for the HTTP resources defined in the
     Swagger specification. Describes available endpoints with their methods,
     models, query/body/path parameters, etc.
@@ -318,8 +305,7 @@ class ResourceDocGenerator(BaseDocGenerator, OperationDocGenerationMixin):
     RESOURCES_CONFIG_TEMPLATE = 'resources_config.md.j2'
 
     def __init__(self, template_dir, template_ctx, api_spec):
-        super().__init__(template_dir, template_ctx)
-        self._api_spec = api_spec
+        super().__init__(template_dir, template_ctx, api_spec)
         self._tags_being_described = []
 
     @staticmethod
@@ -422,7 +408,7 @@ class ErrorsDocGenerator(BaseDocGenerator):
         return error_codes_file
 
 
-class APIIntroductionDocGenerator(BaseDocGenerator):
+class ApiIntroductionDocGenerator(BaseDocGenerator):
 
     """Introduction pages for FTD API documentation generation """
 

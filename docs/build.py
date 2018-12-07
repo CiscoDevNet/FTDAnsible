@@ -11,7 +11,7 @@ from ansible.module_utils.urls import open_url
 
 from docs.enricher import ApiSpecAutocomplete
 from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator, \
-    ResourceDocGenerator, ResourceModelDocGenerator, ErrorsDocGenerator, APIIntroductionDocGenerator
+    ResourceDocGenerator, ResourceModelDocGenerator, ErrorsDocGenerator, ApiIntroductionDocGenerator
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
@@ -91,9 +91,15 @@ class FtdApiClient(object):
         Downloads an API Error codes specification for FTD device.
 
         :return: a documented API specification containing error code definitions for FTD device
-        :rtype: dict
+        :rtype: dict in case error code description fetched successfully
+        :rtype: None in case error code description was not present at server side
         """
-        spec = self._send_request(self.ERRORS_PATH, HTTPMethod.GET)
+        try:
+            spec = self._send_request(self.ERRORS_PATH, HTTPMethod.GET)
+        except json.decoder.JSONDecodeError:
+            # All FTD versions before 6.4 will not have such documents
+            spec = None
+
         return spec
 
     def fetch_ftd_version(self, spec):
@@ -168,8 +174,8 @@ def _generate_ansible_docs(args, api_spec, template_ctx):
 
 def _generate_ftd_api_docs(args, api_spec, template_ctx, api_version, errors_codes ):
     ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-    ResourceModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-    APIIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_version).generate_doc_files(args.dist)
+    ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
+    ApiIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_version).generate_doc_files(args.dist)
     if errors_codes:
         ErrorsDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist, errors_codes)
 
@@ -181,12 +187,7 @@ def _generate_docs(args, api_client):
     if args.doctype == DocType.ftd_ansible:
         _generate_ansible_docs(args, api_spec, template_ctx)
     elif args.doctype == DocType.ftd_api:
-        try:
-            errors_codes = api_client.fetch_error_codes()
-        except json.decoder.JSONDecodeError:
-            # All FTD versions before 6.4 will not have such documents
-            errors_codes = None
-
+        errors_codes = api_client.fetch_error_codes()
         _generate_ftd_api_docs(args, api_spec, template_ctx, api_client.api_version, errors_codes)
 
 
