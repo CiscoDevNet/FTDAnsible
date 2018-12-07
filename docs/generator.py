@@ -18,8 +18,6 @@ ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
 ModuleSpec = namedtuple('ModuleSpec', 'name short_description description params return_values examples')
 
-CUSTOM_MODEL_MAPPING = {FILE_MODEL_NAME: 'File'}
-
 
 class BaseDocGenerator(object):
     """Abstract class for documentation generators that produce
@@ -85,57 +83,19 @@ class BaseDocGenerator(object):
         return template_name[:-len(self.J2_SUFFIX)]
 
 
-class ModelDocGenerator(BaseDocGenerator):
-    """Generates documentation for the models defined in the
-    Swagger specification. Documentation is written using
-    Markdown markup language.
+class ApiSpecDocGenerator(BaseDocGenerator):
+    """Abstract class for documentation generators that create documentation
+    pages based on API specification.
     """
 
-    MODEL_TEMPLATE = 'model.md.j2'
+    CUSTOM_MODEL_MAPPING = {FILE_MODEL_NAME: 'File'}
 
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
 
-    def generate_doc_files(self, dest_dir, include_models=None):
-        model_dir = os.path.join(dest_dir, 'models')
-
-        model_index = []
-        model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
-
-        for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
-            if self.model_should_be_ignored(model_name, include_models):
-                continue
-
-            model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-            displayed_model_name = CUSTOM_MODEL_MAPPING.get(model_name, model_name)
-            model_spec = ModelSpec(
-                name=displayed_model_name,
-                description=model_api_spec.get(PropName.DESCRIPTION, ''),
-                properties=model_api_spec.get(PropName.PROPERTIES, {}),
-                operations=[
-                    {
-                        "name": op_name,
-                        "tag": op_spec[OperationField.TAGS][0]
-                    } for op_name, op_spec in operations.items()
-                ]
-            )
-            model_content = model_template.render(model=model_spec, **self._template_ctx)
-            self._write_generated_file(model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
-            model_index.append(displayed_model_name)
-
-        self._write_index_files(model_dir, 'Model', model_index)
-
-
-class ApiSpecDocGenerator(BaseDocGenerator):
-
-    def __init__(self, template_dir, template_ctx, api_spec):
-        super().__init__(template_dir, template_ctx)
-        self._api_spec = api_spec
-
-    @staticmethod
-    def _get_display_model_name(model_name):
-        return CUSTOM_MODEL_MAPPING.get(model_name, model_name)
+    def _get_display_model_name(self, model_name):
+        return self.CUSTOM_MODEL_MAPPING.get(model_name, model_name)
 
     @staticmethod
     def _data_params_are_present(op_spec):
@@ -164,6 +124,44 @@ class ApiSpecDocGenerator(BaseDocGenerator):
         return data_params
 
 
+class ModelDocGenerator(ApiSpecDocGenerator):
+    """Generates documentation for the models defined in the
+    Swagger specification. Documentation is written using
+    Markdown markup language.
+    """
+
+    MODEL_TEMPLATE = 'model.md.j2'
+
+    def generate_doc_files(self, dest_dir, include_models=None):
+        model_dir = os.path.join(dest_dir, 'models')
+
+        model_index = []
+        model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
+
+        for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
+            if self.model_should_be_ignored(model_name, include_models):
+                continue
+
+            model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+            displayed_model_name = self._get_display_model_name(model_name)
+            model_spec = ModelSpec(
+                name=displayed_model_name,
+                description=model_api_spec.get(PropName.DESCRIPTION, ''),
+                properties=model_api_spec.get(PropName.PROPERTIES, {}),
+                operations=[
+                    {
+                        "name": op_name,
+                        "tag": op_spec[OperationField.TAGS][0]
+                    } for op_name, op_spec in operations.items()
+                ]
+            )
+            model_content = model_template.render(model=model_spec, **self._template_ctx)
+            self._write_generated_file(model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
+            model_index.append(displayed_model_name)
+
+        self._write_index_files(model_dir, 'Model', model_index)
+
+
 class OperationDocGenerator(ApiSpecDocGenerator):
     """Generates documentation for the operations defined in the
     Swagger specification. Documentation is written using
@@ -171,7 +169,6 @@ class OperationDocGenerator(ApiSpecDocGenerator):
     """
 
     OPERATION_TEMPLATE = 'operation.md.j2'
-
 
     def generate_doc_files(self, dest_dir, include_models=None):
         op_dir = os.path.join(dest_dir, 'operations')
@@ -304,7 +301,7 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
 
     OPERATION_TEMPLATE = 'resource_operation.md.j2'
     CONFIG_TEMPLATE = 'config.json.j2'
-    RESOURCES_CONFIG_TEMPLATE = 'resources_config.md.j2'
+    RESOURCES_CONFIG_TEMPLATE = 'resources_config.json.j2'
 
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx, api_spec)
@@ -379,8 +376,7 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
         self._write_generated_file(base_dest_dir, 'config.json', content)
 
 
-class ErrorsDocGenerator(BaseDocGenerator):
-
+class ErrorDocGenerator(BaseDocGenerator):
     """Generates Page with FTD API native error codes description."""
 
     ERRORS_TEMPLATE = 'error_codes.md.j2'
@@ -394,7 +390,6 @@ class ErrorsDocGenerator(BaseDocGenerator):
 
 
 class ApiIntroductionDocGenerator(BaseDocGenerator):
-
     """Introduction pages for FTD API documentation generation """
 
     INTRO_TEMPLATE = 'intro.md.j2'
@@ -402,10 +397,6 @@ class ApiIntroductionDocGenerator(BaseDocGenerator):
     DEPLOY_TEMPLATE = 'deploy_config.md.j2'
     TEMPLATES_TO_RENDER = [INTRO_TEMPLATE, AUTH_TEMPLATE, DEPLOY_TEMPLATE]
     DEST_DIR = "introduction"
-
-    def __init__(self, template_dir, template_ctx, api_version):
-        super().__init__(template_dir, template_ctx)
-        self._api_version = api_version
 
     @staticmethod
     def _get_index_data(index_name, index_list):
@@ -415,9 +406,7 @@ class ApiIntroductionDocGenerator(BaseDocGenerator):
         introduction_dir = os.path.join(dest_dir, self.DEST_DIR)
         for template_name in self.TEMPLATES_TO_RENDER:
             template = self._jinja_env.get_template(template_name)
-            page_content = template.render(
-                api_version=self._api_version,
-                **self._template_ctx)
+            page_content = template.render(**self._template_ctx)
             filename = self._get_file_name_from_template_name(template_name)
             self._write_generated_file(introduction_dir, filename, page_content)
 

@@ -10,6 +10,6 @@ parser.add_argument('--dist', type=str, help='An output directory for generated 
 args = parser.parse_args()
 
 with open(args.src, 'r') as src_file:
-    errors_codes = json.load(src_file)
+    error_codes = json.load(src_file)
 
-generator.ErrorsDocGenerator(build.DEFAULT_TEMPLATE_DIR, {}).generate_doc_files(args.dist, errors_codes)
+generator.ErrorDocGenerator(build.DEFAULT_TEMPLATE_DIR, {}).generate_doc_files(args.dist, error_codes)

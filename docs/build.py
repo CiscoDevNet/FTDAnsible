@@ -11,7 +11,7 @@ from ansible.module_utils.urls import open_url
 
 from docs.enricher import ApiSpecAutocomplete
 from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator, \
-    ResourceDocGenerator, ErrorsDocGenerator, ApiIntroductionDocGenerator
+    ResourceDocGenerator, ErrorDocGenerator, ApiIntroductionDocGenerator
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
@@ -172,23 +172,23 @@ def _generate_ansible_docs(args, api_spec, template_ctx):
     StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
 
 
-def _generate_ftd_api_docs(args, api_spec, template_ctx, api_version, errors_codes ):
+def _generate_ftd_api_docs(args, api_spec, template_ctx, errors_codes):
     ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
     ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-    ApiIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_version).generate_doc_files(args.dist)
+    ApiIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
     if errors_codes:
-        ErrorsDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist, errors_codes)
+        ErrorDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist, errors_codes)
 
 
 def _generate_docs(args, api_client):
     api_spec, ftd_version = _fetch_api_spec_and_version(api_client, args)
-    template_ctx = dict(ftd_version=ftd_version, sample_dir=DEFAULT_SAMPLES_DIR)
+    template_ctx = dict(ftd_version=ftd_version, api_version=api_client.api_version, sample_dir=DEFAULT_SAMPLES_DIR)
 
     if args.doctype == DocType.ftd_ansible:
         _generate_ansible_docs(args, api_spec, template_ctx)
     elif args.doctype == DocType.ftd_api:
-        errors_codes = api_client.fetch_error_codes()
-        _generate_ftd_api_docs(args, api_spec, template_ctx, api_client.api_version, errors_codes)
+        error_codes = api_client.fetch_error_codes()
+        _generate_ftd_api_docs(args, api_spec, template_ctx, error_codes)
 
 
 if __name__ == '__main__':
