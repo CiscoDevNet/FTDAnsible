@@ -182,7 +182,8 @@ def _generate_ftd_api_docs(args, api_spec, template_ctx, errors_codes):
 
 def _generate_docs(args, api_client):
     api_spec, ftd_version = _fetch_api_spec_and_version(api_client, args)
-    template_ctx = dict(ftd_version=ftd_version, api_version=api_client.api_version, sample_dir=DEFAULT_SAMPLES_DIR)
+    template_ctx = dict(ftd_version=ftd_version, api_version=api_client.api_version,
+                        sample_dir=DEFAULT_SAMPLES_DIR, doctype=args.doctype)
 
     if args.doctype == DocType.ftd_ansible:
         _generate_ansible_docs(args, api_spec, template_ctx)

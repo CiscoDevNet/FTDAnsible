@@ -8,7 +8,11 @@
 {% if model.operations %}
 ## Supported Operations
 {% for operation in model.operations %}
+{% if doctype.name == 'ftd_api' %}
+* [{{ operation['name'] }}](../resources/{{ operation['tag'] }}/{{ operation['name'] | camel_to_snake }}.md)
+{% else %}
 * [{{ operation['name'] }}](../operations/{{ operation['name'] | camel_to_snake }}.md)
+{% endif %}
 {% endfor %}
 {% endif %}
 {% with model_properties = model.properties %}
