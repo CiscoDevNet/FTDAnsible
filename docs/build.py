@@ -10,8 +10,8 @@ from ansible.module_utils._text import to_text
 from ansible.module_utils.urls import open_url
 
 from docs.enricher import ApiSpecAutocomplete
-from docs.generator import ModelDocGenerator, OperationDocGenerator, ModuleDocGenerator, StaticDocGenerator, \
-    ResourceDocGenerator, ErrorDocGenerator, ApiIntroductionDocGenerator
+from docs import generator
+
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
@@ -166,18 +166,26 @@ def _clean_dist_dir(args):
 
 
 def _generate_ansible_docs(args, api_spec, template_ctx):
-    ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-    OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-    ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR).generate_doc_files(args.dist)
-    StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
+    generator.ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
+        .generate_doc_files(args.dist, args.models)
+    generator.OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
+        .generate_doc_files(args.dist, args.models)
+    generator.ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR)\
+        .generate_doc_files(args.dist)
+    generator.StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx)\
+        .generate_doc_files(args.dist)
 
 
 def _generate_ftd_api_docs(args, api_spec, template_ctx, errors_codes):
-    ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-    ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec).generate_doc_files(args.dist, args.models)
-    ApiIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist)
+    generator.ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
+        .generate_doc_files(args.dist, args.models)
+    generator.APIModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
+        .generate_doc_files(args.dist, args.models)
+    generator.ApiIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx)\
+        .generate_doc_files(args.dist)
     if errors_codes:
-        ErrorDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx).generate_doc_files(args.dist, errors_codes)
+        generator.ErrorDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx)\
+            .generate_doc_files(args.dist, errors_codes)
 
 
 def _generate_docs(args, api_client):

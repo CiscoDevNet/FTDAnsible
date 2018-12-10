@@ -11,7 +11,7 @@ def generate_sample(op_spec, data_params_are_present, model_name, full_spec, bas
     headers = dict(base_headers)
     # add mandatory token
     headers["Authorization"] = 'Bearer ${ACCESS_TOKEN}'
-
+    headers.pop('User-Agent', None)
     if data_params_are_present:
         body = body_generator.generate_model_sample(model_name, full_spec)
 

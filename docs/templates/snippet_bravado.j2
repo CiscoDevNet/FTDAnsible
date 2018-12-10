@@ -6,7 +6,7 @@ def get_client(host, token):
     http_client = RequestsClient()
     http_client.ssl_verify = False
     http_client.set_api_key(
-         host,
+        host,
         "Bearer {}".format(token),
         param_name="Authorization",
         param_in="header"

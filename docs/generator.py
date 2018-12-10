@@ -37,8 +37,12 @@ class BaseDocGenerator(object):
                           extensions=['docs.extension.IncludePlaybookTasks'])
         env.filters['camel_to_snake'] = camel_to_snake
         env.filters['split_operation_names'] = split_operation_names
+        env.filters['show_type_or_reference'] = show_type_or_reference
+        env.filters['show_description_with_references'] = show_description_with_references
+        env.filters['get_link_to_model_page_by_name'] = get_link_to_model_page_by_name
         env.filters['escape_md_symbols'] = lambda s: s.replace('[', '&#91;').replace(']', '&#93;') \
             .replace('|', '&#124;')
+
         self._jinja_env = env
         self._template_ctx = template_ctx
 
@@ -132,34 +136,62 @@ class ModelDocGenerator(ApiSpecDocGenerator):
 
     MODEL_TEMPLATE = 'model.md.j2'
 
-    def generate_doc_files(self, dest_dir, include_models=None):
-        model_dir = os.path.join(dest_dir, 'models')
+    def __init__(self, template_dir, template_ctx, api_spec):
+        super().__init__(template_dir, template_ctx, api_spec)
+        self._model_index = []
+        self._model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
+        self._model_dir = None
 
-        model_index = []
-        model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
+    def _process_single_model(self, model_name, operations):
+        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+        displayed_model_name = self._get_display_model_name(model_name)
+        model_spec = ModelSpec(
+            name=displayed_model_name,
+            description=model_api_spec.get(PropName.DESCRIPTION, ''),
+            properties=model_api_spec.get(PropName.PROPERTIES, {}),
+            operations=[
+                {
+                    "name": op_name,
+                    "tag": op_spec[OperationField.TAGS][0]
+                } for op_name, op_spec in operations.items()
+            ]
+        )
+        model_content = self._model_template.render(model=model_spec, **self._template_ctx)
+        self._write_generated_file(self._model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
+        self._model_index.append(displayed_model_name)
 
+    def _process_models(self, include_models):
         for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
+
             if self.model_should_be_ignored(model_name, include_models):
                 continue
 
-            model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-            displayed_model_name = self._get_display_model_name(model_name)
-            model_spec = ModelSpec(
-                name=displayed_model_name,
-                description=model_api_spec.get(PropName.DESCRIPTION, ''),
-                properties=model_api_spec.get(PropName.PROPERTIES, {}),
-                operations=[
-                    {
-                        "name": op_name,
-                        "tag": op_spec[OperationField.TAGS][0]
-                    } for op_name, op_spec in operations.items()
-                ]
-            )
-            model_content = model_template.render(model=model_spec, **self._template_ctx)
-            self._write_generated_file(model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
-            model_index.append(displayed_model_name)
+            self._process_single_model(model_name, operations)
 
-        self._write_index_files(model_dir, 'Model', model_index)
+    def generate_doc_files(self, dest_dir, include_models=None):
+        self._model_dir = os.path.join(dest_dir, 'models')
+
+        self._process_models(include_models)
+
+        self._write_index_files(self._model_dir, 'Model', self._model_index)
+
+
+class APIModelDocGenerator(ModelDocGenerator):
+
+    def model_should_be_ignored(self, model_name, include_models):
+        return super().model_should_be_ignored(model_name, include_models) \
+               or model_name.endswith("Wrapper") \
+               or "$" in model_name or \
+               "enum" in self._api_spec[SpecProp.MODELS][model_name]
+
+    def _process_models(self, include_models):
+        for model_name in self._api_spec[SpecProp.MODELS]:
+            operations = self._api_spec[SpecProp.MODEL_OPERATIONS].get(model_name, {})
+
+            if self.model_should_be_ignored(model_name, include_models):
+                continue
+
+            self._process_single_model(model_name, operations)
 
 
 class OperationDocGenerator(ApiSpecDocGenerator):
@@ -338,9 +370,9 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
             model_name = self._get_model_name_from_op_spec(op_spec)
             if self.model_should_be_ignored(model_name, include_models):
                 continue
-
             data_params = self._get_data_params(op_name, op_spec)
             data_params_are_present = self._data_params_are_present(op_spec)
+
             op_content = template.render(
                 name=op_name,
                 description=op_spec.get(OperationField.DESCRIPTION),
@@ -349,6 +381,7 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
                 path_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
                 query_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
                 data_params=data_params,
+                model_name=model_name,
                 curl_sample=swagger_ui_curlify.generate_sample(
                     op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS], BASE_HEADERS,
                     self._jinja_env),
@@ -420,3 +453,57 @@ def split_operation_names(text):
     replace_regexp = r'\1 \2'
     updated_text = re.sub('(.)([A-Z][a-z]+)', replace_regexp, text)
     return re.sub('([a-z0-9])([A-Z])', replace_regexp, updated_text)
+
+
+#####
+def get_link_to_model_page_by_name(model_name, display_name="object"):
+    return "[{}]{}".format(display_name, _get_link_path(model_name))
+
+
+def _get_link_path(model_name):
+    return "(/models/{}.md)".format(camel_to_snake(model_name))
+
+
+def show_type_or_reference(data_param_spec):
+
+    def ref_to_model_name(ref_address):
+        return ref_address.replace("#/definitions/", "")
+
+    REFERENCE_KEY_NAME = "$ref"
+    try:
+
+        if data_param_spec['type'] == "array":
+            ref_name = data_param_spec['items'].get(REFERENCE_KEY_NAME)
+            if ref_name:
+                model = ref_to_model_name(ref_name)
+                return "[{}]".format(get_link_to_model_page_by_name(model))
+            else:
+                return "[{}]".format(data_param_spec['items']['type'])
+        elif data_param_spec['type'] == "object" \
+                and REFERENCE_KEY_NAME in data_param_spec \
+                and " enum " not in data_param_spec.get("description", ""):
+            model = ref_to_model_name(data_param_spec[REFERENCE_KEY_NAME])
+            return get_link_to_model_page_by_name(model)
+        else:
+            return data_param_spec['type']
+
+    except Exception as e:
+        import ipdb;ipdb.set_trace()
+
+
+def show_description_with_references(description):
+    matched_model_names = re.findall("types are: &#91;(.*)&#93;", description)
+    if not matched_model_names:
+        return description
+
+    model_names = matched_model_names[0].split(', ')
+
+    linked_model_names = [
+        get_link_to_model_page_by_name(model, display_name=model)
+        for model in model_names
+    ]
+
+    return description.replace(
+        matched_model_names[0],
+        ", ".join(linked_model_names)
+    )
