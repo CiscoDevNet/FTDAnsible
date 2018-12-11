@@ -181,7 +181,7 @@ class HttpApi(HttpApiBase):
         # Being invoked via JSON-RPC, this method does not serialize and pass HTTPError correctly to the method caller.
         # Thus, in order to handle non-200 responses, we need to wrap them into a simple structure and pass explicitly.
         except HTTPError as e:
-            error_msg = e.read()
+            error_msg = to_text(e.read())
             self._display(http_method, 'error', error_msg)
             return {
                 ResponseParams.SUCCESS: False,
