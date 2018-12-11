@@ -1,16 +1,18 @@
 import importlib
 import os
+import re
 import sys
 from collections import namedtuple
-
-import re
+from functools import partial
 from shutil import copyfile
+
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
 from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
-from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME
+from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME, \
+    PropType
 from httpapi_plugins.ftd import BASE_HEADERS
 from docs.snippets_generation import swagger_ui_bravado, swagger_ui_curlify
 
@@ -37,7 +39,6 @@ class BaseDocGenerator(object):
                           extensions=['docs.extension.IncludePlaybookTasks'])
         env.filters['camel_to_snake'] = camel_to_snake
         env.filters['split_operation_names'] = split_operation_names
-        env.filters['show_type_or_reference'] = show_type_or_reference
         env.filters['show_description_with_references'] = show_description_with_references
         env.filters['get_link_to_model_page_by_name'] = get_link_to_model_page_by_name
         env.filters['escape_md_symbols'] = lambda s: s.replace('[', '&#91;').replace(']', '&#93;') \
@@ -97,6 +98,7 @@ class ApiSpecDocGenerator(BaseDocGenerator):
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
+        self._jinja_env.filters['show_type_or_reference'] = partial(show_type_or_reference, api_spec=api_spec)
 
     def _get_display_model_name(self, model_name):
         return self.CUSTOM_MODEL_MAPPING.get(model_name, model_name)
@@ -160,8 +162,15 @@ class ModelDocGenerator(ApiSpecDocGenerator):
         self._write_generated_file(self._model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
         self._model_index.append(displayed_model_name)
 
+    def model_should_be_ignored(self, model_name, include_models):
+        return super().model_should_be_ignored(model_name, include_models) \
+            or model_name.endswith("Wrapper") \
+            or "$" in model_name \
+            or PropName.ENUM in self._api_spec[SpecProp.MODELS][model_name]
+
     def _process_models(self, include_models):
-        for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
+        for model_name in self._api_spec[SpecProp.MODELS]:
+            operations = self._api_spec[SpecProp.MODEL_OPERATIONS].get(model_name, {})
 
             if self.model_should_be_ignored(model_name, include_models):
                 continue
@@ -174,24 +183,6 @@ class ModelDocGenerator(ApiSpecDocGenerator):
         self._process_models(include_models)
 
         self._write_index_files(self._model_dir, 'Model', self._model_index)
-
-
-class APIModelDocGenerator(ModelDocGenerator):
-
-    def model_should_be_ignored(self, model_name, include_models):
-        return super().model_should_be_ignored(model_name, include_models) \
-               or model_name.endswith("Wrapper") \
-               or "$" in model_name or \
-               "enum" in self._api_spec[SpecProp.MODELS][model_name]
-
-    def _process_models(self, include_models):
-        for model_name in self._api_spec[SpecProp.MODELS]:
-            operations = self._api_spec[SpecProp.MODEL_OPERATIONS].get(model_name, {})
-
-            if self.model_should_be_ignored(model_name, include_models):
-                continue
-
-            self._process_single_model(model_name, operations)
 
 
 class OperationDocGenerator(ApiSpecDocGenerator):
@@ -464,31 +455,42 @@ def _get_link_path(model_name):
     return "(/models/{}.md)".format(camel_to_snake(model_name))
 
 
-def show_type_or_reference(data_param_spec):
+def show_type_or_reference(data_param_spec, api_spec=None):
+
+    data_param_type = data_param_spec[PropName.TYPE]
 
     def ref_to_model_name(ref_address):
         return ref_address.replace("#/definitions/", "")
 
-    REFERENCE_KEY_NAME = "$ref"
-    try:
+    def default_value():
+        return data_param_type
 
-        if data_param_spec['type'] == "array":
-            ref_name = data_param_spec['items'].get(REFERENCE_KEY_NAME)
-            if ref_name:
-                model = ref_to_model_name(ref_name)
-                return "[{}]".format(get_link_to_model_page_by_name(model))
-            else:
-                return "[{}]".format(data_param_spec['items']['type'])
-        elif data_param_spec['type'] == "object" \
-                and REFERENCE_KEY_NAME in data_param_spec \
-                and " enum " not in data_param_spec.get("description", ""):
-            model = ref_to_model_name(data_param_spec[REFERENCE_KEY_NAME])
-            return get_link_to_model_page_by_name(model)
-        else:
-            return data_param_spec['type']
+    def process_array():
+        ref_name = data_param_spec[PropName.ITEMS].get(PropName.REF)
+        if ref_name:
+            model = ref_to_model_name(ref_name)
+            return "[{}]".format(get_link_to_model_page_by_name(model))
 
-    except Exception as e:
-        import ipdb;ipdb.set_trace()
+        return "[{}]".format(data_param_spec[PropName.ITEMS][PropName.TYPE])
+
+    def process_object():
+        if PropName.REF not in data_param_spec:
+            return default_value()
+
+        model = ref_to_model_name(data_param_spec[PropName.REF])
+        model_api_spec = api_spec[SpecProp.MODELS].get(model, {})
+
+        if PropName.ENUM in model_api_spec:
+            return model_api_spec.get(PropName.TYPE, data_param_type)
+
+        return get_link_to_model_page_by_name(model)
+
+    decision_map = {
+        PropType.ARRAY: process_array,
+        PropType.OBJECT: process_object
+    }
+
+    return decision_map.get(data_param_type, default_value)()
 
 
 def show_description_with_references(description):

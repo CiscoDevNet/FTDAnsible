@@ -179,7 +179,7 @@ def _generate_ansible_docs(args, api_spec, template_ctx):
 def _generate_ftd_api_docs(args, api_spec, template_ctx, errors_codes):
     generator.ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
         .generate_doc_files(args.dist, args.models)
-    generator.APIModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
+    generator.ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec) \
         .generate_doc_files(args.dist, args.models)
     generator.ApiIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx)\
         .generate_doc_files(args.dist)
