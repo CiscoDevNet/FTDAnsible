@@ -15,6 +15,7 @@ from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, 
     PropType
 from httpapi_plugins.ftd import BASE_HEADERS
 from docs.snippets_generation import swagger_ui_bravado, swagger_ui_curlify
+from docs import utils
 
 ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
@@ -123,11 +124,7 @@ class ApiSpecDocGenerator(BaseDocGenerator):
 
         model_name = self._get_model_name_from_op_spec(op_spec)
         data_params = self._get_model_properties(model_name)
-
-        if op_name.startswith('add') and op_method == HTTPMethod.POST:
-            data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
-
-        return data_params
+        return utils.filter_data_params(op_name, op_method, data_params)
 
 
 class ModelDocGenerator(ApiSpecDocGenerator):
