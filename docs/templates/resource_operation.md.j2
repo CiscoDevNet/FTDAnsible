@@ -1,6 +1,12 @@
-{% if description %}
+{% if model_name or description %}
 ## Description
+{% if model_name %}
+{% include 'includes/operation_description.j2' %}
+
+{% endif %}
+{% if description %}
 {{ description | escape_md_symbols }}
+{% endif %}
 {% endif %}
 
 ## HTTP request

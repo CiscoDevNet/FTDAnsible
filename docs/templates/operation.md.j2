@@ -1,7 +1,9 @@
 # {{ operation.name }}
 
 {% if operation.model_name%}
-The [{{ operation.name }}]({{ operation.name | camel_to_snake }}.md) operation handles configuration related to [{{ operation.model_name }}](../models/{{ operation.model_name | camel_to_snake }}.md) model.
+{% with name = operation.name,  model_name = operation.model_name %}
+{% include 'includes/operation_description.j2' %}
+{% endwith %}
 {% endif %}
 
 {% if operation.description %}

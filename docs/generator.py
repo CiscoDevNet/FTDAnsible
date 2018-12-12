@@ -1,18 +1,20 @@
 import importlib
 import os
+import re
 import sys
 from collections import namedtuple
-
-import re
+from functools import partial
 from shutil import copyfile
+
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
+from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME
-from httpapi_plugins.ftd import BASE_HEADERS
 from docs.snippets_generation import swagger_ui_bravado, swagger_ui_curlify
+from docs import utils
+from docs import jinja_filters
 
 ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
@@ -35,10 +37,11 @@ class BaseDocGenerator(object):
     def __init__(self, template_dir, template_ctx):
         env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True,
                           extensions=['docs.extension.IncludePlaybookTasks'])
-        env.filters['camel_to_snake'] = camel_to_snake
-        env.filters['split_operation_names'] = split_operation_names
+
+        env.filters['camel_to_snake'] = jinja_filters.camel_to_snake
         env.filters['escape_md_symbols'] = lambda s: s.replace('[', '&#91;').replace(']', '&#93;') \
             .replace('|', '&#124;')
+
         self._jinja_env = env
         self._template_ctx = template_ctx
 
@@ -56,7 +59,7 @@ class BaseDocGenerator(object):
     def _write_generated_file(dir_path, filename, content):
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        with open('%s/%s' % (dir_path, camel_to_snake(filename)), "wb") as f:
+        with open('%s/%s' % (dir_path, jinja_filters.camel_to_snake(filename)), "wb") as f:
             f.write(content.encode('utf-8'))
 
     @staticmethod
@@ -67,7 +70,7 @@ class BaseDocGenerator(object):
         }
 
     @staticmethod
-    def model_should_be_ignored(model_name, include_models):
+    def _model_should_be_ignored(model_name, include_models):
         return model_name is None or (include_models and model_name not in include_models)
 
     def _write_index_files(self, dir_path, index_name, index_list):
@@ -93,6 +96,10 @@ class ApiSpecDocGenerator(BaseDocGenerator):
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
+        self._jinja_env.filters['show_type_or_reference'] = partial(
+            jinja_filters.show_type_or_reference, api_spec=api_spec)
+        self._jinja_env.filters['show_description_with_references'] = jinja_filters.show_description_with_references
+        self._jinja_env.filters['get_link_to_model_page_by_name'] = jinja_filters.get_link_to_model_page_by_name
 
     def _get_display_model_name(self, model_name):
         return self.CUSTOM_MODEL_MAPPING.get(model_name, model_name)
@@ -117,11 +124,7 @@ class ApiSpecDocGenerator(BaseDocGenerator):
 
         model_name = self._get_model_name_from_op_spec(op_spec)
         data_params = self._get_model_properties(model_name)
-
-        if op_name.startswith('add') and op_method == HTTPMethod.POST:
-            data_params = {k: v for k, v in data_params.items() if k not in IDENTITY_PROPERTIES}
-
-        return data_params
+        return utils.filter_data_params(op_name, op_method, data_params)
 
 
 class ModelDocGenerator(ApiSpecDocGenerator):
@@ -132,34 +135,53 @@ class ModelDocGenerator(ApiSpecDocGenerator):
 
     MODEL_TEMPLATE = 'model.md.j2'
 
-    def generate_doc_files(self, dest_dir, include_models=None):
-        model_dir = os.path.join(dest_dir, 'models')
+    def __init__(self, template_dir, template_ctx, api_spec):
+        super().__init__(template_dir, template_ctx, api_spec)
+        self._model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
+        self._model_dir = None
 
-        model_index = []
-        model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
+    def _process_single_model(self, model_name, operations):
+        model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
+        displayed_model_name = self._get_display_model_name(model_name)
+        model_spec = ModelSpec(
+            name=displayed_model_name,
+            description=model_api_spec.get(PropName.DESCRIPTION, ''),
+            properties=model_api_spec.get(PropName.PROPERTIES, {}),
+            operations=[
+                {
+                    "name": op_name,
+                    "tag": op_spec[OperationField.TAGS][0]
+                } for op_name, op_spec in operations.items()
+            ]
+        )
+        model_content = self._model_template.render(model=model_spec, **self._template_ctx)
+        self._write_generated_file(self._model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
+        self._model_index.append(displayed_model_name)
 
-        for model_name, operations in self._api_spec[SpecProp.MODEL_OPERATIONS].items():
-            if self.model_should_be_ignored(model_name, include_models):
+    def _model_should_be_ignored(self, model_name, include_models):
+        model_spec = self._api_spec[SpecProp.MODELS][model_name]
+        return super()._model_should_be_ignored(model_name, include_models) \
+            or model_name.endswith("Wrapper") \
+            or PropName.ENUM in model_spec \
+            or PropName.PROPERTIES not in model_spec
+
+    def _process_models(self, include_models):
+        for model_name in self._api_spec[SpecProp.MODELS]:
+            operations = self._api_spec[SpecProp.MODEL_OPERATIONS].get(model_name, {})
+
+            if self._model_should_be_ignored(model_name, include_models):
                 continue
 
-            model_api_spec = self._api_spec[SpecProp.MODELS].get(model_name, {})
-            displayed_model_name = self._get_display_model_name(model_name)
-            model_spec = ModelSpec(
-                name=displayed_model_name,
-                description=model_api_spec.get(PropName.DESCRIPTION, ''),
-                properties=model_api_spec.get(PropName.PROPERTIES, {}),
-                operations=[
-                    {
-                        "name": op_name,
-                        "tag": op_spec[OperationField.TAGS][0]
-                    } for op_name, op_spec in operations.items()
-                ]
-            )
-            model_content = model_template.render(model=model_spec, **self._template_ctx)
-            self._write_generated_file(model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
-            model_index.append(displayed_model_name)
+            self._process_single_model(model_name, operations)
 
-        self._write_index_files(model_dir, 'Model', model_index)
+    def generate_doc_files(self, dest_dir, include_models=None):
+        self._model_index = []
+
+        self._model_dir = os.path.join(dest_dir, 'models')
+
+        self._process_models(include_models)
+
+        self._write_index_files(self._model_dir, 'Model', self._model_index)
 
 
 class OperationDocGenerator(ApiSpecDocGenerator):
@@ -177,7 +199,7 @@ class OperationDocGenerator(ApiSpecDocGenerator):
         op_template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
 
         for op_name, op_api_spec in self._api_spec[SpecProp.OPERATIONS].items():
-            if self.model_should_be_ignored(op_api_spec[OperationField.MODEL_NAME], include_models):
+            if self._model_should_be_ignored(op_api_spec[OperationField.MODEL_NAME], include_models):
                 continue
 
             model_name = op_api_spec[OperationField.MODEL_NAME]
@@ -336,11 +358,11 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
 
         for op_name, op_spec in operations.items():
             model_name = self._get_model_name_from_op_spec(op_spec)
-            if self.model_should_be_ignored(model_name, include_models):
+            if self._model_should_be_ignored(model_name, include_models):
                 continue
-
             data_params = self._get_data_params(op_name, op_spec)
             data_params_are_present = self._data_params_are_present(op_spec)
+
             op_content = template.render(
                 name=op_name,
                 description=op_spec.get(OperationField.DESCRIPTION),
@@ -349,9 +371,9 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
                 path_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.PATH, {}),
                 query_params=op_spec.get(OperationField.PARAMETERS, {}).get(OperationParams.QUERY, {}),
                 data_params=data_params,
+                model_name=model_name,
                 curl_sample=swagger_ui_curlify.generate_sample(
-                    op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS], BASE_HEADERS,
-                    self._jinja_env),
+                    op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS], self._jinja_env),
                 bravado_sample=swagger_ui_bravado.generate_sample(
                     op_name, op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS],
                     self._jinja_env),
@@ -409,14 +431,3 @@ class ApiIntroductionDocGenerator(BaseDocGenerator):
             page_content = template.render(**self._template_ctx)
             filename = self._get_file_name_from_template_name(template_name)
             self._write_generated_file(introduction_dir, filename, page_content)
-
-
-def camel_to_snake(text):
-    test_with_underscores = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', test_with_underscores).lower()
-
-
-def split_operation_names(text):
-    replace_regexp = r'\1 \2'
-    updated_text = re.sub('(.)([A-Z][a-z]+)', replace_regexp, text)
-    return re.sub('([a-z0-9])([A-Z])', replace_regexp, updated_text)

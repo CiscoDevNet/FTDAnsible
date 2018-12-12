@@ -1,4 +1,9 @@
+from pprint import PrettyPrinter
+
+from module_utils.fdm_swagger_client import OperationField
+
 from docs.snippets_generation import body_generator
+from docs import utils
 
 
 def generate_sample(op_name, op_spec, data_params_are_present, model_name, full_spec, jinja_env):
@@ -13,7 +18,9 @@ def generate_sample(op_name, op_spec, data_params_are_present, model_name, full_
             model_name,
             full_spec
         )
-        operation_arguments["body"] = str(body).replace(', ', ", \n\t\t")
+        body = utils.filter_data_params(op_name, op_spec[OperationField.METHOD], body)
+        printer = PrettyPrinter(width=1)
+        operation_arguments["body"] = printer.pformat(body)
 
     template = jinja_env.get_template(template_name)
     return template.render(
