@@ -137,7 +137,6 @@ class ModelDocGenerator(ApiSpecDocGenerator):
 
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx, api_spec)
-        self._model_index = []
         self._model_template = self._jinja_env.get_template(self.MODEL_TEMPLATE)
         self._model_dir = None
 
@@ -176,6 +175,8 @@ class ModelDocGenerator(ApiSpecDocGenerator):
             self._process_single_model(model_name, operations)
 
     def generate_doc_files(self, dest_dir, include_models=None):
+        self._model_index = []
+
         self._model_dir = os.path.join(dest_dir, 'models')
 
         self._process_models(include_models)
