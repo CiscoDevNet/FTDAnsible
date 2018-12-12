@@ -10,12 +10,11 @@ from shutil import copyfile
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
-from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME, \
-    PropType
-from httpapi_plugins.ftd import BASE_HEADERS
+from module_utils.common import HTTPMethod
+from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME
 from docs.snippets_generation import swagger_ui_bravado, swagger_ui_curlify
 from docs import utils
+from docs import jinja_filters
 
 ModelSpec = namedtuple('ModelSpec', 'name description properties operations')
 OperationSpec = namedtuple('OperationSpec', 'name description model_name path_params query_params data_params')
@@ -38,10 +37,8 @@ class BaseDocGenerator(object):
     def __init__(self, template_dir, template_ctx):
         env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True,
                           extensions=['docs.extension.IncludePlaybookTasks'])
-        env.filters['camel_to_snake'] = camel_to_snake
-        env.filters['split_operation_names'] = split_operation_names
-        env.filters['show_description_with_references'] = show_description_with_references
-        env.filters['get_link_to_model_page_by_name'] = get_link_to_model_page_by_name
+
+        env.filters['camel_to_snake'] = jinja_filters.camel_to_snake
         env.filters['escape_md_symbols'] = lambda s: s.replace('[', '&#91;').replace(']', '&#93;') \
             .replace('|', '&#124;')
 
@@ -62,7 +59,7 @@ class BaseDocGenerator(object):
     def _write_generated_file(dir_path, filename, content):
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        with open('%s/%s' % (dir_path, camel_to_snake(filename)), "wb") as f:
+        with open('%s/%s' % (dir_path, jinja_filters.camel_to_snake(filename)), "wb") as f:
             f.write(content.encode('utf-8'))
 
     @staticmethod
@@ -73,7 +70,7 @@ class BaseDocGenerator(object):
         }
 
     @staticmethod
-    def model_should_be_ignored(model_name, include_models):
+    def _model_should_be_ignored(model_name, include_models):
         return model_name is None or (include_models and model_name not in include_models)
 
     def _write_index_files(self, dir_path, index_name, index_list):
@@ -99,7 +96,10 @@ class ApiSpecDocGenerator(BaseDocGenerator):
     def __init__(self, template_dir, template_ctx, api_spec):
         super().__init__(template_dir, template_ctx)
         self._api_spec = api_spec
-        self._jinja_env.filters['show_type_or_reference'] = partial(show_type_or_reference, api_spec=api_spec)
+        self._jinja_env.filters['show_type_or_reference'] = partial(
+            jinja_filters.show_type_or_reference, api_spec=api_spec)
+        self._jinja_env.filters['show_description_with_references'] = jinja_filters.show_description_with_references
+        self._jinja_env.filters['get_link_to_model_page_by_name'] = jinja_filters.get_link_to_model_page_by_name
 
     def _get_display_model_name(self, model_name):
         return self.CUSTOM_MODEL_MAPPING.get(model_name, model_name)
@@ -159,17 +159,18 @@ class ModelDocGenerator(ApiSpecDocGenerator):
         self._write_generated_file(self._model_dir, displayed_model_name + self.MD_SUFFIX, model_content)
         self._model_index.append(displayed_model_name)
 
-    def model_should_be_ignored(self, model_name, include_models):
-        return super().model_should_be_ignored(model_name, include_models) \
+    def _model_should_be_ignored(self, model_name, include_models):
+        model_spec = self._api_spec[SpecProp.MODELS][model_name]
+        return super()._model_should_be_ignored(model_name, include_models) \
             or model_name.endswith("Wrapper") \
-            or "$" in model_name \
-            or PropName.ENUM in self._api_spec[SpecProp.MODELS][model_name]
+            or PropName.ENUM in model_spec \
+            or PropName.PROPERTIES not in model_spec
 
     def _process_models(self, include_models):
         for model_name in self._api_spec[SpecProp.MODELS]:
             operations = self._api_spec[SpecProp.MODEL_OPERATIONS].get(model_name, {})
 
-            if self.model_should_be_ignored(model_name, include_models):
+            if self._model_should_be_ignored(model_name, include_models):
                 continue
 
             self._process_single_model(model_name, operations)
@@ -197,7 +198,7 @@ class OperationDocGenerator(ApiSpecDocGenerator):
         op_template = self._jinja_env.get_template(self.OPERATION_TEMPLATE)
 
         for op_name, op_api_spec in self._api_spec[SpecProp.OPERATIONS].items():
-            if self.model_should_be_ignored(op_api_spec[OperationField.MODEL_NAME], include_models):
+            if self._model_should_be_ignored(op_api_spec[OperationField.MODEL_NAME], include_models):
                 continue
 
             model_name = op_api_spec[OperationField.MODEL_NAME]
@@ -356,7 +357,7 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
 
         for op_name, op_spec in operations.items():
             model_name = self._get_model_name_from_op_spec(op_spec)
-            if self.model_should_be_ignored(model_name, include_models):
+            if self._model_should_be_ignored(model_name, include_models):
                 continue
             data_params = self._get_data_params(op_name, op_spec)
             data_params_are_present = self._data_params_are_present(op_spec)
@@ -371,8 +372,7 @@ class ResourceDocGenerator(ApiSpecDocGenerator):
                 data_params=data_params,
                 model_name=model_name,
                 curl_sample=swagger_ui_curlify.generate_sample(
-                    op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS], BASE_HEADERS,
-                    self._jinja_env),
+                    op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS], self._jinja_env),
                 bravado_sample=swagger_ui_bravado.generate_sample(
                     op_name, op_spec, data_params_are_present, model_name, self._api_spec[SpecProp.MODELS],
                     self._jinja_env),
@@ -430,79 +430,3 @@ class ApiIntroductionDocGenerator(BaseDocGenerator):
             page_content = template.render(**self._template_ctx)
             filename = self._get_file_name_from_template_name(template_name)
             self._write_generated_file(introduction_dir, filename, page_content)
-
-
-def camel_to_snake(text):
-    test_with_underscores = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', test_with_underscores).lower()
-
-
-def split_operation_names(text):
-    replace_regexp = r'\1 \2'
-    updated_text = re.sub('(.)([A-Z][a-z]+)', replace_regexp, text)
-    return re.sub('([a-z0-9])([A-Z])', replace_regexp, updated_text)
-
-
-#####
-def get_link_to_model_page_by_name(model_name, display_name="object"):
-    return "[{}]{}".format(display_name, _get_link_path(model_name))
-
-
-def _get_link_path(model_name):
-    return "(/models/{}.md)".format(camel_to_snake(model_name))
-
-
-def show_type_or_reference(data_param_spec, api_spec=None):
-
-    data_param_type = data_param_spec[PropName.TYPE]
-
-    def ref_to_model_name(ref_address):
-        return ref_address.replace("#/definitions/", "")
-
-    def default_value():
-        return data_param_type
-
-    def process_array():
-        ref_name = data_param_spec[PropName.ITEMS].get(PropName.REF)
-        if ref_name:
-            model = ref_to_model_name(ref_name)
-            return "[{}]".format(get_link_to_model_page_by_name(model))
-
-        return "[{}]".format(data_param_spec[PropName.ITEMS][PropName.TYPE])
-
-    def process_object():
-        if PropName.REF not in data_param_spec:
-            return default_value()
-
-        model = ref_to_model_name(data_param_spec[PropName.REF])
-        model_api_spec = api_spec[SpecProp.MODELS].get(model, {})
-
-        if PropName.ENUM in model_api_spec:
-            return model_api_spec.get(PropName.TYPE, data_param_type)
-
-        return get_link_to_model_page_by_name(model)
-
-    decision_map = {
-        PropType.ARRAY: process_array,
-        PropType.OBJECT: process_object
-    }
-
-    return decision_map.get(data_param_type, default_value)()
-
-
-def show_description_with_references(description):
-    matched_model_names = re.findall("types are: &#91;(.*)&#93;", description)
-    if not matched_model_names:
-        return description
-
-    model_names = matched_model_names[0].split(', ')
-
-    linked_model_names = [
-        get_link_to_model_page_by_name(model, display_name=model)
-        for model in model_names
-    ]
-
-    return description.replace(
-        matched_model_names[0],
-        ", ".join(linked_model_names)
-    )
