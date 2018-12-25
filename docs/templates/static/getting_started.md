@@ -29,7 +29,7 @@ For example, a playbook with a task for `addNetworkObject` operation might look 
           name: LocalhostNetwork
           subType: HOST
           value: 127.0.0.1
-          type: LocalhostNetwork
+          type: networkobject
 ```
 
 More examples can be found [here](./examples.md).
