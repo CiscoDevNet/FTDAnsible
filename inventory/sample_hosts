@@ -4,6 +4,7 @@ ansible_network_os=ftd
 [vftd]
 localhost ansible_user=admin ansible_password=123qwe ansible_httpapi_port=8585 ansible_httpapi_use_ssl=False network_value=130.51.181.228
 10.89.21.213 ansible_user=admin ansible_password=123qwe ansible_httpapi_port=4343 ansible_httpapi_use_ssl=True ansible_httpapi_validate_certs=True network_value=130.51.181.225
+ftd-6.3.0 ansible_host=10.89.21.49 ansible_port=35724 ansible_user=admin ansible_password=Admin123 ansible_httpapi_port=35724 ansible_httpapi_use_ssl=True ansible_httpapi_validate_certs=False network_value=130.51.181.225
 
 [vftd:vars]
 network_type=HOST

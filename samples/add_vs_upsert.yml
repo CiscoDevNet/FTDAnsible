@@ -1,0 +1,34 @@
+- hosts: ftd-6.3.0
+  connection: httpapi
+  tasks:
+    - name: Get localhost networks
+      ftd_configuration:
+        operation: getNetworkObjectList
+        query_params:
+          filter: name~LocalhostNetwork
+        register_as: my_networks
+    - name: Create localhost network
+      ftd_configuration:
+        operation: addNetworkObject
+        data:
+          name: LocalhostNetwork
+          subType: HOST
+          value: 127.0.0.1
+          type: networkobject
+      when: my_networks.0 is undefined
+    - name: Update localhost network
+      ftd_configuration:
+        operation: editNetworkObject
+        data:
+          name: LocalhostNetwork
+          subType: HOST
+          value: 127.0.0.1
+          type: networkobject
+        path_params:
+          objId: "{{ my_networks[0].id }}"
+      when: my_networks.0 is not undefined
+    - name: Clenup networkobject
+      ftd_configuration:
+        operation: deleteNetworkObject
+        path_params:
+          objId: "{{ networkobject_localhostnetwork.id }}"
