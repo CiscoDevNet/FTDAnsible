@@ -36,7 +36,7 @@ More examples can be found [here](./examples.md).
 
 ## Understanding upsert operation
 
-Upsert is idempotent "Add or Update" operation which came from [Database world](https://en.wikipedia.org/wiki/Merge_(SQL). 
+Upsert is idempotent "Add or Update" operation which came from [Database world](https://en.wikipedia.org/wiki/Merge_\(SQL\)). 
 It allows You to define the desired state of the record without check if the record exists(so should be updated) or not(so should be created). 
 As result usage of this operation allows You define your playbook as:
 
