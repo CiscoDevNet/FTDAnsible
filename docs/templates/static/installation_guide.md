@@ -84,7 +84,7 @@ Here is an example of the inventory file with one local FTD device:
 
 ```
 [ftd]
-localhost ansible_network_os=ftd ansible_user=admin ansible_password=123qwe ansible_httpapi_use_ssl=True
+my-ftd ansible_host=192.168.1.1 ansible_port=443 ansible_network_os=ftd ansible_user=admin ansible_password=123qwe ansible_httpapi_use_ssl=True
 ```
 
 FTD modules __require__ the following host parameters in the inventory file:
