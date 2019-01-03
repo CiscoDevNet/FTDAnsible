@@ -8,10 +8,7 @@ the user documentation, please check [FTD Ansible docs on DevNet](https://develo
 
 ## Installation Guide
 
-The project contains Ansible modules for managing device configuration ([`ftd_configuration.py`](./library/ftd_configuration.py)), 
-uploading ([`ftd_file_upload.py`](./library/ftd_file_upload.py)) and downloading
-([`ftd_file_download.py`](./library/ftd_file_download.py)) files. Sample playbooks are located in 
-the [`samples`](./samples) folder.
+The project contains Ansible modules for managing device configuration ([`ftd_configuration.py`](./library/ftd_configuration.py)), uploading ([`ftd_file_upload.py`](./library/ftd_file_upload.py)) and downloading ([`ftd_file_download.py`](./library/ftd_file_download.py)) files. Sample playbooks are located in the [`samples`](./samples) folder.
 
 ### Running playbooks in Docker
 
@@ -20,13 +17,15 @@ the [`samples`](./samples) folder.
     docker build -t ftd-ansible .
     ```
     **NOTE** The default image is based on the release v0.1.0 of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
-1. You can build the custom Docker image:
+
+2. You can build the custom Docker image:
     ```
     docker build -t ftd-ansible --build-arg PYTHON_VERSION=<2.7|3.5|3.6|3.7> --build-arg FTD_ANSIBLE_VERSION=<tag name | branch name> .
     ```
-1. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) 
-shows an example of inventory file.
-1. Run the playbook in Docker mounting playbook folder to `/ftd-ansible/playbooks` and inventory file to `/etc/ansible/hosts`:
+
+3. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) shows an example of inventory file.
+
+4. Run the playbook in Docker mounting playbook folder to `/ftd-ansible/playbooks` and inventory file to `/etc/ansible/hosts`:
     ```
     docker run -v $(pwd)/samples:/ftd-ansible/playbooks -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts ftd-ansible playbooks/network_object.yml
     ```
@@ -39,24 +38,22 @@ python3 -m venv venv
 . venv/bin/activate
 ```
 
-1. Install dependencies:
+2. Install dependencies:
 `pip install -r requirements.txt`
 
-1. Update Python path to include the project's directory:
+3. Update Python path to include the project's directory:
 ```
 export PYTHONPATH=.:$PYTHONPATH
 ```
-   
-1. Run the playbook:
+  
+4. Run the playbook:
 ``` 
 ansible-playbook samples/network_object.yml
 ```
 
 ## Unit Tests
 
-The project contains unit tests for Ansible modules, HTTP API plugin and util files. They can be found 
-in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests
-in this project also rely on them and including Ansible test module to the Python path is required.
+The project contains unit tests for Ansible modules, HTTP API plugin and util files. They can be found in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests in this project also rely on them and including Ansible test module to the Python path is required.
 
 ### Running unit tests in Docker
 
@@ -67,7 +64,7 @@ docker build -t ftd-ansible-test test
 By default, the Dockerfile clones `devel` branch of Ansible repository, but you can change it by adding
 `--build-arg ANSIBLE_BRANCH=$BRANCH_NAME` to the build command.
 
-1. Run unit tests with: 
+2. Run unit tests with:
 ```
 docker run -v $(pwd):/ftd-ansible ftd-ansible-test pytest test/
 ```
@@ -92,16 +89,19 @@ In case you experience the following error while running the tests in Docker, re
 ### Running unit tests locally
 
 1. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
-1. Install Ansible and test dependencies:
+
+2. Install Ansible and test dependencies:
 ```
 pip install $ANSIBLE_DIR/requirements.txt
 pip install test/requirements.txt
 ```
-1. Add Ansible modules to the Python path:
+
+3. Add Ansible modules to the Python path:
 ```
 export PYTHONPATH=$PYTHONPATH:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
 ```
-1. Run unit tests:
+
+4. Run unit tests:
 ```
 pytest test/unit
 ```
@@ -134,25 +134,25 @@ tox -e py27-integration,py35-integration,py36-integration,py37-integration -- sa
     ```
     pip install flake8
     ```
-1. Run Flake8 check:
+
+2. Run Flake8 check:
     ```
     flake8
     ```
+
 Flake8 configuration is defined in the [tox config file](./tox.ini) file.
 
 ## Integration Tests
 
-Integration tests are written in a form of playbooks and usually started with `ansible-test` command 
-from Ansible repository. As this project is created outside Ansible, it does not have utils to run 
-the tests. Thus, integration tests are written as sample playbooks with assertion and can be found 
-in the `samples` folder. They start with `test_` prefix and can be run as usual playbooks.
+Integration tests are written in a form of playbooks and usually started with `ansible-test` command from Ansible repository. As this project is created outside Ansible, it does not have utils to run the tests. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be run as usual playbooks.
 
 ## Debugging
 
 1. Add `log_path` with path to log file in `ansible.cfg`
+
 2. Run `ansible-playbook` with `-vvvv`
     ```
     $ ansible-playbook samples/network_object.yml -vvvv
     ```
-3. The log file will contain additional information(REST etc.)
 
+3. The log file will contain additional information (REST, etc.)
