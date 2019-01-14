@@ -189,15 +189,9 @@ class OperationChecker(object):
         :return: True if all criteria required to provide requested called operation are satisfied, otherwise False
         :rtype: bool
         """
-        amount_operations_need_for_upsert_operation = 3
-        amount_supported_operations = 0
-        for operation_name, operation_spec in operations.items():
-            if cls.is_add_operation(operation_name, operation_spec) \
-                    or cls.is_edit_operation(operation_name, operation_spec) \
-                    or cls.is_get_list_operation(operation_name, operation_spec):
-                amount_supported_operations += 1
-
-        return amount_supported_operations == amount_operations_need_for_upsert_operation
+        has_edit_operation = next((name for name, spec in operations.items() if cls.is_edit_operation(name, spec)), None)
+        has_get_list_operation = next((name for name, spec in operations.items() if cls.is_get_list_operation(name, spec)), None)
+        return has_edit_operation and has_get_list_operation
 
 
 class BaseConfigurationResource(object):
