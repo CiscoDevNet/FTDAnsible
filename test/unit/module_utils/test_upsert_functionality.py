@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
-import pytest
-import json
 import copy
+import json
 import unittest
 
+import pytest
 from ansible.compat.tests import mock
 
 try:
@@ -17,7 +17,6 @@ except ImportError:
     from module_utils.configuration import DUPLICATE_NAME_ERROR_MESSAGE, UNPROCESSABLE_ENTITY_STATUS, \
         MULTIPLE_DUPLICATES_FOUND_ERROR, BaseConfigurationResource, FtdInvalidOperationNameError, QueryParams
     from module_utils.fdm_swagger_client import ValidationError
-
 
 ADD_RESPONSE = {'status': 'Object added'}
 EDIT_RESPONSE = {'status': 'Object edited'}
@@ -101,20 +100,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
             params
         )
 
-    @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
-    @mock.patch("module_utils.configuration._extract_model_from_upsert_operation")
-    def test_is_upsert_operation_supported(self, extract_model_mock, is_upsert_supported_mock, get_operation_spec_mock):
-        op_name = mock.MagicMock()
-
-        result = self._resource.is_upsert_operation_supported(op_name)
-
-        assert result == is_upsert_supported_mock.return_value
-        extract_model_mock.assert_called_once_with(op_name)
-        get_operation_spec_mock.assert_called_once_with(extract_model_mock.return_value)
-        is_upsert_supported_mock.assert_called_once_with(get_operation_spec_mock.return_value)
-
-    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -129,13 +115,13 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         result = self._resource.upsert_object(op_name, params)
 
         assert result == add_mock.return_value
-        is_upsert_supported_mock.assert_called_once_with(op_name)
+        is_upsert_supported_mock.assert_called_once_with(get_operation_mock.return_value)
         extract_model_mock.assert_called_once_with(op_name)
         get_operation_mock.assert_called_once_with(extract_model_mock.return_value)
         add_mock.assert_called_once_with(get_operation_mock.return_value, params)
         edit_mock.assert_not_called()
 
-    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
+    @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -154,13 +140,13 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         result = self._resource.upsert_object(op_name, params)
 
         assert result == edit_mock.return_value
-        is_upsert_supported_mock.assert_called_once_with(op_name)
         extract_model_mock.assert_called_once_with(op_name)
         get_operation_mock.assert_called_once_with(extract_model_mock.return_value)
+        is_upsert_supported_mock.assert_called_once_with(get_operation_mock.return_value)
         add_mock.assert_called_once_with(get_operation_mock.return_value, params)
         edit_mock.assert_called_once_with(get_operation_mock.return_value, error.obj, params)
 
-    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
+    @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -177,13 +163,13 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
             self._resource.upsert_object, op_name, params
         )
 
-        is_upsert_supported_mock.assert_called_once_with(op_name)
-        extract_model_mock.assert_not_called()
-        get_operation_mock.assert_not_called()
+        extract_model_mock.assert_called_once_with(op_name)
+        get_operation_mock.assert_called_once_with(extract_model_mock.return_value)
+        is_upsert_supported_mock.assert_called_once_with(get_operation_mock.return_value)
         add_mock.assert_not_called()
         edit_mock.assert_not_called()
 
-    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
+    @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -205,13 +191,13 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
             self._resource.upsert_object, op_name, params
         )
 
-        is_upsert_supported_mock.assert_called_once_with(op_name)
+        is_upsert_supported_mock.assert_called_once_with(get_operation_mock.return_value)
         extract_model_mock.assert_called_once_with(op_name)
         get_operation_mock.assert_called_once_with(extract_model_mock.return_value)
         add_mock.assert_called_once_with(get_operation_mock.return_value, params)
         edit_mock.assert_called_once_with(get_operation_mock.return_value, error.obj, params)
 
-    @mock.patch.object(BaseConfigurationResource, "is_upsert_operation_supported")
+    @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
@@ -231,7 +217,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
             self._resource.upsert_object, op_name, params
         )
 
-        is_upsert_supported_mock.assert_called_once_with(op_name)
+        is_upsert_supported_mock.assert_called_once_with(get_operation_mock.return_value)
         extract_model_mock.assert_called_once_with(op_name)
         get_operation_mock.assert_called_once_with(extract_model_mock.return_value)
         add_mock.assert_called_once_with(get_operation_mock.return_value, params)

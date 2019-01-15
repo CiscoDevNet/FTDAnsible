@@ -419,19 +419,6 @@ class BaseConfigurationResource(object):
         if report:
             raise ValidationError(report)
 
-    def is_upsert_operation_supported(self, op_name):
-        """
-        Checks if all operations required for upsert object operation are defined in 'operations'.
-
-        :param op_name: upsert operation name
-        :type op_name: str
-        :return: True if all criteria required to provide requested called operation are satisfied, otherwise False
-        :rtype: bool
-        """
-        model_name = _extract_model_from_upsert_operation(op_name)
-        operations = self.get_operation_specs_by_model_name(model_name)
-        return self._operation_checker.is_upsert_operation_supported(operations)
-
     @staticmethod
     def _get_operation_name(checker, operations):
         for operation_name, op_spec in operations.items():
@@ -465,11 +452,11 @@ class BaseConfigurationResource(object):
         :return: upserted object representation
         :rtype: dict
         """
-        if not self.is_upsert_operation_supported(op_name):
-            raise FtdInvalidOperationNameError(op_name)
-
         model_name = _extract_model_from_upsert_operation(op_name)
         model_operations = self.get_operation_specs_by_model_name(model_name)
+
+        if not self._operation_checker.is_upsert_operation_supported(model_operations):
+            raise FtdInvalidOperationNameError(op_name)
 
         try:
             return self._add_upserted_object(model_operations, params)
