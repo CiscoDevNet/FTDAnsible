@@ -30,7 +30,7 @@ class FtdApiClient(object):
     and token-related aspects.
     """
 
-    SUPPORTED_VERSIONS = ['v2', 'v1']
+    SUPPORTED_VERSIONS = ['latest', 'v3', 'v2', 'v1']
     TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
 
     SPEC_PATH = '/apispec/ngfw.json'
