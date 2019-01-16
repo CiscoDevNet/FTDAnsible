@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.6
 FROM python:${PYTHON_VERSION}
-`ARG FTD_ANSIBLE_VERSION=v0.1.1
+ARG FTD_ANSIBLE_VERSION=v0.1.1
 ARG FTD_ANSIBLE_FOLDER=ftd-ansible
 
 RUN wget https://github.com/CiscoDevNet/FTDAnsible/archive/${FTD_ANSIBLE_VERSION}.tar.gz && \
