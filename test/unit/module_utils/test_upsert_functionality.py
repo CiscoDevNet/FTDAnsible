@@ -171,7 +171,8 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
     @mock.patch("module_utils.configuration._extract_model_from_upsert_operation")
     def test_upsert_object_returned_without_modifications(self, extract_model_mock, edit_mock, add_mock, find_object,
-                                                          get_operation_mock, is_upsert_supported_mock, equal_objects_mock):
+                                                          get_operation_mock, is_upsert_supported_mock,
+                                                          equal_objects_mock):
         op_name = mock.MagicMock()
         params = mock.MagicMock()
         existing_obj = mock.MagicMock()
@@ -223,7 +224,8 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
     @mock.patch("module_utils.configuration._extract_model_from_upsert_operation")
     def test_upsert_object_with_fatal_error_during_edit(self, extract_model_mock, edit_mock, add_mock, find_object,
-                                                        get_operation_mock, is_upsert_supported_mock, equal_objects_mock):
+                                                        get_operation_mock, is_upsert_supported_mock,
+                                                        equal_objects_mock):
         op_name = mock.MagicMock()
         params = mock.MagicMock()
         existing_obj = mock.MagicMock()

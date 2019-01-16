@@ -198,7 +198,8 @@ class OperationChecker(object):
         :rtype: bool
         """
         has_edit_op = next((name for name, spec in iteritems(operations) if cls.is_edit_operation(name, spec)), None)
-        has_get_list_op = next((name for name, spec in iteritems(operations) if cls.is_get_list_operation(name, spec)), None)
+        has_get_list_op = next((name for name, spec in iteritems(operations)
+                                if cls.is_get_list_operation(name, spec)), None)
         return has_edit_op and has_get_list_op
 
 
@@ -474,7 +475,8 @@ class BaseConfigurationResource(object):
         existing_obj = self._find_object_matching_params(model_name, params)
         if existing_obj:
             equal_to_existing_obj = equal_objects(existing_obj, params[ParamName.DATA])
-            return existing_obj if equal_to_existing_obj else self._edit_upserted_object(model_operations, existing_obj, params)
+            return existing_obj if equal_to_existing_obj \
+                else self._edit_upserted_object(model_operations, existing_obj, params)
         else:
             return self._add_upserted_object(model_operations, params)
 
