@@ -23,8 +23,8 @@ class ApiSpecAutocomplete(object):
     def _add_operation_to_operations_spec(self, op_name, op_spec):
         self._api_spec[SpecProp.OPERATIONS][op_name] = op_spec
 
-    def _generate_upsert_spec(self, operations, model_name, add_operantion, list_operation):
-        op_spec = dict(operations[add_operantion])
+    def _generate_upsert_spec(self, operations, model_name, edit_operation, list_operation):
+        op_spec = dict(operations[edit_operation])
         base_filter_spec = dict(
             operations[list_operation][OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER])
 
@@ -49,12 +49,12 @@ class ApiSpecAutocomplete(object):
             # Some actions will have no model - we can't do upsert for them.
             return
 
-        add_operantion = OperationNamePrefix.ADD + model_name
+        edit_operation = OperationNamePrefix.EDIT + model_name
         list_operation = OperationNamePrefix.GET + model_name + 'List'
 
         if self._operation_checker.is_upsert_operation_supported(operations):
             op_name = OperationNamePrefix.UPSERT + model_name
-            op_spec = self._generate_upsert_spec(operations, model_name, add_operantion, list_operation)
+            op_spec = self._generate_upsert_spec(operations, model_name, edit_operation, list_operation)
 
             self._add_operation_to_model_spec(
                 model_name=model_name,
