@@ -40,6 +40,14 @@ MULTIPLE_DUPLICATES_FOUND_ERROR = (
     "Multiple objects matching specified filters are found. "
     "Please, define filters more precisely to match one object exactly."
 )
+DUPLICATE_ERROR = (
+    "Cannot add a new object. "
+    "An object with the same name but different parameters already exists."
+)
+ADD_OPERATION_NOT_SUPPORTED_ERROR = (
+    "Cannot add a new object while executing an upsert request. "
+    "Creation of objects with this type is not supported."
+)
 
 
 class OperationNamePrefix:
@@ -292,18 +300,20 @@ class BaseConfigurationResource(object):
             return self.send_general_request(operation_name, params)
         except FtdServerError as e:
             if is_duplicate_name_error(e):
-                return self._check_if_the_same_object(operation_name, params, e)
+                return self._check_equality_with_existing_object(operation_name, params, e)
             else:
                 raise e
 
-    def _check_if_the_same_object(self, operation_name, params, e):
+    def _check_equality_with_existing_object(self, operation_name, params, e):
         """
-        Special check used in the scope of 'add_object' operation, which can be requested as a standalone operation or
-        in the scope of 'upsert_object' operation. This method executed in case 'add_object' failed and should try to
-        find the object that caused "object duplicate" error. In case single object found and it's equal to one we are
-        trying to create - the existing object will be returned (attempt to have kind of idempotency for add action).
-        In the case when we got more than one object returned as a result of the request to API - it will be hard to
-        find exact duplicate so the exception will be raised.
+        Looks for an existing object that caused "object duplicate" error and
+        checks whether it corresponds to the one specified in `params`.
+
+        In case a single object is found and it is equal to one we are trying
+        to create, the existing object is returned.
+
+        When the existing object is not equal to the object being created or
+        several objects are returned, an exception is raised.
         """
         model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
         existing_obj = self._find_object_matching_params(model_name, params)
@@ -312,10 +322,7 @@ class BaseConfigurationResource(object):
             if equal_objects(existing_obj, params[ParamName.DATA]):
                 return existing_obj
             else:
-                raise FtdConfigurationError(
-                    'Cannot add new object. '
-                    'An object with the same name but different parameters already exists.',
-                    existing_obj)
+                raise FtdConfigurationError(DUPLICATE_ERROR, existing_obj)
 
         raise e
 
@@ -428,13 +435,12 @@ class BaseConfigurationResource(object):
 
     @staticmethod
     def _get_operation_name(checker, operations):
-        for operation_name, op_spec in operations.items():
-            if checker(operation_name, op_spec):
-                return operation_name
-        raise FtdConfigurationError("Operation is not supported")
+        return next((op_name for op_name, op_spec in iteritems(operations) if checker(op_name, op_spec)), None)
 
     def _add_upserted_object(self, model_operations, params):
         add_op_name = self._get_operation_name(self._operation_checker.is_add_operation, model_operations)
+        if not add_op_name:
+            raise FtdConfigurationError(ADD_OPERATION_NOT_SUPPORTED_ERROR)
         return self.add_object(add_op_name, params)
 
     def _edit_upserted_object(self, model_operations, existing_object, params):
@@ -448,9 +454,9 @@ class BaseConfigurationResource(object):
 
     def upsert_object(self, op_name, params):
         """
-        The wrapper on top of add object operation, get a list of objects and edit object operations that implement
-        upsert object operation. As a result, the object will be created if the object does not exist, if a single
-        object exists with requested 'params' this object will be updated otherwise, Exception will be raised.
+        Updates an object if it already exists, or tries to create a new one if there is no
+        such object. If multiple objects match filter criteria, or add operation is not supported,
+        the exception is raised.
 
         :param op_name: upsert operation name
         :type op_name: str
@@ -467,10 +473,8 @@ class BaseConfigurationResource(object):
 
         existing_obj = self._find_object_matching_params(model_name, params)
         if existing_obj:
-            if not equal_objects(existing_obj, params[ParamName.DATA]):
-                return self._edit_upserted_object(model_operations, existing_obj, params)
-            else:
-                return existing_obj
+            equal_to_existing_obj = equal_objects(existing_obj, params[ParamName.DATA])
+            return existing_obj if equal_to_existing_obj else self._edit_upserted_object(model_operations, existing_obj, params)
         else:
             return self._add_upserted_object(model_operations, params)
 
