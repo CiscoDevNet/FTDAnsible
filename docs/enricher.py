@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from module_utils.configuration import OperationChecker, QueryParams, OperationNamePrefix
 from module_utils.fdm_swagger_client import SpecProp, OperationField, OperationParams, PropName
 
@@ -11,7 +13,7 @@ class ApiSpecAutocomplete(object):
         _add_operation_to_model_spec
         _add_operation_to_operations_spec
     """
-    UPSERT_DEFAUL_FILTER_COMMENT = " Default filtering for Upsert operation is done by name."
+    UPSERT_DEFAULT_FILTER_COMMENT = " Default filtering for Upsert operation is done by name."
 
     def __init__(self, api_spec):
         self._api_spec = api_spec
@@ -24,8 +26,8 @@ class ApiSpecAutocomplete(object):
         self._api_spec[SpecProp.OPERATIONS][op_name] = op_spec
 
     def _generate_upsert_spec(self, operations, model_name, edit_operation, list_operation):
-        op_spec = dict(operations[edit_operation])
-        base_filter_spec = dict(
+        op_spec = deepcopy(operations[edit_operation])
+        base_filter_spec = deepcopy(
             operations[list_operation][OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER])
 
         def property_for_filtering_is_present(model_spec, prop_name):
@@ -34,7 +36,7 @@ class ApiSpecAutocomplete(object):
 
         if property_for_filtering_is_present(model_spec=self._api_spec[SpecProp.MODELS][model_name],
                                              prop_name=PropName.NAME):
-            base_filter_spec[PropName.DESCRIPTION] += self.UPSERT_DEFAUL_FILTER_COMMENT
+            base_filter_spec[PropName.DESCRIPTION] += self.UPSERT_DEFAULT_FILTER_COMMENT
         else:
             base_filter_spec[PropName.REQUIRED] = True
 
