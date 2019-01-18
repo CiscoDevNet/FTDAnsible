@@ -371,19 +371,9 @@ class BaseConfigurationResource(object):
                 raise e
 
     def edit_object(self, operation_name, params):
-        data, _, path_params = _get_user_params(params)
-
-        model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
-        get_operation = self._find_get_operation(model_name)
-
-        if get_operation:
-            existing_object = self.send_general_request(get_operation, {ParamName.PATH_PARAMS: path_params})
-            if not existing_object:
-                raise FtdConfigurationError('Referenced object does not exist')
-            elif equal_objects(existing_object, data):
-                return existing_object
-
-        return self.send_general_request(operation_name, params)
+        existing_object, _, _ = _get_user_params(params)
+        edited_object = self.send_general_request(operation_name, params)
+        return edited_object if edited_object else existing_object
 
     def send_general_request(self, operation_name, params):
         def stop_if_check_mode():
@@ -407,7 +397,7 @@ class BaseConfigurationResource(object):
         response = self._conn.send_request(url_path=url_path, http_method=http_method, body_params=body_params,
                                            path_params=path_params, query_params=query_params)
         raise_for_failure(response)
-        if http_method != HTTPMethod.GET:
+        if http_method != HTTPMethod.GET and response[ResponseParams.STATUS_CODE] != 204:
             self.config_changed = True
         return response[ResponseParams.RESPONSE]
 
@@ -474,9 +464,7 @@ class BaseConfigurationResource(object):
 
         existing_obj = self._find_object_matching_params(model_name, params)
         if existing_obj:
-            equal_to_existing_obj = equal_objects(existing_obj, params[ParamName.DATA])
-            return existing_obj if equal_to_existing_obj \
-                else self._edit_upserted_object(model_operations, existing_obj, params)
+            return self._edit_upserted_object(model_operations, existing_obj, params)
         else:
             return self._add_upserted_object(model_operations, params)
 
