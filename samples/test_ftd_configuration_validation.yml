@@ -128,13 +128,14 @@
         register_as: "testObj"
       register: result
       ignore_errors: yes
-      when: ftd_version is undefined or ftd_version != '6.2.3'
+      # ignoring this test as API docs in v6.2.3 do not have required fields for objects;
+      tags: skip-on-6.2.3
     - assert:
         that:
           - 'result.changed == false'
           - 'result.failed == true'
           - 'result.msg == {"Invalid data provided": {"required": ["name", "subType", "type", "value"]}}'
-      when: ftd_version is undefined or ftd_version != '6.2.3'
+      tags: skip-on-6.2.3
 
     - name: data should contain valid data
       ftd_configuration:
