@@ -19,8 +19,8 @@
 #
 
 from __future__ import absolute_import, division, print_function
-__metaclass__ = type
 
+__metaclass__ = type
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
@@ -51,15 +51,15 @@ options:
   password:
     description:
       - Password to login   
-  console_port:
+  ssh_port:
     description:
       - Port of device on terminal server   
     required: true 
-  tftp_server_ip:
+  tftp_server:
     description:
       - TFTP Server IP Address
     required: true
-  dns_servers:
+  dns_server:
     description:
       - DNS server
     required: true
@@ -82,8 +82,8 @@ EXAMPLES = """
     hostname: 'firepower'
     password: 'Admin123'
     console_port: '2004'
-    tftp_server_ip: '10.88.90.130'
-    dns_servers: '171.70.168.183'
+    tftp_server: '10.88.90.130'
+    dns_server: '171.70.168.183'
     rommon_file: 'xyz/ftd-boot.cdisk'
     ftd_file: 'http://10.88.90.130/xyz/ftd-6.3.0-xxx.pkg'
 """
@@ -93,16 +93,15 @@ from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
 
 
 def main():
-
     fields = dict(
         ip=dict(type='str', required=True),
         netmask=dict(type='str', required=True),
         gateway=dict(type='str', required=True),
         hostname=dict(type='str'),
         password=dict(type='str'),
-        console_port=dict(type='int', required=True),
-        tftp_server_ip=dict(type='str', required=True),
-        dns_servers=dict(type='str', required=True),
+        ssh_port=dict(type='int', required=True),
+        tftp_server=dict(type='str', required=True),
+        dns_server=dict(type='str', required=True),
         rommon_file=dict(type='str', required=True),
         ftd_file=dict(type='path', required=True)
     )
@@ -114,26 +113,25 @@ def main():
     gateway = module.params["gateway"]
     hostname = module.params["hostname"]
     password = module.params["password"]
-    port = module.params["console_port"]
-    tftpServerIp = module.params["tftp_server_ip"]
-    dnsServers = module.params["dns_servers"]
-    rommonFile = module.params["rommon_file"]
-    ftdFile = module.params["ftd_file"]
+    ssh_port = module.params["ssh_port"]
+    tftp_server = module.params["tftp_server"]
+    dns_server = module.params["dns_servers"]
+    rommon_file = module.params["rommon_file"]
+    ftd_file = module.params["ftd_file"]
 
     ftd = Ftd5500x(hostname=hostname, login_password=password, sudo_password=password)
 
-    dev = ftd.ssh_console(ip=ip, port=port)
+    dev = ftd.ssh_console(ip=ip, port=ssh_port)
 
-    dev.rommon_to_new_image(rommon_tftp_server=tftpServerIp,
-                            pkg_image=ftdFile,
-                            rommon_image=rommonFile,
+    dev.rommon_to_new_image(rommon_tftp_server=tftp_server,
+                            pkg_image=ftd_file,
+                            rommon_image=rommon_file,
                             uut_ip=ip,
                             uut_netmask=netmask,
                             uut_gateway=gateway,
-                            dns_server=dnsServers,
+                            dns_server=dns_server,
                             hostname=hostname,
-                            power_cycle_flag=False
-                            )
+                            power_cycle_flag=False)
 
     dev.disconnect()
 
