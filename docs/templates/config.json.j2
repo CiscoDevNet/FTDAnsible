@@ -1,9 +1,11 @@
 {
   "items": [
+{% if index_name  %}
     {
-      "title": "{{ index_name }} Index",
+      "title": "{{ index_name }} Index for FTD {{ ftd_version }}",
       "content": "index.md"
     }{{ "," if index_list }}
+{% endif %}
 {% for item in index_list | sort %}
     {
       "title": "{{ item }}",

@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import json
 
 from ansible.compat.tests import mock
@@ -26,19 +25,15 @@ from ansible.module_utils.connection import ConnectionError
 from ansible.module_utils.six import BytesIO, PY3, StringIO
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
-from httpapi_plugins.ftd import HttpApi
+from httpapi_plugins.ftd import HttpApi, BASE_HEADERS
+
 from module_utils.common import HTTPMethod, ResponseParams
-from module_utils.fdm_swagger_client import SpecProp, FdmSwaggerParser
+from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp
 
 if PY3:
     BUILTINS_NAME = 'builtins'
 else:
     BUILTINS_NAME = '__builtin__'
-
-EXPECTED_BASE_HEADERS = {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-}
 
 
 class FakeFtdHttpApiPlugin(HttpApi):
@@ -150,7 +145,7 @@ class TestFtdHttpApi(unittest.TestCase):
         assert {ResponseParams.SUCCESS: True, ResponseParams.STATUS_CODE: 200,
                 ResponseParams.RESPONSE: exp_resp} == resp
         self.connection_mock.send.assert_called_once_with('/test/123?at=0', '{"name": "foo"}', method=HTTPMethod.PUT,
-                                                          headers=EXPECTED_BASE_HEADERS)
+                                                          headers=BASE_HEADERS)
 
     def test_send_request_should_return_empty_dict_when_no_response_data(self):
         self.connection_mock.send.return_value = self._connection_response(None)
@@ -159,7 +154,7 @@ class TestFtdHttpApi(unittest.TestCase):
 
         assert {ResponseParams.SUCCESS: True, ResponseParams.STATUS_CODE: 200, ResponseParams.RESPONSE: {}} == resp
         self.connection_mock.send.assert_called_once_with('/test', None, method=HTTPMethod.GET,
-                                                          headers=EXPECTED_BASE_HEADERS)
+                                                          headers=BASE_HEADERS)
 
     def test_send_request_should_return_error_info_when_http_error_raises(self):
         self.connection_mock.send.side_effect = HTTPError('http://testhost.com', 500, '', {},
@@ -234,7 +229,7 @@ class TestFtdHttpApi(unittest.TestCase):
             resp = self.ftd_plugin.upload_file('/tmp/test.txt', '/files')
 
         assert {'id': '123'} == resp
-        exp_headers = dict(EXPECTED_BASE_HEADERS)
+        exp_headers = dict(BASE_HEADERS)
         exp_headers['Content-Length'] = len('--Encoded data--')
         exp_headers['Content-Type'] = 'multipart/form-data'
         self.connection_mock.send.assert_called_once_with('/files', data='--Encoded data--',
@@ -275,7 +270,7 @@ class TestFtdHttpApi(unittest.TestCase):
         assert self.ftd_plugin.get_model_spec('NonExistingTestModel') is None
 
     @patch.object(FdmSwaggerParser, 'parse_spec')
-    def test_get_model_spec(self, parse_spec_mock):
+    def test_get_operation_spec_by_model_name(self, parse_spec_mock):
         self.connection_mock.send.return_value = self._connection_response(None)
         operation1 = {'modelName': 'TestModel'}
         op_model_name_is_none = {'modelName': None}

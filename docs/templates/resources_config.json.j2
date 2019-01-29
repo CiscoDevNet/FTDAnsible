@@ -1,0 +1,15 @@
+{
+    "items": [
+        {
+            "title": "Model Index",
+            "content": "../models/index.md"
+        },
+    {% for tag_name in tags_being_described %}
+        {
+            "title": "{{ tag_name }}",
+            "type": "config",
+            "content": "{{ tag_name }}/config.json"
+        }{{ "," if not loop.last }}
+    {% endfor %}
+    ]
+}

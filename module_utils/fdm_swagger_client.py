@@ -31,6 +31,7 @@ class OperationField:
     MODEL_NAME = 'modelName'
     DESCRIPTION = 'description'
     RETURN_MULTIPLE_ITEMS = 'returnMultipleItems'
+    TAGS = "tags"
 
 
 class SpecProp:
@@ -73,6 +74,10 @@ class OperationParams:
     QUERY = 'query'
 
 
+class QueryParams:
+    FILTER = 'filter'
+
+
 def _get_model_name_from_url(schema_ref):
     path = schema_ref.split('/')
     return path[len(path) - 1]
@@ -101,14 +106,16 @@ class FdmSwaggerParser:
         This method simplifies a swagger format, resolves a model name for each operation, and adds documentation for
         each operation and model if it is provided.
 
-        :param spec: An API specification in the swagger format, see <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
+        :param spec: An API specification in the swagger format, see
+            <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>
         :type spec: dict
         :param spec: A documentation map containing descriptions for models, operations and operation parameters.
         :type docs: dict
         :rtype: dict
         :return:
         Ex.
-            The models field contains model definition from swagger see <#https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions>
+            The models field contains model definition from swagger see
+            <#https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#definitions>
             {
                 'models':{
                     'model_name':{...},
@@ -182,7 +189,8 @@ class FdmSwaggerParser:
                     OperationField.METHOD: method,
                     OperationField.URL: self._base_path + url,
                     OperationField.MODEL_NAME: self._get_model_name(method, params),
-                    OperationField.RETURN_MULTIPLE_ITEMS: self._return_multiple_items(params)
+                    OperationField.RETURN_MULTIPLE_ITEMS: self._return_multiple_items(params),
+                    OperationField.TAGS: params.get(OperationField.TAGS, [])
                 }
                 if OperationField.PARAMETERS in params:
                     operation[OperationField.PARAMETERS] = self._get_rest_params(params[OperationField.PARAMETERS])
@@ -201,8 +209,10 @@ class FdmSwaggerParser:
             operation[OperationField.DESCRIPTION] = operation_docs.get(PropName.DESCRIPTION, '')
 
             if OperationField.PARAMETERS in operation:
-                param_descriptions = {p[PropName.NAME]: p[PropName.DESCRIPTION]
-                                      for p in operation_docs.get(OperationField.PARAMETERS, {})}
+                param_descriptions = dict((
+                    (p[PropName.NAME], p[PropName.DESCRIPTION])
+                    for p in operation_docs.get(OperationField.PARAMETERS, {})
+                ))
 
                 for param_name, params_spec in operation[OperationField.PARAMETERS][OperationParams.PATH].items():
                     params_spec[OperationField.DESCRIPTION] = param_descriptions.get(param_name, '')

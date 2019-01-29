@@ -1,0 +1,9 @@
+{% if data_params %}
+
+## Data Parameters
+| Parameter | Required | Type | Description |
+| --------- | -------- | ---- | ----------- |
+{% for param_name, param_spec in data_params.items() %}
+| {{ param_name }} | {{ param_spec.required }} | {{ param_spec | show_type_or_reference }} <td colspan=3> {{ param_spec.description | escape_md_symbols | show_description_with_references }} |
+{% endfor %}
+{% endif %}

@@ -1,5 +1,3 @@
-[Model Index](index.md) » [{{ model.name }}]({{ model.name | camel_to_snake }}.md)
-
 # {{ model.name }}
 
 {% if model.description %}
@@ -10,15 +8,13 @@
 {% if model.operations %}
 ## Supported Operations
 {% for operation in model.operations %}
-* [{{ operation }}](../operations/{{ operation | camel_to_snake }}.md)
+{% if doctype.name == 'ftd_api' %}
+* [{{ operation['name'] }}](../resources/{{ operation['tag'] }}/{{ operation['name'] | camel_to_snake }}.md)
+{% else %}
+* [{{ operation['name'] }}](../operations/{{ operation['name'] | camel_to_snake }}.md)
+{% endif %}
 {% endfor %}
 {% endif %}
-
-{% if model.properties %}
-## Model Properties
-| Property | Required | Type | Description |
-| -------- | -------- | ---- | ----------- |
-{% for property_name, property_spec in model.properties.items() %}
-| {{ property_name }} | {{ property_spec.required }} | {{ property_spec.type }} | {{ property_spec.description | escape_md_symbols }} |
-{% endfor %}
-{% endif %}
+{% with model_properties = model.properties %}
+{% include 'includes/model_params.j2' %}
+{% endwith %}

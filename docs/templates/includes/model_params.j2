@@ -1,0 +1,9 @@
+{% if model_properties %}
+
+## Model Properties
+| Property | Required | Type | Description |
+| -------- | -------- | ---- | ----------- |
+{% for property_name, property_spec in model_properties.items() %}
+| {{ property_name }} | {{ property_spec.required }} | {{ property_spec | show_type_or_reference }} <td colspan=3>  {{ property_spec.description | escape_md_symbols | show_description_with_references }} |
+{% endfor %}
+{% endif %}

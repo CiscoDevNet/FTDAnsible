@@ -16,11 +16,13 @@
           - 'result.changed == false'
           - 'result.failed == true'
           - '"Invalid query_params provided" in result.msg'
-          - 'result.msg == {"Invalid query_params provided":
-                            {"invalid_type": [
-                                  {"actually_value": true, "expected_type": "integer", "path": "offset"},
-                                  {"actually_value": 0, "expected_type": "string", "path": "sort"},
-                                  {"actually_value": 1.1, "expected_type": "string", "path": "filter"}]}}'
+          - '3 == result.msg["Invalid query_params provided"]["invalid_type"] | length'
+          - '{"actually_value": true, "expected_type": "integer", "path": "offset"}
+                              in result.msg["Invalid query_params provided"]["invalid_type"]'
+          - '{"actually_value": 0, "expected_type": "string", "path": "sort"}
+                              in result.msg["Invalid query_params provided"]["invalid_type"]'
+          - '{"actually_value": 1.1, "expected_type": "string", "path": "filter"}
+                              in result.msg["Invalid query_params provided"]["invalid_type"]'
 
     - name: 'query_params should contain valid data'
       ftd_configuration:
@@ -69,7 +71,9 @@
         that:
           - 'result.changed == false'
           - 'result.failed == true'
-          - 'result.msg == {"Invalid path_params provided": {"invalid_type": [{"actually_value": 1, "expected_type": "string", "path": "parentId"}]}}'
+          - '1 == result.msg["Invalid path_params provided"]["invalid_type"] | length'
+          - '{"actually_value": 1, "expected_type": "string", "path": "parentId"}
+                              in result.msg["Invalid path_params provided"]["invalid_type"]'
 
     - name: 'edit: path_params should contain all required params'
       ftd_configuration:
@@ -124,11 +128,14 @@
         register_as: "testObj"
       register: result
       ignore_errors: yes
+      # ignoring this test as API docs in v6.2.3 do not have required fields for objects;
+      tags: skip-on-6.2.3
     - assert:
         that:
           - 'result.changed == false'
           - 'result.failed == true'
           - 'result.msg == {"Invalid data provided": {"required": ["name", "subType", "type", "value"]}}'
+      tags: skip-on-6.2.3
 
     - name: data should contain valid data
       ftd_configuration:
@@ -147,15 +154,19 @@
         that:
           - 'result.changed == false'
           - 'result.failed == true'
-          - 'result.msg == {
-                            "Invalid data provided":
-                                {"invalid_type": [
-                                    {"actually_value": false, "expected_type": "string", "path": "name"},
-                                    {"actually_value": true, "expected_type": "string", "path": "description"},
-                                    {"actually_value": "not_enum", "expected_type": "enum", "path": "subType"},
-                                    {"actually_value": 0, "expected_type": "string", "path": "value"},
-                                    {"actually_value": "test", "expected_type": "boolean", "path": "isSystemDefined"},
-                                    {"actually_value": 1, "expected_type": "string", "path": "type"}]}}'
+          - '6 == result.msg["Invalid data provided"]["invalid_type"] | length'
+          - '{"actually_value": false, "expected_type": "string", "path": "name"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": true, "expected_type": "string", "path": "description"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": "not_enum", "expected_type": "enum", "path": "subType"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": 0, "expected_type": "string", "path": "value"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": "test", "expected_type": "boolean", "path": "isSystemDefined"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": 1, "expected_type": "string", "path": "type"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
 
     - name: data should contain valid data
       ftd_configuration:
@@ -174,12 +185,16 @@
         that:
           - 'result.changed == false'
           - 'result.failed == true'
-          - 'result.msg == {
-                            "Invalid data provided":
-                                {"invalid_type": [
-                                    {"actually_value": 0, "expected_type": "string", "path": "name"},
-                                    {"actually_value": 1.2, "expected_type": "string", "path": "description"},
-                                    {"actually_value": 0, "expected_type": "enum", "path": "subType"},
-                                    {"actually_value": 1, "expected_type": "string", "path": "value"},
-                                    {"actually_value": 1, "expected_type": "boolean", "path": "isSystemDefined"},
-                                    {"actually_value": 1.1, "expected_type": "string", "path": "type"}]}}'
+          - '6 == result.msg["Invalid data provided"]["invalid_type"] | length'
+          - '{"actually_value": 0, "expected_type": "string", "path": "name"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": 1.2, "expected_type": "string", "path": "description"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": 0, "expected_type": "enum", "path": "subType"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": 1, "expected_type": "string", "path": "value"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": 1, "expected_type": "boolean", "path": "isSystemDefined"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'
+          - '{"actually_value": 1.1, "expected_type": "string", "path": "type"}
+                              in result.msg["Invalid data provided"]["invalid_type"]'

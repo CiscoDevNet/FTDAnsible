@@ -1,42 +1,24 @@
-[Operation Index](index.md) » [{{ operation.name }}]({{ operation.name | camel_to_snake }}.md)
-
 # {{ operation.name }}
 
 {% if operation.model_name%}
-The [{{ operation.name }}]({{ operation.name | camel_to_snake }}.md) operation handles configuration related to [{{ operation.model_name }}](../models/{{ operation.model_name | camel_to_snake }}.md) model.
+{% with name = operation.name,  model_name = operation.model_name %}
+{% include 'includes/operation_description.j2' %}
+{% endwith %}
 {% endif %}
 
 {% if operation.description %}
 ## Description
 {{ operation.description | escape_md_symbols }}
 {% endif %}
-
-{% if operation.data_params %}
-## Data Parameters
-| Parameter | Required | Type | Description |
-| --------- | -------- | ---- | ----------- |
-{% for param_name, param_spec in operation.data_params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
-{% endfor %}
-{% endif %}
-
-{% if operation.path_params %}
-## Path Parameters
-| Parameter | Required | Type | Description |
-| --------- | -------- | ---- | ----------- |
-{% for param_name, param_spec in operation.path_params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
-{% endfor %}
-{% endif %}
-
-{% if operation.query_params %}
-## Query Parameters
-| Parameter | Required | Type | Description |
-| --------- | -------- | ---- | ----------- |
-{% for param_name, param_spec in operation.query_params.items() %}
-| {{ param_name }} | {{ param_spec.required }} | {{ param_spec.type }} | {{ param_spec.description | escape_md_symbols }} |
-{% endfor %}
-{% endif %}
+{% with data_params = operation.data_params %}
+{% include 'includes/data_params.j2' %}
+{% endwith %}
+{% with path_params = operation.path_params %}
+{% include 'includes/path_params.j2' %}
+{% endwith %}
+{% with query_params = operation.query_params %}
+{% include 'includes/query_params.j2' %}
+{% endwith %}
 
 ## Example
 ```yaml

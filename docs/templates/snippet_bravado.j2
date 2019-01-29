@@ -1,0 +1,41 @@
+from bravado.requests_client import RequestsClient
+from bravado.client import SwaggerClient
+
+
+def get_client(host, token):
+    http_client = RequestsClient()
+    http_client.ssl_verify = False
+    http_client.set_api_key(
+        host,
+        "Bearer {}".format(token),
+        param_name="Authorization",
+        param_in="header"
+    )
+    return SwaggerClient.from_url(
+        "https://{}/apispec/ngfw.json".format(host),
+        http_client=http_client,
+        config={
+            "validate_responses": False,
+            "validate_swagger_spec": False
+        }
+    )
+
+
+def {{ operation | camel_to_snake }}(client{% for key in operation_arguments %}, {{ key | camel_to_snake }}{% endfor %}):
+    return client.{{ tag }}.{{ operation }}(
+        {% for key in operation_arguments %}
+        {{ key }}={{ key | camel_to_snake }}{{ "," if not loop.last }}
+        {% endfor %}
+    ).response().result
+
+
+if __name__ == "__main__":
+    host = "ftd.example.com"
+    token = "access_token"
+    client = get_client(host, token)
+
+    {% for key, value in operation_arguments.items() %}
+    {{ key | camel_to_snake }} = {{ value }}
+    {% endfor %}
+
+    {{ operation | camel_to_snake }}(client{% for key in operation_arguments %}, {{ key | camel_to_snake }}{% endfor %})

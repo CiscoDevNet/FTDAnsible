@@ -1,0 +1,71 @@
+# Deploying Configuration Changes
+
+Although POST, PUT, and DELETE calls directly update the Firepower Threat Defense device, they are not immediately active. You must deploy configuration changes before the device uses your new settings when processing traffic.
+
+### Procedure
+
+#### Step 1
+
+Use the POST /operational/deploy resource in the DeploymentStatus group to initiate a deployment.
+
+For example, the **curl** command would look like the following:
+
+```bash
+curl -X POST \
+    --header 'Content-Type: application/json' \
+    --header 'Accept: application/json' \
+    https://ftd.example.com/api/fdm/{{ api_version }}/operational/deploy
+```
+
+#### Step 2
+
+Evaluate the response to verify that the deployment job was queued.
+
+A good response (status code 200) looks like the following. Note the state.
+
+```json
+{
+  "id": "a7a227fb-82ab-11e7-8186-0dc471ff0672",
+  "statusMessage": null,
+  "statusMessages": null,
+  "modifiedObjects": {},
+  "queuedTime": 1502905942150,
+  "startTime": -1,
+  "endTime": -1,
+  "state": "QUEUED",
+  "links": {
+    "self": "https://ftd.example.com/api/fdm/{{ api_version }}/operational/deploy/a7a227fb-82ab-11e7-8186-0dc471ff0672"
+  }
+}
+```
+
+#### Step 3
+Use the GET /operational/deploy/{objId} resource to check the status of the job.
+
+For example, the **curl** command would look like the following:
+```bash
+curl -X GET \
+    --header 'Accept: application/json' \
+    https://ftd.example.com/api/fdm/{{ api_version }}/operational/deploy/a7a227fb-82ab-11e7-8186-0dc471ff0672
+```
+
+The response might look like the following. Note the state, DEPLOYED, indicates the job completed successfully. The modifiedObjects parameter lists the objects that were changed in the deployment job. In this case, there is a single change, to a network object named new-network.
+```json
+{
+  "id": "a7a227fb-82ab-11e7-8186-0dc471ff0672",
+  "statusMessage": null,
+  "statusMessages": null,
+  "modifiedObjects": {
+    "NetworkObject": [
+      "new-network"
+    ]
+  },
+  "queuedTime": 1502905942150,
+  "startTime": 1502905942463,
+  "endTime": 1502906010068,
+  "state": "DEPLOYED",
+  "links": {
+    "self": "https://ftd.example.com/api/fdm/{{ api_version }}/operational/deploy/a7a227fb-82ab-11e7-8186-0dc471ff0672"
+  }
+}
+```

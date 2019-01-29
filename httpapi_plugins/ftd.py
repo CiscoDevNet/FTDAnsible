@@ -50,6 +50,8 @@ import json
 import os
 import re
 
+from ansible import __version__ as ansible_version
+
 from ansible.module_utils.basic import to_text
 from ansible.errors import AnsibleConnectionFailure
 from ansible.module_utils.six.moves.urllib.error import HTTPError
@@ -64,7 +66,8 @@ from module_utils.common import HTTPMethod, ResponseParams
 
 BASE_HEADERS = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'User-Agent': 'FTD Ansible/%s' % ansible_version
 }
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
@@ -178,7 +181,7 @@ class HttpApi(HttpApiBase):
         # Being invoked via JSON-RPC, this method does not serialize and pass HTTPError correctly to the method caller.
         # Thus, in order to handle non-200 responses, we need to wrap them into a simple structure and pass explicitly.
         except HTTPError as e:
-            error_msg = e.read()
+            error_msg = to_text(e.read())
             self._display(http_method, 'error', error_msg)
             return {
                 ResponseParams.SUCCESS: False,

@@ -38,7 +38,7 @@ author: "Cisco Systems, Inc."
 options:
   operation:
     description:
-      - The name of the operation to execute. Commonly, the operation starts with 'add', 'edit', 'get'
+      - The name of the operation to execute. Commonly, the operation starts with 'add', 'edit', 'get', 'upsert'
        or 'delete' verbs, but can have an arbitrary name too.
     required: true
     type: string
@@ -98,14 +98,14 @@ from ansible.module_utils.connection import Connection
 try:
     from ansible.module_utils.configuration import BaseConfigurationResource, CheckModeException, \
         FtdInvalidOperationNameError
-    from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
-    from ansible.module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError
+    from ansible.module_utils.fdm_swagger_client import ValidationError
+    from ansible.module_utils.common import construct_ansible_facts, FtdConfigurationError, \
+        FtdServerError, FtdUnexpectedResponse
 except ImportError:
     from module_utils.configuration import BaseConfigurationResource, CheckModeException, FtdInvalidOperationNameError
-    from module_utils.fdm_swagger_client import OperationField, ValidationError
-    from module_utils.common import HTTPMethod, construct_ansible_facts, FtdConfigurationError, \
-        FtdServerError
+    from module_utils.fdm_swagger_client import ValidationError
+    from module_utils.common import construct_ansible_facts, FtdConfigurationError, \
+        FtdServerError, FtdUnexpectedResponse
 
 
 def main():
@@ -125,7 +125,7 @@ def main():
     resource = BaseConfigurationResource(connection, module.check_mode)
     op_name = params['operation']
     try:
-        resp = resource.crud_operation(op_name, params)
+        resp = resource.execute_operation(op_name, params)
         module.exit_json(changed=resource.config_changed, response=resp,
                          ansible_facts=construct_ansible_facts(resp, module.params))
     except FtdInvalidOperationNameError as e:
@@ -135,9 +135,10 @@ def main():
     except FtdServerError as e:
         module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
                              'Server response: %s' % (op_name, e.code, e.response))
+    except FtdUnexpectedResponse as e:
+        module.fail_json(msg=e.args[0])
     except ValidationError as e:
         module.fail_json(msg=e.args[0])
-
     except CheckModeException:
         module.exit_json(changed=False)
 

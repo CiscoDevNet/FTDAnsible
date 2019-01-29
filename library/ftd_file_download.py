@@ -45,11 +45,12 @@ options:
   path_params:
     description:
       - Key-value pairs that should be sent as path parameters in a REST API call.
-    type: dict  
+    type: dict
   destination:
     description:
       - Absolute path of where to download the file to.
-      - If destination is a directory, the module uses a filename from 'Content-Disposition' header specified by the server.
+      - If destination is a directory, the module uses a filename from 'Content-Disposition' header specified by
+        the server.
     required: true
     type: path
 """

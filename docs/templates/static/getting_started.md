@@ -29,10 +29,64 @@ For example, a playbook with a task for `addNetworkObject` operation might look 
           name: LocalhostNetwork
           subType: HOST
           value: 127.0.0.1
-          type: LocalhostNetwork
+          type: networkobject
 ```
 
 More examples can be found [here](./examples.md).
+
+## Understanding upsert operation
+
+Upsert is idempotent "Insert or Update" operation which came from [Database world](https://en.wikipedia.org/wiki/Merge_\(SQL\)). 
+It allows You to define the desired state of the record without check if the record exists(so should be updated) or not(so should be created). 
+As result usage of this operation allows You define your playbook as:
+
+```yaml
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Upsert localhost network
+      ftd_configuration:
+        operation: upsertNetworkObject
+        data:
+          name: LocalhostNetwork
+          subType: HOST
+          value: 127.0.0.1
+          type: networkobject
+```
+
+instead of:
+
+```yaml
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Get localhost networks
+      ftd_configuration:
+        operation: getNetworkObjectList
+        query_params:
+          filter: name~LocalhostNetwork
+        register_as: my_networks
+    - name: Create localhost network does not exists
+      ftd_configuration:
+        operation: addNetworkObject
+        data:
+          name: LocalhostNetwork
+          subType: HOST
+          value: 127.0.0.1
+          type: networkobject
+      when: my_networks.0 is undefined
+    - name: Update localhost network if exists already
+      ftd_configuration:
+        operation: editNetworkObject
+        data:
+          name: LocalhostNetwork
+          subType: HOST
+          value: 127.0.0.1
+          type: networkobject
+        path_params:
+          objId: "{{ my_networks[0].id }}"
+      when: my_networks.0 is not undefined
+```
 
 ## Registering objects as Ansible facts
 

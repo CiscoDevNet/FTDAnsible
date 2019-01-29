@@ -1,0 +1,26 @@
+{% if model_name or description %}
+## Description
+{% if model_name %}
+{% include 'includes/operation_description.j2' %}
+
+{% endif %}
+{% if description %}
+{{ description | escape_md_symbols }}
+{% endif %}
+{% endif %}
+
+## HTTP request
+```url
+{{ method | upper }} {{ url }}
+```
+{% include 'includes/data_params.j2' %}
+{% include 'includes/path_params.j2' %}
+{% include 'includes/query_params.j2' %}
+
+## Example
+```bash
+{{ curl_sample }}
+```
+```python
+{{ bravado_sample }}
+```

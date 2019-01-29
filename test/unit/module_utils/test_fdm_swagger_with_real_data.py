@@ -17,7 +17,7 @@ class TestFdmSwagger(unittest.TestCase):
 
     def init_mock_data(self):
         with open(os.path.join(TEST_DATA_FOLDER, 'ngfw_with_ex.json'), 'rb') as f:
-            self.base_data = json.load(f)
+            self.base_data = json.loads(f.read().decode('utf-8'))
 
     def test_with_all_data(self):
         fdm_data = FdmSwaggerParser().parse_spec(self.base_data)
@@ -35,10 +35,11 @@ class TestFdmSwagger(unittest.TestCase):
                     try:
                         valid, rez = validator.validate_data(operation, example)
                         assert valid
-                    except Exception as e:
+                    except Exception:
                         invalid.add(model_name)
-        assert invalid == set({'TCPPortObject',
-                               'UDPPortObject', 'ICMPv4PortObject',
+        assert invalid == set(['TCPPortObject',
+                               'UDPPortObject',
+                               'ICMPv4PortObject',
                                'ICMPv6PortObject',
                                'StandardAccessList',
                                'ExtendedAccessList',
@@ -51,7 +52,7 @@ class TestFdmSwagger(unittest.TestCase):
                                'PolicyList',
                                'SyslogServer',
                                'HAConfiguration',
-                               'TestIdentitySource'})
+                               'TestIdentitySource'])
 
     def test_parse_all_data(self):
         self.fdm_data = FdmSwaggerParser().parse_spec(self.base_data)

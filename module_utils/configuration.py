@@ -18,15 +18,15 @@
 import copy
 from functools import partial
 
-from ansible.module_utils.six import iteritems, viewitems
+from ansible.module_utils.six import iteritems
 
 try:
     from ansible.module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
-        FtdServerError, ResponseParams
+        FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedResponse
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
 except ImportError:
     from module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
-        FtdServerError, ResponseParams
+        FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedResponse
     from module_utils.fdm_swagger_client import OperationField, ValidationError
 
 DEFAULT_PAGE_SIZE = 10
@@ -36,12 +36,26 @@ UNPROCESSABLE_ENTITY_STATUS = 422
 INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
 DUPLICATE_NAME_ERROR_MESSAGE = "Validation failed due to a duplicate name"
 
+MULTIPLE_DUPLICATES_FOUND_ERROR = (
+    "Multiple objects matching specified filters are found. "
+    "Please, define filters more precisely to match one object exactly."
+)
+DUPLICATE_ERROR = (
+    "Cannot add a new object. "
+    "An object with the same name but different parameters already exists."
+)
+ADD_OPERATION_NOT_SUPPORTED_ERROR = (
+    "Cannot add a new object while executing an upsert request. "
+    "Creation of objects with this type is not supported."
+)
 
-class _OperationNamePrefix:
+
+class OperationNamePrefix:
     ADD = 'add'
     EDIT = 'edit'
     GET = 'get'
     DELETE = 'delete'
+    UPSERT = 'upsert'
 
 
 class QueryParams:
@@ -65,27 +79,180 @@ class FtdInvalidOperationNameError(Exception):
         self.operation_name = operation_name
 
 
+class OperationChecker(object):
+
+    @classmethod
+    def is_add_operation(cls, operation_name, operation_spec):
+        """
+        Check if operation defined with 'operation_name' is add object operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is add object operation, otherwise False
+        :rtype: bool
+        """
+        # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
+        return operation_name.startswith(OperationNamePrefix.ADD) and is_post_request(operation_spec)
+
+    @classmethod
+    def is_edit_operation(cls, operation_name, operation_spec):
+        """
+        Check if operation defined with 'operation_name' is edit object operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is edit object operation, otherwise False
+        :rtype: bool
+        """
+        # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
+        return operation_name.startswith(OperationNamePrefix.EDIT) and is_put_request(operation_spec)
+
+    @classmethod
+    def is_delete_operation(cls, operation_name, operation_spec):
+        """
+        Check if operation defined with 'operation_name' is delete object operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is delete object operation, otherwise False
+        :rtype: bool
+        """
+        # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
+        return operation_name.startswith(OperationNamePrefix.DELETE) \
+            and operation_spec[OperationField.METHOD] == HTTPMethod.DELETE
+
+    @classmethod
+    def is_get_list_operation(cls, operation_name, operation_spec):
+        """
+        Check if operation defined with 'operation_name' is get list of objects operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is get a list of objects operation, otherwise False
+        :rtype: bool
+        """
+        return operation_spec[OperationField.METHOD] == HTTPMethod.GET \
+            and operation_spec[OperationField.RETURN_MULTIPLE_ITEMS]
+
+    @classmethod
+    def is_get_operation(cls, operation_name, operation_spec):
+        """
+        Check if operation defined with 'operation_name' is get objects operation according to 'operation_spec'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :return: True if the called operation is get object operation, otherwise False
+        :rtype: bool
+        """
+        return operation_spec[OperationField.METHOD] == HTTPMethod.GET \
+            and not operation_spec[OperationField.RETURN_MULTIPLE_ITEMS]
+
+    @classmethod
+    def is_upsert_operation(cls, operation_name):
+        """
+        Check if operation defined with 'operation_name' is upsert objects operation according to 'operation_name'.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :return: True if the called operation is upsert object operation, otherwise False
+        :rtype: bool
+        """
+        return operation_name.startswith(OperationNamePrefix.UPSERT)
+
+    @classmethod
+    def is_find_by_filter_operation(cls, operation_name, params, operation_spec):
+        """
+        Checks whether the called operation is 'find by filter'. This operation fetches all objects and finds
+        the matching ones by the given filter. As filtering is done on the client side, this operation should be used
+        only when selected filters are not implemented on the server side.
+
+        :param operation_name: name of the operation being called by the user
+        :type operation_name: str
+        :param operation_spec: specification of the operation being called by the user
+        :type operation_spec: dict
+        :param params: params - params should contain 'filters'
+        :return: True if the called operation is find by filter, otherwise False
+        :rtype: bool
+        """
+        is_get_list = cls.is_get_list_operation(operation_name, operation_spec)
+        return is_get_list and ParamName.FILTERS in params and params[ParamName.FILTERS]
+
+    @classmethod
+    def is_upsert_operation_supported(cls, operations):
+        """
+        Checks if all operations required for upsert object operation are defined in 'operations'.
+
+        :param operations: specification of the operations supported by model
+        :type operations: dict
+        :return: True if all criteria required to provide requested called operation are satisfied, otherwise False
+        :rtype: bool
+        """
+        has_edit_op = next((name for name, spec in iteritems(operations) if cls.is_edit_operation(name, spec)), None)
+        has_get_list_op = next((name for name, spec in iteritems(operations)
+                                if cls.is_get_list_operation(name, spec)), None)
+        return has_edit_op and has_get_list_op
+
+
 class BaseConfigurationResource(object):
+
     def __init__(self, conn, check_mode=False):
         self._conn = conn
         self.config_changed = False
         self._operation_spec_cache = {}
         self._models_operations_specs_cache = {}
         self._check_mode = check_mode
+        self._operation_checker = OperationChecker
+
+    def execute_operation(self, op_name, params):
+        """
+        Allow user request execution of simple operations(natively supported by API provider) as well as complex
+        operations(operations that are implemented as a set of simple operations).
+
+        :param op_name: name of the operation being called by the user
+        :type op_name: str
+        :param params: definition of the params that operation should be executed with
+        :type params: dict
+        :return: Result of the operation being executed
+        :rtype: dict
+        """
+        if self._operation_checker.is_upsert_operation(op_name):
+            return self.upsert_object(op_name, params)
+        else:
+            return self.crud_operation(op_name, params)
 
     def crud_operation(self, op_name, params):
+        """
+        Allow user request execution of simple operations(natively supported by API provider) only.
+
+        :param op_name: name of the operation being called by the user
+        :type op_name: str
+        :param params: definition of the params that operation should be executed with
+        :type params: dict
+        :return: Result of the operation being executed
+        :rtype: dict
+        """
         op_spec = self.get_operation_spec(op_name)
         if op_spec is None:
             raise FtdInvalidOperationNameError(op_name)
 
-        if self.is_add_operation(op_name):
+        if self._operation_checker.is_add_operation(op_name, op_spec):
             resp = self.add_object(op_name, params)
-        elif self.is_edit_operation(op_name):
+        elif self._operation_checker.is_edit_operation(op_name, op_spec):
             resp = self.edit_object(op_name, params)
-        elif self.is_delete_operation(op_name):
+        elif self._operation_checker.is_delete_operation(op_name, op_spec):
             resp = self.delete_object(op_name, params)
-        elif self.is_find_by_filter_operation(op_name, params):
-            resp = self.get_objects_by_filter(op_name, params)
+        elif self._operation_checker.is_find_by_filter_operation(op_name, params, op_spec):
+            resp = list(self.get_objects_by_filter(op_name, params))
         else:
             resp = self.send_general_request(op_name, params)
         return resp
@@ -103,12 +270,15 @@ class BaseConfigurationResource(object):
                 self._operation_spec_cache.setdefault(op_name, op_spec)
         return self._models_operations_specs_cache[model_name]
 
-    def get_objects_by_filter(self, operation_name, params, get_one_item=False):
+    def get_objects_by_filter(self, operation_name, params):
         def transform_filters_to_query_param(filter_params):
-            return ';'.join(['%s:%s' % (key, val) for key, val in iteritems(filter_params)])
+            return ';'.join(['%s:%s' % (key, val) for key, val in sorted(iteritems(filter_params))])
 
         def match_filters(filter_params, obj):
-            return viewitems(filter_params) <= viewitems(obj)
+            for k, v in iteritems(filter_params):
+                if k not in obj or obj[k] != v:
+                    return False
+            return True
 
         _, query_params, path_params = _get_user_params(params)
         # copy required params to avoid mutation of passed `params` dict
@@ -121,10 +291,7 @@ class BaseConfigurationResource(object):
         item_generator = iterate_over_pageable_resource(
             partial(self.send_general_request, operation_name=operation_name), get_list_params
         )
-        if get_one_item:
-            return next((i for i in item_generator if match_filters(filters, i)), None)
-        else:
-            return [i for i in item_generator if match_filters(filters, i)]
+        return (i for i in item_generator if match_filters(filters, i))
 
     def add_object(self, operation_name, params):
         def is_duplicate_name_error(err):
@@ -134,38 +301,62 @@ class BaseConfigurationResource(object):
             return self.send_general_request(operation_name, params)
         except FtdServerError as e:
             if is_duplicate_name_error(e):
-                return self._check_if_the_same_object(operation_name, params, e)
+                return self._check_equality_with_existing_object(operation_name, params, e)
             else:
                 raise e
 
-    def _check_if_the_same_object(self, operation_name, params, e):
+    def _check_equality_with_existing_object(self, operation_name, params, e):
+        """
+        Looks for an existing object that caused "object duplicate" error and
+        checks whether it corresponds to the one specified in `params`.
+
+        In case a single object is found and it is equal to one we are trying
+        to create, the existing object is returned.
+
+        When the existing object is not equal to the object being created or
+        several objects are returned, an exception is raised.
+        """
         model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
-        get_list_operation = self._find_get_list_operation(model_name)
-        if get_list_operation:
-            data = params[ParamName.DATA]
-            if not params.get(ParamName.FILTERS):
-                params[ParamName.FILTERS] = {'name': data['name']}
+        existing_obj = self._find_object_matching_params(model_name, params)
 
-            existing_obj = self.get_objects_by_filter(get_list_operation, params, True)
-
-            if existing_obj is not None:
-                if equal_objects(existing_obj, data):
-                    return existing_obj
-                else:
-                    raise FtdConfigurationError(
-                        'Cannot add new object. '
-                        'An object with the same name but different parameters already exists.',
-                        existing_obj)
+        if existing_obj is not None:
+            if equal_objects(existing_obj, params[ParamName.DATA]):
+                return existing_obj
+            else:
+                raise FtdConfigurationError(DUPLICATE_ERROR, existing_obj)
 
         raise e
 
+    def _find_object_matching_params(self, model_name, params):
+        get_list_operation = self._find_get_list_operation(model_name)
+        if not get_list_operation:
+            return None
+
+        data = params[ParamName.DATA]
+        if not params.get(ParamName.FILTERS):
+            params[ParamName.FILTERS] = {'name': data['name']}
+
+        obj = None
+        filtered_objs = self.get_objects_by_filter(get_list_operation, params)
+
+        for i, obj in enumerate(filtered_objs):
+            if i > 0:
+                raise FtdConfigurationError(MULTIPLE_DUPLICATES_FOUND_ERROR)
+            obj = obj
+
+        return obj
+
     def _find_get_list_operation(self, model_name):
         operations = self.get_operation_specs_by_model_name(model_name) or {}
-        return next((op for op in operations.keys() if self.is_get_list_operation(op)), None)
+        return next((
+            op for op, op_spec in operations.items()
+            if self._operation_checker.is_get_list_operation(op, op_spec)), None)
 
     def _find_get_operation(self, model_name):
         operations = self.get_operation_specs_by_model_name(model_name) or {}
-        return next((op for op in operations.keys() if self.is_get_operation(op)), None)
+        return next((
+            op for op, op_spec in operations.items()
+            if self._operation_checker.is_get_operation(op, op_spec)), None)
 
     def delete_object(self, operation_name, params):
         def is_invalid_uuid_error(err):
@@ -220,47 +411,6 @@ class BaseConfigurationResource(object):
             self.config_changed = True
         return response[ResponseParams.RESPONSE]
 
-    def is_add_operation(self, operation_name):
-        operation_spec = self.get_operation_spec(operation_name)
-        # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-        return operation_name.startswith(_OperationNamePrefix.ADD) and is_post_request(operation_spec)
-
-    def is_edit_operation(self, operation_name):
-        operation_spec = self.get_operation_spec(operation_name)
-        # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-        return operation_name.startswith(_OperationNamePrefix.EDIT) and is_put_request(operation_spec)
-
-    def is_delete_operation(self, operation_name):
-        operation_spec = self.get_operation_spec(operation_name)
-        # Some endpoints have non-CRUD operations, so checking operation name is required in addition to the HTTP method
-        return operation_name.startswith(_OperationNamePrefix.DELETE) and operation_spec[
-            OperationField.METHOD] == HTTPMethod.DELETE
-
-    def is_get_list_operation(self, operation_name):
-        op_spec = self.get_operation_spec(operation_name)
-        return op_spec[OperationField.METHOD] == HTTPMethod.GET and op_spec[OperationField.RETURN_MULTIPLE_ITEMS]
-
-    def is_get_operation(self, operation_name):
-        op_spec = self.get_operation_spec(operation_name)
-        return op_spec[OperationField.METHOD] == HTTPMethod.GET and not op_spec[OperationField.RETURN_MULTIPLE_ITEMS]
-
-    def is_find_by_filter_operation(self, operation_name, params):
-        """
-        Checks whether the called operation is 'find by filter'. This operation fetches all objects and finds
-        the matching ones by the given filter. As filtering is done on the client side, this operation should be used
-        only when selected filters are not implemented on the server side.
-
-        :param operation_name: name of the operation being called by the user
-        :type operation_name: str
-        :param operation_spec: specification of the operation being called by the user
-        :type operation_spec: dict
-        :param params: params - params should contain 'filters'
-        :return: True if called operation is find by filter, otherwise False
-        :rtype: bool
-        """
-        is_get_list = self.is_get_list_operation(operation_name)
-        return is_get_list and ParamName.FILTERS in params and params[ParamName.FILTERS]
-
     def validate_params(self, operation_name, params):
         report = {}
         op_spec = self.get_operation_spec(operation_name)
@@ -284,6 +434,52 @@ class BaseConfigurationResource(object):
         if report:
             raise ValidationError(report)
 
+    @staticmethod
+    def _get_operation_name(checker, operations):
+        return next((op_name for op_name, op_spec in iteritems(operations) if checker(op_name, op_spec)), None)
+
+    def _add_upserted_object(self, model_operations, params):
+        add_op_name = self._get_operation_name(self._operation_checker.is_add_operation, model_operations)
+        if not add_op_name:
+            raise FtdConfigurationError(ADD_OPERATION_NOT_SUPPORTED_ERROR)
+        return self.add_object(add_op_name, params)
+
+    def _edit_upserted_object(self, model_operations, existing_object, params):
+        edit_op_name = self._get_operation_name(self._operation_checker.is_edit_operation, model_operations)
+        _set_default(params, 'path_params', {})
+        _set_default(params, 'data', {})
+
+        params['path_params']['objId'] = existing_object['id']
+        copy_identity_properties(existing_object, params['data'])
+        return self.edit_object(edit_op_name, params)
+
+    def upsert_object(self, op_name, params):
+        """
+        Updates an object if it already exists, or tries to create a new one if there is no
+        such object. If multiple objects match filter criteria, or add operation is not supported,
+        the exception is raised.
+
+        :param op_name: upsert operation name
+        :type op_name: str
+        :param params: params that upsert operation should be executed with
+        :type params: dict
+        :return: upserted object representation
+        :rtype: dict
+        """
+        model_name = _extract_model_from_upsert_operation(op_name)
+        model_operations = self.get_operation_specs_by_model_name(model_name)
+
+        if not self._operation_checker.is_upsert_operation_supported(model_operations):
+            raise FtdInvalidOperationNameError(op_name)
+
+        existing_obj = self._find_object_matching_params(model_name, params)
+        if existing_obj:
+            equal_to_existing_obj = equal_objects(existing_obj, params[ParamName.DATA])
+            return existing_obj if equal_to_existing_obj \
+                else self._edit_upserted_object(model_operations, existing_obj, params)
+        else:
+            return self._add_upserted_object(model_operations, params)
+
 
 def _set_default(params, field_name, value):
     if field_name not in params or params[field_name] is None:
@@ -296,6 +492,10 @@ def is_post_request(operation_spec):
 
 def is_put_request(operation_spec):
     return operation_spec[OperationField.METHOD] == HTTPMethod.PUT
+
+
+def _extract_model_from_upsert_operation(op_name):
+    return op_name[len(OperationNamePrefix.UPSERT):]
 
 
 def _get_user_params(params):
@@ -320,13 +520,30 @@ def iterate_over_pageable_resource(resource_func, params):
     params = copy.deepcopy(params)
     params[ParamName.QUERY_PARAMS].setdefault('limit', DEFAULT_PAGE_SIZE)
     params[ParamName.QUERY_PARAMS].setdefault('offset', DEFAULT_OFFSET)
+    limit = int(params[ParamName.QUERY_PARAMS]['limit'])
 
-    result = resource_func(params=params)
-    while result['items']:
+    def received_less_items_than_requested(items_in_response, items_expected):
+        if items_in_response == items_expected:
+            return False
+        elif items_in_response < items_expected:
+            return True
+
+        raise FtdUnexpectedResponse(
+            "Get List of Objects Response from the server contains more objects than requested. "
+            "There are {0} item(s) in the response while {1} was(ere) requested".format(
+                items_in_response, items_expected)
+        )
+
+    while True:
+        result = resource_func(params=params)
+
         for item in result['items']:
             yield item
+
+        if received_less_items_than_requested(len(result['items']), limit):
+            break
+
         # creating a copy not to mutate existing dict
         params = copy.deepcopy(params)
         query_params = params[ParamName.QUERY_PARAMS]
-        query_params['offset'] = int(query_params['offset']) + int(query_params['limit'])
-        result = resource_func(params=params)
+        query_params['offset'] = int(query_params['offset']) + limit
