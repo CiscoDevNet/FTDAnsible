@@ -1,5 +1,5 @@
---extra-index-url http://kick-pypi.cisco.com/kick/prod/
---trusted-host kick-pypi.cisco.com
-kick-external
 ansible==2.7.0
 urllib3==1.23
+--extra-index-url http://kick-pypi.cisco.com/kick/prod/
+--trusted-host kick-pypi.cisco.com
+kick==5.415
