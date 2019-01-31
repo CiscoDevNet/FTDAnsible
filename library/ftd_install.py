@@ -74,18 +74,23 @@ options:
 """
 
 EXAMPLES = """
-- name: install ftd
-  ftd_install:
-    ip: '192.168.0.156'
-    netmask: '255.255.255.0'
-    gateway: '192.168.0.254'
-    hostname: 'firepower'
-    password: 'Admin123'
-    console_port: '2004'
-    tftp_server: '10.88.90.130'
-    dns_server: '171.70.168.183'
-    rommon_file: 'xyz/ftd-boot.cdisk'
-    ftd_file: 'http://10.88.90.130/xyz/ftd-6.3.0-xxx.pkg'
+  - name: Install image v6.2.3 on FTD
+    ftd_install:
+      device_hostname: firepower
+      device_password: Sourcefire
+      device_ip: 192.168.0.1
+      device_netmask: 255.255.255.0
+      device_gateway: 192.168.0.254
+      dns_server: 8.8.8.8
+
+      console_ip: 10.89.0.0
+      console_port: 2004
+      console_username: console_user
+      console_password: console_pass
+
+      image_site: ast
+      image_branch: Release
+      image_version: 6.2.3-83
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -94,46 +99,55 @@ from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
 
 def main():
     fields = dict(
-        ip=dict(type='str', required=True),
-        netmask=dict(type='str', required=True),
-        gateway=dict(type='str', required=True),
-        hostname=dict(type='str'),
-        password=dict(type='str'),
-        ssh_port=dict(type='int', required=True),
-        tftp_server=dict(type='str', required=True),
+        device_hostname=dict(type='str', required=True),
+        device_password=dict(type='str', required=True),
+        device_ip=dict(type='str', required=True),
+        device_netmask=dict(type='str', required=True),
+        device_gateway=dict(type='str', required=True),
         dns_server=dict(type='str', required=True),
-        rommon_file=dict(type='str', required=True),
-        ftd_file=dict(type='path', required=True)
-    )
 
+        console_ip=dict(type='str', required=True),
+        console_port=dict(type='str', required=True),
+        console_username=dict(type='str', required=True),
+        console_password=dict(type='str', required=True),
+
+        image_site=dict(type='str', required=True),
+        image_branch=dict(type='str', required=True),
+        image_version=dict(type='str', required=True)
+    )
     module = AnsibleModule(argument_spec=fields)
 
-    ip = module.params["ip"]
-    netmask = module.params["netmask"]
-    gateway = module.params["gateway"]
-    hostname = module.params["hostname"]
-    password = module.params["password"]
-    ssh_port = module.params["ssh_port"]
-    tftp_server = module.params["tftp_server"]
-    dns_server = module.params["dns_servers"]
-    rommon_file = module.params["rommon_file"]
-    ftd_file = module.params["ftd_file"]
+    hostname, password = module.params["device_hostname"], module.params["device_password"]
+    console_ip, console_port = module.params["console_ip"], module.params["console_port"]
+    console_username, console_password = module.params["console_username"], module.params["console_password"]
+    device_ip, device_netmask, device_gateway = \
+        module.params["device_ip"], module.params["device_netmask"], module.params["device_gateway"]
+    dns_server = module.params["dns_server"]
+    img_site, img_branch, img_version = module.params["image_site"], module.params["image_branch"], module.params["image_version"]
 
-    ftd = Ftd5500x(hostname=hostname, login_password=password, sudo_password=password)
+    ftd = Ftd5500x(hostname=hostname,
+                   login_password=password,
+                   sudo_password=password)
+    dev = None
 
-    dev = ftd.ssh_console(ip=ip, port=ssh_port)
+    try:
+        dev = ftd.ssh_console(ip=console_ip,
+                              port=console_port,
+                              username=console_username,
+                              password=console_password)
 
-    dev.rommon_to_new_image(rommon_tftp_server=tftp_server,
-                            pkg_image=ftd_file,
-                            rommon_image=rommon_file,
-                            uut_ip=ip,
-                            uut_netmask=netmask,
-                            uut_gateway=gateway,
-                            dns_server=dns_server,
-                            hostname=hostname,
-                            power_cycle_flag=False)
+        dev.baseline_by_branch_and_version(site=img_site,
+                                           branch=img_branch,
+                                           version=img_version,
+                                           uut_ip=device_ip,
+                                           uut_netmask=device_netmask,
+                                           uut_gateway=device_gateway,
+                                           dns_server=dns_server,
+                                           hostname=hostname)
 
-    dev.disconnect()
+        module.exit_json(changed=True)
+    finally:
+        dev.disconnect()
 
 
 if __name__ == '__main__':
