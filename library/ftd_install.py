@@ -105,6 +105,36 @@ except ImportError:
 GET_SYSTEM_INFO_OPERATION = 'getSystemInformation'
 
 
+def provision_ftd_5500x_with_kenton_platform(params):
+    hostname, password = params["device_hostname"], params["device_password"]
+    ftd = Ftd5500x(hostname=hostname,
+                   login_password=password,
+                   sudo_password=password)
+    dev = None
+
+    try:
+        dev = ftd.ssh_console(ip=params["console_ip"],
+                              port=params["console_port"],
+                              username=params["console_username"],
+                              password=params["console_password"])
+
+        dev.baseline_by_branch_and_version(site=params["image_site"],
+                                           branch=params["image_branch"],
+                                           version=params["image_version"],
+                                           uut_ip=params["device_ip"],
+                                           uut_netmask=params["device_netmask"],
+                                           uut_gateway=params["device_gateway"],
+                                           dns_server=params["dns_server"],
+                                           hostname=hostname)
+    finally:
+        dev.disconnect()
+
+
+PLATFORM_TO_INSTALL_MAP = {
+    'Cisco ASA5516-X Threat Defense': provision_ftd_5500x_with_kenton_platform
+}
+
+
 def main():
     fields = dict(
         device_hostname=dict(type='str', required=True),
@@ -124,52 +154,35 @@ def main():
         image_version=dict(type='str', required=True)
     )
     module = AnsibleModule(argument_spec=fields)
-
-    hostname, password = module.params["device_hostname"], module.params["device_password"]
-    console_ip, console_port = module.params["console_ip"], module.params["console_port"]
-    console_username, console_password = module.params["console_username"], module.params["console_password"]
-    device_ip, device_netmask, device_gateway = \
-        module.params["device_ip"], module.params["device_netmask"], module.params["device_gateway"]
-    dns_server = module.params["dns_server"]
-    img_site, img_branch, img_version = module.params["image_site"], module.params["image_branch"], module.params["image_version"]
-
     connection = Connection(module._socket_path)
     resource = BaseConfigurationResource(connection, module.check_mode)
 
-    current_ftd_version = get_current_ftd_version(resource)
-    if img_version == current_ftd_version:
-        return module.exit_json(changed=False, msg="FTD already has %s version of software installed." % img_version)
+    system_info = get_system_info(resource)
+    check_that_model_is_supported(module, system_info)
+    check_that_update_is_needed(module, system_info)
 
-    ftd = Ftd5500x(hostname=hostname,
-                   login_password=password,
-                   sudo_password=password)
-    dev = None
+    provision_method = PLATFORM_TO_INSTALL_MAP[system_info['platformModel']]
+    provision_method(module.params)
 
-    try:
-        dev = ftd.ssh_console(ip=console_ip,
-                              port=console_port,
-                              username=console_username,
-                              password=console_password)
-
-        dev.baseline_by_branch_and_version(site=img_site,
-                                           branch=img_branch,
-                                           version=img_version,
-                                           uut_ip=device_ip,
-                                           uut_netmask=device_netmask,
-                                           uut_gateway=device_gateway,
-                                           dns_server=dns_server,
-                                           hostname=hostname)
-
-        module.exit_json(changed=True)
-    finally:
-        dev.disconnect()
+    module.exit_json(changed=True)
 
 
-def get_current_ftd_version(resource):
+def get_system_info(resource):
     path_params = {ParamName.PATH_PARAMS: PATH_PARAMS_FOR_DEFAULT_OBJ}
     system_info = resource.execute_operation(GET_SYSTEM_INFO_OPERATION, path_params)
-    ftd_version = system_info['softwareVersion']
-    return ftd_version
+    return system_info
+
+
+def check_that_model_is_supported(module, system_info):
+    platform_model = system_info['platformModel']
+    if platform_model not in PLATFORM_TO_INSTALL_MAP:
+        module.fail_json(msg="Platform '%s' is not supported by this module." % platform_model)
+
+
+def check_that_update_is_needed(module, system_info):
+    target_ftd_version = module.params["image_version"]
+    if target_ftd_version == system_info['softwareVersion']:
+        module.exit_json(changed=False, msg="FTD already has %s version of software installed." % target_ftd_version)
 
 
 if __name__ == '__main__':

@@ -40,8 +40,22 @@ class TestFtdInstall(object):
         resource_class_mock = mocker.patch('library.ftd_install.BaseConfigurationResource')
         return resource_class_mock.return_value
 
+    def test_module_should_fail_when_platform_is_not_supported(self, config_resource_mock):
+        config_resource_mock.execute_operation.return_value = {'platformModel': 'nonSupportedPlatform'}
+
+        set_module_args(dict(DEFAULT_INSTALL_PARAMS))
+        with pytest.raises(AnsibleFailJson) as ex:
+            self.module.main()
+
+        result = ex.value.args[0]
+        assert result['failed']
+        assert result['msg'] == "Platform 'nonSupportedPlatform' is not supported by this module."
+
     def test_module_should_return_when_software_is_already_installed(self, config_resource_mock):
-        config_resource_mock.execute_operation.return_value = {'softwareVersion': '6.3.0-11'}
+        config_resource_mock.execute_operation.return_value = {
+            'softwareVersion': '6.3.0-11',
+            'platformModel': 'Cisco ASA5516-X Threat Defense'
+        }
         module_params = dict(DEFAULT_INSTALL_PARAMS)
         module_params['image_version'] = '6.3.0-11'
 
