@@ -103,6 +103,9 @@ except ImportError:
     from module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
 
 GET_SYSTEM_INFO_OPERATION = 'getSystemInformation'
+GET_MANAGEMENT_IP_LIST_OPERATION = 'getManagementIPList'
+GET_DNS_SETTING_LIST_OPERATION = 'getDeviceDNSSettingsList'
+GET_DNS_SERVER_GROUP_OPERATION = 'getDNSServerGroup'
 
 
 def provision_ftd_5500x_with_kenton_platform(params):
@@ -139,10 +142,10 @@ def main():
     fields = dict(
         device_hostname=dict(type='str', required=True),
         device_password=dict(type='str', required=True),
-        device_ip=dict(type='str', required=True),
-        device_netmask=dict(type='str', required=True),
-        device_gateway=dict(type='str', required=True),
-        dns_server=dict(type='str', required=True),
+        device_ip=dict(type='str', required=False),
+        device_netmask=dict(type='str', required=False),
+        device_gateway=dict(type='str', required=False),
+        dns_server=dict(type='str', required=False),
 
         console_ip=dict(type='str', required=True),
         console_port=dict(type='str', required=True),
@@ -160,11 +163,12 @@ def main():
     system_info = get_system_info(resource)
     check_that_model_is_supported(module, system_info)
     check_that_update_is_needed(module, system_info)
+    check_management_and_dns_params(resource, module.params)
 
     provision_method = PLATFORM_TO_INSTALL_MAP[system_info['platformModel']]
     provision_method(module.params)
 
-    module.exit_json(changed=True)
+    module.exit_json(changed=True, result=module.params)
 
 
 def get_system_info(resource):
@@ -183,6 +187,20 @@ def check_that_update_is_needed(module, system_info):
     target_ftd_version = module.params["image_version"]
     if target_ftd_version == system_info['softwareVersion']:
         module.exit_json(changed=False, msg="FTD already has %s version of software installed." % target_ftd_version)
+
+
+def check_management_and_dns_params(resource, params):
+    if not params.get('device_ip') or not params.get('device_netmask') or not params.get('device_gateway'):
+        management_ip = resource.execute_operation(GET_MANAGEMENT_IP_LIST_OPERATION, {})['items'][0]
+        params['device_ip'] = params.get('device_ip') or management_ip['ipv4Address']
+        params['device_netmask'] = params.get('device_netmask') or management_ip['ipv4NetMask']
+        params['device_gateway'] = params.get('device_gateway') or management_ip['ipv4Gateway']
+    if not params.get('dns_server'):
+        dns_setting = resource.execute_operation(GET_DNS_SETTING_LIST_OPERATION, {})['items'][0]
+        dns_server_group_id = dns_setting['dnsServerGroup']['id']
+        dns_server_group = resource.execute_operation(GET_DNS_SERVER_GROUP_OPERATION,
+                                                      {ParamName.PATH_PARAMS: {'objId': dns_server_group_id}})
+        params['dns_server'] = dns_server_group['dnsServers'][0]['ipAddress']
 
 
 if __name__ == '__main__':
