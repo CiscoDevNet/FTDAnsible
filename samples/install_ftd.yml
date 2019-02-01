@@ -1,10 +1,10 @@
-- hosts: localhost
-  connection: local
+- hosts: ftd
+  connection: httpapi
   tasks:
   - name: Install image v6.2.3 on FTD
     ftd_install:
       device_hostname: firepower
-      device_password: Sourcefire
+      device_password: pass
       device_ip: 192.168.0.1
       device_netmask: 255.255.255.0
       device_gateway: 192.168.0.254

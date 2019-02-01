@@ -95,6 +95,14 @@ EXAMPLES = """
 
 from ansible.module_utils.basic import AnsibleModule
 from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
+from ansible.module_utils.connection import Connection
+
+try:
+    from ansible.module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
+except ImportError:
+    from module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
+
+GET_SYSTEM_INFO_OPERATION = 'getSystemInformation'
 
 
 def main():
@@ -125,6 +133,13 @@ def main():
     dns_server = module.params["dns_server"]
     img_site, img_branch, img_version = module.params["image_site"], module.params["image_branch"], module.params["image_version"]
 
+    connection = Connection(module._socket_path)
+    resource = BaseConfigurationResource(connection, module.check_mode)
+
+    current_ftd_version = get_current_ftd_version(resource)
+    if img_version == current_ftd_version:
+        return module.exit_json(changed=False, msg="FTD already has %s version of software installed." % img_version)
+
     ftd = Ftd5500x(hostname=hostname,
                    login_password=password,
                    sudo_password=password)
@@ -148,6 +163,13 @@ def main():
         module.exit_json(changed=True)
     finally:
         dev.disconnect()
+
+
+def get_current_ftd_version(resource):
+    path_params = {ParamName.PATH_PARAMS: PATH_PARAMS_FOR_DEFAULT_OBJ}
+    system_info = resource.execute_operation(GET_SYSTEM_INFO_OPERATION, path_params)
+    ftd_version = system_info['softwareVersion']
+    return ftd_version
 
 
 if __name__ == '__main__':
