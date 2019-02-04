@@ -40,6 +40,10 @@ class TestFtdInstall(object):
         resource_class_mock = mocker.patch('library.ftd_install.BaseConfigurationResource')
         return resource_class_mock.return_value
 
+    @pytest.fixture(autouse=True)
+    def ftd_5500x_mock(self, mocker):
+        return mocker.patch('library.ftd_install.Ftd5500x')
+
     def test_module_should_fail_when_platform_is_not_supported(self, config_resource_mock):
         config_resource_mock.execute_operation.return_value = {'platformModel': 'nonSupportedPlatform'}
 
@@ -66,3 +70,88 @@ class TestFtdInstall(object):
         result = ex.value.args[0]
         assert not result['changed']
         assert result['msg'] == 'FTD already has 6.3.0-11 version of software installed.'
+
+    def test_module_should_fill_management_ip_values_when_missing(self, config_resource_mock, ftd_5500x_mock):
+        config_resource_mock.execute_operation.side_effect = [
+            {
+                'softwareVersion': '6.3.0-11',
+                'platformModel': 'Cisco ASA5516-X Threat Defense'
+            },
+            {
+                'items': [{
+                    'ipv4Address': '192.168.1.1',
+                    'ipv4NetMask': '255.255.255.0',
+                    'ipv4Gateway': '192.168.0.1'
+                }]
+            }
+        ]
+        module_params = dict(DEFAULT_INSTALL_PARAMS)
+        del module_params['device_ip']
+        del module_params['device_netmask']
+        del module_params['device_gateway']
+
+        set_module_args(module_params)
+        with pytest.raises(AnsibleExitJson):
+            self.module.main()
+
+        console_mock = ftd_5500x_mock.return_value.ssh_console
+        console_mock.assert_called_once_with(
+            ip=module_params['console_ip'],
+            password=module_params['console_password'],
+            port=module_params['console_port'],
+            username=module_params['console_username']
+        )
+        console_mock.return_value.baseline_by_branch_and_version.assert_called_once_with(
+            site=module_params['image_site'],
+            branch=module_params['image_branch'],
+            version=module_params['image_version'],
+            uut_ip='192.168.1.1',
+            uut_netmask='255.255.255.0',
+            uut_gateway='192.168.0.1',
+            dns_server=module_params['dns_server'],
+            hostname=module_params['device_hostname']
+        )
+
+    def test_module_should_fill_dns_server_when_missing(self, config_resource_mock, ftd_5500x_mock):
+        config_resource_mock.execute_operation.side_effect = [
+            {
+                'softwareVersion': '6.3.0-11',
+                'platformModel': 'Cisco ASA5516-X Threat Defense'
+            },
+            {
+                'items': [{
+                    'dnsServerGroup': {
+                        'id': '123'
+                    }
+                }]
+            },
+            {
+                'dnsServers': [{
+                    'ipAddress': '8.8.9.9'
+                }]
+            }
+        ]
+        module_params = dict(DEFAULT_INSTALL_PARAMS)
+        del module_params['dns_server']
+
+        set_module_args(module_params)
+        with pytest.raises(AnsibleExitJson):
+            self.module.main()
+
+        console_mock = ftd_5500x_mock.return_value.ssh_console
+        console_mock.assert_called_once_with(
+            ip=module_params['console_ip'],
+            password=module_params['console_password'],
+            port=module_params['console_port'],
+            username=module_params['console_username']
+        )
+        console_mock.return_value.baseline_by_branch_and_version.assert_called_once_with(
+            site=module_params['image_site'],
+            branch=module_params['image_branch'],
+            version=module_params['image_version'],
+            uut_ip=module_params['device_ip'],
+            uut_netmask=module_params['device_netmask'],
+            uut_gateway=module_params['device_gateway'],
+            dns_server='8.8.9.9',
+            hostname=module_params['device_hostname']
+        )
