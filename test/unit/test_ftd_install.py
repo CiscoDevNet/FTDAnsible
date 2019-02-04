@@ -17,9 +17,9 @@ DEFAULT_INSTALL_PARAMS = dict(
     console_port="2004",
     console_username="console_user",
     console_password="console_pass",
-    image_site="ast",
-    image_branch="Release",
-    image_version="6.2.3-83"
+    tftp_server="10.0.0.1",
+    rommon_file_location="boot/ftd-boot-1.9.2.0.lfbff",
+    image_file_location="http://10.0.0.1/Release/ftd-6.2.3-83.pkg"
 )
 
 
@@ -101,10 +101,10 @@ class TestFtdInstall(object):
             port=module_params['console_port'],
             username=module_params['console_username']
         )
-        console_mock.return_value.baseline_by_branch_and_version.assert_called_once_with(
-            site=module_params['image_site'],
-            branch=module_params['image_branch'],
-            version=module_params['image_version'],
+        console_mock.return_value.rommon_to_new_image.assert_called_once_with(
+            rommon_tftp_server=module_params['tftp_server'],
+            rommon_image=module_params['rommon_file_location'],
+            pkg_image=module_params['image_file_location'],
             uut_ip='192.168.1.1',
             uut_netmask='255.255.255.0',
             uut_gateway='192.168.0.1',
@@ -145,10 +145,10 @@ class TestFtdInstall(object):
             port=module_params['console_port'],
             username=module_params['console_username']
         )
-        console_mock.return_value.baseline_by_branch_and_version.assert_called_once_with(
-            site=module_params['image_site'],
-            branch=module_params['image_branch'],
-            version=module_params['image_version'],
+        console_mock.return_value.rommon_to_new_image.assert_called_once_with(
+            rommon_tftp_server=module_params['tftp_server'],
+            rommon_image=module_params['rommon_file_location'],
+            pkg_image=module_params['image_file_location'],
             uut_ip=module_params['device_ip'],
             uut_netmask=module_params['device_netmask'],
             uut_gateway=module_params['device_gateway'],

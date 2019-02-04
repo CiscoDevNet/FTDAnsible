@@ -121,14 +121,14 @@ def provision_ftd_5500x_with_kenton_platform(params):
                               username=params["console_username"],
                               password=params["console_password"])
 
-        dev.baseline_by_branch_and_version(site=params["image_site"],
-                                           branch=params["image_branch"],
-                                           version=params["image_version"],
-                                           uut_ip=params["device_ip"],
-                                           uut_netmask=params["device_netmask"],
-                                           uut_gateway=params["device_gateway"],
-                                           dns_server=params["dns_server"],
-                                           hostname=hostname)
+        dev.rommon_to_new_image(rommon_tftp_server=params["tftp_server"],
+                                pkg_image=params["image_file_location"],
+                                rommon_image=params["rommon_file_location"],
+                                uut_ip=params["device_ip"],
+                                uut_netmask=params["device_netmask"],
+                                uut_gateway=params["device_gateway"],
+                                dns_server=params["dns_server"],
+                                hostname=hostname)
     finally:
         dev.disconnect()
 
@@ -152,9 +152,10 @@ def main():
         console_username=dict(type='str', required=True),
         console_password=dict(type='str', required=True),
 
-        image_site=dict(type='str', required=True),
-        image_branch=dict(type='str', required=True),
-        image_version=dict(type='str', required=True)
+        tftp_server=dict(type='str', required=True),
+        rommon_file_location=dict(type='str', required=True),
+        image_file_location=dict(type='str', required=True),
+        image_version=dict(type='str', required=False)
     )
     module = AnsibleModule(argument_spec=fields)
     connection = Connection(module._socket_path)
