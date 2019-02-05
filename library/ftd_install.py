@@ -31,8 +31,8 @@ DOCUMENTATION = """
 module: ftd_install
 short_description: Installs FTD pkg image on the firewall
 description:
-  - Provisions firewall devices by installing ROMmon image (if needed) and 
-    FTD pkg image on the firewall. 
+  - Provisions firewall devices by installing ROMmon image (if needed) and
+    FTD pkg image on the firewall.
 version_added: "2.8"
 requirements: [ "python >= 3.5", "kick" ]
 author: "Cisco Systems, Inc."
@@ -41,12 +41,12 @@ options:
     description:
       - Hostname of the device as appears in the prompt (e.g., 'firepower-5516').
     required: true
-    type: string  
+    type: string
   device_password:
     description:
       - Password to login on the device.
     required: true
-    type: string  
+    type: string
   device_sudo_password:
     description:
       - Root password for the device. If not specified, `device_password` is used.
@@ -54,47 +54,47 @@ options:
     type: string
   device_ip:
     description:
-      - Device IP address of management interface. 
+      - Device IP address of management interface.
       - If not specified, the module tries to fetch the existing value via REST API.
     required: false
     type: string
   device_gateway:
     description:
-      - Device gateway of management interface. 
+      - Device gateway of management interface.
       - If not specified, the module tries to fetch the existing value via REST API.
     required: false
     type: string
   device_netmask:
     description:
-      - Device netmask of management interface. 
+      - Device netmask of management interface.
       - If not specified, the module tries to fetch the existing value via REST API.
     required: false
     type: string
   dns_server:
     description:
-      - DNS IP address of management interface. 
+      - DNS IP address of management interface.
       - If not specified, the module tries to fetch the existing value via REST API.
     required: false
     type: string
   console_ip:
     description:
-      - IP address of a terminal server. 
+      - IP address of a terminal server.
       - Used to set up an SSH connection with device's console port through the terminal server.
     required: true
     type: string
   console_port:
     description:
-      - Device's port on a terminal server. 
+      - Device's port on a terminal server.
     required: true
     type: string
   console_username:
     description:
-      - Username to login on a terminal server. 
+      - Username to login on a terminal server.
     required: true
     type: string
   console_password:
     description:
-      - Password to login on a terminal server. 
+      - Password to login on a terminal server.
     required: true
     type: string
   tftp_server:
