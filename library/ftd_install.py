@@ -34,6 +34,7 @@ description:
   - Provisions firewall devices by installing ROMmon image (if needed) and 
     FTD pkg image on the firewall. 
 version_added: "2.8"
+requirements: [ "python >= 3.5", "kick" ]
 author: "Cisco Systems, Inc."
 options:
   device_hostname:
@@ -141,8 +142,13 @@ EXAMPLES = """
 """
 
 from ansible.module_utils.basic import AnsibleModule
-from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
 from ansible.module_utils.connection import Connection
+
+try:
+    from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
+    HAS_KICK = True
+except ImportError:
+    HAS_KICK = False
 
 try:
     from ansible.module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
@@ -206,6 +212,9 @@ def main():
         image_version=dict(type='str', required=False)
     )
     module = AnsibleModule(argument_spec=fields)
+    if not HAS_KICK:
+        module.fail_json(msg='Kick Python module is required to run this module.')
+
     connection = Connection(module._socket_path)
     resource = BaseConfigurationResource(connection, module.check_mode)
 

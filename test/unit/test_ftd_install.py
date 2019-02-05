@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 
+import sys
+
 import pytest
 from ansible.module_utils import basic
+from six.moves import reload_module
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
 from library import ftd_install
@@ -43,6 +46,21 @@ class TestFtdInstall(object):
     @pytest.fixture(autouse=True)
     def ftd_5500x_mock(self, mocker):
         return mocker.patch('library.ftd_install.Ftd5500x')
+
+    def test_module_should_fail_when_kick_is_not_installed(self, mocker):
+        mocker.patch.dict(sys.modules, {'kick.device2.ftd5500x.actions.ftd5500x': None})
+        reload_module(ftd_install)
+
+        set_module_args(dict(DEFAULT_INSTALL_PARAMS))
+        with pytest.raises(AnsibleFailJson) as ex:
+            self.module.main()
+
+        result = ex.value.args[0]
+        assert result['failed']
+        assert result['msg'] == "Kick Python module is required to run this module."
+
+        mocker.stopall()
+        reload_module(ftd_install)
 
     def test_module_should_fail_when_platform_is_not_supported(self, config_resource_mock):
         config_resource_mock.execute_operation.return_value = {'platformModel': 'nonSupportedPlatform'}
