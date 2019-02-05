@@ -29,55 +29,101 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 DOCUMENTATION = """
 ---
 module: ftd_install
-short_description: Configure FTD devices
+short_description: Installs FTD pkg image on the firewall
+description:
+  - Provisions firewall devices by installing ROMmon image (if needed) and 
+    FTD pkg image on the firewall. 
 version_added: "2.8"
 author: "Cisco Systems, Inc."
 options:
-  ip:
+  device_hostname:
     description:
-      - Device IP Address to access TFTP Server
+      - Hostname of the device as appears in the prompt (e.g., 'firepower-5516').
     required: true
-  netmask:
+    type: string  
+  device_password:
     description:
-      - Device Netmask
+      - Password to login on the device.
     required: true
-  gateway:
+    type: string  
+  device_sudo_password:
     description:
-      - Device Gateway
-    required: true
-  hostname:
+      - Root password for the device. If not specified, `device_password` is used.
+    required: false
+    type: string
+  device_ip:
     description:
-      - Hostname to be set
-  password:
+      - Device IP address of management interface. 
+      - If not specified, the module tries to fetch the existing value via REST API.
+    required: false
+    type: string
+  device_gateway:
     description:
-      - Password to login   
-  ssh_port:
+      - Device gateway of management interface. 
+      - If not specified, the module tries to fetch the existing value via REST API.
+    required: false
+    type: string
+  device_netmask:
     description:
-      - Port of device on terminal server   
-    required: true 
-  tftp_server:
-    description:
-      - TFTP Server IP Address
-    required: true
+      - Device netmask of management interface. 
+      - If not specified, the module tries to fetch the existing value via REST API.
+    required: false
+    type: string
   dns_server:
     description:
-      - DNS server
-    required: true
-  rommon_file:
+      - DNS IP address of management interface. 
+      - If not specified, the module tries to fetch the existing value via REST API.
+    required: false
+    type: string
+  console_ip:
     description:
-      - Boot image to be transferred via TFTP
+      - IP address of a terminal server. 
+      - Used to set up an SSH connection with device's console port through the terminal server.
     required: true
-  ftd_file:
+    type: string
+  console_port:
     description:
-      - FTD image to be transferred via HTTP
+      - Device's port on a terminal server. 
     required: true
+    type: string
+  console_username:
+    description:
+      - Username to login on a terminal server. 
+    required: true
+    type: string
+  console_password:
+    description:
+      - Password to login on a terminal server. 
+    required: true
+    type: string
+  tftp_server:
+    description:
+      - IP address of TFTP server with ROMmon image.
+    required: true
+    type: string
+  rommon_file_location:
+    description:
+      - Path to the boot (ROMmon) image on TFTP server.
+    required: true
+    type: string
+  image_file_location:
+    description:
+      - Path to the FTD pkg image to be transferred via HTTP.
+    required: true
+    type: string
+  image_version:
+    description:
+      - Version of FTD image to be installed.
+      - Helps to compare target and current FTD versions to prevent unnecessary reinstalls.
+    required: false
+    type: string
 """
 
 EXAMPLES = """
-  - name: Install image v6.2.3 on FTD
+  - name: Install image v6.3.0 on FTD 5516
     ftd_install:
       device_hostname: firepower
-      device_password: Sourcefire
+      device_password: pass
       device_ip: 192.168.0.1
       device_netmask: 255.255.255.0
       device_gateway: 192.168.0.254
@@ -88,9 +134,10 @@ EXAMPLES = """
       console_username: console_user
       console_password: console_pass
 
-      image_site: ast
-      image_branch: Release
-      image_version: 6.2.3-83
+      tftp_server: 10.89.0.11
+      rommon_file_location: 'installers/ftd-boot-9.10.1.3.lfbff'
+      image_file_location: 'https://10.89.0.11/installers/ftd-6.3.0-83.pkg'
+      image_version: 6.3.0-83
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -109,10 +156,10 @@ GET_DNS_SERVER_GROUP_OPERATION = 'getDNSServerGroup'
 
 
 def provision_ftd_5500x_with_kenton_platform(params):
-    hostname, password = params["device_hostname"], params["device_password"]
+    hostname = params["device_hostname"]
     ftd = Ftd5500x(hostname=hostname,
-                   login_password=password,
-                   sudo_password=password)
+                   login_password=params["device_password"],
+                   sudo_password=params.get("device_sudo_password") or params["device_password"])
     dev = None
 
     try:
@@ -141,7 +188,8 @@ PLATFORM_TO_INSTALL_MAP = {
 def main():
     fields = dict(
         device_hostname=dict(type='str', required=True),
-        device_password=dict(type='str', required=True),
+        device_password=dict(type='str', required=True, no_log=True),
+        device_sudo_password=dict(type='str', required=False, no_log=True),
         device_ip=dict(type='str', required=False),
         device_netmask=dict(type='str', required=False),
         device_gateway=dict(type='str', required=False),
@@ -150,7 +198,7 @@ def main():
         console_ip=dict(type='str', required=True),
         console_port=dict(type='str', required=True),
         console_username=dict(type='str', required=True),
-        console_password=dict(type='str', required=True),
+        console_password=dict(type='str', required=True, no_log=True),
 
         tftp_server=dict(type='str', required=True),
         rommon_file_location=dict(type='str', required=True),
