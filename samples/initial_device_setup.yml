@@ -1,0 +1,19 @@
+- hosts: vftd
+  connection: httpapi
+  tasks:
+    - name: Get provisioning info
+      ftd_configuration:
+        operation: getInitialProvision
+        path_params:
+          objId: default
+        register_as: provisionInfo
+
+    - name: Complete initial provisioning
+      ftd_configuration:
+        operation: addInitialProvision
+        data:
+          acceptEULA: True
+          eulaText: "{{ provisionInfo['eulaText'] }}"
+          currentPassword: "oldPassword"
+          newPassword: "newPassword1$"
+          type: initialprovision
