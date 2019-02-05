@@ -143,6 +143,7 @@ EXAMPLES = """
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
+from enum import Enum
 
 try:
     from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
@@ -155,10 +156,12 @@ try:
 except ImportError:
     from module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
 
-GET_SYSTEM_INFO_OPERATION = 'getSystemInformation'
-GET_MANAGEMENT_IP_LIST_OPERATION = 'getManagementIPList'
-GET_DNS_SETTING_LIST_OPERATION = 'getDeviceDNSSettingsList'
-GET_DNS_SERVER_GROUP_OPERATION = 'getDNSServerGroup'
+
+class FtdOperations(Enum):
+    GET_SYSTEM_INFO = 'getSystemInformation'
+    GET_MANAGEMENT_IP_LIST = 'getManagementIPList'
+    GET_DNS_SETTING_LIST = 'getDeviceDNSSettingsList'
+    GET_DNS_SERVER_GROUP = 'getDNSServerGroup'
 
 
 def provision_ftd_5500x_with_kenton_platform(params):
@@ -231,7 +234,7 @@ def main():
 
 def get_system_info(resource):
     path_params = {ParamName.PATH_PARAMS: PATH_PARAMS_FOR_DEFAULT_OBJ}
-    system_info = resource.execute_operation(GET_SYSTEM_INFO_OPERATION, path_params)
+    system_info = resource.execute_operation(FtdOperations.GET_SYSTEM_INFO.value, path_params)
     return system_info
 
 
@@ -248,15 +251,15 @@ def check_that_update_is_needed(module, system_info):
 
 
 def check_management_and_dns_params(resource, params):
-    if not params.get('device_ip') or not params.get('device_netmask') or not params.get('device_gateway'):
-        management_ip = resource.execute_operation(GET_MANAGEMENT_IP_LIST_OPERATION, {})['items'][0]
+    if not all([params.get('device_ip'), params.get('device_netmask'), params.get('device_gateway')]):
+        management_ip = resource.execute_operation(FtdOperations.GET_MANAGEMENT_IP_LIST.value, {})['items'][0]
         params['device_ip'] = params.get('device_ip') or management_ip['ipv4Address']
         params['device_netmask'] = params.get('device_netmask') or management_ip['ipv4NetMask']
         params['device_gateway'] = params.get('device_gateway') or management_ip['ipv4Gateway']
     if not params.get('dns_server'):
-        dns_setting = resource.execute_operation(GET_DNS_SETTING_LIST_OPERATION, {})['items'][0]
+        dns_setting = resource.execute_operation(FtdOperations.GET_DNS_SETTING_LIST.value, {})['items'][0]
         dns_server_group_id = dns_setting['dnsServerGroup']['id']
-        dns_server_group = resource.execute_operation(GET_DNS_SERVER_GROUP_OPERATION,
+        dns_server_group = resource.execute_operation(FtdOperations.GET_DNS_SERVER_GROUP.value,
                                                       {ParamName.PATH_PARAMS: {'objId': dns_server_group_id}})
         params['dns_server'] = dns_server_group['dnsServers'][0]['ipAddress']
 
