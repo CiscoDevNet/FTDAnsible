@@ -49,6 +49,8 @@ ADD_OPERATION_NOT_SUPPORTED_ERROR = (
     "Creation of objects with this type is not supported."
 )
 
+PATH_PARAMS_FOR_DEFAULT_OBJ = {'objId': 'default'}
+
 
 class OperationNamePrefix:
     ADD = 'add'

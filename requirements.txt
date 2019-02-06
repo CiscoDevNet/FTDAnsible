@@ -1,2 +1,6 @@
 ansible==2.7.0
 urllib3==1.23
+lxml==4.3.0
+--extra-index-url http://kick-pypi.cisco.com/kick/prod/
+--trusted-host kick-pypi.cisco.com
+kick
