@@ -8,6 +8,14 @@
           objId: default
         register_as: provisionInfo
 
+    - name: Show EULA text
+      debug:
+        msg: "EULA details: {{ provisionInfo['eulaText'] }}"
+
+    - name: Confirm EULA acceptance
+      pause:
+        prompt: 'Please confirm you want to accept EULA. Press return to continue. To about, press Ctrl+C and then "A"'
+
     - name: Complete initial provisioning
       ftd_configuration:
         operation: addInitialProvision
