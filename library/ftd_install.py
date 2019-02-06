@@ -42,6 +42,13 @@ options:
       - Hostname of the device as appears in the prompt (e.g., 'firepower-5516').
     required: true
     type: string
+  device_username:
+    description:
+      - Username to login on the device.
+      - Defaulted to 'admin' if not specified.
+    required: false
+    type: string
+    default: admin
   device_password:
     description:
       - Password to login on the device.
@@ -116,8 +123,16 @@ options:
     description:
       - Version of FTD image to be installed.
       - Helps to compare target and current FTD versions to prevent unnecessary reinstalls.
+    required: true
+    type: string
+  search_domains:
+    description:
+      - Search domains delimited by comma.
+      - Defaulted to 'cisco.com' if not specified.
     required: false
     type: string
+    default: cisco.com
+    
 """
 
 EXAMPLES = """
@@ -147,6 +162,8 @@ from enum import Enum
 
 try:
     from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
+    from kick.device2.kp.actions import Kp
+
     HAS_KICK = True
 except ImportError:
     HAS_KICK = False
@@ -169,40 +186,78 @@ def provision_ftd_5500x_with_kenton_platform(params):
     ftd = Ftd5500x(hostname=hostname,
                    login_password=params["device_password"],
                    sudo_password=params.get("device_sudo_password") or params["device_password"])
-    dev = None
+    line = None
 
     try:
-        dev = ftd.ssh_console(ip=params["console_ip"],
+        line = ftd.ssh_console(ip=params["console_ip"],
+                               port=params["console_port"],
+                               username=params["console_username"],
+                               password=params["console_password"])
+
+        line.rommon_to_new_image(rommon_tftp_server=params["tftp_server"],
+                                 pkg_image=params["image_file_location"],
+                                 rommon_image=params["rommon_file_location"],
+                                 uut_ip=params["device_ip"],
+                                 uut_netmask=params["device_netmask"],
+                                 uut_gateway=params["device_gateway"],
+                                 dns_server=params["dns_server"],
+                                 search_domains=params["search_domains"],
+                                 hostname=hostname)
+    finally:
+        line.disconnect()
+
+
+def provision_kp(params):
+    hostname, username, password = params["device_hostname"], params["device_username"], params["device_password"]
+
+    kp = Kp(hostname=hostname,
+            login_username=username,
+            login_password=password,
+            sudo_password=params.get("device_sudo_password") or password)
+    line = None
+
+    try:
+        line = kp.ssh_console(ip=params["console_ip"],
                               port=params["console_port"],
                               username=params["console_username"],
                               password=params["console_password"])
 
-        dev.rommon_to_new_image(rommon_tftp_server=params["tftp_server"],
-                                pkg_image=params["image_file_location"],
-                                rommon_image=params["rommon_file_location"],
-                                uut_ip=params["device_ip"],
-                                uut_netmask=params["device_netmask"],
-                                uut_gateway=params["device_gateway"],
-                                dns_server=params["dns_server"],
-                                hostname=hostname)
+        line.baseline_fp2k_ftd(tftp_server=params["tftp_server"],
+                               rommon_file=params["rommon_file_location"],
+                               uut_hostname=hostname,
+                               uut_username=username,
+                               uut_password=password,
+                               uut_ip=params["device_ip"],
+                               uut_netmask=params["device_netmask"],
+                               uut_gateway=params["device_gateway"],
+                               dns_servers=params["dns_server"],
+                               search_domains=params["search_domains"],
+                               fxos_url=params["image_file_location"],
+                               ftd_version=params["image_version"])
     finally:
-        dev.disconnect()
+        line.disconnect()
 
 
 PLATFORM_TO_INSTALL_MAP = {
-    'Cisco ASA5516-X Threat Defense': provision_ftd_5500x_with_kenton_platform
+    'Cisco ASA5516-X Threat Defense': provision_ftd_5500x_with_kenton_platform,
+    'Cisco Firepower 2110 Threat Defense': provision_kp,
+    'Cisco Firepower 2120 Threat Defense': provision_kp,
+    'Cisco Firepower 2130 Threat Defense': provision_kp,
+    'Cisco Firepower 2140 Threat Defense': provision_kp
 }
 
 
 def main():
     fields = dict(
         device_hostname=dict(type='str', required=True),
+        device_username=dict(type='str', required=False, default='admin'),
         device_password=dict(type='str', required=True, no_log=True),
         device_sudo_password=dict(type='str', required=False, no_log=True),
         device_ip=dict(type='str', required=False),
         device_netmask=dict(type='str', required=False),
         device_gateway=dict(type='str', required=False),
         dns_server=dict(type='str', required=False),
+        search_domains=dict(type='str', required=False, default='cisco.com'),
 
         console_ip=dict(type='str', required=True),
         console_port=dict(type='str', required=True),
@@ -212,7 +267,7 @@ def main():
         tftp_server=dict(type='str', required=True),
         rommon_file_location=dict(type='str', required=True),
         image_file_location=dict(type='str', required=True),
-        image_version=dict(type='str', required=False)
+        image_version=dict(type='str', required=True)
     )
     module = AnsibleModule(argument_spec=fields)
     if not HAS_KICK:
