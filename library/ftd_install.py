@@ -141,6 +141,12 @@ EXAMPLES = """
       image_version: 6.3.0-83
 """
 
+RETURN = """
+msg:
+    description: The message saying whether the image was installed or explaining why the installation failed.
+    returned: always
+    type: string
+"""
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 from enum import Enum
