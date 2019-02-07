@@ -10,6 +10,10 @@ Cisco Firepower Threat Defense (FTD) devices. Currently, three Ansible modules a
 FTD modules allow executing any API operations in form of Ansible plays. The modules configure virtual and 
 physical devices by sending HTTPS calls formatted according to the REST API specification.
 
+{% include 'includes/api_compatibility_disclaimer.j2' %}
+
+### How to use Ansible modules
+
 A simple example of creating a network with the [`ftd_configuration`](modules/ftd_configuration.md) module looks like this:
 
 ```yaml
@@ -25,3 +29,5 @@ A simple example of creating a network with the [`ftd_configuration`](modules/ft
              value: "0.0.0.0/0"
              type: "networkobject"
  ```
+ 
+ Check out the [Examples](examples.md) section for more playbook samples. 
