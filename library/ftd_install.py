@@ -156,6 +156,12 @@ EXAMPLES = """
       image_version: 6.3.0-83
 """
 
+RETURN = """
+msg:
+    description: The message saying whether the image was installed or explaining why the installation failed.
+    returned: always
+    type: string
+"""
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 from enum import Enum
@@ -284,7 +290,8 @@ def main():
     provision_method = PLATFORM_TO_INSTALL_MAP[system_info['platformModel']]
     provision_method(module.params)
 
-    module.exit_json(changed=True, result=module.params)
+    module.exit_json(changed=True,
+                     msg='Successfully installed FTD image %s on the firewall device.' % module.params["image_version"])
 
 
 def get_system_info(resource):
