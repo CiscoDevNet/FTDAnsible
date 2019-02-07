@@ -298,7 +298,7 @@ class StaticDocGenerator(BaseDocGenerator):
 
     def __init__(self, template_dir, template_ctx, static_template_dir):
         super().__init__(template_dir, template_ctx)
-        self._jinja_env.loader = FileSystemLoader([template_dir, static_template_dir])
+        self._jinja_env.loader = FileSystemLoader([static_template_dir, template_dir])
         self._static_template_dir = static_template_dir
 
     def generate_doc_files(self, dest_dir):
