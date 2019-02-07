@@ -296,16 +296,17 @@ class StaticDocGenerator(BaseDocGenerator):
     Documentation is written using Markdown markup language.
     """
 
-    def __init__(self, template_dir, template_ctx):
+    def __init__(self, template_dir, template_ctx, static_template_dir):
         super().__init__(template_dir, template_ctx)
-        self._template_dir = template_dir
+        self._jinja_env.loader = FileSystemLoader([template_dir, static_template_dir])
+        self._static_template_dir = static_template_dir
 
     def generate_doc_files(self, dest_dir):
-        for filename in os.listdir(self._template_dir):
+        for filename in os.listdir(self._static_template_dir):
             if filename.endswith(self.J2_SUFFIX):
                 self._generate_from_template(dest_dir, filename)
             else:
-                copyfile(os.path.join(self._template_dir, filename), os.path.join(dest_dir, filename))
+                copyfile(os.path.join(self._static_template_dir, filename), os.path.join(dest_dir, filename))
 
     def _generate_from_template(self, dest_dir, filename):
         template = self._jinja_env.get_template(filename)

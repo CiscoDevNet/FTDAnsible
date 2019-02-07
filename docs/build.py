@@ -172,7 +172,7 @@ def _generate_ansible_docs(args, api_spec, template_ctx):
         .generate_doc_files(args.dist, args.models)
     generator.ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR)\
         .generate_doc_files(args.dist)
-    generator.StaticDocGenerator(STATIC_TEMPLATE_DIR, template_ctx)\
+    generator.StaticDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, STATIC_TEMPLATE_DIR)\
         .generate_doc_files(args.dist)
 
 
