@@ -3,11 +3,13 @@ from __future__ import absolute_import
 import sys
 
 import pytest
+from ansible.compat.tests.mock import PropertyMock
 from ansible.module_utils import basic
 from six.moves import reload_module
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
 from library import ftd_install
+from module_utils.device import FtdModel
 
 DEFAULT_MODULE_PARAMS = dict(
     device_hostname="firepower",
@@ -17,6 +19,7 @@ DEFAULT_MODULE_PARAMS = dict(
     device_ip="192.168.0.1",
     device_netmask="255.255.255.0",
     device_gateway="192.168.0.254",
+    device_model=FtdModel.FTD_ASA5516_X.value,
     dns_server="8.8.8.8",
     console_ip="10.89.0.0",
     console_port="2004",
@@ -36,7 +39,9 @@ class TestFtdInstall(object):
 
     @pytest.fixture(autouse=True)
     def module_mock(self, mocker):
-        return mocker.patch.multiple(basic.AnsibleModule, exit_json=exit_json, fail_json=fail_json)
+        mocker.patch.multiple(basic.AnsibleModule, exit_json=exit_json, fail_json=fail_json)
+        mocker.patch.object(basic.AnsibleModule, '_socket_path', new_callable=PropertyMock, create=True,
+                            return_value=mocker.MagicMock())
 
     @pytest.fixture(autouse=True)
     def connection_mock(self, mocker):
@@ -69,8 +74,10 @@ class TestFtdInstall(object):
 
     def test_module_should_fail_when_platform_is_not_supported(self, config_resource_mock):
         config_resource_mock.execute_operation.return_value = {'platformModel': 'nonSupportedModel'}
+        module_params = dict(DEFAULT_MODULE_PARAMS)
+        del module_params['device_model']
 
-        set_module_args(dict(DEFAULT_MODULE_PARAMS))
+        set_module_args(module_params)
         with pytest.raises(AnsibleFailJson) as ex:
             self.module.main()
 
