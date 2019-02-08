@@ -125,6 +125,13 @@ options:
       - Helps to compare target and current FTD versions to prevent unnecessary reinstalls.
     required: true
     type: string
+  force_install:
+    description:
+      - Forces the FTD image to be installed even when the same version is already installed on the firewall.
+      - By default, the module stops execution when the target version is installed in the device.
+    required: false
+    type: boolean
+    default: false
   search_domains:
     description:
       - Search domains delimited by comma.
@@ -208,7 +215,8 @@ def main():
         tftp_server=dict(type='str', required=True),
         rommon_file_location=dict(type='str', required=True),
         image_file_location=dict(type='str', required=True),
-        image_version=dict(type='str', required=True)
+        image_version=dict(type='str', required=True),
+        force_reinstall=dict(type='bool', required=False, default=False)
     )
     module = AnsibleModule(argument_spec=fields)
     if not HAS_KICK:
@@ -243,7 +251,7 @@ def check_that_model_is_supported(module, system_info):
 
 def check_that_update_is_needed(module, system_info):
     target_ftd_version = module.params["image_version"]
-    if target_ftd_version == system_info['softwareVersion']:
+    if not module.params["force_reinstall"] and target_ftd_version == system_info['softwareVersion']:
         module.exit_json(changed=False, msg="FTD already has %s version of software installed." % target_ftd_version)
 
 

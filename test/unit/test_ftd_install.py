@@ -26,7 +26,8 @@ DEFAULT_MODULE_PARAMS = dict(
     rommon_file_location="boot/ftd-boot-1.9.2.0.lfbff",
     image_file_location="http://10.0.0.1/Release/ftd-6.2.3-83.pkg",
     image_version="6.2.3-83",
-    search_domains="cisco.com"
+    search_domains="cisco.com",
+    force_reinstall=False
 )
 
 
@@ -93,19 +94,39 @@ class TestFtdInstall(object):
         assert not result['changed']
         assert result['msg'] == 'FTD already has 6.3.0-11 version of software installed.'
 
+    def test_module_should_proceed_if_software_is_already_installed_and_force_param_given(self, config_resource_mock):
+        config_resource_mock.execute_operation.return_value = {
+            'softwareVersion': '6.3.0-11',
+            'platformModel': 'Cisco ASA5516-X Threat Defense'
+        }
+        module_params = dict(DEFAULT_MODULE_PARAMS)
+        module_params['image_version'] = '6.3.0-11'
+        module_params['force_reinstall'] = True
+
+        set_module_args(module_params)
+        with pytest.raises(AnsibleExitJson) as ex:
+            self.module.main()
+
+        result = ex.value.args[0]
+        assert result['changed']
+        assert result['msg'] == 'Successfully installed FTD image 6.3.0-11 on the firewall device.'
+
     def test_module_should_install_ftd_image(self, config_resource_mock, ftd_factory_mock):
         config_resource_mock.execute_operation.side_effect = [
             {
-                'softwareVersion': '6.3.0-11',
+                'softwareVersion': '6.2.3-11',
                 'platformModel': 'Cisco ASA5516-X Threat Defense'
             }
         ]
         module_params = dict(DEFAULT_MODULE_PARAMS)
 
         set_module_args(module_params)
-        with pytest.raises(AnsibleExitJson):
+        with pytest.raises(AnsibleExitJson) as ex:
             self.module.main()
 
+        result = ex.value.args[0]
+        assert result['changed']
+        assert result['msg'] == 'Successfully installed FTD image 6.2.3-83 on the firewall device.'
         ftd_factory_mock.create.assert_called_once_with('Cisco ASA5516-X Threat Defense', DEFAULT_MODULE_PARAMS)
         ftd_factory_mock.create.return_value.install_ftd_image.assert_called_once_with(DEFAULT_MODULE_PARAMS)
 
