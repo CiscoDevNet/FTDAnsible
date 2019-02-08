@@ -167,8 +167,7 @@ from ansible.module_utils.connection import Connection
 from enum import Enum
 
 try:
-    from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
-    from kick.device2.kp.actions import Kp
+    import kick
 
     HAS_KICK = True
 except ImportError:
@@ -176,8 +175,10 @@ except ImportError:
 
 try:
     from ansible.module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
+    from ansible.module_utils.device import FtdPlatformFactory, FtdModel
 except ImportError:
     from module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
+    from module_utils.device import FtdPlatformFactory, FtdModel
 
 
 class FtdOperations(Enum):
@@ -185,72 +186,6 @@ class FtdOperations(Enum):
     GET_MANAGEMENT_IP_LIST = 'getManagementIPList'
     GET_DNS_SETTING_LIST = 'getDeviceDNSSettingsList'
     GET_DNS_SERVER_GROUP = 'getDNSServerGroup'
-
-
-def provision_ftd_5500x_with_kenton_platform(params):
-    hostname = params["device_hostname"]
-    ftd = Ftd5500x(hostname=hostname,
-                   login_password=params["device_password"],
-                   sudo_password=params.get("device_sudo_password") or params["device_password"])
-    line = None
-
-    try:
-        line = ftd.ssh_console(ip=params["console_ip"],
-                               port=params["console_port"],
-                               username=params["console_username"],
-                               password=params["console_password"])
-
-        line.rommon_to_new_image(rommon_tftp_server=params["tftp_server"],
-                                 pkg_image=params["image_file_location"],
-                                 rommon_image=params["rommon_file_location"],
-                                 uut_ip=params["device_ip"],
-                                 uut_netmask=params["device_netmask"],
-                                 uut_gateway=params["device_gateway"],
-                                 dns_server=params["dns_server"],
-                                 search_domains=params["search_domains"],
-                                 hostname=hostname)
-    finally:
-        line.disconnect()
-
-
-def provision_kp(params):
-    hostname, username, password = params["device_hostname"], params["device_username"], params["device_password"]
-
-    kp = Kp(hostname=hostname,
-            login_username=username,
-            login_password=password,
-            sudo_password=params.get("device_sudo_password") or password)
-    line = None
-
-    try:
-        line = kp.ssh_console(ip=params["console_ip"],
-                              port=params["console_port"],
-                              username=params["console_username"],
-                              password=params["console_password"])
-
-        line.baseline_fp2k_ftd(tftp_server=params["tftp_server"],
-                               rommon_file=params["rommon_file_location"],
-                               uut_hostname=hostname,
-                               uut_username=username,
-                               uut_password=password,
-                               uut_ip=params["device_ip"],
-                               uut_netmask=params["device_netmask"],
-                               uut_gateway=params["device_gateway"],
-                               dns_servers=params["dns_server"],
-                               search_domains=params["search_domains"],
-                               fxos_url=params["image_file_location"],
-                               ftd_version=params["image_version"])
-    finally:
-        line.disconnect()
-
-
-PLATFORM_TO_INSTALL_MAP = {
-    'Cisco ASA5516-X Threat Defense': provision_ftd_5500x_with_kenton_platform,
-    'Cisco Firepower 2110 Threat Defense': provision_kp,
-    'Cisco Firepower 2120 Threat Defense': provision_kp,
-    'Cisco Firepower 2130 Threat Defense': provision_kp,
-    'Cisco Firepower 2140 Threat Defense': provision_kp
-}
 
 
 def main():
@@ -287,8 +222,8 @@ def main():
     check_that_update_is_needed(module, system_info)
     check_management_and_dns_params(resource, module.params)
 
-    provision_method = PLATFORM_TO_INSTALL_MAP[system_info['platformModel']]
-    provision_method(module.params)
+    ftd_platform = FtdPlatformFactory.create(system_info['platformModel'], module.params)
+    ftd_platform.install_ftd_image(module.params)
 
     module.exit_json(changed=True,
                      msg='Successfully installed FTD image %s on the firewall device.' % module.params["image_version"])
@@ -302,8 +237,8 @@ def get_system_info(resource):
 
 def check_that_model_is_supported(module, system_info):
     platform_model = system_info['platformModel']
-    if platform_model not in PLATFORM_TO_INSTALL_MAP:
-        module.fail_json(msg="Platform '%s' is not supported by this module." % platform_model)
+    if not FtdModel.has_value(platform_model):
+        module.fail_json(msg="Platform model '%s' is not supported by this module." % platform_model)
 
 
 def check_that_update_is_needed(module, system_info):
