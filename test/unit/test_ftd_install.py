@@ -9,7 +9,7 @@ from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFa
 
 from library import ftd_install
 
-DEFAULT_INSTALL_PARAMS = dict(
+DEFAULT_MODULE_PARAMS = dict(
     device_hostname="firepower",
     device_username="admin",
     device_password="pass",
@@ -55,7 +55,7 @@ class TestFtdInstall(object):
         mocker.patch.dict(sys.modules, {'kick': None})
         reload_module(ftd_install)
 
-        set_module_args(dict(DEFAULT_INSTALL_PARAMS))
+        set_module_args(dict(DEFAULT_MODULE_PARAMS))
         with pytest.raises(AnsibleFailJson) as ex:
             self.module.main()
 
@@ -69,7 +69,7 @@ class TestFtdInstall(object):
     def test_module_should_fail_when_platform_is_not_supported(self, config_resource_mock):
         config_resource_mock.execute_operation.return_value = {'platformModel': 'nonSupportedModel'}
 
-        set_module_args(dict(DEFAULT_INSTALL_PARAMS))
+        set_module_args(dict(DEFAULT_MODULE_PARAMS))
         with pytest.raises(AnsibleFailJson) as ex:
             self.module.main()
 
@@ -82,7 +82,7 @@ class TestFtdInstall(object):
             'softwareVersion': '6.3.0-11',
             'platformModel': 'Cisco ASA5516-X Threat Defense'
         }
-        module_params = dict(DEFAULT_INSTALL_PARAMS)
+        module_params = dict(DEFAULT_MODULE_PARAMS)
         module_params['image_version'] = '6.3.0-11'
 
         set_module_args(module_params)
@@ -92,6 +92,22 @@ class TestFtdInstall(object):
         result = ex.value.args[0]
         assert not result['changed']
         assert result['msg'] == 'FTD already has 6.3.0-11 version of software installed.'
+
+    def test_module_should_install_ftd_image(self, config_resource_mock, ftd_factory_mock):
+        config_resource_mock.execute_operation.side_effect = [
+            {
+                'softwareVersion': '6.3.0-11',
+                'platformModel': 'Cisco ASA5516-X Threat Defense'
+            }
+        ]
+        module_params = dict(DEFAULT_MODULE_PARAMS)
+
+        set_module_args(module_params)
+        with pytest.raises(AnsibleExitJson):
+            self.module.main()
+
+        ftd_factory_mock.create.assert_called_once_with('Cisco ASA5516-X Threat Defense', DEFAULT_MODULE_PARAMS)
+        ftd_factory_mock.create.return_value.install_ftd_image.assert_called_once_with(DEFAULT_MODULE_PARAMS)
 
     def test_module_should_fill_management_ip_values_when_missing(self, config_resource_mock, ftd_factory_mock):
         config_resource_mock.execute_operation.side_effect = [
@@ -107,7 +123,7 @@ class TestFtdInstall(object):
                 }]
             }
         ]
-        module_params = dict(DEFAULT_INSTALL_PARAMS)
+        module_params = dict(DEFAULT_MODULE_PARAMS)
         expected_module_params = dict(module_params)
         del module_params['device_ip']
         del module_params['device_netmask']
@@ -144,7 +160,7 @@ class TestFtdInstall(object):
                 }]
             }
         ]
-        module_params = dict(DEFAULT_INSTALL_PARAMS)
+        module_params = dict(DEFAULT_MODULE_PARAMS)
         expected_module_params = dict(module_params)
         del module_params['dns_server']
         expected_module_params['dns_server'] = '8.8.9.9'

@@ -25,7 +25,7 @@ class FtdPlatformFactory(object):
     def create(model, module_params):
         for cls in AbstractFtdPlatform.__subclasses__():
             if cls.supports_ftd_model(model):
-                return model(module_params)
+                return cls(module_params)
         raise ValueError("FTD model '%s' is not supported by this module." % model)
 
 
@@ -50,14 +50,12 @@ class Ftd2100Platform(AbstractFtdPlatform):
                        sudo_password=params.get("device_sudo_password") or params["device_password"])
 
     def install_ftd_image(self, params):
-        line = None
+        line = self._ftd.ssh_console(ip=params["console_ip"],
+                                     port=params["console_port"],
+                                     username=params["console_username"],
+                                     password=params["console_password"])
 
         try:
-            line = self._ftd.ssh_console(ip=params["console_ip"],
-                                         port=params["console_port"],
-                                         username=params["console_username"],
-                                         password=params["console_password"])
-
             line.baseline_fp2k_ftd(tftp_server=params["tftp_server"],
                                    rommon_file=params["rommon_file_location"],
                                    uut_hostname=params["device_hostname"],
@@ -83,14 +81,11 @@ class FtdAsa5500xPlatform(AbstractFtdPlatform):
                              sudo_password=params.get("device_sudo_password") or params["device_password"])
 
     def install_ftd_image(self, params):
-        line = None
-
+        line = self._ftd.ssh_console(ip=params["console_ip"],
+                                     port=params["console_port"],
+                                     username=params["console_username"],
+                                     password=params["console_password"])
         try:
-            line = self._ftd.ssh_console(ip=params["console_ip"],
-                                         port=params["console_port"],
-                                         username=params["console_username"],
-                                         password=params["console_password"])
-
             line.rommon_to_new_image(rommon_tftp_server=params["tftp_server"],
                                      pkg_image=params["image_file_location"],
                                      rommon_image=params["rommon_file_location"],
