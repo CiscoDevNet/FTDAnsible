@@ -62,25 +62,36 @@ options:
   device_ip:
     description:
       - Device IP address of management interface.
-      - If not specified, the module tries to fetch the existing value via REST API.
+      - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
+      - For 'local' connection type, this parameter is mandatory.
     required: false
     type: string
   device_gateway:
     description:
       - Device gateway of management interface.
-      - If not specified, the module tries to fetch the existing value via REST API.
+      - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
+      - For 'local' connection type, this parameter is mandatory.
     required: false
     type: string
   device_netmask:
     description:
       - Device netmask of management interface.
-      - If not specified, the module tries to fetch the existing value via REST API.
+      - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
+      - For 'local' connection type, this parameter is mandatory.
+    required: false
+    type: string
+  device_model:
+    description:
+      - Platform model of the device (e.g., 'Cisco ASA5506-X Threat Defense').
+      - If not specified and connection is 'httpapi`, the module tries to fetch the device model via REST API.
+      - For 'local' connection type, this parameter is mandatory.
     required: false
     type: string
   dns_server:
     description:
       - DNS IP address of management interface.
-      - If not specified, the module tries to fetch the existing value via REST API.
+      - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
+      - For 'local' connection type, this parameter is mandatory.
     required: false
     type: string
   console_ip:
@@ -204,6 +215,7 @@ def main():
         device_ip=dict(type='str', required=False),
         device_netmask=dict(type='str', required=False),
         device_gateway=dict(type='str', required=False),
+        device_model=dict(type='str', required=False, choices=[e.value for e in FtdModel]),
         dns_server=dict(type='str', required=False),
         search_domains=dict(type='str', required=False, default='cisco.com'),
 
@@ -222,19 +234,34 @@ def main():
     if not HAS_KICK:
         module.fail_json(msg='Kick Python module is required to run this module.')
 
-    connection = Connection(module._socket_path)
-    resource = BaseConfigurationResource(connection, module.check_mode)
+    use_local_connection = module._socket_path is None
+    if use_local_connection:
+        check_required_params_for_local_connection(module, module.params)
+        platform_model = module.params['device_model']
+        check_that_model_is_supported(module, platform_model)
+    else:
+        connection = Connection(module._socket_path)
+        resource = BaseConfigurationResource(connection, module.check_mode)
+        system_info = get_system_info(resource)
 
-    system_info = get_system_info(resource)
-    check_that_model_is_supported(module, system_info)
-    check_that_update_is_needed(module, system_info)
-    check_management_and_dns_params(resource, module.params)
+        platform_model = module.params['device_model'] or system_info['platformModel']
+        check_that_model_is_supported(module, platform_model)
+        check_that_update_is_needed(module, system_info)
+        check_management_and_dns_params(resource, module.params)
 
-    ftd_platform = FtdPlatformFactory.create(system_info['platformModel'], module.params)
+    ftd_platform = FtdPlatformFactory.create(platform_model, module.params)
     ftd_platform.install_ftd_image(module.params)
 
     module.exit_json(changed=True,
                      msg='Successfully installed FTD image %s on the firewall device.' % module.params["image_version"])
+
+
+def check_required_params_for_local_connection(module, params):
+    if not all([params['device_ip'], params['device_netmask'], params['device_gateway'], params['device_model'],
+                params['dns_server']]):
+        message = "The following parameters are mandatory when the module is used with 'local' connection: " \
+                  "'device_ip', 'device_netmask', 'device_gateway', 'device_model', 'dns_server'."
+        module.fail_json(msg=message)
 
 
 def get_system_info(resource):
@@ -243,8 +270,7 @@ def get_system_info(resource):
     return system_info
 
 
-def check_that_model_is_supported(module, system_info):
-    platform_model = system_info['platformModel']
+def check_that_model_is_supported(module, platform_model):
     if not FtdModel.has_value(platform_model):
         module.fail_json(msg="Platform model '%s' is not supported by this module." % platform_model)
 
@@ -256,12 +282,12 @@ def check_that_update_is_needed(module, system_info):
 
 
 def check_management_and_dns_params(resource, params):
-    if not all([params.get('device_ip'), params.get('device_netmask'), params.get('device_gateway')]):
+    if not all([params['device_ip'], params['device_netmask'], params['device_gateway']]):
         management_ip = resource.execute_operation(FtdOperations.GET_MANAGEMENT_IP_LIST.value, {})['items'][0]
-        params['device_ip'] = params.get('device_ip') or management_ip['ipv4Address']
-        params['device_netmask'] = params.get('device_netmask') or management_ip['ipv4NetMask']
-        params['device_gateway'] = params.get('device_gateway') or management_ip['ipv4Gateway']
-    if not params.get('dns_server'):
+        params['device_ip'] = params['device_ip'] or management_ip['ipv4Address']
+        params['device_netmask'] = params['device_netmask'] or management_ip['ipv4NetMask']
+        params['device_gateway'] = params['device_gateway'] or management_ip['ipv4Gateway']
+    if not params['dns_server']:
         dns_setting = resource.execute_operation(FtdOperations.GET_DNS_SETTING_LIST.value, {})['items'][0]
         dns_server_group_id = dns_setting['dnsServerGroup']['id']
         dns_server_group = resource.execute_operation(FtdOperations.GET_DNS_SERVER_GROUP.value,
