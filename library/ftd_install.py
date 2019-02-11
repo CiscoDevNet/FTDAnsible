@@ -31,8 +31,11 @@ DOCUMENTATION = """
 module: ftd_install
 short_description: Installs FTD pkg image on the firewall
 description:
-  - Provisions firewall devices by installing ROMmon image (if needed) and
+  - Provisioning module for FTD devices that installs ROMmon image (if needed) and
     FTD pkg image on the firewall.
+  - Can be used with `httpapi` and `local` connection types. The `httpapi` is preferred,
+    the `local` connection should be used only when the device cannot be accessed via
+    REST API.
 version_added: "2.8"
 requirements: [ "python >= 3.5", "kick" ]
 author: "Cisco Systems, Inc."
