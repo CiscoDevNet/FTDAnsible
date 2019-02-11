@@ -16,6 +16,6 @@
         console_password: console_pass
 
         tftp_server: 10.89.0.11
-        rommon_file_location: 'installers/fxos-k8-fp2k-lfbff.2.6.1.94i.SSB'
-        image_file_location: 'tftp://10.89.0.11/installers/cisco-ftd-fp2k.6.4.0-1293.SSB'
+        rommon_file_location: 'installers/fxos-k8-fp2k-lfbff.2.6.1.94i.SPA'
+        image_file_location: 'tftp://10.89.0.11/installers/cisco-ftd-fp2k.6.4.0-1293.SPA'
         image_version: 6.4.0-1292
