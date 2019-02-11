@@ -85,6 +85,37 @@ class TestFtdInstall(object):
         assert result['failed']
         assert result['msg'] == "Platform model 'nonSupportedModel' is not supported by this module."
 
+    def test_module_should_fail_when_device_model_is_missing_with_local_connection(self, mocker):
+        mocker.patch.object(basic.AnsibleModule, '_socket_path', create=True, return_value=None)
+        module_params = dict(DEFAULT_MODULE_PARAMS)
+        del module_params['device_model']
+
+        set_module_args(module_params)
+        with pytest.raises(AnsibleFailJson) as ex:
+            self.module.main()
+
+        result = ex.value.args[0]
+        assert result['failed']
+        expected_msg = "The following parameters are mandatory when the module is used with 'local' connection: device_model."
+        assert expected_msg == result['msg']
+
+    def test_module_should_fail_when_management_ip_values_are_missing_with_local_connection(self, mocker):
+        mocker.patch.object(basic.AnsibleModule, '_socket_path', create=True, return_value=None)
+        module_params = dict(DEFAULT_MODULE_PARAMS)
+        del module_params['device_ip']
+        del module_params['device_netmask']
+        del module_params['device_gateway']
+
+        set_module_args(module_params)
+        with pytest.raises(AnsibleFailJson) as ex:
+            self.module.main()
+
+        result = ex.value.args[0]
+        assert result['failed']
+        expected_msg = "The following parameters are mandatory when the module is used with 'local' connection: " \
+                       "device_ip, device_netmask, device_gateway."
+        assert expected_msg == result['msg']
+
     def test_module_should_return_when_software_is_already_installed(self, config_resource_mock):
         config_resource_mock.execute_operation.return_value = {
             'softwareVersion': '6.3.0-11',
