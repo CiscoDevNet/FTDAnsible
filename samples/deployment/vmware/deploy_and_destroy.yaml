@@ -1,0 +1,64 @@
+- name: "Test VMware deployemnt of vFTD"
+  hosts: localhost
+  gather_facts: no
+  vars:
+    vcenter_hostname: "vmware.api.host.com"
+    vcenter_username: "username"
+    vcenter_password: "username"
+    vcenter_datacenter: "dc.name"
+    vcenter_resource_pool: "some.resource.pool"
+    vcenter_folder_name: "some.folder.name"
+    mgmt_netowrk_name: "some.network.name"
+    new_vm_name: "Test_vFTD"
+    new_passwd: "customPasswd"
+  tasks:
+    - name: "Download OVF"
+      get_url:
+        url: "https://some.file/server/Cisco_Firepower_Threat_Defense_Virtual-VI-6.4.0-1304.ovf"
+        dest: "./"
+        validate_certs: no
+    - name: "Download VMDK"
+      get_url:
+        url: "https://some.file/server/Cisco_Firepower_Threat_Defense_Virtual-6.4.0-1304.vmdk"
+        dest: "./"
+        validate_certs: no
+    - name: "Gather facts about datastore"
+      vmware_datastore_facts:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+      delegate_to: localhost
+      register: datastores_list
+    - name: "Create vFTD VM"
+      vmware_deploy_ovf:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        resource_pool: "{{ vcenter_resource_pool }}"
+        datastore: "{{ ( datastores_list.datastores | sort(attribute='freeSpace') | last).name }}"
+        disk_provisioning: thin
+        fail_on_spec_warnings: no
+        folder: "{{ vcenter_folder_name }}"
+        name: "{{ new_vm_name }}"
+        ovf: "./Cisco_Firepower_Threat_Defense_Virtual-VI-6.4.0-1304.ovf"
+        power_on: true
+        wait: true
+        networks:
+          Management0-0: "{{ mgmt_netowrk_name }}"
+        properties:
+          # Zero Day config defined with the following properties
+          pw: "{{ new_passwd }}"
+        wait_for_ip_address: yes
+      delegate_to: localhost
+    - name: "Destroy vFTD VM"
+      vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        name: "{{ new_vm_name }}"
+        force: yes
+        state: absent
+      delegate_to: localhost
