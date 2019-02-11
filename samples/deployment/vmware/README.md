@@ -56,7 +56,7 @@ ansible-playbook -i demo_cloud.vmware.yaml deploy_and_destroy.yaml
 # Known issues
 1. Slow Inventory load:
     - partially mitigated using ansible inventory cache plugins;
-    - partially mitigated by execution of the plyabook from the host which is closer to the cloud.
+    - partially mitigated by execution of the playbook from the host which is closer to the cloud.
 
 1. deploy_ovf does not support ovf path as URL, only local file path for now:
     - Issue been reported(https://github.com/ansible/ansible/issues/42666)  - development started.
