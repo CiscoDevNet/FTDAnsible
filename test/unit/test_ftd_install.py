@@ -96,7 +96,8 @@ class TestFtdInstall(object):
 
         result = ex.value.args[0]
         assert result['failed']
-        expected_msg = "The following parameters are mandatory when the module is used with 'local' connection: device_model."
+        expected_msg = \
+            "The following parameters are mandatory when the module is used with 'local' connection: device_model."
         assert expected_msg == result['msg']
 
     def test_module_should_fail_when_management_ip_values_are_missing_with_local_connection(self, mocker):
