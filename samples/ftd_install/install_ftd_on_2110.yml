@@ -5,10 +5,6 @@
       ftd_install:
         device_hostname: firepower
         device_password: pass
-        device_netmask: 255.255.255.0
-        device_ip: 192.168.0.1
-        device_gateway: 192.168.0.254
-        dns_server: 8.8.8.8
 
         console_ip: 10.89.0.0
         console_port: 2004
