@@ -14,7 +14,7 @@
 
     - name: Confirm EULA acceptance
       pause:
-        prompt: 'Please confirm you want to accept EULA. Press return to continue. To about, press Ctrl+C and then "A"'
+        prompt: 'Please confirm you want to accept EULA. Press Return to continue. To abort, press Ctrl+C and then "A"'
 
     - name: Complete initial provisioning
       ftd_configuration:
