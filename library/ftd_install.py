@@ -62,6 +62,13 @@ options:
       - Root password for the device. If not specified, `device_password` is used.
     required: false
     type: string
+  device_new_password:
+    description:
+      - New device password to set after image installation.
+      - If not specified, current password from `device_password` property is reused.
+      - Not applicable for ASA5500-X series devices.
+    required: false
+    type: string
   device_ip:
     description:
       - Device IP address of management interface.
@@ -218,6 +225,7 @@ def main():
         device_username=dict(type='str', required=False, default='admin'),
         device_password=dict(type='str', required=True, no_log=True),
         device_sudo_password=dict(type='str', required=False, no_log=True),
+        device_new_password=dict(type='str', required=False, no_log=True),
         device_ip=dict(type='str', required=False),
         device_netmask=dict(type='str', required=False),
         device_gateway=dict(type='str', required=False),

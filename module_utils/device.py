@@ -60,7 +60,7 @@ class Ftd2100Platform(AbstractFtdPlatform):
                                    rommon_file=params["rommon_file_location"],
                                    uut_hostname=params["device_hostname"],
                                    uut_username=params["device_username"],
-                                   uut_password=params["device_password"],
+                                   uut_password=params.get("device_new_password") or params["device_password"],
                                    uut_ip=params["device_ip"],
                                    uut_netmask=params["device_netmask"],
                                    uut_gateway=params["device_gateway"],
