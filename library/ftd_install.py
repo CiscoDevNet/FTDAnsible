@@ -31,8 +31,11 @@ DOCUMENTATION = """
 module: ftd_install
 short_description: Installs FTD pkg image on the firewall
 description:
-  - Provisions firewall devices by installing ROMmon image (if needed) and
+  - Provisioning module for FTD devices that installs ROMmon image (if needed) and
     FTD pkg image on the firewall.
+  - Can be used with `httpapi` and `local` connection types. The `httpapi` is preferred,
+    the `local` connection should be used only when the device cannot be accessed via
+    REST API.
 version_added: "2.8"
 requirements: [ "python >= 3.5", "kick" ]
 author: "Cisco Systems, Inc."
@@ -42,6 +45,13 @@ options:
       - Hostname of the device as appears in the prompt (e.g., 'firepower-5516').
     required: true
     type: string
+  device_username:
+    description:
+      - Username to login on the device.
+      - Defaulted to 'admin' if not specified.
+    required: false
+    type: string
+    default: admin
   device_password:
     description:
       - Password to login on the device.
@@ -52,28 +62,46 @@ options:
       - Root password for the device. If not specified, `device_password` is used.
     required: false
     type: string
+  device_new_password:
+    description:
+      - New device password to set after image installation.
+      - If not specified, current password from `device_password` property is reused.
+      - Not applicable for ASA5500-X series devices.
+    required: false
+    type: string
   device_ip:
     description:
       - Device IP address of management interface.
-      - If not specified, the module tries to fetch the existing value via REST API.
+      - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
+      - For 'local' connection type, this parameter is mandatory.
     required: false
     type: string
   device_gateway:
     description:
       - Device gateway of management interface.
-      - If not specified, the module tries to fetch the existing value via REST API.
+      - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
+      - For 'local' connection type, this parameter is mandatory.
     required: false
     type: string
   device_netmask:
     description:
       - Device netmask of management interface.
-      - If not specified, the module tries to fetch the existing value via REST API.
+      - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
+      - For 'local' connection type, this parameter is mandatory.
+    required: false
+    type: string
+  device_model:
+    description:
+      - Platform model of the device (e.g., 'Cisco ASA5506-X Threat Defense').
+      - If not specified and connection is 'httpapi`, the module tries to fetch the device model via REST API.
+      - For 'local' connection type, this parameter is mandatory.
     required: false
     type: string
   dns_server:
     description:
       - DNS IP address of management interface.
-      - If not specified, the module tries to fetch the existing value via REST API.
+      - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
+      - For 'local' connection type, this parameter is mandatory.
     required: false
     type: string
   console_ip:
@@ -116,8 +144,22 @@ options:
     description:
       - Version of FTD image to be installed.
       - Helps to compare target and current FTD versions to prevent unnecessary reinstalls.
+    required: true
+    type: string
+  force_install:
+    description:
+      - Forces the FTD image to be installed even when the same version is already installed on the firewall.
+      - By default, the module stops execution when the target version is installed in the device.
+    required: false
+    type: boolean
+    default: false
+  search_domains:
+    description:
+      - Search domains delimited by comma.
+      - Defaulted to 'cisco.com' if not specified.
     required: false
     type: string
+    default: cisco.com
 """
 
 EXAMPLES = """
@@ -150,17 +192,23 @@ msg:
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 from enum import Enum
+from six import iteritems
 
 try:
-    from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
+    import kick  # noqa: F401
+
     HAS_KICK = True
 except ImportError:
     HAS_KICK = False
 
 try:
     from ansible.module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
+    from ansible.module_utils.device import FtdPlatformFactory, FtdModel
 except ImportError:
     from module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
+    from module_utils.device import FtdPlatformFactory, FtdModel
+
+REQUIRED_PARAMS_FOR_LOCAL_CONNECTION = ['device_ip', 'device_netmask', 'device_gateway', 'device_model', 'dns_server']
 
 
 class FtdOperations(Enum):
@@ -170,45 +218,19 @@ class FtdOperations(Enum):
     GET_DNS_SERVER_GROUP = 'getDNSServerGroup'
 
 
-def provision_ftd_5500x_with_kenton_platform(params):
-    hostname = params["device_hostname"]
-    ftd = Ftd5500x(hostname=hostname,
-                   login_password=params["device_password"],
-                   sudo_password=params.get("device_sudo_password") or params["device_password"])
-    dev = None
-
-    try:
-        dev = ftd.ssh_console(ip=params["console_ip"],
-                              port=params["console_port"],
-                              username=params["console_username"],
-                              password=params["console_password"])
-
-        dev.rommon_to_new_image(rommon_tftp_server=params["tftp_server"],
-                                pkg_image=params["image_file_location"],
-                                rommon_image=params["rommon_file_location"],
-                                uut_ip=params["device_ip"],
-                                uut_netmask=params["device_netmask"],
-                                uut_gateway=params["device_gateway"],
-                                dns_server=params["dns_server"],
-                                hostname=hostname)
-    finally:
-        dev.disconnect()
-
-
-PLATFORM_TO_INSTALL_MAP = {
-    'Cisco ASA5516-X Threat Defense': provision_ftd_5500x_with_kenton_platform
-}
-
-
 def main():
     fields = dict(
         device_hostname=dict(type='str', required=True),
+        device_username=dict(type='str', required=False, default='admin'),
         device_password=dict(type='str', required=True, no_log=True),
         device_sudo_password=dict(type='str', required=False, no_log=True),
+        device_new_password=dict(type='str', required=False, no_log=True),
         device_ip=dict(type='str', required=False),
         device_netmask=dict(type='str', required=False),
         device_gateway=dict(type='str', required=False),
+        device_model=dict(type='str', required=False, choices=[e.value for e in FtdModel]),
         dns_server=dict(type='str', required=False),
+        search_domains=dict(type='str', required=False, default='cisco.com'),
 
         console_ip=dict(type='str', required=True),
         console_port=dict(type='str', required=True),
@@ -218,24 +240,41 @@ def main():
         tftp_server=dict(type='str', required=True),
         rommon_file_location=dict(type='str', required=True),
         image_file_location=dict(type='str', required=True),
-        image_version=dict(type='str', required=False)
+        image_version=dict(type='str', required=True),
+        force_reinstall=dict(type='bool', required=False, default=False)
     )
     module = AnsibleModule(argument_spec=fields)
     if not HAS_KICK:
         module.fail_json(msg='Kick Python module is required to run this module.')
 
-    connection = Connection(module._socket_path)
-    resource = BaseConfigurationResource(connection, module.check_mode)
+    use_local_connection = module._socket_path is None
+    if use_local_connection:
+        check_required_params_for_local_connection(module, module.params)
+        platform_model = module.params['device_model']
+        check_that_model_is_supported(module, platform_model)
+    else:
+        connection = Connection(module._socket_path)
+        resource = BaseConfigurationResource(connection, module.check_mode)
+        system_info = get_system_info(resource)
 
-    system_info = get_system_info(resource)
-    check_that_model_is_supported(module, system_info)
-    check_that_update_is_needed(module, system_info)
-    check_management_and_dns_params(resource, module.params)
+        platform_model = module.params['device_model'] or system_info['platformModel']
+        check_that_model_is_supported(module, platform_model)
+        check_that_update_is_needed(module, system_info)
+        check_management_and_dns_params(resource, module.params)
 
-    provision_method = PLATFORM_TO_INSTALL_MAP[system_info['platformModel']]
-    provision_method(module.params)
+    ftd_platform = FtdPlatformFactory.create(platform_model, module.params)
+    ftd_platform.install_ftd_image(module.params)
 
-    module.exit_json(changed=True, result=module.params)
+    module.exit_json(changed=True,
+                     msg='Successfully installed FTD image %s on the firewall device.' % module.params["image_version"])
+
+
+def check_required_params_for_local_connection(module, params):
+    missing_params = [k for k, v in iteritems(params) if k in REQUIRED_PARAMS_FOR_LOCAL_CONNECTION and v is None]
+    if missing_params:
+        message = "The following parameters are mandatory when the module is used with 'local' connection: %s." \
+                  % ', '.join(missing_params)
+        module.fail_json(msg=message)
 
 
 def get_system_info(resource):
@@ -244,25 +283,24 @@ def get_system_info(resource):
     return system_info
 
 
-def check_that_model_is_supported(module, system_info):
-    platform_model = system_info['platformModel']
-    if platform_model not in PLATFORM_TO_INSTALL_MAP:
-        module.fail_json(msg="Platform '%s' is not supported by this module." % platform_model)
+def check_that_model_is_supported(module, platform_model):
+    if not FtdModel.has_value(platform_model):
+        module.fail_json(msg="Platform model '%s' is not supported by this module." % platform_model)
 
 
 def check_that_update_is_needed(module, system_info):
     target_ftd_version = module.params["image_version"]
-    if target_ftd_version == system_info['softwareVersion']:
+    if not module.params["force_reinstall"] and target_ftd_version == system_info['softwareVersion']:
         module.exit_json(changed=False, msg="FTD already has %s version of software installed." % target_ftd_version)
 
 
 def check_management_and_dns_params(resource, params):
-    if not all([params.get('device_ip'), params.get('device_netmask'), params.get('device_gateway')]):
+    if not all([params['device_ip'], params['device_netmask'], params['device_gateway']]):
         management_ip = resource.execute_operation(FtdOperations.GET_MANAGEMENT_IP_LIST.value, {})['items'][0]
-        params['device_ip'] = params.get('device_ip') or management_ip['ipv4Address']
-        params['device_netmask'] = params.get('device_netmask') or management_ip['ipv4NetMask']
-        params['device_gateway'] = params.get('device_gateway') or management_ip['ipv4Gateway']
-    if not params.get('dns_server'):
+        params['device_ip'] = params['device_ip'] or management_ip['ipv4Address']
+        params['device_netmask'] = params['device_netmask'] or management_ip['ipv4NetMask']
+        params['device_gateway'] = params['device_gateway'] or management_ip['ipv4Gateway']
+    if not params['dns_server']:
         dns_setting = resource.execute_operation(FtdOperations.GET_DNS_SETTING_LIST.value, {})['items'][0]
         dns_server_group_id = dns_setting['dnsServerGroup']['id']
         dns_server_group = resource.execute_operation(FtdOperations.GET_DNS_SERVER_GROUP.value,
