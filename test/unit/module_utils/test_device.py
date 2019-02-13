@@ -66,11 +66,11 @@ class TestFtd2100Platform(object):
         ftd = FtdPlatformFactory.create(FtdModel.FTD_2110.value, module_params)
         ftd.install_ftd_image(module_params)
 
-        kp_mock.assert_called_once()
-        kp_mock.return_value.ssh_console.assert_called_once()
+        assert kp_mock.called
+        assert kp_mock.return_value.ssh_console.called
         ftd_line = kp_mock.return_value.ssh_console.return_value
-        ftd_line.baseline_fp2k_ftd.assert_called_once()
-        ftd_line.disconnect.assert_called_once()
+        assert ftd_line.baseline_fp2k_ftd.called
+        assert ftd_line.disconnect.called
 
     def test_install_ftd_image_should_call_disconnect_when_install_fails(self, kp_mock, module_params):
         ftd_line = kp_mock.return_value.ssh_console.return_value
@@ -80,8 +80,8 @@ class TestFtd2100Platform(object):
         with pytest.raises(Exception):
             ftd.install_ftd_image(module_params)
 
-        ftd_line.baseline_fp2k_ftd.assert_called_once()
-        ftd_line.disconnect.assert_called_once()
+        assert ftd_line.baseline_fp2k_ftd.called
+        assert ftd_line.disconnect.called
 
 
 class TestFtdAsa5500xPlatform(object):
@@ -98,11 +98,11 @@ class TestFtdAsa5500xPlatform(object):
         ftd = FtdPlatformFactory.create(FtdModel.FTD_ASA5508_X.value, module_params)
         ftd.install_ftd_image(module_params)
 
-        asa5500x_mock.assert_called_once()
-        asa5500x_mock.return_value.ssh_console.assert_called_once()
+        assert asa5500x_mock.called
+        assert asa5500x_mock.return_value.ssh_console.called
         ftd_line = asa5500x_mock.return_value.ssh_console.return_value
-        ftd_line.rommon_to_new_image.assert_called_once()
-        ftd_line.disconnect.assert_called_once()
+        assert ftd_line.rommon_to_new_image.called
+        assert ftd_line.disconnect.called
 
     def test_install_ftd_image_should_call_disconnect_when_install_fails(self, asa5500x_mock, module_params):
         ftd_line = asa5500x_mock.return_value.ssh_console.return_value
@@ -112,5 +112,5 @@ class TestFtdAsa5500xPlatform(object):
         with pytest.raises(Exception):
             ftd.install_ftd_image(module_params)
 
-        ftd_line.rommon_to_new_image.assert_called_once()
-        ftd_line.disconnect.assert_called_once()
+        assert ftd_line.rommon_to_new_image.called
+        assert ftd_line.disconnect.called
