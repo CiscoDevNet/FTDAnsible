@@ -1,5 +1,7 @@
 import pytest
 
+pytest.importorskip("kick")
+
 from module_utils.device import FtdPlatformFactory, FtdModel, FtdAsa5500xPlatform, Ftd2100Platform, AbstractFtdPlatform
 from test.unit.test_ftd_install import DEFAULT_MODULE_PARAMS
 
@@ -16,6 +18,11 @@ class TestFtdModel(object):
 
 
 class TestFtdPlatformFactory(object):
+
+    @pytest.fixture(autouse=True)
+    def mock_devices(self, mocker):
+        mocker.patch('module_utils.device.Kp')
+        mocker.patch('module_utils.device.Ftd5500x')
 
     def test_factory_should_return_corresponding_platform(self):
         ftd_platform = FtdPlatformFactory.create(FtdModel.FTD_ASA5508_X.value, dict(DEFAULT_MODULE_PARAMS))
