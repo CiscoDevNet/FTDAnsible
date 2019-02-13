@@ -265,8 +265,8 @@ def main():
 def check_required_params_for_local_connection(module, params):
     missing_params = [k for k, v in iteritems(params) if k in REQUIRED_PARAMS_FOR_LOCAL_CONNECTION and v is None]
     if missing_params:
-        message = "The following parameters are mandatory when the module is used with 'local' connection: %s." % ', '.join(
-            sorted(missing_params))
+        message = "The following parameters are mandatory when the module is used with 'local' connection: %s." %\
+                  ', '.join(sorted(missing_params))
         module.fail_json(msg=message)
 
 
