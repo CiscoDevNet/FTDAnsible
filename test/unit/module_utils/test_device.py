@@ -17,6 +17,11 @@ class TestFtdModel(object):
 
 class TestFtdPlatformFactory(object):
 
+    @pytest.fixture(autouse=True)
+    def mock_devices(self, mocker):
+        mocker.patch('module_utils.device.Kp')
+        mocker.patch('module_utils.device.Ftd5500x')
+
     def test_factory_should_return_corresponding_platform(self):
         ftd_platform = FtdPlatformFactory.create(FtdModel.FTD_ASA5508_X.value, dict(DEFAULT_MODULE_PARAMS))
         assert type(ftd_platform) is FtdAsa5500xPlatform
@@ -43,6 +48,16 @@ class TestAbstractFtdPlatform(object):
         assert not AbstractFtdPlatform.supports_ftd_model(FtdModel.FTD_2120.value)
         assert not Ftd2100Platform.supports_ftd_model(FtdModel.FTD_ASA5508_X.value)
         assert not FtdAsa5500xPlatform.supports_ftd_model(FtdModel.FTD_2120.value)
+
+    def test_parse_rommon_file_location(self):
+        server, path = AbstractFtdPlatform.parse_rommon_file_location('tftp://1.2.3.4/boot/rommon-boot.foo')
+        assert '1.2.3.4' == server
+        assert '/boot/rommon-boot.foo' == path
+
+    def test_parse_rommon_file_location_should_fail_for_non_tftp_protocol(self):
+        with pytest.raises(ValueError) as ex:
+            AbstractFtdPlatform.parse_rommon_file_location('http://1.2.3.4/boot/rommon-boot.foo')
+            assert 'The ROMMON image must be downloaded from TFTP server' in str(ex)
 
 
 class TestFtd2100Platform(object):

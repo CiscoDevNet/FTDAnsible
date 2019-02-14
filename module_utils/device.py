@@ -2,6 +2,7 @@ from enum import Enum
 
 from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
 from kick.device2.kp.actions import Kp
+from ansible.module_utils.six.moves.urllib.parse import urlparse
 
 
 class FtdModel(Enum):
@@ -39,6 +40,13 @@ class AbstractFtdPlatform(object):
     def supports_ftd_model(cls, model):
         return any(model == item.value for item in cls.PLATFORM_MODELS)
 
+    @staticmethod
+    def parse_rommon_file_location(rommon_file_location):
+        rommon_url = urlparse(rommon_file_location)
+        if rommon_url.scheme != 'tftp':
+            raise ValueError('The ROMMON image must be downloaded from TFTP server, other protocols are not supported.')
+        return rommon_url.netloc, rommon_url.path
+
 
 class Ftd2100Platform(AbstractFtdPlatform):
     PLATFORM_MODELS = [FtdModel.FTD_2110, FtdModel.FTD_2120, FtdModel.FTD_2130, FtdModel.FTD_2140]
@@ -56,8 +64,9 @@ class Ftd2100Platform(AbstractFtdPlatform):
                                      password=params["console_password"])
 
         try:
-            line.baseline_fp2k_ftd(tftp_server=params["tftp_server"],
-                                   rommon_file=params["rommon_file_location"],
+            rommon_server, rommon_path = self.parse_rommon_file_location(params["rommon_file_location"])
+            line.baseline_fp2k_ftd(tftp_server=rommon_server,
+                                   rommon_file=rommon_path,
                                    uut_hostname=params["device_hostname"],
                                    uut_username=params["device_username"],
                                    uut_password=params.get("device_new_password") or params["device_password"],
@@ -86,9 +95,10 @@ class FtdAsa5500xPlatform(AbstractFtdPlatform):
                                      username=params["console_username"],
                                      password=params["console_password"])
         try:
-            line.rommon_to_new_image(rommon_tftp_server=params["tftp_server"],
+            rommon_server, rommon_path = self.parse_rommon_file_location(params["rommon_file_location"])
+            line.rommon_to_new_image(rommon_tftp_server=rommon_server,
+                                     rommon_image=rommon_path,
                                      pkg_image=params["image_file_location"],
-                                     rommon_image=params["rommon_file_location"],
                                      uut_ip=params["device_ip"],
                                      uut_netmask=params["device_netmask"],
                                      uut_gateway=params["device_gateway"],
