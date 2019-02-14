@@ -468,7 +468,14 @@ class BaseConfigurationResource(object):
         :return: upserted object representation
         :rtype: dict
         """
-        model_name = _extract_model_from_upsert_operation(op_name)
+
+        def extract_and_validate_model():
+            model = op_name[len(OperationNamePrefix.UPSERT):]
+            if not self._conn.get_model_spec(model):
+                raise FtdInvalidOperationNameError(op_name)
+            return model
+
+        model_name = extract_and_validate_model()
         model_operations = self.get_operation_specs_by_model_name(model_name)
 
         if not self._operation_checker.is_upsert_operation_supported(model_operations):
@@ -494,10 +501,6 @@ def is_post_request(operation_spec):
 
 def is_put_request(operation_spec):
     return operation_spec[OperationField.METHOD] == HTTPMethod.PUT
-
-
-def _extract_model_from_upsert_operation(op_name):
-    return op_name[len(OperationNamePrefix.UPSERT):]
 
 
 def _get_user_params(params):
