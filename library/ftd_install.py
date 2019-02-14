@@ -240,7 +240,8 @@ def main():
     )
     module = AnsibleModule(argument_spec=fields)
     if not HAS_KICK:
-        module.fail_json(msg='Kick Python module is required to run this module.')
+        module.fail_json(msg='Kick Python module is required to run this module. '
+                             'Please, install it with `pip install kick` command and run the playbook again.')
 
     use_local_connection = module._socket_path is None
     if use_local_connection:

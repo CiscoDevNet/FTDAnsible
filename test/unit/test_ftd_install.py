@@ -67,7 +67,7 @@ class TestFtdInstall(object):
 
         result = ex.value.args[0]
         assert result['failed']
-        assert result['msg'] == "Kick Python module is required to run this module."
+        assert "Kick Python module is required to run this module." in result['msg']
 
         mocker.stopall()
         reload_module(ftd_install)
