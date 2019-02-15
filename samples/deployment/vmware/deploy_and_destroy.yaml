@@ -11,15 +11,16 @@
     mgmt_netowrk_name: "some.network.name"
     new_vm_name: "Test_vFTD"
     new_passwd: "customPasswd"
+    ftd_version: "6.4.0-1304"
   tasks:
     - name: "Download OVF"
       get_url:
-        url: "https://some.file/server/Cisco_Firepower_Threat_Defense_Virtual-VI-6.4.0-1304.ovf"
+        url: "https://some.file/server/Cisco_Firepower_Threat_Defense_Virtual-VI-{{ ftd_version }}.ovf"
         dest: "./"
         validate_certs: no
     - name: "Download VMDK"
       get_url:
-        url: "https://some.file/server/Cisco_Firepower_Threat_Defense_Virtual-6.4.0-1304.vmdk"
+        url: "https://some.file/server/Cisco_Firepower_Threat_Defense_Virtual-{{ ftd_version }}.vmdk"
         dest: "./"
         validate_certs: no
     - name: "Gather facts about datastore"
@@ -42,7 +43,7 @@
         fail_on_spec_warnings: no
         folder: "{{ vcenter_folder_name }}"
         name: "{{ new_vm_name }}"
-        ovf: "./Cisco_Firepower_Threat_Defense_Virtual-VI-6.4.0-1304.ovf"
+        ovf: "./Cisco_Firepower_Threat_Defense_Virtual-VI-{{ ftd_version }}.ovf"
         power_on: true
         wait: true
         networks:
