@@ -1,5 +1,6 @@
 # Setup Guide
 
+## Setup dependencies
 1. Create python virtual env
     ```bash
     virtualenv -p python3.6 ./venv
@@ -31,16 +32,21 @@
     ansible-inventory -i ec2.py --list 
     ```
 
-# Build custom AMI image
+## Build custom AMI image
+
 1. Set FTD version in the playbook and QCOW2 file download path
+
 1. Run playbook
     ```bash
     ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ec2.py build_ami_vftd.yaml
     ```
 
-# Deploy new vFTD using custom AMI image
+## Deploy new vFTD using custom AMI image
 1. Set FTD version in the playbook and custom admin password
 1. Run playbook
     ```bash
     ansible-playbook -i ec2.py deploy_and_destroy.yaml
     ```
+
+## Useful Links
+- https://aws.amazon.com/blogs/apn/getting-started-with-ansible-and-dynamic-amazon-ec2-inventory-management/
