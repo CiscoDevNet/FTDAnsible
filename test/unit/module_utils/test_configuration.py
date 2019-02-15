@@ -85,12 +85,11 @@ class TestBaseConfigurationResource(object):
         # we need evaluate it.
         assert [objects[1]] == list(resource.get_objects_by_filter(
             'test',
-            {ParamName.FILTERS: {'type': 1, 'foo': {'bar': 'buz'}}}))
+            {ParamName.FILTERS: {'name': 'obj2', 'type': 1, 'foo': {'bar': 'buz'}}}))
 
         send_request_mock.assert_has_calls(
             [
-                mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "foo:{'bar': 'buz'};type:1", 'limit': 10, 'offset': 0})
+                mock.call('/object/', 'get', {}, {}, {QueryParams.FILTER: 'name:obj2', 'limit': 10, 'offset': 0})
             ]
         )
 
@@ -116,8 +115,7 @@ class TestBaseConfigurationResource(object):
             {ParamName.FILTERS: {'type': 'foo'}}))
         send_request_mock.assert_has_calls(
             [
-                mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "type:foo", 'limit': 10, 'offset': 0})
+                mock.call('/object/', 'get', {}, {}, {'limit': 10, 'offset': 0})
             ]
         )
 
@@ -141,10 +139,8 @@ class TestBaseConfigurationResource(object):
         assert [{'name': 'obj1', 'type': 'foo'}, {'name': 'obj3', 'type': 'foo'}] == resp
         send_request_mock.assert_has_calls(
             [
-                mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "type:foo", 'limit': 2, 'offset': 0}),
-                mock.call('/object/', 'get', {}, {},
-                          {QueryParams.FILTER: "type:foo", 'limit': 2, 'offset': 2})
+                mock.call('/object/', 'get', {}, {}, {'limit': 2, 'offset': 0}),
+                mock.call('/object/', 'get', {}, {}, {'limit': 2, 'offset': 2})
             ]
         )
 
