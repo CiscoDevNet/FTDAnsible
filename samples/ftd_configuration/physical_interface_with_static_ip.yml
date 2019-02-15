@@ -6,7 +6,7 @@
         operation: upsertPhysicalInterface
         data:
           name: outside
-          hardwareName: GigabitEthernet0/2
+          hardwareName: GigabitEthernet0/0
           monitorInterface: true
           ipv4:
             addressNull: FALSE

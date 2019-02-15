@@ -1,0 +1,21 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Setup Interface with DHCP
+      ftd_configuration:
+        operation: upsertPhysicalInterface
+        data:
+          name: outside02
+          hardwareName: GigabitEthernet0/2
+          monitorInterface: true
+          ipv4:
+            defaultRouteUsingDHCP: True
+            dhcp: True
+            ipType: DHCP
+            dhcpRouteMetric: 100
+            addressNull: True
+            type: interfaceipv4
+          mtu: 1500
+          enabled: TRUE
+          mode: ROUTED
+          type: physicalinterface
