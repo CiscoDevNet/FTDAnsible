@@ -134,7 +134,7 @@ options:
   image_file_location:
     description:
       - Path to the FTD pkg image on the server to be downloaded.
-      - FTP, SCP, SFTP, TFTP, or HTTP protocols are supported.
+      - FTP, SCP, SFTP, TFTP, or HTTP protocols are usually supported, but may depend on the device model.
     required: true
     type: string
   image_version:
