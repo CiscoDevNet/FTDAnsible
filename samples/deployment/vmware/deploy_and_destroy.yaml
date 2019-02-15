@@ -1,4 +1,4 @@
-- name: "Test VMware deployemnt of vFTD"
+- name: "Test VMware deployment of vFTD"
   hosts: localhost
   gather_facts: no
   vars:
@@ -8,7 +8,7 @@
     vcenter_datacenter: "dc.name"
     vcenter_resource_pool: "some.resource.pool"
     vcenter_folder_name: "some.folder.name"
-    mgmt_netowrk_name: "some.network.name"
+    mgmt_network_name: "some.network.name"
     new_vm_name: "Test_vFTD"
     new_passwd: "customPasswd"
     ftd_version: "6.4.0-1304"
@@ -47,10 +47,30 @@
         power_on: true
         wait: true
         networks:
-          Management0-0: "{{ mgmt_netowrk_name }}"
+          Management0-0: "{{ mgmt_network_name }}"
         properties:
-          # Zero Day config defined with the following properties
+          # Zero Day config defined with the following properties:
+          # - pw
+          # - fqdn
+          # - dns1
+          # - dns2
+          # - dns3
+          # - searchdomains
+          # - ipv4.how
+          # - ipv4.addr
+          # - ipv4.mask
+          # - ipv4.gw
+          # - ipv6.how
+          # - ipv6.addr
+          # - ipv6.mask
+          # - ipv6.gw
+          # - manageLocally
+          # - firewallmode
+          # - mgr
+          # - regkey
+          # - regNAT
           pw: "{{ new_passwd }}"
+
         wait_for_ip_address: yes
       delegate_to: localhost
     - name: "Destroy vFTD VM"
