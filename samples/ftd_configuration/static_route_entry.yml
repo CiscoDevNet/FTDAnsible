@@ -39,7 +39,6 @@
           gateway: "{{ networkobject_router2 }}"
           metricValue: 1
           ipType: IPv4
-          description: "Static Route for PrivateNetwork4"
           type: staticrouteentry
         path_params:
           parentId: default
