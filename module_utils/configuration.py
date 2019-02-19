@@ -273,8 +273,6 @@ class BaseConfigurationResource(object):
         return self._models_operations_specs_cache[model_name]
 
     def get_objects_by_filter(self, operation_name, params):
-        def transform_filters_to_query_param(filter_params):
-            return ';'.join(['%s:%s' % (key, val) for key, val in sorted(iteritems(filter_params))])
 
         def match_filters(filter_params, obj):
             for k, v in iteritems(filter_params):
@@ -284,14 +282,15 @@ class BaseConfigurationResource(object):
 
         _, query_params, path_params = _get_user_params(params)
         # copy required params to avoid mutation of passed `params` dict
-        get_list_params = {ParamName.QUERY_PARAMS: dict(query_params), ParamName.PATH_PARAMS: dict(path_params)}
+        url_params = {ParamName.QUERY_PARAMS: dict(query_params), ParamName.PATH_PARAMS: dict(path_params)}
 
         filters = params.get(ParamName.FILTERS) or {}
-        if filters:
-            get_list_params[ParamName.QUERY_PARAMS][QueryParams.FILTER] = transform_filters_to_query_param(filters)
+        if QueryParams.FILTER not in url_params[ParamName.QUERY_PARAMS] and 'name' in filters:
+            # most endpoints only support filtering by name, so remaining `filters` are applied on returned objects
+            url_params[ParamName.QUERY_PARAMS][QueryParams.FILTER] = 'name:%s' % filters['name']
 
         item_generator = iterate_over_pageable_resource(
-            partial(self.send_general_request, operation_name=operation_name), get_list_params
+            partial(self.send_general_request, operation_name=operation_name), url_params
         )
         return (i for i in item_generator if match_filters(filters, i))
 
@@ -468,7 +467,14 @@ class BaseConfigurationResource(object):
         :return: upserted object representation
         :rtype: dict
         """
-        model_name = _extract_model_from_upsert_operation(op_name)
+
+        def extract_and_validate_model():
+            model = op_name[len(OperationNamePrefix.UPSERT):]
+            if not self._conn.get_model_spec(model):
+                raise FtdInvalidOperationNameError(op_name)
+            return model
+
+        model_name = extract_and_validate_model()
         model_operations = self.get_operation_specs_by_model_name(model_name)
 
         if not self._operation_checker.is_upsert_operation_supported(model_operations):
@@ -494,10 +500,6 @@ def is_post_request(operation_spec):
 
 def is_put_request(operation_spec):
     return operation_spec[OperationField.METHOD] == HTTPMethod.PUT
-
-
-def _extract_model_from_upsert_operation(op_name):
-    return op_name[len(OperationNamePrefix.UPSERT):]
 
 
 def _get_user_params(params):

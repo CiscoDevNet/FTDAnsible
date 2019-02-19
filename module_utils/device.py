@@ -1,8 +1,13 @@
 from enum import Enum
-
-from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
-from kick.device2.kp.actions import Kp
 from ansible.module_utils.six.moves.urllib.parse import urlparse
+
+try:
+    from kick.device2.ftd5500x.actions.ftd5500x import Ftd5500x
+    from kick.device2.kp.actions import Kp
+
+    HAS_KICK = True
+except ImportError:
+    HAS_KICK = False
 
 
 class FtdModel(Enum):

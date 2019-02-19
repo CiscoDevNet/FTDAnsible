@@ -1,11 +1,8 @@
 from __future__ import absolute_import
 
-import sys
-
 import pytest
 from ansible.compat.tests.mock import PropertyMock
 from ansible.module_utils import basic
-from six.moves import reload_module
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
 from library import ftd_install
@@ -57,9 +54,12 @@ class TestFtdInstall(object):
     def ftd_factory_mock(self, mocker):
         return mocker.patch('library.ftd_install.FtdPlatformFactory')
 
+    @pytest.fixture(autouse=True)
+    def has_kick_mock(self, mocker):
+        return mocker.patch('library.ftd_install.HAS_KICK', True)
+
     def test_module_should_fail_when_kick_is_not_installed(self, mocker):
-        mocker.patch.dict(sys.modules, {'kick': None})
-        reload_module(ftd_install)
+        mocker.patch('library.ftd_install.HAS_KICK', False)
 
         set_module_args(dict(DEFAULT_MODULE_PARAMS))
         with pytest.raises(AnsibleFailJson) as ex:
@@ -68,9 +68,6 @@ class TestFtdInstall(object):
         result = ex.value.args[0]
         assert result['failed']
         assert "Kick Python module is required to run this module." in result['msg']
-
-        mocker.stopall()
-        reload_module(ftd_install)
 
     def test_module_should_fail_when_platform_is_not_supported(self, config_resource_mock):
         config_resource_mock.execute_operation.return_value = {'platformModel': 'nonSupportedModel'}
@@ -114,7 +111,7 @@ class TestFtdInstall(object):
         result = ex.value.args[0]
         assert result['failed']
         expected_msg = "The following parameters are mandatory when the module is used with 'local' connection: " \
-                       "device_ip, device_netmask, device_gateway."
+                       "device_gateway, device_ip, device_netmask."
         assert expected_msg == result['msg']
 
     def test_module_should_return_when_software_is_already_installed(self, config_resource_mock):
