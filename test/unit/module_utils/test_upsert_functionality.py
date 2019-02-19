@@ -73,7 +73,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
 
         with pytest.raises(FtdConfigurationError) as exc_info:
             self._resource._add_upserted_object(model_operations, mock.MagicMock())
-            assert ADD_OPERATION_NOT_SUPPORTED_ERROR in str(exc_info.value)
+        assert ADD_OPERATION_NOT_SUPPORTED_ERROR in str(exc_info.value)
 
         get_operation_mock.assert_called_once_with(self._resource._operation_checker.is_add_operation, model_operations)
         add_object_mock.assert_not_called()
@@ -407,7 +407,7 @@ class TestUpsertOperationFunctionalTests(object):
 
         with pytest.raises(FtdConfigurationError) as exc_info:
             self._resource_execute_operation(params, connection=connection_mock)
-            assert ADD_OPERATION_NOT_SUPPORTED_ERROR in str(exc_info.value)
+        assert ADD_OPERATION_NOT_SUPPORTED_ERROR in str(exc_info.value)
 
     # test when object exists but with different fields(except id)
     def test_module_should_update_object_when_upsert_operation_and_object_exists(self, connection_mock):
