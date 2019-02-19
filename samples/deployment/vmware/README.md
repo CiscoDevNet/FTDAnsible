@@ -64,6 +64,6 @@ ansible-playbook -i demo_cloud.vmware.yaml deploy_and_destroy.yaml
 1. Deploy_ovf does not support OVF path as URL, only local file path for now:
     - The issue has been reported(https://github.com/ansible/ansible/issues/42666)  - development started.
     
-## Useful Links
+## References
 - https://docs.ansible.com/ansible/latest/plugins/inventory.html
 - https://docs.ansible.com/ansible/latest/plugins/inventory/vmware_vm_inventory.html

@@ -1,23 +1,19 @@
 # Setup Guide
 
 ## Setup dependencies
-1. Create python virtual env
+1. Create Python virtual environment
     ```bash
     virtualenv -p python3.6 ./venv
     source venv/bin/activate
-    pip install ansible
+    pip install -r requirements.txt
     ```
 
-1. Setup python AWS client
-    ```bash
-    pip install boto3 boto
-    ```
 1. Download dynamic inventory for AWS 
     ```bash
     # Get Dynamic inventory
     wget https://raw.githubusercontent.com/ansible/ansible/devel/contrib/inventory/ec2.py
     wget https://raw.githubusercontent.com/ansible/ansible/devel/contrib/inventory/ec2.ini    
-    cmod +x ec2.py
+    chmod +x ec2.py
     ```
 
 1. Set environment variables
@@ -32,21 +28,21 @@
     ansible-inventory -i ec2.py --list 
     ```
 
-## Build custom AMI image
+## Build a custom AMI image
 
-1. Set FTD version in the playbook and QCOW2 file download path
+1. Set FTD version and QCOW2 file download path in the playbook 
 
-1. Run playbook
+1. Run the playbook
     ```bash
     ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ec2.py build_ami_vftd.yaml
     ```
 
-## Deploy new vFTD using custom AMI image
-1. Set FTD version in the playbook and custom admin password
-1. Run playbook
+## Deploy a new vFTD using the custom AMI image
+1. Set FTD version and custom admin password in the playbook 
+1. Run the playbook
     ```bash
     ansible-playbook -i ec2.py deploy_and_destroy.yaml
     ```
 
-## Useful Links
+## References
 - https://aws.amazon.com/blogs/apn/getting-started-with-ansible-and-dynamic-amazon-ec2-inventory-management/

@@ -1,4 +1,4 @@
-- name: "My AWS Infra"
+- name: "My AWS infrastructure"
   hosts: localhost
   gather_facts: no
   vars:

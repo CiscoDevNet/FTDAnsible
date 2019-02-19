@@ -49,7 +49,7 @@
         networks:
           Management0-0: "{{ mgmt_network_name }}"
         properties:
-          # Zero Day config defined with the following properties:
+          # Zero Day config is defined with the following properties:
           # - pw
           # - fqdn
           # - dns1
