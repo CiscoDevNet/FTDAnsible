@@ -6,17 +6,16 @@
     zero_day_config_file: "{{ vms_folder }}/{{ ftd_vm_name }}/day0-config"
     cdrom_path: '{{ vms_folder }}/{{ ftd_vm_name }}/cdrom.iso'
   tasks:
-    - name: "Create VM dir"
+    - name: "Create directory for VM specific files"
       file:
         path: "{{ main_folder }}/kvm_hdds/{{ ftd_vm_name }}"
         state: directory
-    - name: "Copy image file to hdd dir"
+    - name: "Clone base image file"
       copy:
         src: "{{ main_folder }}/images/vFTD-{{ ftd_build_id }}.qcow2"
         dest: "{{ hdd_path }}"
         remote_src: yes
-
-    - name: "Copy image file to hdd dir"
+    - name: "Create 0day-config file"
       copy:
         dest: "{{ zero_day_config_file }}"
         content: |
@@ -38,14 +37,14 @@
           "FmcIp": "",
           "FmcRegKey": "",
           "FmcNatId": ""}
-    - name: "Generate ISO file"
+    - name: "Generate 0day-config based ISO file"
       shell: "mkisofs -r -o {{ cdrom_path }} {{ zero_day_config_file }}"
-    - name: "Define vm"
+    - name: "Define vFTD VM"
       virt:
           name: "{{ ftd_vm_name }}"
           command: define
           xml: "{{ lookup('template', './guest_template.xml') }}"
-    - name: "Start vm"
+    - name: "Start vFTD VM"
       virt:
           name: "{{ ftd_vm_name }}"
           state: running
