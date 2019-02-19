@@ -1,3 +1,0 @@
-ansible
-boto3
-boto
