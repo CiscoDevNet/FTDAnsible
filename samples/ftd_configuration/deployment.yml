@@ -1,4 +1,4 @@
-- hosts: vftd
+- hosts: all
   connection: httpapi
   tasks:
     - name: Fetch pending changes
