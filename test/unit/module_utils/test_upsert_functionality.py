@@ -188,7 +188,8 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
     @mock.patch.object(BaseConfigurationResource, "_find_object_matching_params")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
-    def test_upsert_object_not_supported(self, edit_mock, add_mock, find_object, get_operation_mock, is_upsert_supported_mock):
+    def test_upsert_object_not_supported(self, edit_mock, add_mock, find_object, get_operation_mock,
+                                         is_upsert_supported_mock):
         params = mock.MagicMock()
 
         is_upsert_supported_mock.return_value = False
