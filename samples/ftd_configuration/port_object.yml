@@ -1,0 +1,39 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Create a TCP port for PostgreSQL
+      ftd_configuration:
+        operation: upsertTCPPortObject
+        data:
+          name: PostgreSQL port
+          port: "5432"
+          type: tcpportobject
+
+
+    - name: Create a TCP port for MySQL
+      ftd_configuration:
+        operation: upsertTCPPortObject
+        data:
+          name: MySQL port
+          port: "3306"
+          type: tcpportobject
+
+
+    - name: Create a database port group
+      ftd_configuration:
+        operation: upsertPortObjectGroup
+        data:
+          name: Database ports
+          objects:
+            - "{{ tcpportobject_mysql_port }}"
+            - "{{ tcpportobject_postgresql_port }}"
+          type: portobjectgroup
+
+
+    - name: Create a UDP port for NTP protocol
+      ftd_configuration:
+        operation: upsertUDPPortObject
+        data:
+          name: NTP port
+          port: "123"
+          type: udpportobject
