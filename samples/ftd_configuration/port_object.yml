@@ -9,7 +9,6 @@
           port: "5432"
           type: tcpportobject
 
-
     - name: Create a TCP port for MySQL
       ftd_configuration:
         operation: upsertTCPPortObject
@@ -17,7 +16,6 @@
           name: MySQL port
           port: "3306"
           type: tcpportobject
-
 
     - name: Create a database port group
       ftd_configuration:
@@ -28,7 +26,6 @@
             - "{{ tcpportobject_mysql_port }}"
             - "{{ tcpportobject_postgresql_port }}"
           type: portobjectgroup
-
 
     - name: Create a UDP port for NTP protocol
       ftd_configuration:
