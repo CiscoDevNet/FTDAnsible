@@ -37,3 +37,12 @@
           name: NTP port
           port: "123"
           type: udpportobject
+
+    - name: Create an object for ICMP Time Exceeded type
+      ftd_configuration:
+        operation: upsertICMPv4PortObject
+        data:
+          name: ICMP Time Exceeded
+          icmpv4Type: TIME_EXCEEDED
+          icmpv4Code: TTL_EXPIRED_TRANSIT
+          type: icmpv4portobject
