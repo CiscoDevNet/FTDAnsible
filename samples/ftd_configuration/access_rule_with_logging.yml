@@ -1,0 +1,37 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+
+    - name: Find a file policy blocking all malware
+      ftd_configuration:
+        operation: getFilePolicyList
+        filters:
+          policyType: BLOCK_MALWARE_ALL
+        register_as: file_policies
+
+    - name: Setup a syslog server
+      ftd_configuration:
+        operation: upsertSyslogServer
+        data:
+          name: 10.0.4.5:514
+          useManagementInterface: True
+          protocol: UDP
+          host: 10.0.4.5
+          port: "514"
+          type: syslogserver
+        filters:
+          host: 10.0.4.5
+        register_as: syslog_server
+
+    - name: Create an access rule logging malware files
+      ftd_configuration:
+        operation: upsertAccessRule
+        data:
+          name: Log traffic with malware files
+          ruleAction: PERMIT
+          eventLogAction: LOG_BOTH
+          filePolicy: "{{ file_policies[0] }}"
+          syslogServer: "{{ syslog_server }}"
+          type: accessrule
+        path_params:
+          parentId: default

@@ -1,0 +1,34 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Find an alcohol URL category
+      ftd_configuration:
+        operation: getURLCategoryList
+        filters:
+          name: Alcohol
+        register_as: alco_category_results
+
+    - name: Find a high risk URL reputation
+      ftd_configuration:
+        operation: getURLReputationList
+        filters:
+          name: High risk
+        register_as: reputation_results
+
+    - name: Create an access rule blocking traffic from alcohol URLs with high risks
+      ftd_configuration:
+        operation: upsertAccessRule
+        data:
+          name: Block traffic from alcohol URLs with high risks
+          ruleAction: DENY
+          eventLogAction: LOG_NONE
+          urlFilter:
+            urlCategories:
+              - type: urlcategorymatcher
+                urlCategory: "{{ alco_category_results[0] }}"
+                urlReputation: "{{ reputation_results[0] }}"
+            urlObjects: []
+            type: embeddedurlfilter
+          type: accessrule
+        path_params:
+          parentId: default

@@ -3,20 +3,19 @@
   tasks:
     - name: Create an FQDN network for Cisco DevNet
       ftd_configuration:
-        operation: addNetworkObject
+        operation: upsertNetworkObject
         data:
           name: CiscoDevNetNetwork
           subType: FQDN
           value: developer.cisco.com
-          isSystemDefined: False
           type: networkobject
           dnsResolution: IPV4_AND_IPV6
                   
     - name: Create an access rule allowing trafic from Cisco DevNet
       ftd_configuration:
-        operation: addAccessRule
+        operation: upsertAccessRule
         data:
-          name: AllowCiscoTraffic
+          name: Allow traffic from Cisco
           type: accessrule
           sourceNetworks:
             - '{{ networkobject_ciscodevnetnetwork }}'
@@ -25,11 +24,11 @@
         path_params:
           parentId: default
 
-    - name: Update the access rule to allow trafic from/to Cisco DevNet
+    - name: Update the access rule allowing trafic from/to Cisco DevNet
       ftd_configuration:
         operation: editAccessRule
         data:
-          name: AllowCiscoTraffic
+          name: Allow traffic from Cisco
           id: '{{ accessrule_allowciscotraffic.id }}'
           ruleId: '{{ accessrule_allowciscotraffic.ruleId }}'
           version: '{{ accessrule_allowciscotraffic.version }}'
