@@ -1,18 +1,17 @@
-- name: "Deploy new vFTD VM"
+- name: "Deploy vFTD at the KVM host"
   hosts: kvm_hosts
-  gather_facts: yes
   vars:
-    hdd_path: '{{ vms_folder }}/{{ ftd_vm_name }}/hdd.qcow2'
-    zero_day_config_file: "{{ vms_folder }}/{{ ftd_vm_name }}/day0-config"
-    cdrom_path: '{{ vms_folder }}/{{ ftd_vm_name }}/cdrom.iso'
+    hdd_path: '{{ vm_folder }}/{{ ftd_vm_name }}/hdd.qcow2'
+    zero_day_config_file: "{{ vm_folder }}/{{ ftd_vm_name }}/day0-config"
+    cdrom_path: '{{ vm_folder }}/{{ ftd_vm_name }}/cdrom.iso'
   tasks:
     - name: "Create directory for VM specific files"
       file:
-        path: "{{ main_folder }}/kvm_hdds/{{ ftd_vm_name }}"
+        path: "{{ vm_folder }}/{{ ftd_vm_name }}"
         state: directory
-    - name: "Clone base image file"
+    - name: "Clone base HDD file"
       copy:
-        src: "{{ main_folder }}/images/vFTD-{{ ftd_build_id }}.qcow2"
+        src: "{{ image_folder }}/vFTD-{{ ftd_build_id }}.qcow2"
         dest: "{{ hdd_path }}"
         remote_src: yes
     - name: "Create 0day-config file"

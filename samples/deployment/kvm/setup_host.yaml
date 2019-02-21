@@ -21,19 +21,19 @@
           - virt-manager
       become: yes
     - file:
-        path: "{{ images_folder }}"
+        path: "{{ image_folder }}"
         state: directory
         owner: "{{ ansible_user }}"
       become: true
     - file:
-        path: "{{ vms_folder }}"
+        path: "{{ vm_folder }}"
         state: directory
         owner: "{{ ansible_user }}"
       become: true
     - name: "Copy base QCOW2 from localhost to KVM host"
       copy:
         src: "./Cisco_Firepower_Threat_Defense_Virtual-{{ ftd_build_id }}.qcow2"
-        dest: "{{ images_folder }}/vFTD-{{ ftd_build_id }}.qcow2"
+        dest: "{{ image_folder }}/vFTD-{{ ftd_build_id }}.qcow2"
     - name: "Register demo networks"
       become: yes
       virt_net:

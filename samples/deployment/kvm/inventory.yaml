@@ -7,8 +7,8 @@ all:
     ftd_build_id: "6.4.0-1304"
     ftd_vm_name: "vFTD-6.4"
     main_folder: "/var/vm"
-    images_folder: "{{ main_folder }}/images"
-    vms_folder: "{{ main_folder }}/kvm_hdds"
+    image_folder: "{{ main_folder }}/images"
+    vm_folder: "{{ main_folder }}/kvm_hdds"
     demo_networks:
       - name: mgmt
         subnet: 10
@@ -21,4 +21,4 @@ all:
   children:
     kvm_hosts:
       hosts:
-        ...kvm host name...:
+        ...kvm host name...
