@@ -1,7 +1,4 @@
 plugin: "vmware_vm_inventory"
-hostname: "vmware.api.host.com"
-username: "username"
-password: "passwd"
 # Inventory cache settings
 cache: yes
 cache_plugin: jsonfile
