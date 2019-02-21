@@ -1,30 +1,29 @@
-- name: "My AWS infrastructure"
+- name: "Deploy vFTD in the AWS cloud"
   hosts: localhost
   gather_facts: no
+  vars_files:
+    - ./vars.yaml
   vars:
-    ftd_build_id: "6.4.0-1304"
-    ec2_instance_type: "c4.xlarge"
-    ansible_ssh_private_key_name: "ngfwv-prod-temp-kp.pem"
-    ansible_ssh_private_key_file: "./ngfwv-prod-temp-kp.pem"
+    ansible_ssh_private_key_name: "ngfwv-production-keypair"
   tasks:
     # Prepare Env Section
-    - name: "Create prod key"
+    - name: "Create production key pair"
       ec2_key:
         name: "{{ ansible_ssh_private_key_name }}"
-      register: prod_kp
-    - name: "Save prod key"
+      register: production_keypair
+    - name: "Save production private key"
       copy:
-        content: "{{ prod_kp.key.private_key }}"
-        dest: "{{ ansible_ssh_private_key_file }}"
+        content: "{{ production_keypair.key.private_key }}"
+        dest: "{{ ansible_ssh_private_key_name }}"
         mode: 0600
-      when: prod_kp.changed
-    - name: "Create VPC"
+      when: production_keypair.changed
+    - name: "Create a VPC"
       ec2_vpc_net:
-        name: "Prod VPC"
+        name: "Production VPC"
         state: present
         cidr_block: 10.0.0.0/16
       register: prod_vpc
-    - name: "Create Internet Gateway"
+    - name: "Create an Internet Gateway"
       ec2_vpc_igw:
         vpc_id: "{{ prod_vpc.vpc.id }}"
         state: present
@@ -53,7 +52,7 @@
         vpc_id: "{{ prod_vpc.vpc.id }}"
         cidr: 10.0.3.0/24
       register: prod_subnet_s3
-    - name: "Create Routing table"
+    - name: "Create a Routing table"
       ec2_vpc_route_table:
         vpc_id: "{{ prod_vpc.vpc.id }}"
         subnets:
@@ -62,9 +61,9 @@
           - dest: 0.0.0.0/0
             gateway_id: "{{ prod_vpc_igw.gateway_id }}"
       register: prod_vpc_route_table
-    - name: "Create Security group"
+    - name: "Create a Security group"
       ec2_group:
-        name: "Prod VPC Security Group"
+        name: "Production VPC Security Group"
         description: "Security group for ProdVPC"
         vpc_id: "{{ prod_vpc.vpc.id }}"
         state: present
@@ -75,7 +74,7 @@
     - name: "Create eth0 for VM"
       ec2_eni:
         subnet_id: "{{ prod_subnet_s0.subnet.id }}"
-        description: "Admin interface"
+        description: "Management interface"
         security_groups: "{{ prod_vpc_security_group.group_name }}"
         delete_on_termination: yes
       register: eth0
@@ -97,16 +96,16 @@
         delete_on_termination: yes
         description: "eth3 interface"
       register: eth3
-    - name: "associate an elastic IP with an instance"
+    - name: "Associate an elastic IP with an instance"
       ec2_eip:
         device_id: "{{ eth0.interface.id }}"
         release_on_disassociation: yes
         in_vpc: yes
       register: public_manamgenet_ip
-    - name: "Find AMI ID"
+    - name: "Find vFTD AMI ID"
       ec2_ami_facts:
         filters:
-          name: "vftd_{{ ftd_build_id }}.ami"
+          name: "{{ ftd_ami_name }}"
       register: ami_facts
     # Create VM Section
     - name: "Create Production VM"
@@ -115,7 +114,7 @@
         instance_type: "{{ ec2_instance_type }}"
         image: "{{ ami_facts.images.0.image_id }}"
         state: present
-#        instance_initiated_shutdown_behavior: terminate
+        instance_initiated_shutdown_behavior: terminate
         network_interfaces:
           - "{{ eth0.interface.id }}"
           - "{{ eth1.interface.id }}"
@@ -124,7 +123,6 @@
         user_data: |
                    #Sensor
                    {
-                   "AdminPassword": "...set new password here...",
-                   "Hostname": "myNewFtd"
+                   "AdminPassword": "{{ new_vm_passwd }}",
+                   "Hostname": "{{ new_vm_hostname }}"
                    }
-      register: prod_vm

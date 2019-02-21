@@ -1,30 +1,28 @@
-# Create Basic VM For AMI BUILD
-- name: "Build AMI image for vFTD"
+- name: "Build an AMI for vFTD"
   hosts: localhost
   remote_user: ubuntu
   gather_facts: no
+  vars_files:
+    - ./vars.yaml
   vars:
-    ftd_build_id: "6.4.0-1304"
-    ec2_instance_type: "c4.xlarge"
-    ec2_base_image: "ami-038f5168"
-    : "ngfwv-stage-temp-kp.pem"
+    ansible_ssh_private_key_name: "ngfwv-stage-temp-keypair"
   tasks:
     - name: "Download QCOW2"
       get_url:
-        url: "https://...path.../...to.../{{ ftd_build_id }}.qcow2"
+        url: "{{ remote_qcow_location }}"
         dest: "./"
 
     # Prepare Env Section
     - name: "Create an AWS EC2 key pair"
       ec2_key:
-        name: "{{ ansible_ssh_private_key_file }}"
-      register: stage_kp
+        name: "{{ ansible_ssh_private_key_name }}"
+      register: stage_keypair
     - name: "Save AWS EC2 private key"
       copy:
-        content: "{{ stage_kp.key.private_key }}"
-        dest: "{{ ansible_ssh_private_key_file }}"
+        content: "{{ stage_keypair.key.private_key }}"
+        dest: "{{ ansible_ssh_private_key_name }}"
         mode: 0600
-      when: stage_kp.changed
+      when: stage_keypair.changed
     - name: "Create a VPC"
       ec2_vpc_net:
         name: "Stage VPC"
@@ -61,13 +59,24 @@
           - proto: all
             cidr_ip: 0.0.0.0/0
       register: stage_vpc_security_group
+    - name: "Find Ubuntu AMI ID"
+      ec2_ami_facts:
+        filters:
+          architecture: "x86_64"
+          root-device-type: "ebs"
+          image-type: "machine"
+          owner-id: 099720109477 # Canonical LTD marketplace ID
+          state: "available"
+          virtualization-type: "hvm"
+          name: "*14.04*"
+      register: ubuntu_images
 
     # Create VM Section
-    - name: "Create staging VM"
+    - name: "Create a staging VM"
       ec2:
-        key_name: "{{ ansible_ssh_private_key_file }}"
+        key_name: "{{ ansible_ssh_private_key_name }}"
         instance_type: "{{ ec2_instance_type }}"
-        image: "{{ ec2_base_image }}"
+        image: "{{ (ubuntu_images.images | last).image_id }}"
         group: "{{ stage_vpc_security_group.group_name }}"
         vpc_subnet_id: "{{ stage_subnet.subnet.id }}"
         volumes:
@@ -101,7 +110,7 @@
       with_items: "{{ stage_vm.instances }}"
     - name: "Copy QCOW2 file to the remote VM"
       copy:
-        src: "./Cisco_Firepower_Threat_Defense_Virtual-{{ ftd_build_id }}.qcow2"
+        src: "{{ qcow_file_name }}"
         dest: "/mnt/image.qcow2"
       delegate_to: "{{ item.public_dns_name }}"
       with_items: "{{ stage_vm.instances }}"
@@ -140,9 +149,9 @@
         device_name: "/dev/sdc"
         description: "Snapshot for vFTD AMI image"
       register: stage_snapshot
-    - name: "Create Snapshot based AMI Image"
+    - name: "Create Snapshot-based AMI"
       ec2_ami:
-        name: "vftd_{{ ftd_build_id }}.ami"
+        name: "{{ ftd_ami_name }}"
         description: "Snapshot based AMI image for vFTD {{ ftd_build_id }}"
         sriov_net_support: "simple"
         architecture: "x86_64"
@@ -158,9 +167,9 @@
       ec2:
         state: 'absent'
         instance_ids: '{{ stage_vm.instance_ids }}'
-    - name: "Destroy AWS EC2 private key"
+    - name: "Destroy an EC2 key pair"
       ec2_key:
-        name: "{{ stage_kp.key.name }}"
+        name: "{{ stage_keypair.key.name }}"
         state: absent
     - name: "Wait for VM termination"
       pause:

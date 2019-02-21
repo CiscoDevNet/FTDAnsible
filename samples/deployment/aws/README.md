@@ -3,7 +3,7 @@
 ## Setup dependencies
 1. Create Python virtual environment
     ```bash
-    virtualenv -p python3.6 ./venv
+    python3 -m venv ./venv
     source venv/bin/activate
     pip install -r requirements.txt
     ```
@@ -30,7 +30,7 @@
 
 ## Build a custom AMI image
 
-1. Set FTD version and QCOW2 file download path in the playbook 
+1. Replace placeholder values in the `vars.yaml` file with real values 
 
 1. Run the playbook
     ```bash
@@ -41,7 +41,7 @@
 1. Set FTD version and custom admin password in the playbook 
 1. Run the playbook
     ```bash
-    ansible-playbook -i ec2.py deploy_and_destroy.yaml
+    ansible-playbook -i ec2.py deploy.yaml
     ```
 
 ## References

@@ -1,0 +1,7 @@
+ftd_build_id: "6.4.0-1304"
+ec2_instance_type: "c4.xlarge"
+ftd_ami_name: "vftd_{{ ftd_build_id }}.ami"
+qcow_file_name: "Cisco_Firepower_Threat_Defense_Virtual-{{ ftd_build_id }}.qcow2"
+remote_qcow_location: "https://...path.../...to.../{{ qcow_file_name }}"
+new_vm_hostname: "...Custom vFTD hostname..."
+new_vm_passwd: "...Custom vFTD admin password..."
