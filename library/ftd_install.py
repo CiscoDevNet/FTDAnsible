@@ -195,18 +195,11 @@ from enum import Enum
 from six import iteritems
 
 try:
-    import kick  # noqa: F401
-
-    HAS_KICK = True
-except ImportError:
-    HAS_KICK = False
-
-try:
     from ansible.module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
-    from ansible.module_utils.device import FtdPlatformFactory, FtdModel
+    from ansible.module_utils.device import HAS_KICK, FtdPlatformFactory, FtdModel
 except ImportError:
     from module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
-    from module_utils.device import FtdPlatformFactory, FtdModel
+    from module_utils.device import HAS_KICK, FtdPlatformFactory, FtdModel
 
 REQUIRED_PARAMS_FOR_LOCAL_CONNECTION = ['device_ip', 'device_netmask', 'device_gateway', 'device_model', 'dns_server']
 
@@ -272,8 +265,8 @@ def main():
 def check_required_params_for_local_connection(module, params):
     missing_params = [k for k, v in iteritems(params) if k in REQUIRED_PARAMS_FOR_LOCAL_CONNECTION and v is None]
     if missing_params:
-        message = "The following parameters are mandatory when the module is used with 'local' connection: %s." \
-                  % ', '.join(missing_params)
+        message = "The following parameters are mandatory when the module is used with 'local' connection: %s." %\
+                  ', '.join(sorted(missing_params))
         module.fail_json(msg=message)
 
 

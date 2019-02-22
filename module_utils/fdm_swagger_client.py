@@ -499,7 +499,7 @@ class FdmSwaggerValidator:
             if prop_name in params:
                 expected_type = prop[PropName.TYPE]
                 value = params[prop_name]
-                if prop_name in params and not self._is_correct_simple_types(expected_type, value):
+                if prop_name in params and not self._is_correct_simple_types(expected_type, value, allow_null=False):
                     self._add_invalid_type_report(status, '', prop_name, expected_type, value)
 
     def _validate_object(self, status, model, data, path):
@@ -512,7 +512,7 @@ class FdmSwaggerValidator:
         return self._is_string_type(model) and PropName.ENUM in model
 
     def _check_enum(self, status, model, value, path):
-        if value not in model[PropName.ENUM]:
+        if value is not None and value not in model[PropName.ENUM]:
             self._add_invalid_type_report(status, path, '', PropName.ENUM, value)
 
     def _add_invalid_type_report(self, status, path, prop_name, expected_type, actually_value):
@@ -523,6 +523,9 @@ class FdmSwaggerValidator:
         })
 
     def _check_object(self, status, model, data, path):
+        if data is None:
+            return
+
         if not isinstance(data, dict):
             self._add_invalid_type_report(status, path, '', PropType.OBJECT, data)
             return None
@@ -556,12 +559,14 @@ class FdmSwaggerValidator:
 
     def _check_required_fields(self, status, required_fields, data, path):
         missed_required_fields = [self._create_path_to_field(path, field) for field in
-                                  required_fields if field not in data.keys()]
+                                  required_fields if field not in data.keys() or data[field] is None]
         if len(missed_required_fields) > 0:
             status[PropName.REQUIRED] += missed_required_fields
 
     def _check_array(self, status, model, data, path):
-        if not isinstance(data, list):
+        if data is None:
+            return
+        elif not isinstance(data, list):
             self._add_invalid_type_report(status, path, '', PropType.ARRAY, data)
         else:
             item_model = model[PropName.ITEMS]
@@ -570,7 +575,7 @@ class FdmSwaggerValidator:
                                   '')
 
     @staticmethod
-    def _is_correct_simple_types(expected_type, value):
+    def _is_correct_simple_types(expected_type, value, allow_null=True):
         def is_numeric_string(s):
             try:
                 float(s)
@@ -578,7 +583,9 @@ class FdmSwaggerValidator:
             except ValueError:
                 return False
 
-        if expected_type == PropType.STRING:
+        if value is None and allow_null:
+            return True
+        elif expected_type == PropType.STRING:
             return isinstance(value, string_types)
         elif expected_type == PropType.BOOLEAN:
             return isinstance(value, bool)
