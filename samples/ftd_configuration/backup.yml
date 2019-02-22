@@ -1,0 +1,43 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Schedule an immediate backup
+      ftd_configuration:
+        operation: addBackupImmediate
+        data:
+          scheduleType: IMMEDIATE
+          name: TestBackup
+          backupLocation: DEFAULT
+          type: backupimmediate
+        register_as: backup
+
+    - name: Wait till the backup job is completed
+      ftd_configuration:
+        operation: getJobHistoryBackup
+        path_params:
+          objId: "{{ backup.jobHistoryUuid }}"
+        register_as: backup_job
+      until: backup_job.status != 'QUEUED' and backup_job.status != 'IN_PROGRESS'
+      retries: 100
+      delay: 3
+
+    - name: Stop the playbook if the backup failed
+      fail:
+        msg: 'Backup failed. Status: {{ backup_job.statusMessage }}'
+      when: backup_job.status != 'SUCCESS'
+
+    - name: Download the backup file
+      ftd_file_download:
+        operation: getdownloadbackup
+        path_params:
+          objId: "{{ backup_job.archiveName }}"
+        destination: /tmp/ftd.backup
+
+    - name: Upload the backup file to AWS S3
+      aws_s3:
+        aws_access_key: ACCESS_KEY
+        aws_secret_key: SECRET_KEY
+        bucket: backup_bucket
+        object: /backups/ftd.backup
+        src: /tmp/ftd.backup
+        mode: put
