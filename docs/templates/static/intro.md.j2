@@ -1,14 +1,12 @@
 # Introduction to Ansible modules for FTD {{ ftd_version }}
 
-A collection of Ansible modules that automate configuration management and execution of operational tasks on
-Cisco Firepower Threat Defense (FTD) devices. Currently, three Ansible modules are available: 
+A collection of Ansible modules that automate provisioning, configuration management and execution of operational tasks on
+Cisco Firepower Threat Defense (FTD) devices. Currently, four Ansible modules are available:
 
-* [`ftd_configuration`](modules/ftd_configuration.md) - manages configuration;
-* [`ftd_file_download`](modules/ftd_file_download.md) - downloads files;
-* [`ftd_file_upload`](modules/ftd_file_upload.md) - uploads files.
-
-FTD modules allow executing any API operations in form of Ansible plays. The modules configure virtual and 
-physical devices by sending HTTPS calls formatted according to the REST API specification.
+* [`ftd_configuration`](modules/ftd_configuration.md) - manages device configuration via REST API. The module configures virtual and physical devices by sending HTTPS calls formatted according to the REST API specification;
+* [`ftd_file_download`](modules/ftd_file_download.md) - downloads files from FTD devices via HTTPS protocol;
+* [`ftd_file_upload`](modules/ftd_file_upload.md) - uploads files to FTD devices via HTTPS protocol;
+* [`ftd_install`](modules/ftd_install.md) - installs FTD images on hardware devices. The module performs a complete reimage of the Firepower system by downloading the new software image and installing it.
 
 {% include 'includes/api_compatibility_disclaimer.j2' %}
 
@@ -16,18 +14,6 @@ physical devices by sending HTTPS calls formatted according to the REST API spec
 
 A simple example of creating a network with the [`ftd_configuration`](modules/ftd_configuration.md) module looks like this:
 
-```yaml
-- hosts: ftd_devices
-  connection: httpapi
-  tasks:
-    - name: Create a network
-      ftd_configuration:
-          operation: "addNetworkObject"
-          data:
-             name: "any-ipv4"
-             subType: "NETWORK"
-             value: "0.0.0.0/0"
-             type: "networkobject"
- ```
- 
- Check out the [Examples](examples.md) section for more playbook samples. 
+{% include_playbook_tasks sample_dir + '/ftd_configuration/network_object.yml', ["Create an FQDN network for Cisco FTD"] %}
+
+Check out the [Examples](examples.md) section for more playbook samples.
