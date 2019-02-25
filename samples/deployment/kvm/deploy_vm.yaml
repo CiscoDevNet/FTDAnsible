@@ -1,4 +1,4 @@
-- name: "Deploy vFTD at the KVM host"
+- name: "Deploy vFTD to the KVM host"
   hosts: kvm_hosts
   vars:
     hdd_path: '{{ vm_folder }}/{{ ftd_vm_name }}/hdd.qcow2'
