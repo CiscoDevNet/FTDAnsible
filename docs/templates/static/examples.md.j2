@@ -4,6 +4,21 @@ Here are some examples that demonstrate how to use Ansible modules for common
 operations on FTD devices. Hopefully, they will make the process of creating 
 your playbooks easier.
 
+## Initial provisioning
+
+Initially, the device is delivered in a locked state. To unlock the device and start using its API, the user needs to accept
+an end-user license agreement (EULA) and change the default password. Luckily, it can be done with Ansible.
+
+The following tasks check the current state of device provisioning, displays the EULA text, and asks the user to accept it:
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/initial_provisioning.yml', ["Get provisioning info", "Show EULA text", "Confirm EULA acceptance"] %}
+
+After getting familiar with the EULA details, this task sends a request to the device to reset the password and unlock it.
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/initial_provisioning.yml', ["Complete initial provisioning"] %}
+
+When the previous task is successfully accomplished, the device is unlocked and ready to be configured via API.
+
 ## Create a NetworkObject
 
 This example demonstrates how to create a simple entity representing a network - 
@@ -86,4 +101,4 @@ More information about variables in [Ansible documentation](https://docs.ansible
 ## More samples on GitHub
 
 All playbook samples can be found on [GitHub](https://github.com/CiscoDevNet/FTDAnsible/tree/master/samples). We are constantly
-adding more examples there, and highly appreciate all contributions too.
+adding more examples there and highly appreciate all contributions too.
