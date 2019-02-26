@@ -48,6 +48,8 @@
           enabled: True
           mode: ROUTED
           type: physicalinterface
+        filters:
+          hardwareName: GigabitEthernet0/1
 
     - name: Setup Interface with DHCP
       ftd_configuration:
@@ -67,3 +69,5 @@
           enabled: True
           mode: ROUTED
           type: physicalinterface
+        filters:
+          hardwareName: GigabitEthernet0/2

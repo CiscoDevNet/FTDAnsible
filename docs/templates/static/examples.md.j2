@@ -4,7 +4,7 @@ Here are some examples that demonstrate how to use Ansible modules for common
 operations on FTD devices. Hopefully, they will make the process of creating 
 your playbooks easier.
 
-## Initial provisioning
+## Make initial provisioning
 
 Initially, the device is delivered in a locked state. To unlock the device and start using its API, the user needs to accept
 an end-user license agreement (EULA) and change the default password. Luckily, it can be done with Ansible.
@@ -73,6 +73,14 @@ following task polls the `DeploymentStatus` every 3 seconds until the job is com
 is completed successfully. Otherwise, it stops the playbook with an error message.
 
 {% include_playbook_tasks sample_dir + '/ftd_configuration/deployment.yml', ["Start deployment", "Poll deployment status until the job is finished", "Stop the playbook if the deployment failed"] %}
+
+## Configure interfaces
+
+To enable a physical interface and update its IPv4 address with a static configuration, check the following `upsert` play.
+Notice, that it has a `filters` parameter to select an interface by hardware name. Usually, interfaces do not have names on fresh
+devices, while hardware names are always set and cannot be changed, so filtering by hardware name is preferred.
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/physical_interface.yml', ["Setup Inside Interface with static IP"] %}
 
 ## Use host and group variables
 
