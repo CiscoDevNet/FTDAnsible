@@ -173,6 +173,10 @@ class FdmSwaggerParser:
             SpecProp.MODEL_OPERATIONS: self._get_model_operations(operations)
         }
 
+    @property
+    def base_path(self):
+        return self._base_path
+
     def _get_model_operations(self, operations):
         model_operations = {}
         for operations_name, params in iteritems(operations):

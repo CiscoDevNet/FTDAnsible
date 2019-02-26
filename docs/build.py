@@ -30,8 +30,7 @@ class FtdApiClient(object):
     and token-related aspects.
     """
 
-    SUPPORTED_VERSIONS = ['v3', 'v2', 'v1']
-    NOT_SUPPORTED_VERSIONS = ['latest']
+    SUPPORTED_VERSIONS = ['latest', 'v3', 'v2', 'v1']
     TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
 
     API_VERSIONS_PATH = '/api/versions'
@@ -42,12 +41,13 @@ class FtdApiClient(object):
     def __init__(self, hostname, username, password):
         self._hostname = hostname
         self._api_version = None
+        self._base_path = None
         token_info = self._authorize(username, password)
         self._auth_headers = self._construct_auth_headers(token_info)
 
     def _fetch_api_versions(self):
         resp = open_url(
-            self.API_VERSIONS_PATH,
+            self._hostname + self.API_VERSIONS_PATH,
             method=HTTPMethod.GET,
             headers=BASE_HEADERS,
             validate_certs=False
@@ -71,10 +71,7 @@ class FtdApiClient(object):
             ).read()
             return json.loads(to_text(resp))
 
-        api_versions = sorted(filter(
-            lambda v: v not in self.NOT_SUPPORTED_VERSIONS,
-            self._fetch_api_versions()
-        ), reverse=True)
+        api_versions = sorted(self._fetch_api_versions(), reverse=True)
 
         for version in api_versions:
             token_url = self._hostname + self.TOKEN_PATH_TEMPLATE.format(version)
@@ -91,6 +88,10 @@ class FtdApiClient(object):
     def api_version(self):
         return self._api_version
 
+    @property
+    def base_path(self):
+        return self._base_path
+
     @staticmethod
     def _construct_auth_headers(token_info):
         headers = dict(BASE_HEADERS)
@@ -106,7 +107,13 @@ class FtdApiClient(object):
         """
         spec = self._send_request(self.SPEC_PATH, HTTPMethod.GET)
         doc = self._send_request(self.DOC_PATH, HTTPMethod.GET)
-        return FdmSwaggerParser().parse_spec(spec, doc)
+        return self._parse_swagger_spec(spec=spec, doc=doc)
+
+    def _parse_swagger_spec(self, spec, doc):
+        swagger_parser = FdmSwaggerParser()
+        spec = swagger_parser.parse_spec(spec, doc)
+        self._base_path = swagger_parser.base_path
+        return spec
 
     def fetch_error_codes(self):
         """
@@ -212,8 +219,9 @@ def _generate_ftd_api_docs(args, api_spec, template_ctx, errors_codes):
 
 def _generate_docs(args, api_client):
     api_spec, ftd_version = _fetch_api_spec_and_version(api_client, args)
-    template_ctx = dict(ftd_version=ftd_version, api_version=api_client.api_version,
-                        sample_dir=DEFAULT_SAMPLES_DIR, doctype=args.doctype)
+
+    template_ctx = dict(ftd_version=ftd_version,
+                        sample_dir=DEFAULT_SAMPLES_DIR, doctype=args.doctype, base_path=api_client.base_path)
 
     if args.doctype == DocType.ftd_ansible:
         _generate_ansible_docs(args, api_spec, template_ctx)
