@@ -63,7 +63,7 @@ The example shows how to create an `AccessRule` allowing traffic from the previo
 Changes made on the FTD device are applied only after they get deployed. This example demonstrates
 how to start a deployment job and make sure that it succeeds.
 
-The first two tasks fetche a list of pending changes that are not in the deployed state yet and make sure that there are at least
+The first two tasks fetch a list of pending changes that are not in the deployed state yet and make sure that there are at least
 some changes that need to be deployed. Otherwise, the playbook execution stops.
 
 {% include_playbook_tasks sample_dir + '/ftd_configuration/deployment.yml', ["Fetch pending changes", "Complete playbook when nothing to deploy"] %}
