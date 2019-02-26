@@ -23,6 +23,8 @@
           enabled: True
           mode: ROUTED
           type: physicalinterface
+        filters:
+          hardwareName: GigabitEthernet0/0
 
     - name: Setup Inside Interface with static IP
       ftd_configuration:

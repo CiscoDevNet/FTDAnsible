@@ -13,7 +13,7 @@ Begin by finding a necessary operation from [Operation Index](operations/index.m
 * `get` - fetches a object by its ID (e.g., `getNetworkObject`);
 * `getList` - fetches a list of objects matching given criteria (e.g., `getNetworkObjectList`). For example, it can be used to find an object by name or other attribute when its ID is not known;
 * `add` - creates a new object (e.g., `addNetworkObject`);
-* `edit` - updates an existing object (e.g., `editNetworkObject`). ID and version of the existing object are mandatory attributes for this operation type;
+* `edit` - updates an existing object (e.g., `editNetworkObject`). ID of the existing object is a mandatory attribute for this operation type;
 * `delete` - deletes an existing object by its ID (e.g., `deleteNetworkObject`);
 * `upsert` - creates a new object if it does not exist, or updates it when the object already exists (e.g., `upsertNetworkObject`). By default, `upsert` operation looks for an object by its name, but the filtering criteria can be adjusted. See [Upsert operation](#upsert-operation) for more details;
 
@@ -42,57 +42,68 @@ More examples can be found [here](./examples.md).
 
 ## Upsert operation
 
-Upsert is idempotent "Insert or Update" operation which came from [Database world](https://en.wikipedia.org/wiki/Merge_\(SQL\)). 
-It allows You to define the desired state of the record without check if the record exists(so should be updated) or not(so should be created). 
-As result usage of this operation allows You define your playbook as:
+Upsert is an idempotent "Insert or Update" operation which came from [relational databases](https://en.wikipedia.org/wiki/Merge_\(SQL\)).
+It allows defining the desired state of the record instead of checking whether the record exists (and should be updated) or not (and should be created).
+As a result, playbook syntax looks simpler and more declarative, so we recommend using upsert operations whenever possible.
+
+Here is an example of an upsert operation defining a network:
 
 ```yaml
-- hosts: all
-  connection: httpapi
-  tasks:
-    - name: Upsert localhost network
-      ftd_configuration:
-        operation: upsertNetworkObject
-        data:
-          name: LocalhostNetwork
-          subType: HOST
-          value: 127.0.0.1
-          type: networkobject
+- name: Upsert localhost network
+  ftd_configuration:
+    operation: upsertNetworkObject
+    data:
+      name: LocalhostNetwork
+      subType: HOST
+      value: 127.0.0.1
+      type: networkobject
 ```
 
-instead of:
+And the equivalent of the upsert task written using other operations:
 
 ```yaml
-- hosts: all
-  connection: httpapi
-  tasks:
-    - name: Get localhost networks
-      ftd_configuration:
-        operation: getNetworkObjectList
-        query_params:
-          filter: name~LocalhostNetwork
-        register_as: my_networks
-    - name: Create localhost network does not exists
-      ftd_configuration:
-        operation: addNetworkObject
-        data:
-          name: LocalhostNetwork
-          subType: HOST
-          value: 127.0.0.1
-          type: networkobject
-      when: my_networks.0 is undefined
-    - name: Update localhost network if exists already
-      ftd_configuration:
-        operation: editNetworkObject
-        data:
-          name: LocalhostNetwork
-          subType: HOST
-          value: 127.0.0.1
-          type: networkobject
-        path_params:
-          objId: {{ "{{ my_networks[0].id }}" }}
-      when: my_networks.0 is not undefined
+- name: Get existing networks with LocalhostNetwork name
+  ftd_configuration:
+    operation: getNetworkObjectList
+    query_params:
+      filter: name:LocalhostNetwork
+    register_as: my_networks
+
+- name: Create a network if it does not exist
+  ftd_configuration:
+    operation: addNetworkObject
+    data:
+      name: LocalhostNetwork
+      subType: HOST
+      value: 127.0.0.1
+      type: networkobject
+  when: my_networks.0 is undefined
+
+- name: Update the network if it already exists
+  ftd_configuration:
+    operation: editNetworkObject
+    data:
+      name: LocalhostNetwork
+      subType: HOST
+      value: 127.0.0.1
+      type: networkobject
+    path_params:
+      objId: {{ "{{ my_networks[0].id }}" }}
+  when: my_networks.0 is not undefined
 ```
+
+### Filtering in upsert operation
+
+Upsert operation uses filters to look for a record on the device and define if the object already exists or not. Default filtering
+is done by name, and the object having a name as in `data` parameter is sought.
+
+If you want to use a different attribute for filtering, overwrite `filters` parameter. For example, to update a physical interface
+with a certain hardware name, add a `hardwareName: {VALUE}` keypair to `filters`:
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/physical_interface.yml', ["Setup Outside Interface with static IP"] %}
+
+When `filters` are too generic and more than one existing object satisfy filtering criteria, the module stops the play and raises
+an error asking to specify filters more precisely to match one object exactly.
 
 ## Registering objects as Ansible facts
 
