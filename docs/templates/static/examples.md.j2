@@ -48,11 +48,16 @@ The example shows how to create an `AccessRule` allowing traffic from the previo
 Changes made on the FTD device are applied only after they get deployed. This example demonstrates
 how to start a deployment job and make sure that it succeeds.
 
-The first task starts a new deployment job and registers returned `DeploymentStatus` as `deployment_job` Ansible fact.
-The next task polls the `DeploymentStatus` every 3 seconds until the job is completed. The last
-part verifies that the deployment is completed successfully. Otherwise, it stops the playbook with an error message.
+The first two tasks fetche a list of pending changes that are not in the deployed state yet and make sure that there are at least
+some changes that need to be deployed. Otherwise, the playbook execution stops.
 
-{% include_playbook_tasks sample_dir + '/ftd_configuration/deployment.yml' %}
+{% include_playbook_tasks sample_dir + '/ftd_configuration/deployment.yml', ["Fetch pending changes", "Complete playbook when nothing to deploy"] %}
+
+Next, the playbook starts a new deployment job and registers returned `DeploymentStatus` as a `deployment_job` Ansible fact. The
+following task polls the `DeploymentStatus` every 3 seconds until the job is completed. The last part verifies that the deployment
+is completed successfully. Otherwise, it stops the playbook with an error message.
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/deployment.yml', ["Start deployment", "Poll deployment status until the job is finished", "Stop the playbook if the deployment failed"] %}
 
 ## Use host and group variables
 
@@ -77,3 +82,8 @@ With the playbook and inventory shown above, Ansible will create a `HOST` networ
 `localhost` device, and another network for IP address `130.51.181.225` on device `10.89.21.213`.
 
 More information about variables in [Ansible documentation](https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html).
+
+## More samples on GitHub
+
+All playbook samples can be found on [GitHub](https://github.com/CiscoDevNet/FTDAnsible/tree/master/samples). We are constantly
+adding more examples there, and highly appreciate all contributions too.
