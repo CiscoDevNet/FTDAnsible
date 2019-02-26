@@ -30,9 +30,11 @@ class FtdApiClient(object):
     and token-related aspects.
     """
 
-    SUPPORTED_VERSIONS = ['latest', 'v3', 'v2', 'v1']
+    SUPPORTED_VERSIONS = ['v3', 'v2', 'v1']
+    NOT_SUPPORTED_VERSIONS = ['latest']
     TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
 
+    API_VERSIONS_PATH = '/api/versions'
     SPEC_PATH = '/apispec/ngfw.json'
     DOC_PATH = '/apispec/en-us/doc.json'
     ERRORS_PATH = '/apispec/customErrorCode.json'
@@ -42,6 +44,21 @@ class FtdApiClient(object):
         self._api_version = None
         token_info = self._authorize(username, password)
         self._auth_headers = self._construct_auth_headers(token_info)
+
+    def _fetch_api_versions(self):
+        resp = open_url(
+            self.API_VERSIONS_PATH,
+            method=HTTPMethod.GET,
+            headers=BASE_HEADERS,
+            validate_certs=False
+        ).read()
+
+        try:
+            supported_versions = json.loads(to_text(resp))["supportedVersions"]
+        except Exception:
+            supported_versions = self.SUPPORTED_VERSIONS
+
+        return supported_versions
 
     def _authorize(self, username, password):
         def request_token(url):
@@ -54,7 +71,12 @@ class FtdApiClient(object):
             ).read()
             return json.loads(to_text(resp))
 
-        for version in self.SUPPORTED_VERSIONS:
+        api_versions = sorted(filter(
+            lambda v: v not in self.NOT_SUPPORTED_VERSIONS,
+            self._fetch_api_versions()
+        ), reverse=True)
+
+        for version in api_versions:
             token_url = self._hostname + self.TOKEN_PATH_TEMPLATE.format(version)
             try:
                 token = request_token(token_url)
