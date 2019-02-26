@@ -1,40 +1,46 @@
-# Getting Started
+# User Guide
 
-This section gives a good introduction how to get started with FTD Ansible modules. 
+This section gives a good introduction how to get started with [`ftd_configuration`](https://docs.ansible.com/ansible/latest/modules/ftd_configuration_module.html) module that allows to configure FTD devices.
 
 First, make sure that Ansible with FTD modules is [installed](./installation_guide.md).
 
-## Managing configuration with Ansible
+## Task operations
 
-Configuring FTD devices is simple with the help of [`ftd_configuration`](https://docs.ansible.com/ansible/latest/modules/ftd_configuration_module.html)
-module. The module exposes all operations available in REST API in a form of Ansible tasks.
+`ftd_configuration` module allows executing all operations available in REST API in a form of Ansible tasks. Each REST API endpoint can be wrapped into an Ansible play and be a part of a playbook.
 
-Begin by finding a necessary operation from [Operation Index](operations/index.md). Most operations correspond to CRUD 
-functions managing [configuration models](models/index.md) (e.g., `addNetworkObject` creates `NetworkObject` instances).
+Begin by finding a necessary operation from [Operation Index](operations/index.md). Most operations are similar to CRUD functions and can be divided into the following groups:
 
-Wrap the selected operation in a playbook task. Each `ftd_configuration` task must contain an `operation` parameter 
-corresponding to the operation name. In addition, the task might also have `data`, `path_params` and `query_params`
-parameters that match body, URL parameters and query string in HTTP request accordingly.
+* `get` - fetches a object by its ID (e.g., `getNetworkObject`);
+* `getList` - fetches a list of objects matching given criteria (e.g., `getNetworkObjectList`). For example, it can be used to find an object by name or other attribute when its ID is not known;
+* `add` - creates a new object (e.g., `addNetworkObject`);
+* `edit` - updates an existing object (e.g., `editNetworkObject`). ID and version of the existing object are mandatory attributes for this operation type;
+* `delete` - deletes an existing object by its ID (e.g., `deleteNetworkObject`);
+* `upsert` - creates a new object if it does not exist, or updates it when the object already exists (e.g., `upsertNetworkObject`). By default, `upsert` operation looks for an object by its name, but the filtering criteria can be adjusted. See [Upsert operation](#upsert-operation) for more details;
 
-For example, a playbook with a task for `addNetworkObject` operation might look like this:
+## Task parameters
 
-```yaml
-- hosts: all
-  connection: httpapi
-  tasks:
-    - name: Create localhost network
-      ftd_configuration:
-        operation: addNetworkObject
-        data:
-          name: LocalhostNetwork
-          subType: HOST
-          value: 127.0.0.1
-          type: networkobject
-```
+Each `ftd_configuration` play has required and optional parameters indicating what API endpoint to call and with what parameters.
+
+| Parameter | Required | Description |
+| -------- | -------- | ----------- |
+| operation | True <td colspan=3> Defines the operation to call. |
+| data | False <td colspan=3> Corresponds to the body part in HTTP request and is mandatory for `add`, `edit`, and `upsert` operations. |
+| path_params | False <td colspan=3> Corresponds to URL parameters in HTTP request and is mandatory for `edit`, and `delete` operations. |
+| query_params | False <td colspan=3> Corresponds to the query string in HTTP request and is usually used for `getList` operations. |
+| filters | False <td colspan=3> A map with filter criteria for `upsert` and `getList` operations. |
+| register_as | False <td colspan=3> A name for the fact that is registered with the response from the server. |
+
+For example, to create or update an existing object, use the `upsert` operation with the `data` parameter:
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/port_object.yml', ["Create a TCP port for PostgreSQL"] %}
+
+To filter out a specific object, the `getList` operation with the `filters` parameter can be used:
+  
+{% include_playbook_tasks sample_dir + '/ftd_configuration/ssl_policy.yml', ["Find an intrustion policy with maximum detection"] %}
 
 More examples can be found [here](./examples.md).
 
-## Understanding upsert operation
+## Upsert operation
 
 Upsert is idempotent "Insert or Update" operation which came from [Database world](https://en.wikipedia.org/wiki/Merge_\(SQL\)). 
 It allows You to define the desired state of the record without check if the record exists(so should be updated) or not(so should be created). 
@@ -84,7 +90,7 @@ instead of:
           value: 127.0.0.1
           type: networkobject
         path_params:
-          objId: "{{ my_networks[0].id }}"
+          objId: {{ "{{ my_networks[0].id }}" }}
       when: my_networks.0 is not undefined
 ```
 
@@ -139,23 +145,23 @@ If you want to change the default naming convention, add a `register_as` paramet
   ftd_configuration:
     operation: editNetworkObject
     data:
-      id: '{{ localNet.id }}'
-      version: '{{ localNet.version }}'
+      id: {{ '{{ localNet.id }}' }}
+      version: {{ '{{ localNet.version }}' }}
       name: LocalhostNetwork
       description: Loopback network to access local computer
       subType: HOST
       value: 127.0.0.1
       type: networkobject
     path_params:
-      objId: '{{ localNet.id }}'
+      objId: {{ '{{ localNet.id }}' }}
 ```
 
 Facts are set on a host-by-host basis. When the playbook is run on multiple devices (hosts), facts are 
 visible in a context of a single device (host) only.
 
-## Understanding operation's idempotency
+## Task idempotency
 
-An operation is _idempotent_ if the result of running it once is exactly the same as the result of running it 
+A task is _idempotent_ if the result of running it once is exactly the same as the result of running it
 multiple times. As Ansible requires modules to be idempotent, `ftd_configuration` complies with this requirement.
 
 Before executing the operation, `ftd_configuration` checks whether the desired final state is already achieved. 
