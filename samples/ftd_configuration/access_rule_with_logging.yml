@@ -1,7 +1,6 @@
 - hosts: all
   connection: httpapi
   tasks:
-
     - name: Find a file policy blocking all malware
       ftd_configuration:
         operation: getFilePolicyList

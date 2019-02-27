@@ -1,7 +1,6 @@
 - hosts: all
   connection: httpapi
   tasks:
-
     - name: Setup destination network for static route
       ftd_configuration:
         operation: upsertNetworkObject
