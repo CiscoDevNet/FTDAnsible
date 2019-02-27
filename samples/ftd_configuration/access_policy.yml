@@ -17,7 +17,7 @@
             action: PERMIT
             eventLogAction: LOG_NONE
             intrusionPolicy:
-              id: "{{ policies[0]['id'] }}"
-              type: "{{ policies[0]['type'] }}"
+              id: "{{ policies[0].id }}"
+              type: "{{ policies[0].type }}"
             type: accessdefaultaction
           type: accesspolicy

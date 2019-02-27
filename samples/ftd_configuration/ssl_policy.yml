@@ -48,8 +48,8 @@
             eventLogAction: LOG_NONE
             syslogServer: null
             intrusionPolicy:
-              id: "{{ intrusion_policies[0]['id'] }}"
-              type: "{{ intrusion_policies[0]['type'] }}"
+              id: "{{ intrusion_policies[0].id }}"
+              type: "{{ intrusion_policies[0].type }}"
             type: accessdefaultaction
           sslPolicy: "{{ ssl_policy }}"
           type: accesspolicy
@@ -64,8 +64,8 @@
             eventLogAction: LOG_NONE
             syslogServer: null
             intrusionPolicy:
-              id: "{{ intrusion_policies[0]['id'] }}"
-              type: "{{ intrusion_policies[0]['type'] }}"
+              id: "{{ intrusion_policies[0].id }}"
+              type: "{{ intrusion_policies[0].type }}"
             type: accessdefaultaction
           sslPolicy: null
           type: accesspolicy

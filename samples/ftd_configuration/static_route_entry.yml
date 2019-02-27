@@ -43,7 +43,7 @@
           parentId: default
         filters:
           networks:
-            - id: "{{ networkobject_privatenetwork4['id'] }}"
-              version: "{{ networkobject_privatenetwork4['version'] }}"
-              type: "{{ networkobject_privatenetwork4['type'] }}"
-              name: "{{ networkobject_privatenetwork4['name'] }}"
+            - id: "{{ networkobject_privatenetwork4.id }}"
+              version: "{{ networkobject_privatenetwork4.version }}"
+              type: "{{ networkobject_privatenetwork4.type }}"
+              name: "{{ networkobject_privatenetwork4.name }}"
