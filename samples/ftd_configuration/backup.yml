@@ -35,8 +35,9 @@
 
     - name: Upload the backup file to AWS S3
       aws_s3:
-        aws_access_key: ACCESS_KEY
-        aws_secret_key: SECRET_KEY
+        # Set the AWS_ACCESS_KEY and the AWS_SECRET_KEY environment variables on the host before running the playbook
+        aws_access_key: "{{ lookup('env','AWS_ACCESS_KEY') }}"
+        aws_secret_key: "{{ lookup('env','AWS_SECRET_KEY') }}"
         bucket: backup_bucket
         object: /backups/ftd.backup
         src: /tmp/ftd.backup

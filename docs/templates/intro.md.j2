@@ -43,11 +43,11 @@ The easiest way to determine the base URL for a given <span>Firepower Threat Def
 
 For example, you can do a GET /object/networks, and see something similar to the following in the returned output under Request URL:
 ```url
-https://ftd.example.com/api/fdm/{{ api_version }}/object/networks
+https://ftd.example.com{{ base_path }}/object/networks
 ```
 The server name part of the URL is the hostname or IP address of the <span>Firepower Threat Defense</span> device, and will be different for your device in place of “ftd.example.com.” In this example, you delete /object/networks from the path to get the base URL:
 ```url
-https://ftd.example.com/api/fdm/{{ api_version }}/
+https://ftd.example.com{{ base_path }}/
 ```
 All resource calls use this URL as the base for the request URL.
 

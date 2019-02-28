@@ -28,7 +28,7 @@
           mtu: 1500
           type: subinterface
         path_params:
-          parentId: "{{ interface0[0]['id'] }}"
+          parentId: "{{ interface0[0].id }}"
 
     - name: Setup SubInterface under GigabitEthernet0/0 with static IP
       ftd_configuration:
@@ -54,4 +54,4 @@
           mtu: 1500
           type: subinterface
         path_params:
-          parentId: "{{ interface0[0]['id'] }}"
+          parentId: "{{ interface0[0].id }}"
