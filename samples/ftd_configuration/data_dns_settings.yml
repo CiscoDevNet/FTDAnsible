@@ -1,0 +1,27 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Create custom DNS object
+      ftd_configuration:
+        operation: upsertDNSServerGroup
+        data:
+          type: dnsservergroup
+          name: CustomDNSServerGroup
+          timeout: 2
+          retries: 3
+          searchDomain: cisco.com
+          dnsServers:
+            - ipAddress: 1.2.3.4
+              type: dnsserver
+            - ipAddress: 2.3.4.5
+              type: dnsserver
+
+    - name: Update Data-plane DNS server to customer server
+      ftd_configuration:
+        operation: upsertDataDNSSetting
+        data:
+          name: DataDNSSettings
+          pollTimer: 240
+          expiryEntryTimer: 2
+          dnsServerGroup: '{{ dnsservergroup_customdnsservergroup }}'
+          type: datadnssettings

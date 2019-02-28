@@ -1,0 +1,67 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Setup Outside Interface with static IP
+      ftd_configuration:
+        operation: upsertPhysicalInterface
+        data:
+          name: outside
+          hardwareName: GigabitEthernet0/0
+          monitorInterface: True
+          ipv4:
+            addressNull: False
+            defaultRouteUsingDHCP: False
+            dhcp: False
+            ipAddress:
+              ipAddress: 192.168.10.2
+              netmask: 255.255.255.0
+              standbyIpAddress: 192.168.10.3
+              type: haipv4address
+            ipType: STATIC
+            type: interfaceipv4
+          mtu: 1500
+          enabled: True
+          mode: ROUTED
+          type: physicalinterface
+
+    - name: Setup Inside Interface with static IP
+      ftd_configuration:
+        operation: upsertPhysicalInterface
+        data:
+          name: inside
+          hardwareName: GigabitEthernet0/1
+          monitorInterface: True
+          ipv4:
+            addressNull: False
+            defaultRouteUsingDHCP: False
+            dhcp: False
+            ipAddress:
+              ipAddress: 192.168.20.2
+              netmask: 255.255.255.0
+              standbyIpAddress: 192.168.20.3
+              type: haipv4address
+            ipType: STATIC
+            type: interfaceipv4
+          mtu: 1500
+          enabled: True
+          mode: ROUTED
+          type: physicalinterface
+
+    - name: Setup Interface with DHCP
+      ftd_configuration:
+        operation: upsertPhysicalInterface
+        data:
+          name: outside02
+          hardwareName: GigabitEthernet0/2
+          monitorInterface: True
+          ipv4:
+            defaultRouteUsingDHCP: True
+            dhcp: True
+            ipType: DHCP
+            dhcpRouteMetric: 100
+            addressNull: True
+            type: interfaceipv4
+          mtu: 1500
+          enabled: True
+          mode: ROUTED
+          type: physicalinterface

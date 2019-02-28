@@ -1,0 +1,53 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Setup an identity policy
+      ftd_configuration:
+        operation: upsertIdentityPolicy
+        data:
+          name: NGFW-Default-Identity-Policy
+          defaultIdentityRule:
+            authAction: PASSIVE
+            type: defaultidentityrule
+          activeAuthPort: "885"
+          type: identitypolicy
+        register_as: identity_policy
+
+    - name: Find an intrustion policy with maximum detection
+      ftd_configuration:
+        operation: getIntrusionPolicyList
+        filters:
+          name: Maximum Detection
+        register_as: intrusion_policies
+
+    - name: Enable the identity policy as a part of access policy
+      ftd_configuration:
+        operation: upsertAccessPolicy
+        data:
+          name: NGFW-Access-Policy
+          defaultAction:
+            action: PERMIT
+            eventLogAction: LOG_NONE
+            syslogServer: null
+            intrusionPolicy:
+              id: "{{ intrusion_policies[0].id }}"
+              type: "{{ intrusion_policies[0].type }}"
+            type: accessdefaultaction
+          identityPolicySetting: "{{ identity_policy }}"
+          type: accesspolicy
+
+    - name: Disable the identity policy from access policy
+      ftd_configuration:
+        operation: upsertAccessPolicy
+        data:
+          name: NGFW-Access-Policy
+          defaultAction:
+            action: PERMIT
+            eventLogAction: LOG_NONE
+            syslogServer: null
+            intrusionPolicy:
+              id: "{{ intrusion_policies[0].id }}"
+              type: "{{ intrusion_policies[0].type }}"
+            type: accessdefaultaction
+          identityPolicySetting: null
+          type: accesspolicy

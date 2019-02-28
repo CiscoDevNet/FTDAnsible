@@ -1,4 +1,4 @@
-- hosts: vftd
+- hosts: all
   connection: httpapi
   tasks:
     - name: Create a NetworkObject based on host variables

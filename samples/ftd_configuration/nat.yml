@@ -1,0 +1,47 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Get a GigabitEthernet0/0 Interface
+      ftd_configuration:
+        operation: getPhysicalInterfaceList
+        filters:
+          hardwareName: GigabitEthernet0/0
+        register_as: interface0
+
+    - name: Get a GigabitEthernet0/1 Interface
+      ftd_configuration:
+        operation: getPhysicalInterfaceList
+        filters:
+          hardwareName: GigabitEthernet0/1
+        register_as: interface1
+
+    - name: Get an IPv4 network
+      ftd_configuration:
+        operation: getNetworkObjectList
+        filters:
+          name: any-ipv4
+        register_as: network_results
+
+    - name: Get a before auto NAT container
+      ftd_configuration:
+        operation: getManualNatRuleContainerList
+        filters:
+          name: NGFW-Before-Auto-NAT-Policy
+        register_as: container_results
+
+    - name: Setup an inside-outsite NAT rule
+      ftd_configuration:
+        operation: upsertManualNatRule
+        data:
+          name: InsideOutsideNatRule
+          natType: DYNAMIC
+          destinationInterface: "{{ interface0[0] }}"
+          sourceInterface: "{{ interface1[0] }}"
+          originalSource: "{{ network_results[0] }}"
+          interfaceInTranslatedSource: True
+          dns: False
+          enabled: True
+          interfaceIPv6: False
+          type: manualnatrule
+        path_params:
+          parentId: "{{ container_results[0].id }}"

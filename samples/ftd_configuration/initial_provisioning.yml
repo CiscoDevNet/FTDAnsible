@@ -1,4 +1,4 @@
-- hosts: vftd
+- hosts: all
   connection: httpapi
   tasks:
     - name: Get provisioning info
@@ -10,7 +10,7 @@
 
     - name: Show EULA text
       debug:
-        msg: "EULA details: {{ provisionInfo['eulaText'] }}"
+        msg: "EULA details: {{ provisionInfo.eulaText }}"
 
     - name: Confirm EULA acceptance
       pause:
@@ -21,7 +21,7 @@
         operation: addInitialProvision
         data:
           acceptEULA: True
-          eulaText: "{{ provisionInfo['eulaText'] }}"
+          eulaText: "{{ provisionInfo.eulaText }}"
           currentPassword: "oldPassword"
           newPassword: "newPassword1$"
           type: initialprovision
