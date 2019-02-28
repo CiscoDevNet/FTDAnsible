@@ -49,7 +49,7 @@ class FtdApiClient(object):
 
     def _fetch_api_versions(self):
         try:
-            # In case of 6.2.3 when Api Versions resource does not exists HTTP 401 will be raised
+            # In case of 6.2.3 when Api Versions resource does not exists HTTP 401 will be returned
             resp = open_url(
                 self._hostname + self.API_VERSIONS_PATH,
                 method=HTTPMethod.GET,
@@ -220,7 +220,9 @@ def _generate_docs(args, api_client):
     api_spec, ftd_version = _fetch_api_spec_and_version(api_client, args)
 
     template_ctx = dict(ftd_version=ftd_version,
-                        sample_dir=DEFAULT_SAMPLES_DIR, doctype=args.doctype, base_path=api_client.base_path)
+                        sample_dir=DEFAULT_SAMPLES_DIR,
+                        doctype=args.doctype,
+                        base_path=api_client.base_path)
 
     if args.doctype == DocType.ftd_ansible:
         _generate_ansible_docs(args, api_spec, template_ctx)
