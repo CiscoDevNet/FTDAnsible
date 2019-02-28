@@ -14,7 +14,7 @@ For example, the **curl** command would look like the following:
 curl -X POST \
     --header 'Content-Type: application/json' \
     --header 'Accept: application/json' \
-    https://ftd.example.com/api/fdm/{{ api_version }}/operational/deploy
+    https://ftd.example.com{{ base_path }}/operational/deploy
 ```
 
 #### Step 2
@@ -34,7 +34,7 @@ A good response (status code 200) looks like the following. Note the state.
   "endTime": -1,
   "state": "QUEUED",
   "links": {
-    "self": "https://ftd.example.com/api/fdm/{{ api_version }}/operational/deploy/a7a227fb-82ab-11e7-8186-0dc471ff0672"
+    "self": "https://ftd.example.com{{ base_path }}/operational/deploy/a7a227fb-82ab-11e7-8186-0dc471ff0672"
   }
 }
 ```
@@ -46,7 +46,7 @@ For example, the **curl** command would look like the following:
 ```bash
 curl -X GET \
     --header 'Accept: application/json' \
-    https://ftd.example.com/api/fdm/{{ api_version }}/operational/deploy/a7a227fb-82ab-11e7-8186-0dc471ff0672
+    https://ftd.example.com{{ base_path }}/operational/deploy/a7a227fb-82ab-11e7-8186-0dc471ff0672
 ```
 
 The response might look like the following. Note the state, DEPLOYED, indicates the job completed successfully. The modifiedObjects parameter lists the objects that were changed in the deployment job. In this case, there is a single change, to a network object named new-network.
@@ -65,7 +65,7 @@ The response might look like the following. Note the state, DEPLOYED, indicates 
   "endTime": 1502906010068,
   "state": "DEPLOYED",
   "links": {
-    "self": "https://ftd.example.com/api/fdm/{{ api_version }}/operational/deploy/a7a227fb-82ab-11e7-8186-0dc471ff0672"
+    "self": "https://ftd.example.com{{ base_path }}/operational/deploy/a7a227fb-82ab-11e7-8186-0dc471ff0672"
   }
 }
 ```
