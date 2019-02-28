@@ -80,8 +80,10 @@ class FtdApiClient(object):
             token_url = self._hostname + self.TOKEN_PATH_TEMPLATE.format(version)
             try:
                 token = request_token(token_url)
-            except Exception:
+            except urllib_error.HTTPError as e:
                 logger.debug("Can't get token for API version: %s", version, exc_info=True)
+                if e.code != HTTPStatus.UNAUTHORIZED:
+                    raise
             else:
                 return token
 
