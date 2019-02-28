@@ -239,6 +239,16 @@ class HttpApi(HttpApiBase):
         return self.get_option('spec_path')
 
     def _get_api_token_path(self):
+        # add something here
+        # kw = dict(
+        #     method=HTTPMethod.GET,
+        #     headers=BASE_HEADERS
+        # )
+        # x = self.connection.send(
+        #     path='/api/versions',
+        #     data=json.dumps({}),
+        #     **kw)
+
         return self.get_option('token_path')
 
     @staticmethod
