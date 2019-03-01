@@ -18,6 +18,7 @@
 
 from __future__ import (absolute_import, division, print_function)
 
+
 __metaclass__ = type
 
 DOCUMENTATION = """
@@ -34,7 +35,6 @@ options:
     type: str
     description:
       - Specifies the api token path of the FTD device
-    default: '/api/fdm/v2/fdm/token'
     vars:
       - name: ansible_httpapi_ftd_token_path
   spec_path:
@@ -72,6 +72,9 @@ BASE_HEADERS = {
 
 TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
+API_TOKEN_PATH_OPTION_NAME = 'token_path'
+TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
+DEFAULT_API_VERSIONS = ['latest', 'v3', 'v2', 'v1']
 
 try:
     from __main__ import display
@@ -113,13 +116,10 @@ class HttpApi(HttpApiBase):
             raise AnsibleConnectionFailure('Username and password are required for login in absence of refresh token')
 
         url = self._get_api_token_path()
-        self._display(HTTPMethod.POST, 'login', url)
-
-        dummy, response_data = self._send_auth_request(
-            url, json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
-        )
-
-        response = self._response_to_json(self._get_response_value(response_data))
+        if url:
+            response = self._login_api_call(payload, url)
+        else:
+            response = self._lookup_login_url(payload)
 
         try:
             self.refresh_token = response['refresh_token']
@@ -128,6 +128,31 @@ class HttpApi(HttpApiBase):
         except KeyError:
             raise ConnectionError(
                 'Server returned response without token info during connection authentication: %s' % response)
+
+    def _lookup_login_url(self, payload):
+        """When token generation URL is not defined in the inventory we may try to find it on the fly.
+        :param payload: Token request payload
+        :type payload: dict
+        :return: token generation response
+        """
+        for url in self._get_known_token_paths():
+            try:
+                response = self._login_api_call(payload, url)
+            except Exception:
+                pass
+            else:
+                self._set_api_token_path(url)
+                return response
+
+        raise Exception("Token generation API was not found.")
+
+    def _login_api_call(self, payload, url):
+        self._display(HTTPMethod.POST, 'login', url)
+        dummy, response_data = self._send_auth_request(
+            url, json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
+        )
+        response = self._response_to_json(self._get_response_value(response_data))
+        return response
 
     def logout(self):
         auth_payload = {
@@ -238,18 +263,46 @@ class HttpApi(HttpApiBase):
     def _get_api_spec_path(self):
         return self.get_option('spec_path')
 
-    def _get_api_token_path(self):
-        # add something here
-        # kw = dict(
-        #     method=HTTPMethod.GET,
-        #     headers=BASE_HEADERS
-        # )
-        # x = self.connection.send(
-        #     path='/api/versions',
-        #     data=json.dumps({}),
-        #     **kw)
+    def _get_known_token_paths(self):
+        """Generate list of token generation urls based on list of versions supported by device(if exposed via API) or
+        default list of API versions.
 
-        return self.get_option('token_path')
+        :returns: list of token generation urls
+        :rtype: generator
+        """
+        try:
+            api_versions_info = self._get_list_of_supported_api_version()
+        except Exception as e:
+            # API versions API is not supported we need to check all known version
+            api_versions_info = DEFAULT_API_VERSIONS
+
+        return [TOKEN_PATH_TEMPLATE.format(version) for version in api_versions_info]
+
+    def _get_list_of_supported_api_version(self):
+        """
+        Fetch list of API versions supported by device.
+
+        :return: list of API versions suitable for device
+        :rtype: list
+        """
+        # Try to fetch supported API version
+        http_method = HTTPMethod.GET
+        self._ignore_http_errors = True
+        response, response_data = self.connection.send(
+            path='/api/versions',
+            data='',
+            method=http_method,
+            headers=BASE_HEADERS)
+        value = self._get_response_value(response_data)
+        self._display(http_method, 'response', value)
+        api_versions_info = self._response_to_json(value)
+        return api_versions_info["supportedVersions"]
+
+    def _get_api_token_path(self):
+        return self.get_option(API_TOKEN_PATH_OPTION_NAME)
+
+    def _set_api_token_path(self, url):
+        return self.set_option(API_TOKEN_PATH_OPTION_NAME, url)
 
     @staticmethod
     def _response_to_json(response_text):
