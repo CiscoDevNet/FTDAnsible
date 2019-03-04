@@ -1,0 +1,203 @@
+# User Guide
+
+This section gives a good introduction how to get started with [`ftd_configuration`](https://docs.ansible.com/ansible/latest/modules/ftd_configuration_module.html) module that allows to configure FTD devices.
+
+First, make sure that Ansible with FTD modules is [installed](./installation_guide.md).
+
+## Task operations
+
+`ftd_configuration` module allows executing all operations available in REST API in a form of Ansible tasks. Each REST API endpoint can be wrapped into an Ansible play and be a part of a playbook.
+
+Begin by finding a necessary operation from [Operation Index](operations/index.md). Most operations are similar to CRUD functions and can be divided into the following groups:
+
+* `get` - fetches a object by its ID (e.g., `getNetworkObject`);
+* `getList` - fetches a list of objects matching given criteria (e.g., `getNetworkObjectList`). For example, it can be used to find an object by name or other attribute when its ID is not known;
+* `add` - creates a new object (e.g., `addNetworkObject`);
+* `edit` - updates an existing object (e.g., `editNetworkObject`). ID of the existing object is a mandatory attribute for this operation type;
+* `delete` - deletes an existing object by its ID (e.g., `deleteNetworkObject`);
+* `upsert` - creates a new object if it does not exist, or updates it when the object already exists (e.g., `upsertNetworkObject`). By default, `upsert` operation looks for an object by its name, but the filtering criteria can be adjusted. See [Upsert operation](#upsert-operation) for more details;
+
+## Task parameters
+
+Each `ftd_configuration` play has required and optional parameters indicating what API endpoint to call and with what parameters.
+
+| Parameter | Required | Description |
+| -------- | -------- | ----------- |
+| operation | True <td colspan=3> Defines the operation to call. |
+| data | False <td colspan=3> Corresponds to the body part in HTTP request and is mandatory for `add`, `edit`, and `upsert` operations. |
+| path_params | False <td colspan=3> Corresponds to URL parameters in HTTP request and is mandatory for `edit`, and `delete` operations. |
+| query_params | False <td colspan=3> Corresponds to the query string in HTTP request and is usually used for `getList` operations. |
+| filters | False <td colspan=3> A map with filter criteria for `upsert` and `getList` operations. |
+| register_as | False <td colspan=3> A name for the fact that is registered with the response from the server. |
+
+For example, to create or update an existing object, use the `upsert` operation with the `data` parameter:
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/port_object.yml', ["Create a TCP port for PostgreSQL"] %}
+
+To filter out a specific object, the `getList` operation with the `filters` parameter can be used:
+  
+{% include_playbook_tasks sample_dir + '/ftd_configuration/ssl_policy.yml', ["Find an intrustion policy with maximum detection"] %}
+
+More examples can be found [here](./examples.md).
+
+## Upsert operation
+
+Upsert is an idempotent "Insert or Update" operation which came from [relational databases](https://en.wikipedia.org/wiki/Merge_\(SQL\)).
+It allows defining the desired state of the record instead of checking whether the record exists (and should be updated) or not (and should be created).
+As a result, playbook syntax looks simpler and more declarative, so we recommend using upsert operations whenever possible.
+
+Here is an example of an upsert operation defining a network:
+
+```yaml
+- name: Upsert localhost network
+  ftd_configuration:
+    operation: upsertNetworkObject
+    data:
+      name: LocalhostNetwork
+      subType: HOST
+      value: 127.0.0.1
+      type: networkobject
+```
+
+And the equivalent of the upsert task written using other operations:
+
+```yaml
+- name: Get existing networks with LocalhostNetwork name
+  ftd_configuration:
+    operation: getNetworkObjectList
+    query_params:
+      filter: name:LocalhostNetwork
+    register_as: my_networks
+
+- name: Create a network if it does not exist
+  ftd_configuration:
+    operation: addNetworkObject
+    data:
+      name: LocalhostNetwork
+      subType: HOST
+      value: 127.0.0.1
+      type: networkobject
+  when: my_networks.0 is undefined
+
+- name: Update the network if it already exists
+  ftd_configuration:
+    operation: editNetworkObject
+    data:
+      name: LocalhostNetwork
+      subType: HOST
+      value: 127.0.0.1
+      type: networkobject
+    path_params:
+      objId: {{ "{{ my_networks[0].id }}" }}
+  when: my_networks.0 is not undefined
+```
+
+### Filtering in upsert operation
+
+Upsert operation uses filters to look for a record on the device and define if the object already exists or not. Default filtering
+is done by name, and the object having a name as in `data` parameter is sought.
+
+If you want to use a different attribute for filtering, overwrite `filters` parameter. For example, to update a physical interface
+with a certain hardware name, add a `hardwareName: {VALUE}` keypair to `filters`:
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/physical_interface.yml', ["Setup Outside Interface with static IP"] %}
+
+When `filters` are too generic and more than one existing object satisfy filtering criteria, the module stops the play and raises
+an error asking to specify filters more precisely to match one object exactly.
+
+## Registering objects as Ansible facts
+
+In order to reuse objects in subsequent plays during an ansible-playbook run, they should be registered as variables. 
+FTD modules automatically register server responses as Ansible _facts_. Then, these _facts_ can be used in the playbook as 
+regular variables.
+
+By default, fact names are constructed as `{OBJECT_TYPE}_{LOWERCASE_OBJECT_NAME}`. For example, an `addNetworkObject` 
+play creating a `NetworkObject` named `LocalhostNetwork` registers the newly created object in a 
+`networkobject_localhostnetwork` fact:
+
+```
+$ ansible-playbook test.yml -vvv
+
+TASK [Create localhost network] ***********************************************************
+ok: [localhost] => {
+    "ansible_facts": {
+        "networkobject_localhostnetwork": {
+            "description": null,
+            "dnsResolution": null,
+            "id": "a016b91b-cbdb-11e8-8efc-8f046e5a37e0",
+            "isSystemDefined": false,
+            "links": {
+                "self": "https://localhost/api/fdm/v2/object/networks/a016b91b-cbdb-11e8-8efc-8f046e5a37e0"
+            },
+            "name": "LocalhostNetwork",
+            "subType": "HOST",
+            "type": "networkobject",
+            "value": "127.0.0.1",
+            "version": "oc2amviloyzed"
+        }
+    },
+...
+```
+
+If you want to change the default naming convention, add a `register_as` parameter with the desired fact name to the play.
+
+```yaml
+- name: Create network and register as 'localNet'
+  ftd_configuration:
+    operation: addNetworkObject
+    data:
+      name: LocalhostNetwork
+      subType: HOST
+      value: 127.0.0.1
+      type: networkobject
+    register_as: localNet
+
+- name: Update description
+  ftd_configuration:
+    operation: editNetworkObject
+    data:
+      id: {{ '{{ localNet.id }}' }}
+      version: {{ '{{ localNet.version }}' }}
+      name: LocalhostNetwork
+      description: Loopback network to access local computer
+      subType: HOST
+      value: 127.0.0.1
+      type: networkobject
+    path_params:
+      objId: {{ '{{ localNet.id }}' }}
+```
+
+Facts are set on a host-by-host basis. When the playbook is run on multiple devices (hosts), facts are 
+visible in a context of a single device (host) only.
+
+## Task idempotency
+
+A task is _idempotent_ if the result of running it once is exactly the same as the result of running it
+multiple times. As Ansible requires modules to be idempotent, `ftd_configuration` complies with this requirement.
+
+Before executing the operation, `ftd_configuration` checks whether the desired final state is already achieved. 
+If yes, no actions are executed, and the operation finishes showing that the state is not changed. 
+
+For example, when running `addNetworkObject` operation multiple times without changing the play configuration, 
+only the first run results in `changed` status. Subsequent runs are finished with `ok` status.
+
+```
+$ ansible-playbook test.yml
+
+TASK [Create localhost network] *******************************************
+changed: [localhost]
+
+PLAY RECAP ****************************************************************
+localhost               : ok=1    changed=1    unreachable=0    failed=0
+
+$ ansible-playbook test.yml
+
+TASK [Create localhost network] *******************************************
+ok: [localhost]
+
+PLAY RECAP ****************************************************************
+localhost               : ok=1    changed=0    unreachable=0    failed=0
+``` 
+
+When playbook tasks are idempotent, the playbook itself must be idempotent too. Having idempotent playbook is 
+recommended, as it allows to re-run them safely.

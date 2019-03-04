@@ -4,6 +4,21 @@ Here are some examples that demonstrate how to use Ansible modules for common
 operations on FTD devices. Hopefully, they will make the process of creating 
 your playbooks easier.
 
+## Make initial provisioning
+
+Initially, the device is delivered in a locked state. To unlock the device and start using its API, the user needs to accept
+an end-user license agreement (EULA) and change the default password. Luckily, it can be done with Ansible.
+
+The following tasks check the current state of device provisioning, displays the EULA text, and asks the user to accept it:
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/initial_provisioning.yml', ["Get provisioning info", "Show EULA text", "Confirm EULA acceptance"] %}
+
+After getting familiar with the EULA details, this task sends a request to the device to reset the password and unlock it.
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/initial_provisioning.yml', ["Complete initial provisioning"] %}
+
+When the previous task is successfully accomplished, the device is unlocked and ready to be configured via API.
+
 ## Create a NetworkObject
 
 This example demonstrates how to create a simple entity representing a network - 
@@ -48,11 +63,24 @@ The example shows how to create an `AccessRule` allowing traffic from the previo
 Changes made on the FTD device are applied only after they get deployed. This example demonstrates
 how to start a deployment job and make sure that it succeeds.
 
-The first task starts a new deployment job and registers returned `DeploymentStatus` as `deployment_job` Ansible fact.
-The next task polls the `DeploymentStatus` every 3 seconds until the job is completed. The last
-part verifies that the deployment is completed successfully. Otherwise, it stops the playbook with an error message.
+The first two tasks fetch a list of pending changes that are not in the deployed state yet and make sure that there are at least
+some changes that need to be deployed. Otherwise, the playbook execution stops.
 
-{% include_playbook_tasks sample_dir + '/ftd_configuration/deployment.yml' %}
+{% include_playbook_tasks sample_dir + '/ftd_configuration/deployment.yml', ["Fetch pending changes", "Complete playbook when nothing to deploy"] %}
+
+Next, the playbook starts a new deployment job and registers returned `DeploymentStatus` as a `deployment_job` Ansible fact. The
+following task polls the `DeploymentStatus` every 3 seconds until the job is completed. The last part verifies that the deployment
+is completed successfully. Otherwise, it stops the playbook with an error message.
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/deployment.yml', ["Start deployment", "Poll deployment status until the job is finished", "Stop the playbook if the deployment failed"] %}
+
+## Configure interfaces
+
+To enable a physical interface and update its IPv4 address with a static configuration, check the following `upsert` play.
+Notice, that it has a `filters` parameter to select an interface by hardware name. Usually, interfaces do not have names on fresh
+devices, while hardware names are always set and cannot be changed, so filtering by hardware name is preferred.
+
+{% include_playbook_tasks sample_dir + '/ftd_configuration/physical_interface.yml', ["Setup Inside Interface with static IP"] %}
 
 ## Use host and group variables
 
@@ -77,3 +105,8 @@ With the playbook and inventory shown above, Ansible will create a `HOST` networ
 `localhost` device, and another network for IP address `130.51.181.225` on device `10.89.21.213`.
 
 More information about variables in [Ansible documentation](https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html).
+
+## More samples on GitHub
+
+All playbook samples can be found on [GitHub](https://github.com/CiscoDevNet/FTDAnsible/tree/master/samples). We are constantly
+adding more examples there and highly appreciate all contributions too.
