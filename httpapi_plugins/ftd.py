@@ -138,13 +138,13 @@ class HttpApi(HttpApiBase):
         for url in self._get_known_token_paths():
             try:
                 response = self._login_api_call(payload, url)
-            except Exception:
-                pass
+            except ConnectionError:
+                display.vvvv('REST:request to {0} failed because of connection error'.format(url))
             else:
                 self._set_api_token_path(url)
                 return response
 
-        raise Exception("Token generation API was not found.")
+        raise ConnectionError("Token generation API was not found.")
 
     def _login_api_call(self, payload, url):
         self._display(HTTPMethod.POST, 'login', url)
@@ -272,7 +272,7 @@ class HttpApi(HttpApiBase):
         """
         try:
             api_versions_info = self._get_list_of_supported_api_version()
-        except Exception as e:
+        except ConnectionError:
             # API versions API is not supported we need to check all known version
             api_versions_info = DEFAULT_API_VERSIONS
 
@@ -288,11 +288,15 @@ class HttpApi(HttpApiBase):
         # Try to fetch supported API version
         http_method = HTTPMethod.GET
         self._ignore_http_errors = True
-        response, response_data = self.connection.send(
-            path='/api/versions',
-            data='',
-            method=http_method,
-            headers=BASE_HEADERS)
+        try:
+            response, response_data = self.connection.send(
+                path='/api/versions',
+                data='',
+                method=http_method,
+                headers=BASE_HEADERS)
+        except HTTPError:
+            raise ConnectionError("Can't fetch list of supported api versions.")
+
         value = self._get_response_value(response_data)
         self._display(http_method, 'response', value)
         api_versions_info = self._response_to_json(value)
