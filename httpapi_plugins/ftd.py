@@ -271,14 +271,14 @@ class HttpApi(HttpApiBase):
         :rtype: generator
         """
         try:
-            api_versions_info = self._get_list_of_supported_api_version()
+            api_versions_info = self._get_list_of_supported_api_versions()
         except ConnectionError:
             # API versions API is not supported we need to check all known version
             api_versions_info = DEFAULT_API_VERSIONS
 
         return [TOKEN_PATH_TEMPLATE.format(version) for version in api_versions_info]
 
-    def _get_list_of_supported_api_version(self):
+    def _get_list_of_supported_api_versions(self):
         """
         Fetch list of API versions supported by device.
 
