@@ -48,6 +48,9 @@ class FakeFtdHttpApiPlugin(HttpApi):
     def get_option(self, var):
         return self.hostvars[var]
 
+    def set_option(self, var, val):
+        self.hostvars[var] = val
+
 
 class TestFtdHttpApi(unittest.TestCase):
 
@@ -116,10 +119,8 @@ class TestFtdHttpApi(unittest.TestCase):
         self.connection_mock.send.side_effect = HTTPError('http://testhost.com', 400, '', {},
                                                           StringIO('{"message": "Failed to authenticate user"}'))
 
-        with self.assertRaises(ConnectionError) as res:
+        with self.assertRaises(ConnectionError):
             self.ftd_plugin.login('foo', 'bar')
-
-        assert 'Failed to authenticate user' in str(res.exception)
 
     def test_logout_should_revoke_tokens(self):
         self.ftd_plugin.access_token = 'ACCESS_TOKEN_TO_REVOKE'
@@ -317,11 +318,13 @@ class TestFtdHttpApi(unittest.TestCase):
         return response_mock, response_data
 
     def test_get_list_of_supported_api_versions_with_failed_http_request(self):
-        send_mock = mock.MagicMock(side_effect=HTTPError('url', 'code', 'msg', 'hdrs', 'fp'))
+        fp = mock.MagicMock()
+        fp.read.return_value = '{"error-msg": "123"}'
+        send_mock = mock.MagicMock(side_effect=HTTPError('url', 'code', 'msg', 'hdrs', fp))
         with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
             self.assertRaises(
                 ConnectionError,
-                self.ftd_plugin._get_list_of_supported_api_versions
+                self.ftd_plugin._get_supported_api_versions
             )
 
     def test_get_list_of_supported_api_versions_with_buggy_response(self):
@@ -332,7 +335,7 @@ class TestFtdHttpApi(unittest.TestCase):
         with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
             self.assertRaises(
                 ConnectionError,
-                self.ftd_plugin._get_list_of_supported_api_versions
+                self.ftd_plugin._get_supported_api_versions
             )
 
     def test_get_list_of_supported_api_versions_with_positive_response(self):
@@ -341,9 +344,10 @@ class TestFtdHttpApi(unittest.TestCase):
 
         send_mock = mock.MagicMock(return_value=(None, http_response_mock))
         with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
-            supported_versions = self.ftd_plugin._get_list_of_supported_api_versions()
+            supported_versions = self.ftd_plugin._get_supported_api_versions()
             assert supported_versions == ['v1']
 
+    @patch('httpapi_plugins.ftd.HttpApi._get_api_token_path', mock.MagicMock(return_value=None))
     @patch('httpapi_plugins.ftd.HttpApi._get_known_token_paths')
     def test_lookup_login_url_with_empty_response(self, get_known_token_paths_mock):
         payload = mock.MagicMock()
@@ -355,13 +359,13 @@ class TestFtdHttpApi(unittest.TestCase):
         )
 
     @patch('httpapi_plugins.ftd.HttpApi._get_known_token_paths')
-    @patch('httpapi_plugins.ftd.HttpApi._login_api_call')
+    @patch('httpapi_plugins.ftd.HttpApi._send_login_request')
     @patch('httpapi_plugins.ftd.display')
-    def test_lookup_login_url_with_failed_request(self, display_mock, login_api_call_mock, get_known_token_paths_mock):
+    def test_lookup_login_url_with_failed_request(self, display_mock, api_request_mock, get_known_token_paths_mock):
         payload = mock.MagicMock()
         url = mock.MagicMock()
         get_known_token_paths_mock.return_value = [url]
-        login_api_call_mock.side_effect = ConnectionError('Error message')
+        api_request_mock.side_effect = ConnectionError('Error message')
         self.assertRaises(
             ConnectionError,
             self.ftd_plugin._lookup_login_url,
@@ -369,42 +373,37 @@ class TestFtdHttpApi(unittest.TestCase):
         )
         assert display_mock.vvvv.called
 
+    @patch('httpapi_plugins.ftd.HttpApi._get_api_token_path', mock.MagicMock(return_value=None))
     @patch('httpapi_plugins.ftd.HttpApi._get_known_token_paths')
-    @patch('httpapi_plugins.ftd.HttpApi._login_api_call')
+    @patch('httpapi_plugins.ftd.HttpApi._send_login_request')
     @patch('httpapi_plugins.ftd.HttpApi._set_api_token_path')
-    def test_lookup_login_url_with_positive_result(self, set_api_token_mock, login_api_call_mock,
+    def test_lookup_login_url_with_positive_result(self, set_api_token_mock, api_request_mock,
                                                    get_known_token_paths_mock):
         payload = mock.MagicMock()
         url = mock.MagicMock()
-
         get_known_token_paths_mock.return_value = [url]
         response_mock = mock.MagicMock()
-        login_api_call_mock.return_value = response_mock
+        api_request_mock.return_value = response_mock
 
         resp = self.ftd_plugin._lookup_login_url(payload)
 
         set_api_token_mock.assert_called_once_with(url)
         assert resp == response_mock
 
-    @patch('httpapi_plugins.ftd.HttpApi._get_list_of_supported_api_versions')
+    @patch('httpapi_plugins.ftd.HttpApi._get_supported_api_versions')
     def test_get_known_token_paths_with_positive_response(self, get_list_of_supported_api_versions_mock):
         test_versions = ['v1', 'v2']
         get_list_of_supported_api_versions_mock.return_value = test_versions
         result = self.ftd_plugin._get_known_token_paths()
         assert result == [TOKEN_PATH_TEMPLATE.format(version) for version in test_versions]
 
-    @patch('httpapi_plugins.ftd.HttpApi._get_list_of_supported_api_versions')
+    @patch('httpapi_plugins.ftd.HttpApi._get_supported_api_versions')
     def test_get_known_token_paths_with_failed_api_call(self, get_list_of_supported_api_versions_mock):
         get_list_of_supported_api_versions_mock.side_effect = ConnectionError('test errro message')
         result = self.ftd_plugin._get_known_token_paths()
         assert result == [TOKEN_PATH_TEMPLATE.format(version) for version in DEFAULT_API_VERSIONS]
 
-    def test_set_api_toke_path(self):
-        set_option_mock = mock.MagicMock()
+    def test_set_api_token_path(self):
         url = mock.MagicMock()
-        with mock.patch.object(self.ftd_plugin, "set_option", set_option_mock):
-            self.ftd_plugin._set_api_token_path(url)
-            set_option_mock.assert_called_once_with(
-                API_TOKEN_PATH_OPTION_NAME,
-                url
-            )
+        self.ftd_plugin._set_api_token_path(url)
+        assert self.ftd_plugin._get_api_token_path() == url

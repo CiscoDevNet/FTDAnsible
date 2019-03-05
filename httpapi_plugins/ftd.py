@@ -74,7 +74,8 @@ TOKEN_EXPIRATION_STATUS_CODE = 408
 UNAUTHORIZED_STATUS_CODE = 401
 API_TOKEN_PATH_OPTION_NAME = 'token_path'
 TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
-DEFAULT_API_VERSIONS = ['latest', 'v3', 'v2', 'v1']
+GET_API_VERSIONS_PATH = '/api/versions'
+DEFAULT_API_VERSIONS = ['v2', 'v1']
 
 try:
     from __main__ import display
@@ -115,11 +116,7 @@ class HttpApi(HttpApiBase):
         else:
             raise AnsibleConnectionFailure('Username and password are required for login in absence of refresh token')
 
-        url = self._get_api_token_path()
-        if url:
-            response = self._login_api_call(payload, url)
-        else:
-            response = self._lookup_login_url(payload)
+        response = self._lookup_login_url(payload)
 
         try:
             self.refresh_token = response['refresh_token']
@@ -130,23 +127,32 @@ class HttpApi(HttpApiBase):
                 'Server returned response without token info during connection authentication: %s' % response)
 
     def _lookup_login_url(self, payload):
-        """When token generation URL is not defined in the inventory we may try to find it on the fly.
+        """ Try to find correct login URL and get api token using this URL.
+
         :param payload: Token request payload
         :type payload: dict
         :return: token generation response
         """
-        for url in self._get_known_token_paths():
+        preconfigured_token_path = self._get_api_token_path()
+        if preconfigured_token_path:
+            token_paths = [preconfigured_token_path]
+        else:
+            token_paths = self._get_known_token_paths()
+
+        for url in token_paths:
             try:
-                response = self._login_api_call(payload, url)
-            except ConnectionError:
-                display.vvvv('REST:request to {0} failed because of connection error'.format(url))
+                response = self._send_login_request(payload, url)
+
+            except ConnectionError as e:
+                display.vvvv('REST:request to {0} failed because of connection error: {1}'.format(url, e))
             else:
-                self._set_api_token_path(url)
+                if not preconfigured_token_path:
+                    self._set_api_token_path(url)
                 return response
 
         raise ConnectionError("Token generation API was not found.")
 
-    def _login_api_call(self, payload, url):
+    def _send_login_request(self, payload, url):
         self._display(HTTPMethod.POST, 'login', url)
         dummy, response_data = self._send_auth_request(
             url, json.dumps(payload), method=HTTPMethod.POST, headers=BASE_HEADERS
@@ -170,6 +176,10 @@ class HttpApi(HttpApiBase):
         self.access_token = None
 
     def _send_auth_request(self, path, data, **kwargs):
+        error_msg_prefix = 'Server returned an error during authentication request'
+        return self._send_request(data, kwargs, path, error_msg_prefix)
+
+    def _send_request(self, data, kwargs, path, error_msg_prefix):
         try:
             self._ignore_http_errors = True
             return self.connection.send(path, data, **kwargs)
@@ -177,7 +187,7 @@ class HttpApi(HttpApiBase):
             # HttpApi connection does not read the error response from HTTPError, so we do it here and wrap it up in
             # ConnectionError, so the actual error message is displayed to the user.
             error_msg = json.loads(to_text(e.read()))
-            raise ConnectionError('Server returned an error during authentication request: %s' % error_msg)
+            raise ConnectionError('%s: %s' % (error_msg_prefix, error_msg))
         finally:
             self._ignore_http_errors = False
 
@@ -271,14 +281,14 @@ class HttpApi(HttpApiBase):
         :rtype: generator
         """
         try:
-            api_versions_info = self._get_list_of_supported_api_versions()
+            api_versions = self._get_supported_api_versions()
         except ConnectionError:
             # API versions API is not supported we need to check all known version
-            api_versions_info = DEFAULT_API_VERSIONS
+            api_versions = DEFAULT_API_VERSIONS
 
-        return [TOKEN_PATH_TEMPLATE.format(version) for version in api_versions_info]
+        return [TOKEN_PATH_TEMPLATE.format(version) for version in api_versions]
 
-    def _get_list_of_supported_api_versions(self):
+    def _get_supported_api_versions(self):
         """
         Fetch list of API versions supported by device.
 
@@ -287,15 +297,14 @@ class HttpApi(HttpApiBase):
         """
         # Try to fetch supported API version
         http_method = HTTPMethod.GET
-        self._ignore_http_errors = True
-        try:
-            response, response_data = self.connection.send(
-                path='/api/versions',
-                data='',
+        response, response_data = self._send_request(
+            data='',
+            kwargs=dict(
                 method=http_method,
-                headers=BASE_HEADERS)
-        except HTTPError:
-            raise ConnectionError("Can't fetch list of supported api versions.")
+                headers=BASE_HEADERS
+            ),
+            path=GET_API_VERSIONS_PATH,
+            error_msg_prefix="Can't fetch list of supported api versions")
 
         value = self._get_response_value(response_data)
         self._display(http_method, 'response', value)
