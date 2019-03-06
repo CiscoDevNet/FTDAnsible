@@ -182,9 +182,9 @@ class HttpApi(HttpApiBase):
 
     def _send_auth_request(self, path, data, **kwargs):
         error_msg_prefix = 'Server returned an error during authentication request'
-        return self._send_request(data, kwargs, path, error_msg_prefix)
+        return self._send_request(kwargs, path, error_msg_prefix, data=data)
 
-    def _send_request(self, data, kwargs, path, error_msg_prefix):
+    def _send_request(self, kwargs, path, error_msg_prefix, data=None):
         try:
             self._ignore_http_errors = True
             return self.connection.send(path, data, **kwargs)
@@ -303,7 +303,6 @@ class HttpApi(HttpApiBase):
         # Try to fetch supported API version
         http_method = HTTPMethod.GET
         response, response_data = self._send_request(
-            data='',
             kwargs=dict(
                 method=http_method,
                 headers=BASE_HEADERS
