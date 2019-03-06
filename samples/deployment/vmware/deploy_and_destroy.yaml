@@ -4,14 +4,26 @@
   vars_files:
     - ./vars.yaml
   tasks:
+    - name: "Check OVF presense"
+      stat:
+        path: '{{ ovf_file_name }}'
+      register: ovf_file_info
+      delegate_to: localhost
     - name: "Download OVF"
       get_url:
         url: "{{ remote_ovf_location }}"
         dest: "./"
+      when: 'ovf_file_info.stat is defined and ovf_file_info.stat.exists == False'
+    - name: "Check VMDK presense"
+        stat:
+          path: '{{ remote_vmdk_location | basename }}'
+        register: vmkdr_file_info
+        delegate_to: localhost
     - name: "Download VMDK"
       get_url:
         url: "{{ remote_vmdk_location }}"
         dest: "./"
+      when: 'vmkdr_file_info.stat is defined and vmkdr_file_info.stat.exists == False'
     - name: "Gather facts about datastore"
       vmware_datastore_facts:
         hostname: "{{ vcenter_hostname }}"
