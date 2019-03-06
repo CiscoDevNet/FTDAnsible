@@ -25,8 +25,7 @@ from ansible.module_utils.connection import ConnectionError
 from ansible.module_utils.six import BytesIO, PY3, StringIO
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
-from httpapi_plugins.ftd import HttpApi, BASE_HEADERS, API_TOKEN_PATH_OPTION_NAME, TOKEN_PATH_TEMPLATE, \
-    DEFAULT_API_VERSIONS
+from httpapi_plugins.ftd import HttpApi, BASE_HEADERS, TOKEN_PATH_TEMPLATE, DEFAULT_API_VERSIONS
 
 from module_utils.common import HTTPMethod, ResponseParams
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp
@@ -119,8 +118,10 @@ class TestFtdHttpApi(unittest.TestCase):
         self.connection_mock.send.side_effect = HTTPError('http://testhost.com', 400, '', {},
                                                           StringIO('{"message": "Failed to authenticate user"}'))
 
-        with self.assertRaises(ConnectionError):
+        with self.assertRaises(ConnectionError) as res:
             self.ftd_plugin.login('foo', 'bar')
+
+        assert "Failed to authenticate user" in str(res.exception)
 
     def test_logout_should_revoke_tokens(self):
         self.ftd_plugin.access_token = 'ACCESS_TOKEN_TO_REVOKE'
@@ -318,25 +319,27 @@ class TestFtdHttpApi(unittest.TestCase):
         return response_mock, response_data
 
     def test_get_list_of_supported_api_versions_with_failed_http_request(self):
+        error_msg = "Invalid Credentials"
         fp = mock.MagicMock()
-        fp.read.return_value = '{"error-msg": "123"}'
-        send_mock = mock.MagicMock(side_effect=HTTPError('url', 'code', 'msg', 'hdrs', fp))
+        fp.read.return_value = '{{"error-msg": "{}"}}'.format(error_msg)
+        send_mock = mock.MagicMock(side_effect=HTTPError('url', 400, 'msg', 'hdrs', fp))
         with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
-            self.assertRaises(
-                ConnectionError,
-                self.ftd_plugin._get_supported_api_versions
-            )
+            with self.assertRaises(ConnectionError) as res:
+                self.ftd_plugin._get_supported_api_versions()
+
+        assert error_msg in str(res.exception)
 
     def test_get_list_of_supported_api_versions_with_buggy_response(self):
+        error_msg = "Non JSON value"
         http_response_mock = mock.MagicMock()
-        http_response_mock.getvalue.return_value = "Non JSON value"
+        http_response_mock.getvalue.return_value = error_msg
 
         send_mock = mock.MagicMock(return_value=(None, http_response_mock))
+
         with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
-            self.assertRaises(
-                ConnectionError,
-                self.ftd_plugin._get_supported_api_versions
-            )
+            with self.assertRaises(ConnectionError) as res:
+                self.ftd_plugin._get_supported_api_versions()
+        assert error_msg in str(res.exception)
 
     def test_get_list_of_supported_api_versions_with_positive_response(self):
         http_response_mock = mock.MagicMock()

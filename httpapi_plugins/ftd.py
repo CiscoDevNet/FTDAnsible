@@ -145,6 +145,11 @@ class HttpApi(HttpApiBase):
 
             except ConnectionError as e:
                 display.vvvv('REST:request to {0} failed because of connection error: {1}'.format(url, e))
+                # In the case of ConnectionError caused by HTTPError we should check response code.
+                # Response code 400 returned in case of invalid credentials so we should stop attempts to log in and
+                # inform the user.
+                if hasattr(e, 'http_code') and e.http_code == 400:
+                    raise
             else:
                 if not preconfigured_token_path:
                     self._set_api_token_path(url)
@@ -187,7 +192,7 @@ class HttpApi(HttpApiBase):
             # HttpApi connection does not read the error response from HTTPError, so we do it here and wrap it up in
             # ConnectionError, so the actual error message is displayed to the user.
             error_msg = json.loads(to_text(e.read()))
-            raise ConnectionError('%s: %s' % (error_msg_prefix, error_msg))
+            raise ConnectionError('%s: %s' % (error_msg_prefix, error_msg), http_code=e.code)
         finally:
             self._ignore_http_errors = False
 
