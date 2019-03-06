@@ -17,13 +17,13 @@
     - name: "Check VMDK presense"
         stat:
           path: '{{ remote_vmdk_location | basename }}'
-        register: vmkdr_file_info
+        register: vmkdk_file_info
         delegate_to: localhost
     - name: "Download VMDK"
       get_url:
         url: "{{ remote_vmdk_location }}"
         dest: "./"
-      when: 'vmkdr_file_info.stat is defined and vmkdr_file_info.stat.exists == False'
+      when: 'vmkdk_file_info.stat is defined and vmkdk_file_info.stat.exists == False'
     - name: "Gather facts about datastore"
       vmware_datastore_facts:
         hostname: "{{ vcenter_hostname }}"
