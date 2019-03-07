@@ -182,9 +182,9 @@ class HttpApi(HttpApiBase):
 
     def _send_auth_request(self, path, data, **kwargs):
         error_msg_prefix = 'Server returned an error during authentication request'
-        return self._send_request(kwargs, path, error_msg_prefix, data=data)
+        return self._send_service_request(path, error_msg_prefix, data=data, **kwargs)
 
-    def _send_request(self, kwargs, path, error_msg_prefix, data=None):
+    def _send_service_request(self, path, error_msg_prefix, data=None, **kwargs):
         try:
             self._ignore_http_errors = True
             return self.connection.send(path, data, **kwargs)
@@ -302,13 +302,12 @@ class HttpApi(HttpApiBase):
         """
         # Try to fetch supported API version
         http_method = HTTPMethod.GET
-        response, response_data = self._send_request(
-            kwargs=dict(
-                method=http_method,
-                headers=BASE_HEADERS
-            ),
+        response, response_data = self._send_service_request(
             path=GET_API_VERSIONS_PATH,
-            error_msg_prefix="Can't fetch list of supported api versions")
+            error_msg_prefix="Can't fetch list of supported api versions",
+            method=http_method,
+            headers=BASE_HEADERS
+        )
 
         value = self._get_response_value(response_data)
         self._display(http_method, 'response', value)
