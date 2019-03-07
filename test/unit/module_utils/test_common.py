@@ -334,15 +334,15 @@ def test_delete_ref_duplicates_with_object_containing_duplicate_refs():
         ]
     }
     assert {
-               'id': '123',
-               'name': 'foo',
-               'type': 'bar',
-               'refs': [
-                   {'id': '123', 'type': 'baz'},
-                   {'id': '234', 'type': 'baz'},
-                   {'id': '234', 'type': 'foo'}
-               ]
-           } == delete_ref_duplicates(data)
+        'id': '123',
+        'name': 'foo',
+        'type': 'bar',
+        'refs': [
+            {'id': '123', 'type': 'baz'},
+            {'id': '234', 'type': 'baz'},
+            {'id': '234', 'type': 'foo'}
+        ]
+    } == delete_ref_duplicates(data)
 
 
 def test_delete_ref_duplicates_with_object_containing_duplicate_refs_in_nested_object():
@@ -361,14 +361,14 @@ def test_delete_ref_duplicates_with_object_containing_duplicate_refs_in_nested_o
         }
     }
     assert {
-               'id': '123',
-               'name': 'foo',
-               'type': 'bar',
-               'children': {
-                   'refs': [
-                       {'id': '123', 'type': 'baz'},
-                       {'id': '234', 'type': 'baz'},
-                       {'id': '234', 'type': 'foo'}
-                   ]
-               }
-           } == delete_ref_duplicates(data)
+        'id': '123',
+        'name': 'foo',
+        'type': 'bar',
+        'children': {
+            'refs': [
+                {'id': '123', 'type': 'baz'},
+                {'id': '234', 'type': 'baz'},
+                {'id': '234', 'type': 'foo'}
+            ]
+        }
+    } == delete_ref_duplicates(data)

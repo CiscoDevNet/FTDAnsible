@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
-from copy import copy
+from collections import OrderedDict
 
 import re
 from ansible.module_utils._text import to_text
@@ -212,7 +212,9 @@ def delete_ref_duplicates(d):
 
     def delete_ref_duplicates_from_list(refs):
         if all(type(i) == dict and is_object_ref(i) for i in refs):
-            unique_reference_map = {(i['id'], i['type']): i for i in refs}
+            unique_reference_map = OrderedDict()
+            for i in refs:
+                unique_reference_map[(i['id'], i['type'])] = i
             return list(unique_reference_map.values())
         else:
             return refs
