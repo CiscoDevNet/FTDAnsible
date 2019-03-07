@@ -220,10 +220,12 @@ def delete_ref_duplicates(d):
     if not d:
         return d
 
-    d = copy(d)
+    modified_d = {}
     for k, v in iteritems(d):
         if type(v) == list:
-            d[k] = delete_ref_duplicates_from_list(v)
+            modified_d[k] = delete_ref_duplicates_from_list(v)
         elif type(v) == dict:
-            d[k] = delete_ref_duplicates(v)
-    return d
+            modified_d[k] = delete_ref_duplicates(v)
+        else:
+            modified_d[k] = v
+    return modified_d
