@@ -77,6 +77,11 @@ TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
 GET_API_VERSIONS_PATH = '/api/versions'
 DEFAULT_API_VERSIONS = ['v2', 'v1']
 
+INVALID_API_TOKEN_PATH_MSG = ('The API token path is incorrect. Please, check correctness of '
+                              'the `ansible_httpapi_ftd_token_path` variable in the inventory file.')
+MISSING_API_TOKEN_PATH_MSG = ('Ansible could not determine the API token path automatically. Please, '
+                              'specify the `ansible_httpapi_ftd_token_path` variable in the inventory file.')
+
 try:
     from __main__ import display
 except ImportError:
@@ -155,7 +160,7 @@ class HttpApi(HttpApiBase):
                     self._set_api_token_path(url)
                 return response
 
-        raise ConnectionError("Token generation API was not found.")
+        raise ConnectionError(INVALID_API_TOKEN_PATH_MSG if preconfigured_token_path else MISSING_API_TOKEN_PATH_MSG)
 
     def _send_login_request(self, payload, url):
         self._display(HTTPMethod.POST, 'login', url)
