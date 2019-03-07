@@ -25,7 +25,7 @@ from ansible.module_utils.connection import ConnectionError
 from ansible.module_utils.six import BytesIO, PY3, StringIO
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 
-from httpapi_plugins.ftd import HttpApi, BASE_HEADERS
+from httpapi_plugins.ftd import HttpApi, BASE_HEADERS, TOKEN_PATH_TEMPLATE, DEFAULT_API_VERSIONS
 
 from module_utils.common import HTTPMethod, ResponseParams
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp
@@ -46,6 +46,9 @@ class FakeFtdHttpApiPlugin(HttpApi):
 
     def get_option(self, var):
         return self.hostvars[var]
+
+    def set_option(self, var, val):
+        self.hostvars[var] = val
 
 
 class TestFtdHttpApi(unittest.TestCase):
@@ -118,7 +121,7 @@ class TestFtdHttpApi(unittest.TestCase):
         with self.assertRaises(ConnectionError) as res:
             self.ftd_plugin.login('foo', 'bar')
 
-        assert 'Failed to authenticate user' in str(res.exception)
+        assert "Failed to authenticate user" in str(res.exception)
 
     def test_logout_should_revoke_tokens(self):
         self.ftd_plugin.access_token = 'ACCESS_TOKEN_TO_REVOKE'
@@ -314,3 +317,96 @@ class TestFtdHttpApi(unittest.TestCase):
         response_text = json.dumps(response) if type(response) is dict else response
         response_data = BytesIO(response_text.encode() if response_text else ''.encode())
         return response_mock, response_data
+
+    def test_get_list_of_supported_api_versions_with_failed_http_request(self):
+        error_msg = "Invalid Credentials"
+        fp = mock.MagicMock()
+        fp.read.return_value = '{{"error-msg": "{}"}}'.format(error_msg)
+        send_mock = mock.MagicMock(side_effect=HTTPError('url', 400, 'msg', 'hdrs', fp))
+        with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
+            with self.assertRaises(ConnectionError) as res:
+                self.ftd_plugin._get_supported_api_versions()
+
+        assert error_msg in str(res.exception)
+
+    def test_get_list_of_supported_api_versions_with_buggy_response(self):
+        error_msg = "Non JSON value"
+        http_response_mock = mock.MagicMock()
+        http_response_mock.getvalue.return_value = error_msg
+
+        send_mock = mock.MagicMock(return_value=(None, http_response_mock))
+
+        with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
+            with self.assertRaises(ConnectionError) as res:
+                self.ftd_plugin._get_supported_api_versions()
+        assert error_msg in str(res.exception)
+
+    def test_get_list_of_supported_api_versions_with_positive_response(self):
+        http_response_mock = mock.MagicMock()
+        http_response_mock.getvalue.return_value = '{"supportedVersions": ["v1"]}'
+
+        send_mock = mock.MagicMock(return_value=(None, http_response_mock))
+        with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
+            supported_versions = self.ftd_plugin._get_supported_api_versions()
+            assert supported_versions == ['v1']
+
+    @patch('httpapi_plugins.ftd.HttpApi._get_api_token_path', mock.MagicMock(return_value=None))
+    @patch('httpapi_plugins.ftd.HttpApi._get_known_token_paths')
+    def test_lookup_login_url_with_empty_response(self, get_known_token_paths_mock):
+        payload = mock.MagicMock()
+        get_known_token_paths_mock.return_value = []
+        self.assertRaises(
+            ConnectionError,
+            self.ftd_plugin._lookup_login_url,
+            payload
+        )
+
+    @patch('httpapi_plugins.ftd.HttpApi._get_known_token_paths')
+    @patch('httpapi_plugins.ftd.HttpApi._send_login_request')
+    @patch('httpapi_plugins.ftd.display')
+    def test_lookup_login_url_with_failed_request(self, display_mock, api_request_mock, get_known_token_paths_mock):
+        payload = mock.MagicMock()
+        url = mock.MagicMock()
+        get_known_token_paths_mock.return_value = [url]
+        api_request_mock.side_effect = ConnectionError('Error message')
+        self.assertRaises(
+            ConnectionError,
+            self.ftd_plugin._lookup_login_url,
+            payload
+        )
+        assert display_mock.vvvv.called
+
+    @patch('httpapi_plugins.ftd.HttpApi._get_api_token_path', mock.MagicMock(return_value=None))
+    @patch('httpapi_plugins.ftd.HttpApi._get_known_token_paths')
+    @patch('httpapi_plugins.ftd.HttpApi._send_login_request')
+    @patch('httpapi_plugins.ftd.HttpApi._set_api_token_path')
+    def test_lookup_login_url_with_positive_result(self, set_api_token_mock, api_request_mock,
+                                                   get_known_token_paths_mock):
+        payload = mock.MagicMock()
+        url = mock.MagicMock()
+        get_known_token_paths_mock.return_value = [url]
+        response_mock = mock.MagicMock()
+        api_request_mock.return_value = response_mock
+
+        resp = self.ftd_plugin._lookup_login_url(payload)
+
+        set_api_token_mock.assert_called_once_with(url)
+        assert resp == response_mock
+
+    @patch('httpapi_plugins.ftd.HttpApi._get_supported_api_versions')
+    def test_get_known_token_paths_with_positive_response(self, get_list_of_supported_api_versions_mock):
+        test_versions = ['v1', 'v2']
+        get_list_of_supported_api_versions_mock.return_value = test_versions
+        result = self.ftd_plugin._get_known_token_paths()
+        assert result == [TOKEN_PATH_TEMPLATE.format(version) for version in test_versions]
+
+    @patch('httpapi_plugins.ftd.HttpApi._get_supported_api_versions')
+    def test_get_known_token_paths_with_failed_api_call(self, get_list_of_supported_api_versions_mock):
+        get_list_of_supported_api_versions_mock.side_effect = ConnectionError('test errro message')
+        result = self.ftd_plugin._get_known_token_paths()
+        assert result == [TOKEN_PATH_TEMPLATE.format(version) for version in DEFAULT_API_VERSIONS]
+
+    def test_set_api_token_path(self):
+        url = mock.MagicMock()
+        self.ftd_plugin._set_api_token_path(url)
+        assert self.ftd_plugin._get_api_token_path() == url
