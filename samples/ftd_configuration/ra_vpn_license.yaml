@@ -1,0 +1,17 @@
+- hosts: all
+  connection: httpapi
+  gather_facts: no
+  tasks:
+  - name: Check RA VPN License
+    ftd_configuration:
+      operation: getLicenseList
+      register_as: all_license_list
+
+  - name: Enable RA VPN License
+    ftd_configuration:
+      operation: addLicense
+      data:
+        licenseType: VPNOnly
+        type: license
+        count: 1
+    when: 'all_license_list | selectattr("licenseType", "in", ["PLUS", "APEX", "VPNOnly"]) | list | length == 0'
