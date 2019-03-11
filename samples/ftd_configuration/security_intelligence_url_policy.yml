@@ -1,0 +1,24 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Create a Cisco URL Object
+      ftd_configuration:
+        operation: upsertURLObject
+        data:
+          name: Cisco
+          description: URL for FB
+          url: www.cisco.com
+          type: urlobject
+
+    - name: Find a Security Intelligence URL Policy
+      ftd_configuration:
+        operation: getSecurityIntelligenceURLPolicyList
+        register_as: policies
+
+    - name: Add Cisco as whitelisted URL to SecurityIntelligenceURLPolicy
+      ftd_configuration:
+        operation: upsertSecurityIntelligenceURLPolicy
+        data:
+          name: NGFW-Default-Security-Intelligence-URL-Policy
+          whitelist: '{{ policies[0]["whitelist"] + [urlobject_cisco] }}'
+          type: securityintelligenceurlpolicy
