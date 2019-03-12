@@ -124,17 +124,16 @@ def equal_lists(l1, l2):
     return True
 
 
-def equal_dicts(d1, d2, compare_by_reference=True):
+def equal_dicts(d1, d2):
     """
-    Checks whether two dictionaries are equal. If `compare_by_reference` is set to True, dictionaries referencing
-    objects are compared using `equal_object_refs` method. Otherwise, every key and value is checked.
+    Checks whether two dictionaries are equal. If dictionaries are reference objects, they
+    are compared using `equal_object_refs` method. Otherwise, every key and value is checked.
 
     :type d1: dict
     :type d2: dict
-    :param compare_by_reference: if True, dictionaries referencing objects are compared using `equal_object_refs` method
     :return: True if passed dicts are equal. Otherwise, returns False.
     """
-    if compare_by_reference and is_object_ref(d1) and is_object_ref(d2):
+    if is_object_ref(d1) and is_object_ref(d2):
         return equal_object_refs(d1, d2)
 
     if len(d1) != len(d2):
@@ -200,7 +199,7 @@ def requires_update(existing_obj, new_obj):
 
     existing_obj = prepare_object_for_comparison(existing_obj)
     new_obj = prepare_object_for_comparison(new_obj)
-    return not equal_dicts(existing_obj, new_obj, compare_by_reference=False)
+    return not equal_values(existing_obj, new_obj)
 
 
 def delete_ref_duplicates(d):
