@@ -1,12 +1,15 @@
 - hosts: all
   connection: httpapi
+  gather_facts: no
+  vars_files:
+  - variables.yaml
   tasks:
     - name: Register device with a Smart License token
       ftd_configuration:
         operation: upsertSmartAgentConnection
         data:
           connectionType: REGISTER
-          token: TOKEN
+          token: "{{ smart_license_token }}"
           type: smartagentconnection
         filters:
           type: smartagentconnection
