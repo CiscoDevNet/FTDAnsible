@@ -16,83 +16,83 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from module_utils.common import equal_objects, delete_ref_duplicates
+from module_utils.common import requires_update, delete_ref_duplicates
 
 
 # simple objects
 
-def test_equal_objects_return_false_with_different_length():
-    assert not equal_objects(
+def test_requires_update_return_true_with_different_length():
+    assert requires_update(
         {'foo': 1},
         {'foo': 1, 'bar': 2}
     )
 
 
-def test_equal_objects_return_false_with_different_fields():
-    assert not equal_objects(
+def test_requires_update_return_true_with_different_fields():
+    assert requires_update(
         {'foo': 1},
         {'bar': 1}
     )
 
 
-def test_equal_objects_return_false_with_different_value_types():
-    assert not equal_objects(
+def test_requires_update_return_true_with_different_value_types():
+    assert requires_update(
         {'foo': 1},
         {'foo': '1'}
     )
 
 
-def test_equal_objects_return_false_with_different_values():
-    assert not equal_objects(
+def test_requires_update_return_true_with_different_values():
+    assert requires_update(
         {'foo': 1},
         {'foo': 2}
     )
 
 
-def test_equal_objects_return_false_with_different_nested_values():
-    assert not equal_objects(
+def test_requires_update_return_true_with_different_nested_values():
+    assert requires_update(
         {'foo': {'bar': 1}},
         {'foo': {'bar': 2}}
     )
 
 
-def test_equal_objects_return_false_with_different_list_length():
-    assert not equal_objects(
+def test_requires_update_return_true_with_different_list_length():
+    assert requires_update(
         {'foo': []},
         {'foo': ['bar']}
     )
 
 
-def test_equal_objects_return_true_with_equal_objects():
-    assert equal_objects(
+def test_requires_update_return_false_with_equal_objects():
+    assert not requires_update(
         {'foo': 1, 'bar': 2},
         {'bar': 2, 'foo': 1}
     )
 
 
-def test_equal_objects_return_true_with_equal_str_like_values():
-    assert equal_objects(
+def test_requires_update_return_false_with_equal_str_like_values():
+    assert not requires_update(
         {'foo': b'bar'},
         {'foo': u'bar'}
     )
 
 
-def test_equal_objects_return_true_with_equal_nested_dicts():
-    assert equal_objects(
+def test_requires_update_return_false_with_equal_nested_dicts():
+    assert not requires_update(
         {'foo': {'bar': 1, 'buz': 2}},
         {'foo': {'buz': 2, 'bar': 1}}
     )
 
 
-def test_equal_objects_return_true_with_equal_lists():
-    assert equal_objects(
+def test_requires_update_return_false_with_equal_lists():
+    assert not requires_update(
         {'foo': ['bar']},
         {'foo': ['bar']}
     )
 
 
-def test_equal_objects_return_true_with_ignored_fields():
-    assert equal_objects(
+def test_requires_update_return_false_with_ignored_fields():
+    assert not requires_update(
         {'foo': 1, 'version': '123', 'id': '123123'},
         {'foo': 1}
     )
@@ -100,22 +100,22 @@ def test_equal_objects_return_true_with_ignored_fields():
 
 # objects with object references
 
-def test_equal_objects_return_true_with_different_ref_ids():
-    assert not equal_objects(
+def test_requires_update_return_false_with_different_ref_ids():
+    assert requires_update(
         {'foo': {'id': '1', 'type': 'network', 'ignored_field': 'foo'}},
         {'foo': {'id': '2', 'type': 'network', 'ignored_field': 'bar'}}
     )
 
 
-def test_equal_objects_return_true_with_different_ref_types():
-    assert not equal_objects(
+def test_requires_update_return_false_with_different_ref_types():
+    assert requires_update(
         {'foo': {'id': '1', 'type': 'network', 'ignored_field': 'foo'}},
         {'foo': {'id': '1', 'type': 'accessRule', 'ignored_field': 'bar'}}
     )
 
 
-def test_equal_objects_return_true_with_same_object_refs():
-    assert equal_objects(
+def test_requires_update_return_false_with_same_object_refs():
+    assert not requires_update(
         {'foo': {'id': '1', 'type': 'network', 'ignored_field': 'foo'}},
         {'foo': {'id': '1', 'type': 'network', 'ignored_field': 'bar'}}
     )
@@ -123,8 +123,8 @@ def test_equal_objects_return_true_with_same_object_refs():
 
 # objects with array of object references
 
-def test_equal_objects_return_false_with_different_array_length():
-    assert not equal_objects(
+def test_requires_update_return_true_with_different_array_length():
+    assert requires_update(
         {'foo': [
             {'id': '1', 'type': 'network', 'ignored_field': 'foo'}
         ]},
@@ -132,8 +132,8 @@ def test_equal_objects_return_false_with_different_array_length():
     )
 
 
-def test_equal_objects_return_false_with_different_array_order():
-    assert not equal_objects(
+def test_requires_update_return_true_with_different_array_order():
+    assert requires_update(
         {'foo': [
             {'id': '1', 'type': 'network', 'ignored_field': 'foo'},
             {'id': '2', 'type': 'network', 'ignored_field': 'bar'}
@@ -145,8 +145,8 @@ def test_equal_objects_return_false_with_different_array_order():
     )
 
 
-def test_equal_objects_return_true_with_equal_ref_arrays():
-    assert equal_objects(
+def test_requires_update_return_false_with_equal_ref_arrays():
+    assert not requires_update(
         {'foo': [
             {'id': '1', 'type': 'network', 'ignored_field': 'foo'}
         ]},
@@ -158,8 +158,8 @@ def test_equal_objects_return_true_with_equal_ref_arrays():
 
 # objects with nested structures and object references
 
-def test_equal_objects_return_true_with_equal_nested_object_references():
-    assert equal_objects(
+def test_requires_update_return_false_with_equal_nested_object_references():
+    assert not requires_update(
         {
             'name': 'foo',
             'config': {
@@ -185,8 +185,8 @@ def test_equal_objects_return_true_with_equal_nested_object_references():
     )
 
 
-def test_equal_objects_return_false_with_different_nested_object_references():
-    assert not equal_objects(
+def test_requires_update_return_true_with_different_nested_object_references():
+    assert requires_update(
         {
             'name': 'foo',
             'config': {
@@ -212,8 +212,8 @@ def test_equal_objects_return_false_with_different_nested_object_references():
     )
 
 
-def test_equal_objects_return_true_with_equal_nested_list_of_object_references():
-    assert equal_objects(
+def test_requires_update_return_false_with_equal_nested_list_of_object_references():
+    assert not requires_update(
         {
             'name': 'foo',
             'config': {
@@ -248,8 +248,8 @@ def test_equal_objects_return_true_with_equal_nested_list_of_object_references()
     )
 
 
-def test_equal_objects_return_true_with_reference_list_containing_duplicates():
-    assert equal_objects(
+def test_requires_update_return_false_with_reference_list_containing_duplicates():
+    assert not requires_update(
         {
             'name': 'foo',
             'config': {
@@ -334,15 +334,15 @@ def test_delete_ref_duplicates_with_object_containing_duplicate_refs():
         ]
     }
     assert {
-        'id': '123',
-        'name': 'foo',
-        'type': 'bar',
-        'refs': [
-            {'id': '123', 'type': 'baz'},
-            {'id': '234', 'type': 'baz'},
-            {'id': '234', 'type': 'foo'}
-        ]
-    } == delete_ref_duplicates(data)
+               'id': '123',
+               'name': 'foo',
+               'type': 'bar',
+               'refs': [
+                   {'id': '123', 'type': 'baz'},
+                   {'id': '234', 'type': 'baz'},
+                   {'id': '234', 'type': 'foo'}
+               ]
+           } == delete_ref_duplicates(data)
 
 
 def test_delete_ref_duplicates_with_object_containing_duplicate_refs_in_nested_object():
@@ -361,14 +361,14 @@ def test_delete_ref_duplicates_with_object_containing_duplicate_refs_in_nested_o
         }
     }
     assert {
-        'id': '123',
-        'name': 'foo',
-        'type': 'bar',
-        'children': {
-            'refs': [
-                {'id': '123', 'type': 'baz'},
-                {'id': '234', 'type': 'baz'},
-                {'id': '234', 'type': 'foo'}
-            ]
-        }
-    } == delete_ref_duplicates(data)
+               'id': '123',
+               'name': 'foo',
+               'type': 'bar',
+               'children': {
+                   'refs': [
+                       {'id': '123', 'type': 'baz'},
+                       {'id': '234', 'type': 'baz'},
+                       {'id': '234', 'type': 'foo'}
+                   ]
+               }
+           } == delete_ref_duplicates(data)

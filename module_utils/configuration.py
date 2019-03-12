@@ -21,11 +21,11 @@ from functools import partial
 from ansible.module_utils.six import iteritems
 
 try:
-    from ansible.module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
+    from ansible.module_utils.common import HTTPMethod, requires_update, FtdConfigurationError, \
         FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedResponse
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
 except ImportError:
-    from module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
+    from module_utils.common import HTTPMethod, requires_update, FtdConfigurationError, \
         FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedResponse
     from module_utils.fdm_swagger_client import OperationField, ValidationError
 
@@ -321,7 +321,7 @@ class BaseConfigurationResource(object):
         existing_obj = self._find_object_matching_params(model_name, params)
 
         if existing_obj is not None:
-            if equal_objects(existing_obj, params[ParamName.DATA]):
+            if not requires_update(existing_obj, params[ParamName.DATA]):
                 return existing_obj
             else:
                 raise FtdConfigurationError(DUPLICATE_ERROR, existing_obj)
@@ -381,7 +381,7 @@ class BaseConfigurationResource(object):
             existing_object = self.send_general_request(get_operation, {ParamName.PATH_PARAMS: path_params})
             if not existing_object:
                 raise FtdConfigurationError('Referenced object does not exist')
-            elif equal_objects(existing_object, data):
+            elif not requires_update(existing_object, data):
                 return existing_object
 
         return self.send_general_request(operation_name, params)
@@ -482,9 +482,8 @@ class BaseConfigurationResource(object):
 
         existing_obj = self._find_object_matching_params(model_name, params)
         if existing_obj:
-            equal_to_existing_obj = equal_objects(existing_obj, params[ParamName.DATA])
-            return existing_obj if equal_to_existing_obj \
-                else self._edit_upserted_object(model_operations, existing_obj, params)
+            return self._edit_upserted_object(model_operations, existing_obj, params) \
+                if requires_update(existing_obj, params[ParamName.DATA]) else existing_obj
         else:
             return self._add_upserted_object(model_operations, params)
 

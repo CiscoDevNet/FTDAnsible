@@ -133,20 +133,20 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         add_mock.assert_called_once_with(get_operation_mock.return_value, params)
         edit_mock.assert_not_called()
 
-    @mock.patch("module_utils.configuration.equal_objects")
+    @mock.patch("module_utils.configuration.requires_update")
     @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_find_object_matching_params")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
     def test_upsert_object_successfully_edited(self, edit_mock, add_mock, find_object, get_operation_mock,
-                                               is_upsert_supported_mock, equal_objects_mock):
+                                               is_upsert_supported_mock, requires_update_mock):
         params = mock.MagicMock()
         existing_obj = mock.MagicMock()
 
         is_upsert_supported_mock.return_value = True
         find_object.return_value = existing_obj
-        equal_objects_mock.return_value = False
+        requires_update_mock.return_value = True
 
         result = self._resource.upsert_object('upsertFoo', params)
 
@@ -155,23 +155,23 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         get_operation_mock.assert_called_once_with('Foo')
         is_upsert_supported_mock.assert_called_once_with(get_operation_mock.return_value)
         add_mock.assert_not_called()
-        equal_objects_mock.assert_called_once_with(existing_obj, params[ParamName.DATA])
+        requires_update_mock.assert_called_once_with(existing_obj, params[ParamName.DATA])
         edit_mock.assert_called_once_with(get_operation_mock.return_value, existing_obj, params)
 
-    @mock.patch("module_utils.configuration.equal_objects")
+    @mock.patch("module_utils.configuration.requires_update")
     @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_find_object_matching_params")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
     def test_upsert_object_returned_without_modifications(self, edit_mock, add_mock, find_object, get_operation_mock,
-                                                          is_upsert_supported_mock, equal_objects_mock):
+                                                          is_upsert_supported_mock, requires_update_mock):
         params = mock.MagicMock()
         existing_obj = mock.MagicMock()
 
         is_upsert_supported_mock.return_value = True
         find_object.return_value = existing_obj
-        equal_objects_mock.return_value = True
+        requires_update_mock.return_value = False
 
         result = self._resource.upsert_object('upsertFoo', params)
 
@@ -180,7 +180,7 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         get_operation_mock.assert_called_once_with('Foo')
         is_upsert_supported_mock.assert_called_once_with(get_operation_mock.return_value)
         add_mock.assert_not_called()
-        equal_objects_mock.assert_called_once_with(existing_obj, params[ParamName.DATA])
+        requires_update_mock.assert_called_once_with(existing_obj, params[ParamName.DATA])
         edit_mock.assert_not_called()
 
     @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
@@ -228,20 +228,20 @@ class TestUpsertOperationUnitTests(unittest.TestCase):
         add_mock.assert_not_called()
         edit_mock.assert_not_called()
 
-    @mock.patch("module_utils.configuration.equal_objects")
+    @mock.patch("module_utils.configuration.requires_update")
     @mock.patch("module_utils.configuration.OperationChecker.is_upsert_operation_supported")
     @mock.patch.object(BaseConfigurationResource, "get_operation_specs_by_model_name")
     @mock.patch.object(BaseConfigurationResource, "_find_object_matching_params")
     @mock.patch.object(BaseConfigurationResource, "_add_upserted_object")
     @mock.patch.object(BaseConfigurationResource, "_edit_upserted_object")
     def test_upsert_object_with_fatal_error_during_edit(self, edit_mock, add_mock, find_object, get_operation_mock,
-                                                        is_upsert_supported_mock, equal_objects_mock):
+                                                        is_upsert_supported_mock, requires_update_mock):
         params = mock.MagicMock()
         existing_obj = mock.MagicMock()
 
         is_upsert_supported_mock.return_value = True
         find_object.return_value = existing_obj
-        equal_objects_mock.return_value = False
+        requires_update_mock.return_value = True
         edit_mock.side_effect = FtdConfigurationError("Some object edit error")
 
         self.assertRaises(

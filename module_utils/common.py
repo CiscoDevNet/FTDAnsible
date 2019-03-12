@@ -178,26 +178,29 @@ def equal_values(v1, v2):
         return v1 == v2
 
 
-def equal_objects(d1, d2):
+def requires_update(existing_obj, new_obj):
     """
-    Checks whether two objects are equal. Ignores special object properties (e.g. 'id', 'version') and
-    properties with None and empty values. In case properties contains a reference to the other object,
-    only object identities (ids and types) are checked. Also, if an array field contains multiple references
-    to the same object, duplicates are ignored when comparing objects.
+    Checks if two object representations are the same and returns whether the object is already in
+    desired state or should be updated.
 
-    :type d1: dict
-    :type d2: dict
-    :return: True if passed objects and their properties are equal. Otherwise, returns False.
+    Ignores special object properties (e.g. 'id', 'version'). In case properties contains a reference
+    to the other object, only object identities (ids and types) are checked. Also, if an array field
+    contains multiple references to the same object, duplicates are ignored when comparing objects.
+
+    :type existing_obj: dict
+    :type new_obj: dict
+    :return: True if `new_obj` is different from `existing_obj` and existing object must be updated.
+    Otherwise, returns False when objects are the same and update is not needed;
     """
 
-    def prepare_data_for_comparison(d):
-        d = dict((k, d[k]) for k in d.keys() if k not in NON_COMPARABLE_PROPERTIES and d[k])
+    def prepare_object_for_comparison(d):
+        d = dict((k, d[k]) for k in d.keys() if k not in NON_COMPARABLE_PROPERTIES)
         d = delete_ref_duplicates(d)
         return d
 
-    d1 = prepare_data_for_comparison(d1)
-    d2 = prepare_data_for_comparison(d2)
-    return equal_dicts(d1, d2, compare_by_reference=False)
+    existing_obj = prepare_object_for_comparison(existing_obj)
+    new_obj = prepare_object_for_comparison(new_obj)
+    return not equal_dicts(existing_obj, new_obj, compare_by_reference=False)
 
 
 def delete_ref_duplicates(d):
