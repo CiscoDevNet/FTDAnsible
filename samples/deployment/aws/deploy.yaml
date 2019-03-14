@@ -124,5 +124,6 @@
                    #Sensor
                    {
                    "AdminPassword": "{{ new_vm_passwd }}",
-                   "Hostname": "{{ new_vm_hostname }}"
+                   "Hostname": "{{ new_vm_hostname }}",
+                   "ManageLocally": "{{ new_vm_is_onbox }}"
                    }

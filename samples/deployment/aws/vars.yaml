@@ -5,3 +5,4 @@ qcow_file_name: "Cisco_Firepower_Threat_Defense_Virtual-{{ ftd_build_id }}.qcow2
 remote_qcow_location: "https://...path.../...to.../{{ qcow_file_name }}"
 new_vm_hostname: "...Custom vFTD hostname..."
 new_vm_passwd: "...Custom vFTD admin password..."
+new_vm_is_onbox: "Yes" # change to 'No' in case new vFTD should be managed by FMC
