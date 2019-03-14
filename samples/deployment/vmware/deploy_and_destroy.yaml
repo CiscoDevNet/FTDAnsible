@@ -1,0 +1,85 @@
+- name: "Deploy and destroy vFTD in the VMware cloud"
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - ./vars.yaml
+  tasks:
+    - name: "Check OVF presense"
+      stat:
+        path: '{{ ovf_file_name }}'
+      register: ovf_file_info
+      delegate_to: localhost
+    - name: "Download OVF"
+      get_url:
+        url: "{{ remote_ovf_location }}"
+        dest: "./"
+      when: 'ovf_file_info.stat is defined and ovf_file_info.stat.exists == False'
+    - name: "Check VMDK presense"
+        stat:
+          path: '{{ remote_vmdk_location | basename }}'
+        register: vmkdk_file_info
+        delegate_to: localhost
+    - name: "Download VMDK"
+      get_url:
+        url: "{{ remote_vmdk_location }}"
+        dest: "./"
+      when: 'vmkdk_file_info.stat is defined and vmkdk_file_info.stat.exists == False'
+    - name: "Gather facts about datastore"
+      vmware_datastore_facts:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+      delegate_to: localhost
+      register: datastore_list
+    - name: "Create vFTD VM"
+      vmware_deploy_ovf:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        resource_pool: "{{ vcenter_resource_pool }}"
+        datastore: "{{ ( datastore_list.datastores | sort(attribute='freeSpace') | last).name }}"
+        disk_provisioning: thin
+        fail_on_spec_warnings: no
+        folder: "{{ vcenter_folder_name }}"
+        name: "{{ new_vm_name }}"
+        ovf: "{{ ovf_file_name }}"
+        power_on: true
+        wait: true
+        networks:
+          Management0-0: "{{ mgmt_network_name }}"
+        properties:
+          # Zero Day config is defined with the following properties:
+          # - pw
+          # - fqdn
+          # - dns1
+          # - dns2
+          # - dns3
+          # - searchdomains
+          # - ipv4.how
+          # - ipv4.addr
+          # - ipv4.mask
+          # - ipv4.gw
+          # - ipv6.how
+          # - ipv6.addr
+          # - ipv6.mask
+          # - ipv6.gw
+          # - manageLocally
+          # - firewallmode
+          # - mgr
+          # - regkey
+          # - regNAT
+          pw: "{{ new_vm_passwd }}"
+        wait_for_ip_address: yes
+      delegate_to: localhost
+    - name: "Destroy vFTD VM"
+      vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        name: "{{ new_vm_name }}"
+        force: yes
+        state: absent
+      delegate_to: localhost
