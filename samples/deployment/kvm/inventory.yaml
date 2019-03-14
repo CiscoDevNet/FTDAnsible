@@ -1,0 +1,24 @@
+all:
+  vars:
+    ansible_user: "...username..."
+    ansible_ssh_private_key_file: "...ssh key path..."
+    ansible_become_pass: "...root passwd..."
+    ansible_connection: "ssh"
+    ftd_build_id: "6.4.0-1304"
+    ftd_vm_name: "vFTD-6.4"
+    main_folder: "/var/vm"
+    image_folder: "{{ main_folder }}/images"
+    vm_folder: "{{ main_folder }}/kvm_hdds"
+    demo_networks:
+      - name: mgmt
+        subnet: 10
+      - name: net1
+        subnet: 11
+      - name: net2
+        subnet: 12
+      - name: net3
+        subnet: 13
+  children:
+    kvm_hosts:
+      hosts:
+        ...kvm host name...
