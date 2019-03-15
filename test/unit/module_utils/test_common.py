@@ -21,13 +21,6 @@ from module_utils.common import requires_update, delete_ref_duplicates
 
 # simple objects
 
-def test_requires_update_return_true_with_different_length():
-    assert requires_update(
-        {'foo': 1},
-        {'foo': 1, 'bar': 2}
-    )
-
-
 def test_requires_update_return_true_with_different_fields():
     assert requires_update(
         {'foo': 1},
@@ -94,6 +87,20 @@ def test_requires_update_return_false_with_equal_lists():
 def test_requires_update_return_false_with_ignored_fields():
     assert not requires_update(
         {'foo': 1, 'version': '123', 'id': '123123'},
+        {'foo': 1}
+    )
+
+
+def test_requires_update_return_true_when_new_object_has_more_fields():
+    assert requires_update(
+        {'foo': 1},
+        {'foo': 1, 'bar': 2}
+    )
+
+
+def test_requires_update_return_false_when_new_object_is_subset_of_old_object():
+    assert not requires_update(
+        {'foo': 1, 'bar': 2},
         {'foo': 1}
     )
 
@@ -206,6 +213,32 @@ def test_requires_update_return_true_with_different_nested_object_references():
                     'name': 'oldPortName',
                     'type': 'port',
                     'id': '234'
+                }
+            }
+        }
+    )
+
+
+def test_requires_update_return_false_when_new_object_with_nested_fields_is_subset_of_old_object():
+    assert not requires_update(
+        {
+            'name': 'foo',
+            'bar': 'buz',
+            'config': {
+                'version': '1',
+                'port': {
+                    'name': 'oldPortName',
+                    'type': 'port',
+                    'id': '123'
+                }
+            }
+        },
+        {
+            'name': 'foo',
+            'config': {
+                'port': {
+                    'type': 'port',
+                    'id': '123'
                 }
             }
         }
