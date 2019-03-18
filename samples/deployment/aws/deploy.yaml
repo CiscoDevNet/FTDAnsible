@@ -1,0 +1,129 @@
+- name: "Deploy vFTD in the AWS cloud"
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - ./vars.yaml
+  vars:
+    ansible_ssh_private_key_name: "ngfwv-production-keypair"
+  tasks:
+    # Prepare Env Section
+    - name: "Create production key pair"
+      ec2_key:
+        name: "{{ ansible_ssh_private_key_name }}"
+      register: production_keypair
+    - name: "Save production private key"
+      copy:
+        content: "{{ production_keypair.key.private_key }}"
+        dest: "{{ ansible_ssh_private_key_name }}"
+        mode: 0600
+      when: production_keypair.changed
+    - name: "Create a VPC"
+      ec2_vpc_net:
+        name: "Production VPC"
+        state: present
+        cidr_block: 10.0.0.0/16
+      register: prod_vpc
+    - name: "Create an Internet Gateway"
+      ec2_vpc_igw:
+        vpc_id: "{{ prod_vpc.vpc.id }}"
+        state: present
+      register: prod_vpc_igw
+    - name: "Create Subnet s0"
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ prod_vpc.vpc.id }}"
+        cidr: 10.0.0.0/24
+      register: prod_subnet_s0
+    - name: "Create Subnet s1"
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ prod_vpc.vpc.id }}"
+        cidr: 10.0.1.0/24
+      register: prod_subnet_s1
+    - name: "Create Subnet s2"
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ prod_vpc.vpc.id }}"
+        cidr: 10.0.2.0/24
+      register: prod_subnet_s2
+    - name: "Create Subnet s3"
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ prod_vpc.vpc.id }}"
+        cidr: 10.0.3.0/24
+      register: prod_subnet_s3
+    - name: "Create a Routing table"
+      ec2_vpc_route_table:
+        vpc_id: "{{ prod_vpc.vpc.id }}"
+        subnets:
+          - "{{ prod_subnet_s0.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ prod_vpc_igw.gateway_id }}"
+      register: prod_vpc_route_table
+    - name: "Create a Security group"
+      ec2_group:
+        name: "Production VPC Security Group"
+        description: "Security group for ProdVPC"
+        vpc_id: "{{ prod_vpc.vpc.id }}"
+        state: present
+        rules:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+      register: prod_vpc_security_group
+    - name: "Create eth0 for VM"
+      ec2_eni:
+        subnet_id: "{{ prod_subnet_s0.subnet.id }}"
+        description: "Management interface"
+        security_groups: "{{ prod_vpc_security_group.group_name }}"
+        delete_on_termination: yes
+      register: eth0
+    - name: "Create eth1 for VM"
+      ec2_eni:
+        subnet_id: "{{ prod_subnet_s1.subnet.id }}"
+        description: "eth1 interface"
+        delete_on_termination: yes
+      register: eth1
+    - name: "Create eth2 for VM"
+      ec2_eni:
+        subnet_id: "{{ prod_subnet_s2.subnet.id }}"
+        delete_on_termination: yes
+        description: "eth2 interface"
+      register: eth2
+    - name: "Create eth3 for VM"
+      ec2_eni:
+        subnet_id: "{{ prod_subnet_s3.subnet.id }}"
+        delete_on_termination: yes
+        description: "eth3 interface"
+      register: eth3
+    - name: "Associate an elastic IP with an instance"
+      ec2_eip:
+        device_id: "{{ eth0.interface.id }}"
+        release_on_disassociation: yes
+        in_vpc: yes
+      register: public_manamgenet_ip
+    - name: "Find vFTD AMI ID"
+      ec2_ami_facts:
+        filters:
+          name: "{{ ftd_ami_name }}"
+      register: ami_facts
+    # Create VM Section
+    - name: "Create Production VM"
+      ec2:
+        key_name: "{{ ansible_ssh_private_key_name }}"
+        instance_type: "{{ ec2_instance_type }}"
+        image: "{{ ami_facts.images.0.image_id }}"
+        state: present
+        instance_initiated_shutdown_behavior: terminate
+        network_interfaces:
+          - "{{ eth0.interface.id }}"
+          - "{{ eth1.interface.id }}"
+          - "{{ eth2.interface.id }}"
+          - "{{ eth3.interface.id }}"
+        user_data: |
+                   #Sensor
+                   {
+                   "AdminPassword": "{{ new_vm_passwd }}",
+                   "Hostname": "{{ new_vm_hostname }}",
+                   "ManageLocally": "{{ new_vm_is_onbox }}"
+                   }
