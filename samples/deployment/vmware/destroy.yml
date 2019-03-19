@@ -1,0 +1,17 @@
+- name: Destroy vFTD in the VMware cloud
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - ./vars.yml
+  tasks:
+    - name: Destroy vFTD VM
+      vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        name: "{{ new_vm_name }}"
+        force: yes
+        state: absent
+      delegate_to: localhost
+      with_sequence: start=1 end="{{total_vms}}" format=%02x

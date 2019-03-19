@@ -1,4 +1,6 @@
-- hosts: all
+- hosts: vftd
+  gather_facts: False
+  any_errors_fatal: true
   connection: httpapi
   tasks:
     - name: Get provisioning info
@@ -22,6 +24,9 @@
         data:
           acceptEULA: True
           eulaText: "{{ provisionInfo.eulaText }}"
-          currentPassword: "oldPassword"
-          newPassword: "newPassword1$"
           type: initialprovision
+      vars:
+        ansible_command_timeout: 30
+
+- name: Deploy
+  import_playbook: deployment.yml
