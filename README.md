@@ -1,7 +1,7 @@
 # FTD Ansible Modules
 
 A collection of Ansible modules that automate configuration management 
-and execution of operational tasks on Cisco Firepower Threat Defense (FTD) devices.
+and execution of operational tasks on Cisco Firepower Threat Defense (FTD) devices using FTD REST API.
 
 _This file describes the development and testing aspects. In case you are looking for 
 the user documentation, please check [FTD Ansible docs on DevNet](https://developer.cisco.com/site/ftd-ansible/)._
