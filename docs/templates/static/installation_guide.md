@@ -84,11 +84,12 @@ Here is an example of the inventory file with one local FTD device:
 
 ```
 [ftd]
-my-ftd ansible_host=192.168.1.1 ansible_port=443 ansible_network_os=ftd ansible_user=admin ansible_password=123qwe ansible_httpapi_use_ssl=True
+my-ftd ansible_host=192.168.1.1 ansible_httpapi_port=443 ansible_network_os=ftd ansible_user=admin ansible_password=123qwe ansible_httpapi_use_ssl=True
 ```
 
 FTD modules __require__ the following host parameters in the inventory file:
  
+* `ansible_host` - a hostname or an IP address of the FTD device;
 * `ansible_network_os` - an OS of the networking device, must be set to `ftd` when using FTD modules;
 * `ansible_user` - a username for the FTD device;
 * `ansible_password` - a password for the given username;
@@ -99,7 +100,7 @@ Additionally, these __optional__ parameters can be used:
 * `ansible_httpapi_use_ssl` - `True` to connect using HTTPS or `False` to connect via HTTP (default is `False`);
 * `ansible_httpapi_ftd_token_path` - a URL for the token endpoint on the FTD device (default URL is `/api/fdm/v2/fdm/token`);
 * `ansible_httpapi_ftd_spec_path` - a URL for the Swagger specification on the FTD device (default URL is `/apispec/ngfw.json`);
-* `ansible_httpapi_validate_certs` - Whether to validate SSL certificates or not.
+* `ansible_httpapi_validate_certs` - an option specifying whether to validate SSL certificates or not.
 
 ### Using Vault
 
