@@ -1,13 +1,22 @@
 - hosts: all
   connection: httpapi
   tasks:
-    - name: Setup destination network for static route
+    - name: Setup first destination network for static route
       ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: PrivateNetwork4
           subType: NETWORK
           value: 192.168.4.0/24
+          dnsResolution: IPV4_AND_IPV6
+          type: networkobject
+    - name: Setup second destination network for static route
+      ftd_configuration:
+        operation: upsertNetworkObject
+        data:
+          name: PrivateNetwork5
+          subType: NETWORK
+          value: 192.168.5.0/24
           dnsResolution: IPV4_AND_IPV6
           type: networkobject
 
@@ -35,6 +44,7 @@
           iface: "{{ interface0[0] }}"
           networks:
             - "{{ networkobject_privatenetwork4 }}"
+            - "{{ networkobject_privatenetwork5 }}"
           gateway: "{{ networkobject_router2 }}"
           metricValue: 1
           ipType: IPv4
