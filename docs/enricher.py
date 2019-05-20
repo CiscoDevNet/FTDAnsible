@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 from module_utils.configuration import OperationChecker, QueryParams, OperationNamePrefix
-from module_utils.fdm_swagger_client import SpecProp, OperationField, OperationParams, PropName
+from module_utils.fdm_swagger_client import SpecProp, OperationField, OperationParams, PropName, PathParams
 
 
 class ApiSpecAutocomplete(object):
@@ -41,6 +41,7 @@ class ApiSpecAutocomplete(object):
             base_filter_spec[PropName.REQUIRED] = True
 
         op_spec[OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER] = base_filter_spec
+        op_spec[OperationField.PARAMETERS][OperationParams.PATH].pop(PathParams.OBJ_ID, None)
 
         return op_spec
 

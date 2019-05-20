@@ -78,6 +78,10 @@ class QueryParams:
     FILTER = 'filter'
 
 
+class PathParams:
+    OBJ_ID = 'objId'
+
+
 def _get_model_name_from_url(schema_ref):
     path = schema_ref.split('/')
     return path[len(path) - 1]
