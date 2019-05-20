@@ -2,14 +2,12 @@
   connection: httpapi
   vars:
     iface_name: "inside"
-    iface_hardware_name: "GigabitEthernet0/1"
   tasks:
     - name: Get List of DHCP servers
       ftd_configuration:
         operation: "getDHCPServerContainerList"
         register_as: dhcp_containers_list
-
-    - name: Execute 'editDHCPServerContainer' operation
+    - name: Remove default DHCP server for inside interface
       ftd_configuration:
         operation: "editDHCPServerContainer"
         data:
@@ -25,28 +23,3 @@
             type: "{{ dhcp_containers_list.0.type }}"
         path_params:
             objId: "{{ dhcp_containers_list.0.id }}"
-
-    - name: Setup Inside Interface with static IP
-      ftd_configuration:
-        operation: upsertPhysicalInterface
-        data:
-          name: "{{iface_name}}"
-          hardwareName: "{{iface_hardware_name}}"
-          monitorInterface: True
-          ipv4:
-            addressNull: False
-            defaultRouteUsingDHCP: False
-            dhcp: False
-            ipAddress:
-              ipAddress: 192.168.20.2
-              netmask: 255.255.255.0
-              standbyIpAddress: 192.168.20.3
-              type: haipv4address
-            ipType: STATIC
-            type: interfaceipv4
-          mtu: 1500
-          enabled: True
-          mode: ROUTED
-          type: physicalinterface
-        filters:
-          hardwareName: "{{iface_hardware_name}}"
