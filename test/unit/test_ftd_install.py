@@ -12,7 +12,7 @@ DEFAULT_MODULE_PARAMS = dict(
     device_hostname="firepower",
     device_username="admin",
     device_password="pass",
-    device_new_password="new_pass",
+    device_new_password="newpass",
     device_sudo_password="sudopass",
     device_ip="192.168.0.1",
     device_netmask="255.255.255.0",
@@ -23,8 +23,7 @@ DEFAULT_MODULE_PARAMS = dict(
     console_port="2004",
     console_username="console_user",
     console_password="console_pass",
-    tftp_server="10.0.0.1",
-    rommon_file_location="boot/ftd-boot-1.9.2.0.lfbff",
+    rommon_file_location="tftp://10.0.0.1/boot/ftd-boot-1.9.2.0.lfbff",
     image_file_location="http://10.0.0.1/Release/ftd-6.2.3-83.pkg",
     image_version="6.2.3-83",
     search_domains="cisco.com",
@@ -68,7 +67,7 @@ class TestFtdInstall(object):
 
         result = ex.value.args[0]
         assert result['failed']
-        assert result['msg'] == "Kick Python module is required to run this module."
+        assert "Kick Python module is required to run this module." in result['msg']
 
     def test_module_should_fail_when_platform_is_not_supported(self, config_resource_mock):
         config_resource_mock.execute_operation.return_value = {'platformModel': 'nonSupportedModel'}

@@ -1,6 +1,15 @@
-- hosts: vftd
+- hosts: all
   connection: httpapi
   tasks:
+    - name: Fetch pending changes
+      ftd_configuration:
+        operation: getBaseEntityDiffList
+        register_as: pending_changes
+
+    - name: Complete playbook when nothing to deploy
+      meta: end_play
+      when: pending_changes | length == 0
+
     - name: Start deployment
       ftd_configuration:
         operation: addDeployment

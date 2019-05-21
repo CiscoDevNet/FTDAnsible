@@ -1,0 +1,11 @@
+- name: Cleanup vFTDs on VMWare
+  import_playbook: deployment/vmware/destroy.yml
+
+- name: Setup vFTD on VMWare
+  import_playbook: deployment/vmware/deploy.yml
+
+- name: Perform initial provisioning
+  import_playbook: ftd_configuration/initial_provisioning.yml
+
+- name: Setup SmartAgent connection
+  import_playbook: ftd_configuration/smart_license.yml

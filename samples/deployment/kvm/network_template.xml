@@ -1,0 +1,10 @@
+<network>
+    <name>{{ item.name }}</name>
+    <forward mode='nat'/>
+    <bridge name='{{ item.name }}' stp='on' delay='0'/>
+    <ip address='192.168.{{ item.subnet }}.1' netmask='255.255.255.0'>
+        <dhcp>
+            <range start='192.168.{{ item.subnet }}.2' end='192.168.{{ item.subnet }}.254'/>
+        </dhcp>
+    </ip>
+</network>

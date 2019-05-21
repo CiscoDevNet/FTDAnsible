@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.2.0] - 2019-04-12
+### Added
+- Ansible module (`ftd_install`) for installing package images on hardware FTD device.
+- Ansible playbooks for provisioning virtual FTDs on AWS, KVM, and VMware platforms.
+### Changed
+- Dynamic lookup of API version in FTD HTTP API plugin.
+- More Ansible playbooks for various FTD configurations (advanced Access Rules, registering Smart License, creating a backup, etc).
+- Automatic [removal of duplicates](https://github.com/CiscoDevNet/FTDAnsible/issues/79) from reference lists for better idempotency.
+
 ## [v0.1.1] - 2019-01-16
 ### Changed
 - Update Ansible module (`ftd_configuration`) to support `upsert` operations for non-creatable objects (e.g., PhysicalInterfaces).

@@ -1,0 +1,25 @@
+- hosts: all
+  connection: httpapi
+  vars:
+    iface_name: "inside"
+  tasks:
+    - name: Get List of DHCP servers
+      ftd_configuration:
+        operation: "getDHCPServerContainerList"
+        register_as: dhcp_containers_list
+    - name: Remove default DHCP server for inside interface
+      ftd_configuration:
+        operation: "editDHCPServerContainer"
+        data:
+            name: "{{ dhcp_containers_list.0.name }}"
+            version: "{{ dhcp_containers_list.0.version }}"
+            autoConfig: "{{ dhcp_containers_list.0.autoConfig }}"
+            primaryDNS: "{{ dhcp_containers_list.0.primaryDNS }}"
+            secondaryDNS: "{{ dhcp_containers_list.0.secondaryDNS }}"
+            primaryWINS: "{{ dhcp_containers_list.0.primaryWINS }}"
+            secondaryWINS: "{{ dhcp_containers_list.0.secondaryWINS }}"
+            servers: '{{ dhcp_containers_list.0.servers | selectattr("interface.name", "ne", iface_name) | list }}'
+            interface: "{{ dhcp_containers_list.0.interface }}"
+            type: "{{ dhcp_containers_list.0.type }}"
+        path_params:
+            objId: "{{ dhcp_containers_list.0.id }}"

@@ -1,0 +1,45 @@
+- hosts: all
+  connection: httpapi
+  gather_facts: no
+  vars_files:
+  - variables.yaml
+  tasks:
+  - name: Check AnyConnect package file presence
+    ftd_configuration:
+      operation: getAnyConnectPackageFileList
+      register_as: all_anyconnect_package_files
+
+  - name: Check AnyConnect file presence on local filesystem
+    stat:
+      path: '{{ anyconnect_linux_image_file_path }}'
+    register: anyconnect_linux_image_file_info
+    when: 'hostvars.values() | map(attribute="ansible_facts") | selectattr("all_anyconnect_package_files", "defined") | map(attribute="all_anyconnect_package_files") | map("length") | min == 0'
+    delegate_to: localhost
+    run_once: true
+
+  - name: Download AnyConnect package to local filesystem
+    get_url:
+      url: '{{ anyconnect_linux_image_url }}'
+      dest: '{{ anyconnect_linux_image_file_path }}'
+    register: anyconnect_linux_image_file_info
+    when: 'anyconnect_linux_image_file_info.stat is defined and anyconnect_linux_image_file_info.stat.exists == False'
+    delegate_to: localhost
+    run_once: true
+
+  - name: Upload AnyConnect package from local filesystem to device
+    ftd_file_upload:
+      operation: postuploaddiskfile
+      file_to_upload: '{{ anyconnect_linux_image_file_path }}'
+      register_as: anyconnect_linux_image_file_on_device
+    when: 'all_anyconnect_package_files | length == 0'
+
+  - name: Add AnyConnect package file
+    ftd_configuration:
+      operation: addAnyConnectPackageFile
+      data:
+        name: anyconnect_package_file
+        platformType: LINUX
+        diskFileName: '{{ anyconnect_linux_image_file_on_device.fileName }}'
+        type: anyconnectpackagefile
+      register_as: anyconnect_package_file
+    when: 'anyconnect_linux_image_file_on_device is defined'

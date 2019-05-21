@@ -1,0 +1,31 @@
+- hosts: all
+  connection: httpapi
+  gather_facts: no
+  vars_files:
+  - variables.yaml
+  tasks:
+    - name: Register device with a Smart License token
+      ftd_configuration:
+        operation: upsertSmartAgentConnection
+        data:
+          connectionType: REGISTER
+          token: "{{ smart_license_token }}"
+          type: smartagentconnection
+        filters:
+          type: smartagentconnection
+
+    - name: Wait till all license registration jobs are completed
+      ftd_configuration:
+        operation: getLicenseJobHistoryList
+        query_params:
+          sort: -startDateTime
+          limit: 1
+        register_as: registration_jobs
+      until: registration_jobs[0].status != 'QUEUED' and registration_jobs[0].status != 'IN_PROGRESS'
+      retries: 100
+      delay: 3
+
+    - name: Stop if the registration job failed
+      fail:
+        msg: 'Smart License registration failed with the following message: {{ registration_jobs[0].statusMessage }}'
+      when: registration_jobs[0].status != 'SUCCESS'

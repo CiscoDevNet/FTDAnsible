@@ -1,0 +1,5 @@
+- name: Deploy FTD
+  import_playbook: deploy.yml
+
+- name: Destroy FTD
+  import_playbook: destroy.yml

@@ -31,7 +31,7 @@ DOCUMENTATION = """
 module: ftd_install
 short_description: Installs FTD pkg image on the firewall
 description:
-  - Provisioning module for FTD devices that installs ROMmon image (if needed) and
+  - Provisioning module for FTD devices that installs ROMMON image (if needed) and
     FTD pkg image on the firewall.
   - Can be used with `httpapi` and `local` connection types. The `httpapi` is preferred,
     the `local` connection should be used only when the device cannot be accessed via
@@ -125,19 +125,16 @@ options:
       - Password to login on a terminal server.
     required: true
     type: string
-  tftp_server:
-    description:
-      - IP address of TFTP server with ROMmon image.
-    required: true
-    type: string
   rommon_file_location:
     description:
-      - Path to the boot (ROMmon) image on TFTP server.
+      - Path to the boot (ROMMON) image on TFTP server.
+      - Only TFTP is supported.
     required: true
     type: string
   image_file_location:
     description:
-      - Path to the FTD pkg image to be transferred via HTTP.
+      - Path to the FTD pkg image on the server to be downloaded.
+      - FTP, SCP, SFTP, TFTP, or HTTP protocols are usually supported, but may depend on the device model.
     required: true
     type: string
   image_version:
@@ -177,8 +174,7 @@ EXAMPLES = """
       console_username: console_user
       console_password: console_pass
 
-      tftp_server: 10.89.0.11
-      rommon_file_location: 'installers/ftd-boot-9.10.1.3.lfbff'
+      rommon_file_location: 'tftp://10.89.0.11/installers/ftd-boot-9.10.1.3.lfbff'
       image_file_location: 'https://10.89.0.11/installers/ftd-6.3.0-83.pkg'
       image_version: 6.3.0-83
 """
@@ -230,7 +226,6 @@ def main():
         console_username=dict(type='str', required=True),
         console_password=dict(type='str', required=True, no_log=True),
 
-        tftp_server=dict(type='str', required=True),
         rommon_file_location=dict(type='str', required=True),
         image_file_location=dict(type='str', required=True),
         image_version=dict(type='str', required=True),
@@ -238,7 +233,8 @@ def main():
     )
     module = AnsibleModule(argument_spec=fields)
     if not HAS_KICK:
-        module.fail_json(msg='Kick Python module is required to run this module.')
+        module.fail_json(msg='Kick Python module is required to run this module. '
+                             'Please, install it with `pip install kick` command and run the playbook again.')
 
     use_local_connection = module._socket_path is None
     if use_local_connection:

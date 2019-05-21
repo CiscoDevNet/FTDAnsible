@@ -1,0 +1,206 @@
+- name: "Build an AMI for vFTD"
+  hosts: localhost
+  remote_user: ubuntu
+  gather_facts: no
+  vars_files:
+    - ./vars.yaml
+  vars:
+    ansible_ssh_private_key_name: "ngfwv-stage-temp-keypair"
+    ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_name }}"
+  tasks:
+    - name: "Download QCOW2"
+      get_url:
+        url: "{{ remote_qcow_location }}"
+        dest: "./"
+
+    # Prepare Env Section
+    - name: "Create an AWS EC2 key pair"
+      ec2_key:
+        name: "{{ ansible_ssh_private_key_name }}"
+      register: stage_keypair
+    - name: "Save AWS EC2 private key"
+      copy:
+        content: "{{ stage_keypair.key.private_key }}"
+        dest: "{{ ansible_ssh_private_key_name }}"
+        mode: 0600
+      when: stage_keypair.changed
+    - name: "Create a VPC"
+      ec2_vpc_net:
+        name: "Stage VPC"
+        state: present
+        cidr_block: 10.0.0.0/16
+      register: stage_vpc
+    - name: "Create an Internet Gateway"
+      ec2_vpc_igw:
+        vpc_id: "{{ stage_vpc.vpc.id }}"
+        state: present
+      register: stage_vpc_igw
+    - name: "Create a Subnet"
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ stage_vpc.vpc.id }}"
+        cidr: 10.0.1.0/24
+      register: stage_subnet
+    - name: "Create a Routing table"
+      ec2_vpc_route_table:
+        vpc_id: "{{ stage_vpc.vpc.id }}"
+        subnets:
+          - "{{ stage_subnet.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ stage_vpc_igw.gateway_id }}"
+      register: stage_vpc_route_table
+    - name: "Create a Security group"
+      ec2_group:
+        name: "Stage VPC Security Group"
+        description: "Security group for Stage VPC"
+        vpc_id: "{{ stage_vpc.vpc.id }}"
+        state: present
+        rules:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+      register: stage_vpc_security_group
+    - name: "Find Ubuntu AMI ID"
+      ec2_ami_facts:
+        filters:
+          architecture: "x86_64"
+          root-device-type: "ebs"
+          image-type: "machine"
+          owner-id: 099720109477 # Canonical LTD marketplace ID
+          state: "available"
+          virtualization-type: "hvm"
+          name: "*14.04*"
+      register: ubuntu_images
+
+    # Create VM Section
+    - name: "Create a staging VM"
+      ec2:
+        key_name: "{{ ansible_ssh_private_key_name }}"
+        instance_type: "{{ ec2_instance_type }}"
+        image: "{{ (ubuntu_images.images | last).image_id }}"
+        group: "{{ stage_vpc_security_group.group_name }}"
+        vpc_subnet_id: "{{ stage_subnet.subnet.id }}"
+        volumes:
+          - device_name: '/dev/sda1'
+            volume_size: 40
+            delete_on_termination: true
+          - device_name: '/dev/sdc'
+            volume_size: 52
+            delete_on_termination: true
+        wait: yes
+        assign_public_ip: yes
+        instance_initiated_shutdown_behavior: terminate
+      register: stage_vm
+    - name: "Add the newly created host so that we can further contact it"
+      add_host:
+        name: "{{ item.public_ip }}"
+        groups: "stage_servers"
+      with_items: "{{ stage_vm.instances }}"
+    - name: "Wait for SSH to come up"
+      delegate_to: "{{ item.public_dns_name }}"
+      wait_for_connection:
+        delay: 60
+        timeout: 320
+      with_items: "{{ stage_vm.instances }}"
+
+    # Build vFTD Volume Section
+    - name: "Prepare mnt directory"
+      shell: "chmod 777 /mnt"
+      become: yes
+      delegate_to: "{{ item.public_dns_name }}"
+      with_items: "{{ stage_vm.instances }}"
+    - name: "Copy QCOW2 file to the remote VM"
+      copy:
+        src: "{{ qcow_file_name }}"
+        dest: "/mnt/image.qcow2"
+      delegate_to: "{{ item.public_dns_name }}"
+      with_items: "{{ stage_vm.instances }}"
+    - name: "Copy fixup.sh file to the remote VM"
+      copy:
+        src: "./fixup-ftd.sh"
+        dest: "/mnt/fixup.sh"
+        mode: "u+rwx"
+      delegate_to: "{{ item.public_dns_name }}"
+      with_items: "{{ stage_vm.instances }}"
+    - name: "Run fixup.sh preinstall command"
+      shell: "/mnt/fixup.sh preinstall"
+      become: yes
+      delegate_to: "{{ item.public_dns_name }}"
+      with_items: "{{ stage_vm.instances }}"
+    - name: "Run fixup.sh doinstall command"
+      shell: "/mnt/fixup.sh doinstall"
+      become: yes
+      delegate_to: "{{ item.public_dns_name }}"
+      with_items: "{{ stage_vm.instances }}"
+    - name: "Run fixup.sh postinstall command"
+      shell: "/mnt/fixup.sh postinstall"
+      become: yes
+      delegate_to: "{{ item.public_dns_name }}"
+      with_items: "{{ stage_vm.instances }}"
+
+    # Create Custom AMI Section
+    - name: "Get volume ID"
+      ec2_instance_facts:
+        instance_ids:
+          - "{{ stage_vm.instance_ids.0 }}"
+      register: stage_vm_facts
+    - name: "Create a Snapshot"
+      ec2_snapshot:
+        instance_id: "{{ stage_vm.instance_ids.0 }}"
+        device_name: "/dev/sdc"
+        description: "Snapshot for vFTD AMI image"
+      register: stage_snapshot
+    - name: "Create Snapshot-based AMI"
+      ec2_ami:
+        name: "{{ ftd_ami_name }}"
+        description: "Snapshot based AMI image for vFTD {{ ftd_build_id }}"
+        sriov_net_support: "simple"
+        architecture: "x86_64"
+        root_device_name: "/dev/xvda"
+        virtualization_type: "hvm"
+        state: present
+        device_mapping:
+          - device_name: "/dev/xvda"
+            snapshot_id: "{{ stage_snapshot.snapshot_id }}"
+
+    # Cleanup ENV
+    - name: "Destroy staging VM"
+      ec2:
+        state: 'absent'
+        instance_ids: '{{ stage_vm.instance_ids }}'
+    - name: "Destroy an EC2 key pair"
+      ec2_key:
+        name: "{{ stage_keypair.key.name }}"
+        state: absent
+    - name: "Wait for VM termination"
+      pause:
+        minutes: 2
+    - name: "Destroy Stage Subnet"
+      ec2_vpc_subnet:
+        vpc_id: "{{ stage_vpc.vpc.id }}"
+        cidr: 10.0.1.0/24
+        state: absent
+    - name: "Destroy Routing table"
+      ec2_vpc_route_table:
+        route_table_id: "{{ stage_vpc_route_table.route_table.route_table_id }}"
+        vpc_id: "{{ stage_vpc.vpc.id }}"
+        lookup: id
+        purge_routes: yes
+        purge_subnets: yes
+        purge_tags: yes
+        state: absent
+    - name: "Destroy Internet Gateway"
+      ec2_vpc_igw:
+        vpc_id: "{{ stage_vpc.vpc.id }}"
+        state: absent
+    - name: "Destroy Security group"
+      ec2_group:
+        name: "Stage VPC Security Group"
+        vpc_id: "{{ stage_vpc.vpc.id }}"
+        state: absent
+    - name: "Destroy Stage VPC"
+      ec2_vpc_net:
+        name: "Stage VPC"
+        state: absent
+        cidr_block: 10.0.0.0/16
+        purge_cidrs: yes

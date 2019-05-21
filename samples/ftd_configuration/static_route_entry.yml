@@ -1,0 +1,59 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Setup the first destination network for static route
+      ftd_configuration:
+        operation: upsertNetworkObject
+        data:
+          name: PrivateNetwork4
+          subType: NETWORK
+          value: 192.168.4.0/24
+          dnsResolution: IPV4_AND_IPV6
+          type: networkobject
+    - name: Setup the second destination network for static route
+      ftd_configuration:
+        operation: upsertNetworkObject
+        data:
+          name: PrivateNetwork5
+          subType: NETWORK
+          value: 192.168.5.0/24
+          dnsResolution: IPV4_AND_IPV6
+          type: networkobject
+
+    - name: Setup gateway network for static route
+      ftd_configuration:
+        operation: upsertNetworkObject
+        data:
+          name: Router2
+          subType: HOST
+          value: 192.168.2.1
+          dnsResolution: IPV4_AND_IPV6
+          type: networkobject
+
+    - name: Get GigabitEthernet0/0 Interface
+      ftd_configuration:
+        operation: getPhysicalInterfaceList
+        filters:
+          hardwareName: GigabitEthernet0/0
+        register_as: interface0
+
+    - name: Setup static route
+      ftd_configuration:
+        operation: upsertStaticRouteEntry
+        data:
+          iface: "{{ interface0[0] }}"
+          networks:
+            - "{{ networkobject_privatenetwork4 }}"
+            - "{{ networkobject_privatenetwork5 }}"
+          gateway: "{{ networkobject_router2 }}"
+          metricValue: 1
+          ipType: IPv4
+          type: staticrouteentry
+        path_params:
+          parentId: default
+        filters:
+          networks:
+            - id: "{{ networkobject_privatenetwork4.id }}"
+              version: "{{ networkobject_privatenetwork4.version }}"
+              type: "{{ networkobject_privatenetwork4.type }}"
+              name: "{{ networkobject_privatenetwork4.name }}"

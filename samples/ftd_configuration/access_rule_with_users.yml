@@ -1,0 +1,36 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Create an FQDN network for Cisco DevNet
+      ftd_configuration:
+        operation: upsertNetworkObject
+        data:
+          name: CiscoDevNetNetwork
+          subType: FQDN
+          value: developer.cisco.com
+          type: networkobject
+          dnsResolution: IPV4_AND_IPV6
+
+    - name: Find a guest realm
+      ftd_configuration:
+        operation: getSpecialRealmList
+        filters:
+          name: Special-Identities-Realm
+        register_as: special_realms
+
+    - name: Create an access rule blocking access for guests to Cisco website
+      ftd_configuration:
+        operation: upsertAccessRule
+        data:
+          name: Block traffic for guests to Cisco
+          ruleAction: DENY
+          eventLogAction: LOG_NONE
+          destinationNetworks:
+            - '{{ networkobject_ciscodevnetnetwork }}'
+          users:
+            - name: Guest
+              identitySource: "{{ special_realms[0] }}"
+              type: trafficuserentry
+          type: accessrule
+        path_params:
+          parentId: default

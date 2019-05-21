@@ -1,0 +1,57 @@
+- name: "Prepare KVM Host"
+  hosts: kvm_hosts
+  gather_facts: yes
+  pre_tasks:
+    - name: 'install python2'
+      raw: apt-get -y install python python-pip
+      become: yes
+    - name: 'install lxml'
+      raw: pip install lxml
+      become: yes
+  tasks:
+    - apt:
+        update_cache: yes
+      become: yes
+    - apt:
+        name:
+          - qemu-kvm
+          - libvirt-clients
+          - libvirt-daemon-system
+          - bridge-utils
+          - virt-manager
+      become: yes
+    - file:
+        path: "{{ image_folder }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+      become: true
+    - file:
+        path: "{{ vm_folder }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+      become: true
+    - name: "Copy base QCOW2 from localhost to KVM host"
+      copy:
+        src: "./Cisco_Firepower_Threat_Defense_Virtual-{{ ftd_build_id }}.qcow2"
+        dest: "{{ image_folder }}/vFTD-{{ ftd_build_id }}.qcow2"
+    - name: "Register demo networks"
+      become: yes
+      virt_net:
+        command: define
+        name: "{{ item.name }}"
+        xml: "{{ lookup('template', './network_template.xml') }}"
+        state: present
+      loop: "{{ demo_networks }}"
+    - name: "Auto-start demo networks"
+      become: yes
+      virt_net:
+        autostart: yes
+        name: "{{ item.name }}"
+      loop: "{{ demo_networks }}"
+    - name: "Start demo networks"
+      become: yes
+      virt_net:
+        command: start
+        name: "{{ item.name }}"
+        state: active
+      loop: "{{ demo_networks }}"

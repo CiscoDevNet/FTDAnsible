@@ -1,0 +1,30 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Find an intrustion policy with balanced security
+      ftd_configuration:
+        operation: getIntrusionPolicyList
+        filters:
+          name: Balanced Security and Connectivity
+        register_as: intrusion_policies
+
+    - name: Find a file policy blocking office documents upload
+      ftd_configuration:
+        operation: getFilePolicyList
+        filters:
+          policyType: BLOCK_OFFICE_DOCUMENTS_UPLOAD_BLOCK_MALWARE_OTHERS
+        register_as: file_policies
+
+    - name: Create an access rule with intrusion and file policies
+      ftd_configuration:
+        operation: upsertAccessRule
+        data:
+          name: Intrusion and file policy rule
+          ruleAction: PERMIT
+          filePolicy: "{{ file_policies[0] }}"
+          intrusionPolicy:
+            id: "{{ intrusion_policies[0].id }}"
+            type: "{{ intrusion_policies[0].type }}"
+          type: accessrule
+        path_params:
+          parentId: default

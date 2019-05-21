@@ -1,0 +1,57 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Get GigabitEthernet0/0 Interface
+      ftd_configuration:
+        operation: getPhysicalInterfaceList
+        filters:
+          hardwareName: GigabitEthernet0/0
+        register_as: interface0
+
+    - name: Setup SubInterface under GigabitEthernet0/0 with DHCP
+      ftd_configuration:
+        operation: upsertSubInterface
+        data:
+          name: outside_subinterface
+          hardwareName: GigabitEthernet0/0.1
+          subIntfId: 1
+          ipv4:
+            defaultRouteUsingDHCP: True
+            dhcp: True
+            ipType: DHCP
+            dhcpRouteMetric: 100
+            addressNull: True
+            type: interfaceipv4
+          enabled: True
+          vlanId: 101
+          monitorInterface: True
+          mtu: 1500
+          type: subinterface
+        path_params:
+          parentId: "{{ interface0[0].id }}"
+
+    - name: Setup SubInterface under GigabitEthernet0/0 with static IP
+      ftd_configuration:
+        operation: upsertSubInterface
+        data:
+          name: outside_subinterface2
+          hardwareName: GigabitEthernet0/0.2
+          subIntfId: 2
+          ipv4:
+            addressNull: False
+            defaultRouteUsingDHCP: False
+            dhcp: False
+            ipAddress:
+              ipAddress: 192.168.5.15
+              netmask: 255.255.255.0
+              standbyIpAddress: 192.168.5.16
+              type: haipv4address
+            ipType: STATIC
+            type: interfaceipv4
+          enabled: True
+          vlanId: 102
+          monitorInterface: True
+          mtu: 1500
+          type: subinterface
+        path_params:
+          parentId: "{{ interface0[0].id }}"

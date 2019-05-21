@@ -1,0 +1,6 @@
+plugin: "vmware_vm_inventory"
+# Inventory cache settings
+cache: yes
+cache_plugin: jsonfile
+cache_connection: ./
+cache_timeout: 36000

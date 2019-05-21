@@ -1,0 +1,114 @@
+- name: Deploy vFTD in the VMware cloud
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - ./vars.yml
+  tasks:
+    - name: Check OVF presense
+      stat:
+        path: '{{ ovf_file_name }}'
+      register: ovf_file_info
+      delegate_to: localhost
+
+    - name: Download OVF
+      get_url:
+        url: "{{ remote_ovf_location }}"
+        dest: "./"
+      when: 'ovf_file_info.stat is defined and ovf_file_info.stat.exists == False'
+
+    - name: Check VMDK presense
+      stat:
+        path: '{{ remote_vmdk_location | basename }}'
+      register: vmkdk_file_info
+      delegate_to: localhost
+
+    - name: Download VMDK
+      get_url:
+        url: "{{ remote_vmdk_location }}"
+        dest: "./"
+      when: 'vmkdk_file_info.stat is defined and vmkdk_file_info.stat.exists == False'
+
+    - name: Gather facts about datastore
+      vmware_datastore_facts:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+      delegate_to: localhost
+      register: datastore_list
+
+    - name: Create vFTD VM
+      vmware_deploy_ovf:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ vcenter_datacenter }}"
+        resource_pool: "{{ vcenter_resource_pool }}"
+        datastore: "{{ ( datastore_list.datastores | sort(attribute='freeSpace', reverse=True) | selectattr('datastore_cluster', 'eq', vcenter_datastore_cluster) | first ).name }}"
+        disk_provisioning: thin
+        fail_on_spec_warnings: no
+        folder: "{{ vcenter_folder_name }}"
+        name: "{{ new_vm_name }}"
+        ovf: "{{ ovf_file_name }}"
+        power_on: true
+        networks:
+          Management0-0: "{{ mgmt_network_name }}"
+        properties:
+          # Zero Day config is defined with the following properties:
+          # - pw
+          # - fqdn
+          # - dns1
+          # - dns2
+          # - dns3
+          # - searchdomains
+          # - ipv4.how
+          # - ipv4.addr
+          # - ipv4.mask
+          # - ipv4.gw
+          # - ipv6.how
+          # - ipv6.addr
+          # - ipv6.mask
+          # - ipv6.gw
+          # - manageLocally
+          # - firewallmode
+          # - mgr
+          # - regkey
+          # - regNAT
+          fqdn: "{{ new_vm_name }}"
+          ipv4.how: "{{ vm_ipv4_how }}"
+          ipv4.addr: "{{ vm_ipv4_addr }}"
+          ipv4.mask: "{{ vm_ipv4_mask }}"
+          ipv4.gw: "{{ vm_ipv4_gw }}"
+          pw: "{{ new_vm_passwd }}"
+      delegate_to: localhost
+      with_sequence: start=1 end="{{total_vms}}" format=%02x
+      register: deployed_vm
+
+    - name: Add vFTD to inventory
+      add_host:
+        name: '{{ item.invocation.module_args.name }}'
+        groups:
+          - vftd
+        ansible_host: '{{ item.invocation.module_args.properties["ipv4.addr"] }}'
+        ansible_user: admin
+        ansible_password: '{{ new_vm_passwd }}'
+        ansible_httpapi_port: 443
+        ansible_port: 443
+        ansible_httpapi_use_ssl: True
+        ansible_network_os: ftd
+      with_items: "{{ deployed_vm.results }}"
+
+- name: Wait for vFTD to finish deployment
+  hosts: vftd
+  gather_facts: False
+  connection: local
+  tasks:
+  - name: Wait for provisioning finish
+    uri:
+      validate_certs: False
+      timeout: 5
+      url:  'https://{{ ansible_host }}:{{ ansible_httpapi_port }}/api/versions'
+    register: result
+    until: result.status == 200
+    retries: 600
+    delay: 5

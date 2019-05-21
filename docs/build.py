@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 import shutil
 from enum import Enum
@@ -9,9 +10,8 @@ from urllib import error as urllib_error
 from ansible.module_utils._text import to_text
 from ansible.module_utils.urls import open_url
 
-from docs.enricher import ApiSpecAutocomplete
 from docs import generator
-
+from docs.enricher import ApiSpecAutocomplete
 from httpapi_plugins.ftd import BASE_HEADERS
 from module_utils.common import HTTPMethod
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
@@ -23,6 +23,9 @@ DEFAULT_SAMPLES_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'samples')
 DEFAULT_DIST_DIR = os.path.join(BASE_DIR_PATH, 'dist')
 DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
 
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 
 class FtdApiClient(object):
     """
@@ -33,15 +36,32 @@ class FtdApiClient(object):
     SUPPORTED_VERSIONS = ['latest', 'v3', 'v2', 'v1']
     TOKEN_PATH_TEMPLATE = '/api/fdm/{}/fdm/token'
 
+    API_VERSIONS_PATH = '/api/versions'
     SPEC_PATH = '/apispec/ngfw.json'
     DOC_PATH = '/apispec/en-us/doc.json'
     ERRORS_PATH = '/apispec/customErrorCode.json'
 
     def __init__(self, hostname, username, password):
         self._hostname = hostname
-        self._api_version = None
+        self._base_path = None
         token_info = self._authorize(username, password)
         self._auth_headers = self._construct_auth_headers(token_info)
+
+    def _fetch_api_versions(self):
+        try:
+            # In case of 6.2.3 when Api Versions resource does not exists HTTP 401 will be returned
+            resp = open_url(
+                self._hostname + self.API_VERSIONS_PATH,
+                method=HTTPMethod.GET,
+                headers=BASE_HEADERS,
+                validate_certs=False
+            ).read()
+            supported_versions = json.loads(to_text(resp))["supportedVersions"]
+        except Exception:
+            logger.debug("Can't fetch supported API versions", exc_info=True)
+            supported_versions = self.SUPPORTED_VERSIONS
+
+        return supported_versions
 
     def _authorize(self, username, password):
         def request_token(url):
@@ -54,20 +74,24 @@ class FtdApiClient(object):
             ).read()
             return json.loads(to_text(resp))
 
-        for version in self.SUPPORTED_VERSIONS:
+        api_versions = sorted(self._fetch_api_versions(), reverse=True)
+
+        for version in api_versions:
             token_url = self._hostname + self.TOKEN_PATH_TEMPLATE.format(version)
             try:
                 token = request_token(token_url)
             except urllib_error.HTTPError as e:
+                logger.debug("Can't get token for API version: %s", version, exc_info=True)
                 if e.code != HTTPStatus.UNAUTHORIZED:
                     raise
             else:
-                self._api_version = version
                 return token
 
+        raise Exception("Can't fetch token via API")
+
     @property
-    def api_version(self):
-        return self._api_version
+    def base_path(self):
+        return self._base_path
 
     @staticmethod
     def _construct_auth_headers(token_info):
@@ -84,7 +108,13 @@ class FtdApiClient(object):
         """
         spec = self._send_request(self.SPEC_PATH, HTTPMethod.GET)
         doc = self._send_request(self.DOC_PATH, HTTPMethod.GET)
-        return FdmSwaggerParser().parse_spec(spec, doc)
+        return self._parse_swagger_spec(spec=spec, doc=doc)
+
+    def _parse_swagger_spec(self, spec, doc):
+        swagger_parser = FdmSwaggerParser()
+        spec = swagger_parser.parse_spec(spec, doc)
+        self._base_path = swagger_parser.base_path
+        return spec
 
     def fetch_error_codes(self):
         """
@@ -166,32 +196,35 @@ def _clean_dist_dir(args):
 
 
 def _generate_ansible_docs(args, api_spec, template_ctx):
-    generator.ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
+    generator.ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec) \
         .generate_doc_files(args.dist, args.models)
-    generator.OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
+    generator.OperationDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec) \
         .generate_doc_files(args.dist, args.models)
-    generator.ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR)\
+    generator.ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR) \
         .generate_doc_files(args.dist)
-    generator.StaticDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, STATIC_TEMPLATE_DIR)\
+    generator.StaticDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, STATIC_TEMPLATE_DIR) \
         .generate_doc_files(args.dist)
 
 
 def _generate_ftd_api_docs(args, api_spec, template_ctx, errors_codes):
-    generator.ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec)\
+    generator.ResourceDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec) \
         .generate_doc_files(args.dist, args.models)
     generator.ModelDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, api_spec) \
         .generate_doc_files(args.dist, args.models)
-    generator.ApiIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx)\
+    generator.ApiIntroductionDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx) \
         .generate_doc_files(args.dist)
     if errors_codes:
-        generator.ErrorDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx)\
+        generator.ErrorDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx) \
             .generate_doc_files(args.dist, errors_codes)
 
 
 def _generate_docs(args, api_client):
     api_spec, ftd_version = _fetch_api_spec_and_version(api_client, args)
-    template_ctx = dict(ftd_version=ftd_version, api_version=api_client.api_version,
-                        sample_dir=DEFAULT_SAMPLES_DIR, doctype=args.doctype)
+
+    template_ctx = dict(ftd_version=ftd_version,
+                        sample_dir=DEFAULT_SAMPLES_DIR,
+                        doctype=args.doctype,
+                        base_path=api_client.base_path)
 
     if args.doctype == DocType.ftd_ansible:
         _generate_ansible_docs(args, api_spec, template_ctx)

@@ -1,4 +1,4 @@
-- hosts: vftd
+- hosts: all
   connection: httpapi
   tasks:
     - name: Create an FQDN network for Cisco DevNet
@@ -8,7 +8,6 @@
           name: CiscoDevNetNetwork
           subType: FQDN
           value: developer.cisco.com
-          isSystemDefined: False
           type: networkobject
           dnsResolution: IPV4_AND_IPV6
 
@@ -19,7 +18,6 @@
           name: CiscoFtdNetwork
           subType: FQDN
           value: ftd.cisco.com
-          isSystemDefined: False
           type: networkobject
           dnsResolution: IPV4_AND_IPV6
 

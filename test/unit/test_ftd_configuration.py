@@ -93,10 +93,10 @@ class TestFtdConfiguration(object):
 
     def test_module_should_run_successful(self, resource_mock):
         operation_name = 'test name'
-        resource_mock.return_value = 'ok'
+        resource_mock.return_value = {'result': 'ok'}
 
         result = self._run_module({'operation': operation_name})
-        assert result['response'] == 'ok'
+        assert result['response'] == {'result': 'ok'}
 
     def _run_module(self, module_args):
         set_module_args(module_args)

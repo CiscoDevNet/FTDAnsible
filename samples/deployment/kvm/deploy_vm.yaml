@@ -1,0 +1,49 @@
+- name: "Deploy vFTD to the KVM host"
+  hosts: kvm_hosts
+  vars:
+    hdd_path: '{{ vm_folder }}/{{ ftd_vm_name }}/hdd.qcow2'
+    zero_day_config_file: "{{ vm_folder }}/{{ ftd_vm_name }}/day0-config"
+    cdrom_path: '{{ vm_folder }}/{{ ftd_vm_name }}/cdrom.iso'
+  tasks:
+    - name: "Create directory for VM specific files"
+      file:
+        path: "{{ vm_folder }}/{{ ftd_vm_name }}"
+        state: directory
+    - name: "Clone base HDD file"
+      copy:
+        src: "{{ image_folder }}/vFTD-{{ ftd_build_id }}.qcow2"
+        dest: "{{ hdd_path }}"
+        remote_src: yes
+    - name: "Create 0day-config file"
+      copy:
+        dest: "{{ zero_day_config_file }}"
+        content: |
+          {"EULA": "accept",
+          "Hostname": "kvm-vFTD",
+          "AdminPassword": "TestPasswd",
+          "FirewallMode": "routed",
+          "DNS1": "8.8.8.8",
+          "DNS2": "8.8.4.4",
+          "DNS3": "",
+          "IPv4Mode": "dhcp",
+          "IPv4Addr": "",
+          "IPv4Mask": "",
+          "IPv4Gw": "",
+          "IPv6Mode": "disabled",
+          "IPv6Addr": "",
+          "IPv6Mask": "",
+          "IPv6Gw": "",
+          "FmcIp": "",
+          "FmcRegKey": "",
+          "FmcNatId": ""}
+    - name: "Generate 0day-config based ISO file"
+      shell: "mkisofs -r -o {{ cdrom_path }} {{ zero_day_config_file }}"
+    - name: "Define vFTD VM"
+      virt:
+          name: "{{ ftd_vm_name }}"
+          command: define
+          xml: "{{ lookup('template', './guest_template.xml') }}"
+    - name: "Start vFTD VM"
+      virt:
+          name: "{{ ftd_vm_name }}"
+          state: running

@@ -1,0 +1,36 @@
+- hosts: all
+  connection: httpapi
+  tasks:
+    - name: Find a Google Drive application
+      ftd_configuration:
+        operation: getApplicationList
+        filters:
+          name: Google Drive
+        register_as: google_app_results
+
+    - name: Find a Dropbox application
+      ftd_configuration:
+        operation: getApplicationList
+        filters:
+          name: Dropbox
+        register_as: dropbox_app_results
+
+    - name: Create an access rule allowing traffic from cloud file storages
+      ftd_configuration:
+        operation: upsertAccessRule
+        data:
+          name: Allow traffic from cloud file storages
+          ruleAction: PERMIT
+          eventLogAction: LOG_BOTH
+          embeddedAppFilter:
+            applications:
+              - id: "{{ dropbox_app_results[0].id }}"
+                type: "{{ dropbox_app_results[0].type }}"
+              - id: "{{ google_app_results[0].id }}"
+                type: "{{ google_app_results[0].type }}"
+            applicationFilters: []
+            conditions: []
+            type: embeddedappfilter
+          type: accessrule
+        path_params:
+          parentId: default
