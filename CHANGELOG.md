@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.2.1] - 2019-05-23
+### Added
+- Ansible playbooks for configuring DHCP servers and Static Routes.
+### Changed
+- `firepower-kickstart` dependency used in `ftd_install` module being installed from official PyPI.
+
 ## [v0.2.0] - 2019-04-12
 ### Added
 - Ansible module (`ftd_install`) for installing package images on hardware FTD device.
