@@ -10,10 +10,10 @@ the user documentation, please check [FTD Ansible docs on DevNet](https://develo
 
 The project contains four Ansible modules:
 
-* ([`ftd_configuration.py`](./library/ftd_configuration.py)) - manages device configuration via REST API. The module configures virtual and physical devices by sending HTTPS calls formatted according to the REST API specification;
-* ([`ftd_file_download.py`](./library/ftd_file_download.py)) - downloads files from FTD devices via HTTPS protocol;
-* ([`ftd_file_upload.py`](./library/ftd_file_upload.py)) - uploads files to FTD devices via HTTPS protocol;
-* ([`ftd_install.py`](./library/ftd_install.py)) - installs FTD images on hardware devices. The module performs a complete reimage of the Firepower system by downloading the new software image and installing it. 
+* [`ftd_configuration.py`](./library/ftd_configuration.py) - manages device configuration via REST API. The module configures virtual and physical devices by sending HTTPS calls formatted according to the REST API specification;
+* [`ftd_file_download.py`](./library/ftd_file_download.py) - downloads files from FTD devices via HTTPS protocol;
+* [`ftd_file_upload.py`](./library/ftd_file_upload.py) - uploads files to FTD devices via HTTPS protocol;
+* [`ftd_install.py`](./library/ftd_install.py) - installs FTD images on hardware devices. The module performs a complete reimage of the Firepower system by downloading the new software image and installing it. 
 
 Sample playbooks are located in the [`samples`](./samples) folder.
 
