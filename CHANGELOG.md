@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.2.2] - 2019-06-06
+### Fixed
+- Usage of `register_as` parameter in `ftd_configuration` module.
+
 ## [v0.2.1] - 2019-05-23
 ### Added
 - Ansible playbooks for configuring DHCP servers and Static Routes.
