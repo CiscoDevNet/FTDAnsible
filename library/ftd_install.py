@@ -37,7 +37,7 @@ description:
     the `local` connection should be used only when the device cannot be accessed via
     REST API.
 version_added: "2.8"
-requirements: [ "python >= 3.5", "kick" ]
+requirements: [ "python >= 3.5", "firepower-kickstart" ]
 author: "Cisco Systems, Inc."
 options:
   device_hostname:
@@ -234,7 +234,8 @@ def main():
     module = AnsibleModule(argument_spec=fields)
     if not HAS_KICK:
         module.fail_json(msg='Kick Python module is required to run this module. '
-                             'Please, install it with `pip install kick` command and run the playbook again.')
+                             'Please, install it with `pip install firepower-kickstart` '
+                             'command and run the playbook again.')
 
     use_local_connection = module._socket_path is None
     if use_local_connection:

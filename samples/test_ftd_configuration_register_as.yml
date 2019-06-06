@@ -1,0 +1,54 @@
+- hosts: vftd
+  connection: httpapi
+
+  tasks:
+    - name: Single-object response must be registered as 'TYPE_NAME' when 'register_as' is absent
+      ftd_configuration:
+        operation: upsertNetworkObject
+        data:
+          name: test-network
+          subType: NETWORK
+          value: 192.23.23.0/24
+          type: networkobject
+    - assert:
+        that:
+          - networkobject_test_network != None
+          - networkobject_test_network.name == "test-network"
+
+    - name: Single-object response must be registered as 'register_as' value when 'register_as' is present
+      ftd_configuration:
+        operation: upsertNetworkObject
+        data:
+          name: test-network
+          subType: NETWORK
+          value: 192.23.23.0/24
+          type: networkobject
+        register_as: test_network
+    - assert:
+        that:
+          - test_network != None
+          - test_network.name  == "test-network"
+
+    - name: List-object response must be ignored when 'register_as' is absent
+      ftd_configuration:
+        operation: getNetworkObjectList
+        query_params:
+          filter: "name:test-network"
+
+    - name: List-object response must be registered as 'register_as' value when 'register_as' is present
+      ftd_configuration:
+        operation: getNetworkObjectList
+        query_params:
+          filter: "name:test-network"
+        register_as: networks
+    - assert:
+       that:
+         - networks != None
+         - networks | length == 1
+         - networks.0.name == "test-network"
+
+    - name: Delete created Network Object
+      ftd_configuration:
+        operation: deleteNetworkObject
+        path_params:
+          objId: "{{ test_network.id }}"
