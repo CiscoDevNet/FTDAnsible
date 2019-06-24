@@ -3,7 +3,9 @@ FROM python:${PYTHON_VERSION}
 ARG FTD_ANSIBLE_VERSION=v0.2.1
 ARG FTD_ANSIBLE_FOLDER=ftd-ansible
 
-RUN apt-get update && apt-get install sshpass
+RUN apt-get update && \
+    apt-get install -yq sshpass && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN wget https://github.com/CiscoDevNet/FTDAnsible/archive/${FTD_ANSIBLE_VERSION}.tar.gz && \
     tar -xvf ${FTD_ANSIBLE_VERSION}.tar.gz
