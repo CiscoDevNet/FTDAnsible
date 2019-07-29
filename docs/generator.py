@@ -71,7 +71,9 @@ class BaseDocGenerator(object):
 
     @staticmethod
     def _model_should_be_ignored(model_name, include_models):
-        return model_name is None or (include_models and model_name not in include_models)
+        # NOTE(Vitalii Kostenko): made model_name non required here to allow generation of the documentation for
+        # the /action/* APIs for example /action/upgrade
+        return include_models and model_name not in include_models
 
     def _write_index_files(self, dir_path, index_name, index_list):
         index_data = self._get_index_data(index_name, index_list)
