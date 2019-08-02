@@ -215,6 +215,11 @@ class BaseConfigurationResource(object):
         self._check_mode = check_mode
         self._operation_checker = OperationChecker
 
+        system_info = self._fetch_system_info()
+        self._system_info = {
+            "version": system_info['databaseInfo']['buildVersion']
+        }
+
     def execute_operation(self, op_name, params):
         """
         Allow user request execution of simple operations(natively supported by API provider) as well as complex
@@ -287,12 +292,22 @@ class BaseConfigurationResource(object):
         filters = params.get(ParamName.FILTERS) or {}
         if QueryParams.FILTER not in url_params[ParamName.QUERY_PARAMS] and 'name' in filters:
             # most endpoints only support filtering by name, so remaining `filters` are applied on returned objects
-            url_params[ParamName.QUERY_PARAMS][QueryParams.FILTER] = 'name:%s' % filters['name']
+            url_params[ParamName.QUERY_PARAMS][QueryParams.FILTER] = self._stringify_name_filter(filters)
 
         item_generator = iterate_over_pageable_resource(
             partial(self.send_general_request, operation_name=operation_name), url_params
         )
         return (i for i in item_generator if match_filters(filters, i))
+
+    def _stringify_name_filter(self, filters):
+        if self._system_info['version'] >= '6.4.0':
+            return "fts~%s" % filters['name']
+        return "name:%s" % filters['name']
+
+    def _fetch_system_info(self):
+        params = {"path_params": {"objId": "default"}}
+        resp = self.send_general_request('getSystemInformation', params)
+        return resp
 
     def add_object(self, operation_name, params):
         def is_duplicate_name_error(err):
