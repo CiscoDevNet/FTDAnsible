@@ -215,11 +215,6 @@ class BaseConfigurationResource(object):
         self._check_mode = check_mode
         self._operation_checker = OperationChecker
 
-        system_info = self._fetch_system_info()
-        self._system_info = {
-            "version": system_info['databaseInfo']['buildVersion']
-        }
-
     def execute_operation(self, op_name, params):
         """
         Allow user request execution of simple operations(natively supported by API provider) as well as complex
@@ -300,14 +295,19 @@ class BaseConfigurationResource(object):
         return (i for i in item_generator if match_filters(filters, i))
 
     def _stringify_name_filter(self, filters):
-        if self._system_info['version'] >= '6.4.0':
+        build_version = self.get_build_version()
+        if build_version >= '6.4.0':
             return "fts~%s" % filters['name']
         return "name:%s" % filters['name']
 
     def _fetch_system_info(self):
-        params = {"path_params": {"objId": "default"}}
+        params = {ParamName.PATH_PARAMS: PATH_PARAMS_FOR_DEFAULT_OBJ}
         resp = self.send_general_request('getSystemInformation', params)
         return resp
+
+    def get_build_version(self):
+        system_info = self._fetch_system_info()
+        return system_info['databaseInfo']['buildVersion']
 
     def add_object(self, operation_name, params):
         def is_duplicate_name_error(err):
