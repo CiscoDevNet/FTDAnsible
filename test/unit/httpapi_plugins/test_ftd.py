@@ -17,16 +17,15 @@
 #
 import json
 
-from ansible.compat.tests import mock
-from ansible.compat.tests import unittest
-from ansible.compat.tests.mock import mock_open, patch
 from ansible.errors import AnsibleConnectionFailure
 from ansible.module_utils.connection import ConnectionError
 from ansible.module_utils.six import BytesIO, PY3, StringIO
 from ansible.module_utils.six.moves.urllib.error import HTTPError
+from units.compat import mock
+from units.compat import unittest
+from units.compat.mock import mock_open, patch
 
 from httpapi_plugins.ftd import HttpApi, BASE_HEADERS, TOKEN_PATH_TEMPLATE, DEFAULT_API_VERSIONS
-
 from module_utils.common import HTTPMethod, ResponseParams
 from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp
 

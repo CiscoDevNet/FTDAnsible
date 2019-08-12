@@ -5,7 +5,7 @@ import json
 import unittest
 
 import pytest
-from ansible.compat.tests import mock
+from units.compat import mock
 
 try:
     from ansible.module_utils.common import FtdServerError, HTTPMethod, ResponseParams, FtdConfigurationError
