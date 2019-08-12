@@ -214,6 +214,8 @@ class BaseConfigurationResource(object):
         self._models_operations_specs_cache = {}
         self._check_mode = check_mode
         self._operation_checker = OperationChecker
+        self._system_info = None
+
 
     def execute_operation(self, op_name, params):
         """
@@ -301,9 +303,11 @@ class BaseConfigurationResource(object):
         return "name:%s" % filters['name']
 
     def _fetch_system_info(self):
-        params = {ParamName.PATH_PARAMS: PATH_PARAMS_FOR_DEFAULT_OBJ}
-        resp = self.send_general_request('getSystemInformation', params)
-        return resp
+        if not self._system_info:
+            params = {ParamName.PATH_PARAMS: PATH_PARAMS_FOR_DEFAULT_OBJ}
+            self._system_info = self.send_general_request('getSystemInformation', params)
+
+        return self._system_info
 
     def get_build_version(self):
         system_info = self._fetch_system_info()
