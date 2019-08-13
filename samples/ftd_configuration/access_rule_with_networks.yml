@@ -15,7 +15,7 @@
       ftd_configuration:
         operation: upsertAccessRule
         data:
-          name: Allow traffic from Cisco
+          name: AllowCiscoTraffic
           type: accessrule
           sourceNetworks:
             - '{{ networkobject_ciscodevnetnetwork }}'
@@ -28,7 +28,7 @@
       ftd_configuration:
         operation: editAccessRule
         data:
-          name: Allow traffic from Cisco
+          name: AllowCiscoTraffic
           id: '{{ accessrule_allowciscotraffic.id }}'
           ruleId: '{{ accessrule_allowciscotraffic.ruleId }}'
           version: '{{ accessrule_allowciscotraffic.version }}'
