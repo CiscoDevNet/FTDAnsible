@@ -1,5 +1,5 @@
 FROM lovato/python-2.6
-ARG ANSIBLE_BRANCH=v2.7.0
+ARG ANSIBLE_BRANCH=v2.8.3
 
 # SETUP SYSTEM PACKAGES
 RUN apt-get update && apt-get -y install git wget build-essential libssl-dev libffi-dev python3-dev
