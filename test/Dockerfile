@@ -1,6 +1,6 @@
 FROM python:3.6
 
-ARG ANSIBLE_BRANCH=v2.7.0
+ARG ANSIBLE_BRANCH=v2.8.3
 
 # CLONE ANSIBLE
 RUN wget https://github.com/ansible/ansible/archive/${ANSIBLE_BRANCH}.tar.gz && \
