@@ -320,7 +320,7 @@ class TestFtdHttpApi(unittest.TestCase):
     def test_get_list_of_supported_api_versions_with_failed_http_request(self):
         error_msg = "Invalid Credentials"
         fp = mock.MagicMock()
-        fp.read.return_value = '{{"error-msg": "{}"}}'.format(error_msg)
+        fp.read.return_value = '{{"error-msg": "{0}"}}'.format(error_msg)
         send_mock = mock.MagicMock(side_effect=HTTPError('url', 400, 'msg', 'hdrs', fp))
         with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
             with self.assertRaises(ConnectionError) as res:
