@@ -100,7 +100,7 @@ In case you experience the following error while running the tests in Docker, re
 2. Install Ansible and test dependencies:
 ```
 pip install $ANSIBLE_DIR/requirements.txt
-pip install test/requirements.txt
+pip install test-requirements.txt
 ```
 
 3. Add Ansible modules to the Python path:
