@@ -68,17 +68,18 @@ The project contains unit tests for Ansible modules, HTTP API plugin and util fi
 ```
 docker build -t ftd-ansible-test test
 ```
-By default, the Dockerfile clones `devel` branch of Ansible repository, but you can change it by adding
-`--build-arg ANSIBLE_BRANCH=$BRANCH_NAME` to the build command.
+**NOTE**: Dockerfile uses Ansible version from `requirements.txt`. You can change it by replacing the version in `requirements.txt` and rebuilding the Docker image.
 
 2. Run unit tests with:
 ```
-docker run -v $(pwd):/ftd-ansible ftd-ansible-test pytest test/
+docker run ftd-ansible-test
 ```
 To run a single test, specify the filename at the end of command:
 ```
-docker run -v $(pwd):/ftd-ansible ftd-ansible-test pytest test/unit/test_fdm_configuration.py
+docker run ftd-ansible-test test/unit/test_ftd_configuration.py
 ```
+
+**NOTE**: You need to rebuild the Docker image on every change of the code.
 
 #### Troubleshooting
 
@@ -100,7 +101,7 @@ In case you experience the following error while running the tests in Docker, re
 2. Install Ansible and test dependencies:
 ```
 pip install $ANSIBLE_DIR/requirements.txt
-pip install test/requirements.txt
+pip install test-requirements.txt
 ```
 
 3. Add Ansible modules to the Python path:
