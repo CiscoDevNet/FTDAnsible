@@ -1,11 +1,23 @@
 - hosts: all
   connection: httpapi
   tasks:
-    - name: Find a file policy blocking all malware
+    - name: Check Licenses
+      ftd_configuration:
+        operation: getLicenseList
+        register_as: all_license_list
+
+    - name: Enable Malware License
+      ftd_configuration:
+        operation: addLicense
+        data:
+          licenseType: MALWARE
+          type: license
+          count: 1
+      when: 'all_license_list | selectattr("licenseType", "in", ["MALWARE"]) | list | length == 0'
+
+    - name: Find a file policy
       ftd_configuration:
         operation: getFilePolicyList
-        filters:
-          policyType: BLOCK_MALWARE_ALL
         register_as: file_policies
 
     - name: Setup a syslog server

@@ -1,18 +1,37 @@
 - hosts: all
   connection: httpapi
   tasks:
-    - name: Find an intrustion policy with balanced security
+    - name: Check Licenses
+      ftd_configuration:
+        operation: getLicenseList
+        register_as: all_license_list
+
+    - name: Enable Malware License
+      ftd_configuration:
+        operation: addLicense
+        data:
+          licenseType: MALWARE
+          type: license
+          count: 1
+      when: 'all_license_list | selectattr("licenseType", "in", ["MALWARE"]) | list | length == 0'
+
+    - name: Enable Threat License
+      ftd_configuration:
+        operation: addLicense
+        data:
+          licenseType: THREAT
+          type: license
+          count: 1
+      when: 'all_license_list | selectattr("licenseType", "in", ["THREAT"]) | list | length == 0'
+
+    - name: Find an intrustion policy
       ftd_configuration:
         operation: getIntrusionPolicyList
-        filters:
-          name: Balanced Security and Connectivity
         register_as: intrusion_policies
 
-    - name: Find a file policy blocking office documents upload
+    - name: Find a file policy
       ftd_configuration:
         operation: getFilePolicyList
-        filters:
-          policyType: BLOCK_OFFICE_DOCUMENTS_UPLOAD_BLOCK_MALWARE_OTHERS
         register_as: file_policies
 
     - name: Create an access rule with intrusion and file policies

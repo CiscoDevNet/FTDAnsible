@@ -1,13 +1,6 @@
 - hosts: all
   connection: httpapi
   tasks:
-    - name: Download pending changes
-      ftd_file_download:
-        operation: getdownload
-        path_params:
-          objId: default
-        destination: /tmp/
-
     - name: Upload disk file
       ftd_file_upload:
         operation: postuploaddiskfile

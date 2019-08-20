@@ -31,11 +31,9 @@
           type: sslpolicy
         register_as: ssl_policy
 
-    - name: Find an intrustion policy with maximum detection
+    - name: Find an intrustion policy
       ftd_configuration:
         operation: getIntrusionPolicyList
-        filters:
-          name: Maximum Detection
         register_as: intrusion_policies
 
     - name: Enable the SSL policy as a part of access policy

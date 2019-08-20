@@ -46,6 +46,7 @@
             - "{{ networkobject_privatenetwork4 }}"
             - "{{ networkobject_privatenetwork5 }}"
           gateway: "{{ networkobject_router2 }}"
+          name: "test_static_route"
           metricValue: 1
           ipType: IPv4
           type: staticrouteentry
