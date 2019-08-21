@@ -107,7 +107,7 @@
     uri:
       validate_certs: False
       timeout: 5
-      url:  'https://{{ ansible_host }}:{{ ansible_httpapi_port }}/api/versions'
+      url:  'https://{{ ansible_host }}:{{ ansible_httpapi_port }}'
     register: result
     until: result.status == 200
     retries: 600

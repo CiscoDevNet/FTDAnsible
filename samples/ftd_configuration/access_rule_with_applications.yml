@@ -1,11 +1,11 @@
 - hosts: all
   connection: httpapi
   tasks:
-    - name: Find a Google Drive application
+    - name: Find a Google application
       ftd_configuration:
         operation: getApplicationList
         filters:
-          name: Google Drive
+          name: Google
         register_as: google_app_results
 
     - name: Find a Dropbox application

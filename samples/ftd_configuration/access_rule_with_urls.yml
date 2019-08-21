@@ -1,21 +1,33 @@
 - hosts: all
   connection: httpapi
   tasks:
-    - name: Find an alcohol URL category
+    - name: Check Licenses
+      ftd_configuration:
+        operation: getLicenseList
+        register_as: all_license_list
+
+    - name: Enable URL License
+      ftd_configuration:
+        operation: addLicense
+        data:
+          licenseType: URLFILTERING
+          type: license
+          count: 1
+      when: 'all_license_list | selectattr("licenseType", "in", ["URLFILTERING"]) | list | length == 0'
+
+    - name: Find an URL category
       ftd_configuration:
         operation: getURLCategoryList
-        filters:
-          name: Alcohol
-        register_as: alco_category_results
+        register_as: category_results
 
     - name: Find a high risk URL reputation
       ftd_configuration:
         operation: getURLReputationList
         filters:
-          name: High risk
+          startPercentage: 1
         register_as: reputation_results
 
-    - name: Create an access rule blocking traffic from alcohol URLs with high risks
+    - name: Create an access rule blocking traffic
       ftd_configuration:
         operation: upsertAccessRule
         data:
@@ -25,7 +37,7 @@
           urlFilter:
             urlCategories:
               - type: urlcategorymatcher
-                urlCategory: "{{ alco_category_results[0] }}"
+                urlCategory: "{{ category_results[0] }}"
                 urlReputation: "{{ reputation_results[0] }}"
             urlObjects: []
             type: embeddedurlfilter

@@ -18,7 +18,7 @@
 
     - name: Update Data-plane DNS server to customer server
       ftd_configuration:
-        operation: upsertDataDNSSetting
+        operation: upsertDataDNSSettings
         data:
           name: DataDNSSettings
           pollTimer: 240

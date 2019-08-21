@@ -1,14 +1,12 @@
 - hosts: all
   connection: httpapi
   tasks:
-    - name: Find an intrustion policy with maximum detection
+    - name: Find an intrustion policy
       ftd_configuration:
         operation: getIntrusionPolicyList
-        filters:
-          name: Maximum Detection
         register_as: policies
 
-    - name: Allow traffic with maximum detection by default
+    - name: Allow traffic by default
       ftd_configuration:
         operation: upsertAccessPolicy
         data:
