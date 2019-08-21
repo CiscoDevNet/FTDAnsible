@@ -270,8 +270,8 @@ class HttpApi(HttpApiBase):
             self.connection._auth = None
             self.login(self.connection.get_option('remote_user'), self.connection.get_option('password'))
             return True
-        # None means that the exception will be passed further to the caller
-        return None
+        # False means that the exception will be passed further to the caller
+        return False
 
     def _display(self, http_method, title, msg=''):
         display.vvvv('REST:{0}:{1}:{2}\n{3}'.format(http_method, self.connection._url, title, msg))
