@@ -32,7 +32,9 @@ except ImportError:
 DEFAULT_PAGE_SIZE = 10
 DEFAULT_OFFSET = 0
 
+NO_CONTENT_STATUS = 204
 UNPROCESSABLE_ENTITY_STATUS = 422
+
 INVALID_UUID_ERROR_MESSAGE = "Validation failed due to an invalid UUID"
 DUPLICATE_NAME_ERROR_MESSAGE = "Validation failed due to a duplicate name"
 
@@ -391,7 +393,7 @@ class BaseConfigurationResource(object):
                 raise e
 
     def edit_object(self, operation_name, params):
-        data, _, path_params = _get_user_params(params)
+        existing_object, _, _ = data, _, path_params = _get_user_params(params)
 
         model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
         get_operation = self._find_get_operation(model_name)
@@ -403,7 +405,8 @@ class BaseConfigurationResource(object):
             elif equal_objects(existing_object, data):
                 return existing_object
 
-        return self.send_general_request(operation_name, params)
+        new_object = self.send_general_request(operation_name, params)
+        return new_object if self.config_changed else existing_object
 
     def send_general_request(self, operation_name, params):
         def stop_if_check_mode():
@@ -427,7 +430,8 @@ class BaseConfigurationResource(object):
         response = self._conn.send_request(url_path=url_path, http_method=http_method, body_params=body_params,
                                            path_params=path_params, query_params=query_params)
         raise_for_failure(response)
-        if http_method != HTTPMethod.GET:
+
+        if http_method != HTTPMethod.GET and response[ResponseParams.STATUS_CODE] != NO_CONTENT_STATUS:
             self.config_changed = True
         return response[ResponseParams.RESPONSE]
 
@@ -486,7 +490,6 @@ class BaseConfigurationResource(object):
         :return: upserted object representation
         :rtype: dict
         """
-
         def extract_and_validate_model():
             model = op_name[len(OperationNamePrefix.UPSERT):]
             if not self._conn.get_model_spec(model):

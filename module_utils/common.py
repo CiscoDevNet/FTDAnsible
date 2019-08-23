@@ -23,7 +23,6 @@ except ImportError:
 import re
 from ansible.module_utils._text import to_text
 from ansible.module_utils.common.collections import is_string
-from ansible.module_utils.six import iteritems
 
 INVALID_IDENTIFIER_SYMBOLS = r'[^a-zA-Z0-9_]'
 
@@ -181,25 +180,34 @@ def equal_values(v1, v2):
         return v1 == v2
 
 
-def equal_objects(d1, d2):
+def equal_objects(d1, d2, compare_common_fields_only=True):
     """
     Checks whether two objects are equal. Ignores special object properties (e.g. 'id', 'version') and
     properties with None and empty values. In case properties contains a reference to the other object,
     only object identities (ids and types) are checked. Also, if an array field contains multiple references
     to the same object, duplicates are ignored when comparing objects.
 
+    Use compare_common_fields_only to specify if only common fields should be compared.
+
     :type d1: dict
     :type d2: dict
+    :type compare_common_fields_only: bool
     :return: True if passed objects and their properties are equal. Otherwise, returns False.
     """
 
-    def prepare_data_for_comparison(d):
-        d = dict((k, d[k]) for k in d.keys() if k not in NON_COMPARABLE_PROPERTIES and d[k])
+    def prepare_data_for_comparison(d, keys):
+        d = dict((k, v) for k, v in d.items() if k not in NON_COMPARABLE_PROPERTIES and v)
         d = delete_ref_duplicates(d)
+
+        if keys:
+            d = dict((k, v) for k, v in d.items() if k in keys)
+
         return d
 
-    d1 = prepare_data_for_comparison(d1)
-    d2 = prepare_data_for_comparison(d2)
+    common_keys = set(d1.keys()) & set(d2.keys()) if compare_common_fields_only else None
+
+    d1 = prepare_data_for_comparison(d1, common_keys)
+    d2 = prepare_data_for_comparison(d2, common_keys)
     return equal_dicts(d1, d2, compare_by_reference=False)
 
 
@@ -226,7 +234,7 @@ def delete_ref_duplicates(d):
         return d
 
     modified_d = {}
-    for k, v in iteritems(d):
+    for k, v in d.items():
         if type(v) == list:
             modified_d[k] = delete_ref_duplicates_from_list(v)
         elif type(v) == dict:
