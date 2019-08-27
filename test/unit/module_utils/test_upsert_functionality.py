@@ -11,13 +11,13 @@ try:
     from ansible.module_utils.common import FtdServerError, HTTPMethod, ResponseParams, FtdConfigurationError
     from ansible.module_utils.configuration import DUPLICATE_NAME_ERROR_MESSAGE, UNPROCESSABLE_ENTITY_STATUS, \
         MULTIPLE_DUPLICATES_FOUND_ERROR, BaseConfigurationResource, FtdInvalidOperationNameError, QueryParams, \
-        ADD_OPERATION_NOT_SUPPORTED_ERROR, ParamName
+        ADD_OPERATION_NOT_SUPPORTED_ERROR, ParamName, NO_CONTENT_STATUS
     from ansible.module_utils.fdm_swagger_client import ValidationError
 except ImportError:
     from module_utils.common import FtdServerError, HTTPMethod, ResponseParams, FtdConfigurationError
     from module_utils.configuration import DUPLICATE_NAME_ERROR_MESSAGE, UNPROCESSABLE_ENTITY_STATUS, \
         MULTIPLE_DUPLICATES_FOUND_ERROR, BaseConfigurationResource, FtdInvalidOperationNameError, QueryParams, \
-        ADD_OPERATION_NOT_SUPPORTED_ERROR, ParamName
+        ADD_OPERATION_NOT_SUPPORTED_ERROR, ParamName, NO_CONTENT_STATUS
     from module_utils.fdm_swagger_client import ValidationError
 
 ADD_RESPONSE = {'status': 'Object added'}
@@ -337,7 +337,8 @@ class TestUpsertOperationFunctionalTests(object):
                 assert path_params == params['path_params']
                 return {
                     ResponseParams.SUCCESS: True,
-                    ResponseParams.RESPONSE: ADD_RESPONSE
+                    ResponseParams.RESPONSE: ADD_RESPONSE,
+                    ResponseParams.STATUS_CODE: 200,
                 }
             elif http_method == HTTPMethod.GET:
                 return {
@@ -469,7 +470,8 @@ class TestUpsertOperationFunctionalTests(object):
                 assert url_path == url_with_id_templ
                 return {
                     ResponseParams.SUCCESS: True,
-                    ResponseParams.RESPONSE: body_params
+                    ResponseParams.RESPONSE: body_params,
+                    ResponseParams.STATUS_CODE: 200,
                 }
             else:
                 assert False
@@ -536,6 +538,83 @@ class TestUpsertOperationFunctionalTests(object):
                     ResponseParams.RESPONSE: {
                         'items': [expected_val]
                     }
+                }
+            else:
+                assert False
+
+        operations = {
+            'getObjectList': {'method': HTTPMethod.GET, 'modelName': 'Object', 'url': url, 'returnMultipleItems': True},
+            'addObject': {'method': HTTPMethod.POST, 'modelName': 'Object', 'url': url},
+            'editObject': {'method': HTTPMethod.PUT, 'modelName': 'Object', 'url': url_with_id_templ},
+            'otherObjectOperation': {
+                'method': HTTPMethod.GET,
+                'modelName': 'Object',
+                'url': url_with_id_templ,
+                'returnMultipleItems': False}
+        }
+
+        def get_operation_spec(name):
+            return operations[name]
+
+        connection_mock.get_operation_spec = get_operation_spec
+        connection_mock.get_operation_specs_by_model_name.return_value = operations
+        connection_mock.send_request = request_handler
+
+        result = self._resource_execute_operation(params, connection=connection_mock)
+
+        assert expected_val == result
+
+    # test when object exists and all fields have the same value
+    def test_module_should_not_update_object_when_upsert_operation_and_server_returns_204(
+            self, connection_mock):
+        url = '/test'
+        url_object = '/test/{objId}'
+        url_with_id_templ = '{0}/{1}'.format(url, '{objId}')
+
+        params = {
+            'operation': 'upsertObject',
+            'data': {'name': 'testObject', 'value': '3333', 'type': 'object'},
+            'register_as': 'test_var'
+        }
+
+        expected_val = copy.deepcopy(params['data'])
+        expected_val['version'] = 'test_version'
+        expected_val['id'] = 'test_id'
+
+        def request_handler(url_path=None, http_method=None, body_params=None, path_params=None, query_params=None):
+            if http_method == HTTPMethod.PUT and path_params.get('objId'):
+                assert url_path == url_object
+                assert body_params == params['data']
+                assert query_params == {}
+                assert path_params == {'objId': expected_val['id']}
+                return {
+                    ResponseParams.SUCCESS: True,
+                    ResponseParams.RESPONSE: '',
+                    ResponseParams.STATUS_CODE: 204,
+                }
+            elif http_method == HTTPMethod.GET and path_params.get('objId'):
+                assert url_path == url_object
+                assert body_params == {}
+                assert path_params == {'objId': expected_val['id']}
+                assert query_params == {}
+
+                expected_val['value'] = '4444'
+                return {
+                    ResponseParams.SUCCESS: True,
+                    ResponseParams.RESPONSE: expected_val,
+                }
+            elif http_method == HTTPMethod.GET:
+                assert url_path == url
+                assert body_params == {}
+                assert query_params == {QueryParams.FILTER: 'name:testObject', 'limit': 10, 'offset': 0}
+                assert path_params == {}
+
+                expected_val['value'] = '4444'
+                return {
+                    ResponseParams.SUCCESS: True,
+                    ResponseParams.RESPONSE: {
+                        'items': [expected_val]
+                    },
                 }
             else:
                 assert False
