@@ -66,7 +66,7 @@ The project contains unit tests for Ansible modules, HTTP API plugin and util fi
 
 1. Build the Docker image: 
 ```
-docker build -t ftd-ansible-test test
+docker build -t ftd-ansible-test -f Dockerfile.tests . 
 ```
 **NOTE**: Dockerfile uses Ansible version from `requirements.txt`. You can change it by replacing the version in `requirements.txt` and rebuilding the Docker image.
 

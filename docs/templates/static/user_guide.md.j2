@@ -176,7 +176,8 @@ A task is _idempotent_ if the result of running it once is exactly the same as t
 multiple times. As Ansible requires modules to be idempotent, `ftd_configuration` complies with this requirement.
 
 Before executing the operation, `ftd_configuration` checks whether the desired final state is already achieved. 
-If yes, no actions are executed, and the operation finishes showing that the state is not changed. 
+If yes, no actions are executed, and the operation finishes showing that the state is not changed. Comparation of
+objects is described below.
 
 For example, when running `addNetworkObject` operation multiple times without changing the play configuration, 
 only the first run results in `changed` status. Subsequent runs are finished with `ok` status.
@@ -201,3 +202,45 @@ localhost               : ok=1    changed=0    unreachable=0    failed=0
 
 When playbook tasks are idempotent, the playbook itself must be idempotent too. Having idempotent playbook is 
 recommended, as it allows to re-run them safely.
+
+### How objects are being compared
+
+Comparation take place every time, when object should be modified. The first object is an object from playbook 
+(local object) and the second object is an object on server (remote object).
+
+There are several cases when local and remote objects have:
+
+1) same fields and values - same objects
+    
+    | Local object   | Remote object  | Value |
+    | -------------- | -------------- | ----- |
+    | field1: value1 | field1: value1 | Same  | 
+    | field2: value2 | field2: value2 | Same  | 
+    | field3: value3 | field3: value3 | Same  | 
+
+2) same fields and different values - different objects;
+    
+    | Local object   | Remote object   | Value      |
+    | -------------- | --------------- | ---------- |
+    | field1: value1 | field1: value10 | Different  | 
+    | field2: value2 | field2: value20 | Different  | 
+    | field3: value3 | field3: value3  | Same       | 
+
+3) different set of fields but common fields has same values - same objects;
+
+    | Local object   | Remote object  | Value    |
+    | -------------- | -------------- | -------- |
+    | field1: value1 |                | No Field | 
+    | field2: value2 | field2: value2 | Same     | 
+    | field3: value3 | field3: value3 | Same     | 
+    |                | field4: value4 | No Field | 
+
+
+4) different set of fields but common fields has different values - different objects.
+
+    | Local object   | Remote object   | Value     |
+    | -------------- | --------------- | --------- |
+    | field1: value1 |                 | No Field  | 
+    | field2: value2 | field2: value20 | Different | 
+    | field3: value3 | field3: value3  | Same      | 
+    |                | field4: value4  | No Field  | 

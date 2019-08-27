@@ -21,8 +21,8 @@ from module_utils.common import equal_objects, delete_ref_duplicates, construct_
 
 # simple objects
 
-def test_equal_objects_return_false_with_different_length():
-    assert not equal_objects(
+def test_objects_with_different_fields_check_common_values():
+    assert equal_objects(
         {'foo': 1},
         {'foo': 1, 'bar': 2}
     )

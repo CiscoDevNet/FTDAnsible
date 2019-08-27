@@ -9,15 +9,13 @@
           defaultIdentityRule:
             authAction: PASSIVE
             type: defaultidentityrule
-          activeAuthPort: "885"
+          activeAuthPort: 885
           type: identitypolicy
         register_as: identity_policy
 
     - name: Find an intrustion policy with maximum detection
       ftd_configuration:
         operation: getIntrusionPolicyList
-        filters:
-          name: Maximum Detection
         register_as: intrusion_policies
 
     - name: Enable the identity policy as a part of access policy
