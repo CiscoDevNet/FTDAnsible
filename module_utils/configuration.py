@@ -431,7 +431,9 @@ class BaseConfigurationResource(object):
                                            path_params=path_params, query_params=query_params)
         raise_for_failure(response)
 
-        if http_method != HTTPMethod.GET and response[ResponseParams.STATUS_CODE] != NO_CONTENT_STATUS:
+        is_unsafe_method = http_method != HTTPMethod.GET
+        config_changed = response[ResponseParams.STATUS_CODE] != NO_CONTENT_STATUS or http_method == HTTPMethod.DELETE
+        if is_unsafe_method and config_changed:
             self.config_changed = True
         return response[ResponseParams.RESPONSE]
 
