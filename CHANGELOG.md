@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.3.0] - 2019-10-23
+### Added
+- Update duplicate object lookup process according to API updated in newer versions of FDM
+- Switch to Ansible 2.8.3
+- Add handling of No content response for update resource requests
+
 ## [v0.2.2] - 2019-06-06
 ### Fixed
 - Usage of `register_as` parameter in `ftd_configuration` module.
