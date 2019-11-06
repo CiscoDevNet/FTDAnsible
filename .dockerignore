@@ -6,9 +6,13 @@ __pycache__/
 # IntelliJ IDEA/PyCharm files
 .idea
 
+#Git directory
+.git
+
 # Environments
 .env
 .venv
+.tox
 env/
 venv/
 ENV/
