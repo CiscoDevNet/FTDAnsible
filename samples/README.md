@@ -24,6 +24,7 @@ table.
 | `deployment.yml`                                   |     ✖     |     ✔     |     ✔     |
 | `dhcp_container.yml`                               |     ✖     |     ✔     |     ✔     |
 | `download_upload.yml`                              |     ✔     |     ✔     |     ✔     |
+| `ha_join.yml`                                      |     ✖     |     ✔     |     ✔     |
 | `identity_policy.yml`                              |     ✖     |     ✖     |     ✔     |
 | `initial_provisioning.yml`                         |     ✖     |     ✔     |     ✔     |
 | `nat.yml`                                          |     ✔     |     ✔     |     ✔     |
