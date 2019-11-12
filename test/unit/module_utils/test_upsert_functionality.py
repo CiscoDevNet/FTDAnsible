@@ -343,7 +343,8 @@ class TestUpsertOperationFunctionalTests(object):
             elif http_method == HTTPMethod.GET:
                 return {
                     ResponseParams.SUCCESS: True,
-                    ResponseParams.RESPONSE: {'items': []}
+                    ResponseParams.RESPONSE: {'items': []},
+                    ResponseParams.STATUS_CODE: 200,
                 }
             else:
                 assert False
@@ -404,7 +405,8 @@ class TestUpsertOperationFunctionalTests(object):
         connection_mock.get_operation_specs_by_model_name.return_value = operations
         connection_mock.send_request.return_value = {
             ResponseParams.SUCCESS: True,
-            ResponseParams.RESPONSE: {'items': []}
+            ResponseParams.RESPONSE: {'items': []},
+            ResponseParams.STATUS_CODE: 200,
         }
         params = {
             'operation': 'upsertObject',
@@ -464,7 +466,8 @@ class TestUpsertOperationFunctionalTests(object):
                             {'name': 'testObject', 'value': old_value, 'type': 'object', 'id': obj_id,
                              'version': version}
                         ]
-                    }
+                    },
+                    ResponseParams.STATUS_CODE: 200,
                 }
             elif http_method == HTTPMethod.PUT:
                 assert url_path == url_with_id_templ
@@ -537,7 +540,8 @@ class TestUpsertOperationFunctionalTests(object):
                     ResponseParams.SUCCESS: True,
                     ResponseParams.RESPONSE: {
                         'items': [expected_val]
-                    }
+                    },
+                    ResponseParams.STATUS_CODE: 200,
                 }
             else:
                 assert False
@@ -602,6 +606,7 @@ class TestUpsertOperationFunctionalTests(object):
                 return {
                     ResponseParams.SUCCESS: True,
                     ResponseParams.RESPONSE: expected_val,
+                    ResponseParams.STATUS_CODE: 200,
                 }
             elif http_method == HTTPMethod.GET:
                 assert url_path == url
@@ -615,6 +620,7 @@ class TestUpsertOperationFunctionalTests(object):
                     ResponseParams.RESPONSE: {
                         'items': [expected_val]
                     },
+                    ResponseParams.STATUS_CODE: 200,
                 }
             else:
                 assert False
@@ -698,7 +704,8 @@ class TestUpsertOperationFunctionalTests(object):
                     ResponseParams.SUCCESS: True,
                     ResponseParams.RESPONSE: {
                         'items': []
-                    }
+                    },
+                    ResponseParams.STATUS_CODE: 200,
                 }
             else:
                 assert False
@@ -777,7 +784,8 @@ class TestUpsertOperationFunctionalTests(object):
                             {'name': 'testObject', 'value': old_value, 'type': 'object', 'id': obj_id,
                              'version': version}
                         ]
-                    }
+                    },
+                    ResponseParams.STATUS_CODE: 200,
                 }
             elif http_method == HTTPMethod.PUT:
                 assert url_path == url_with_id_templ
@@ -897,7 +905,8 @@ class TestUpsertOperationFunctionalTests(object):
                     ResponseParams.SUCCESS: True,
                     ResponseParams.RESPONSE: {
                         'items': [sample_obj, sample_obj]
-                    }
+                    },
+                    ResponseParams.STATUS_CODE: 200,
                 }
             else:
                 assert False
