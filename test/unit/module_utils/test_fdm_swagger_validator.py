@@ -900,6 +900,22 @@ class TestFdmSwaggerValidator(unittest.TestCase):
         assert valid
         assert rez is None
 
+    def test_nested_required_fields_for_spec_without_object_type(self):
+        spec_without_object_type = copy.deepcopy(nested_mock_data1)
+        del spec_without_object_type['models']['model1']['type']
+        del spec_without_object_type['models']['TestModel']['type']
+        del spec_without_object_type['models']['TestModel']['properties']['nested_model']['type']
+
+        valid_data = {
+            'nested_model': {
+                'f_string': "test"
+            }
+        }
+        valid, rez = FdmSwaggerValidator(spec_without_object_type).validate_data('getdata', valid_data)
+
+        assert valid
+        assert rez is None
+
     def test_invalid_nested_required_fields(self):
         invalid_data = {
             'f_integer': 2
