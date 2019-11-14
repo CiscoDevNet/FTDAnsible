@@ -1,0 +1,58 @@
+- hosts: all
+  gather_facts: no
+  connection: httpapi
+  tasks:
+    - name: Get failover interface
+      ftd_configuration:
+        operation: getPhysicalInterfaceList
+        filters:
+          hardwareName: GigabitEthernet0/6
+        register_as: failover_interfaces
+
+    - name: Update HA configuration
+      ftd_configuration:
+        operation: upsertHAConfiguration
+        data:
+          name: HA
+          type: haconfiguration
+          nodeRole: HA_PRIMARY
+          failoverName: failover-link
+          statefulFailoverName: stateful-failover-link
+          primaryFailoverIPv4:
+            netmask: "24"
+            ipAddress: 192.168.10.1
+            type: ipv4address
+          secondaryFailoverIPv4:
+            netmask: "24"
+            ipAddress: 192.168.10.2
+            type: ipv4address
+          primaryStatefulFailoverIPv4:
+            netmask: "24"
+            ipAddress: 192.168.10.1
+            type: ipv4address
+          secondaryStatefulFailoverIPv4:
+            netmask: "24"
+            ipAddress: 192.168.10.2
+            type: ipv4address
+          failoverInterface: "{{ failover_interfaces[0] }}"
+          statefulFailoverInterface: "{{ failover_interfaces[0] }}"
+
+    - name: Start HA join
+      ftd_configuration:
+        operation: addJoinHAStatus
+        register_as: ha_job
+
+    - name: Poll HA status until the job is finished
+      ftd_configuration:
+        operation: getJoinHAStatus
+        path_params:
+          objId: '{{ ha_job.id }}'
+        register_as: ha_status
+      until: ha_status.endTime != -1
+      retries: 100
+      delay: 3
+
+    - name: Stop the playbook if the HA Join failed
+      fail:
+        msg: 'HA Join failed. Status: {{ deployment_status.statusMessages }}'
+      when: ha_status.state != 'DEPLOYED'
