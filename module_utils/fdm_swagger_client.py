@@ -545,7 +545,7 @@ class FdmSwaggerValidator:
         for prop in model_properties.keys():
             if prop in data:
                 model_prop_val = model_properties[prop]
-                expected_type = model_prop_val[PropName.TYPE]
+                expected_type = model_prop_val.get(PropName.TYPE, PropType.OBJECT)
                 actually_value = data[prop]
                 self._check_types(status, actually_value, expected_type, model_prop_val, path, prop)
 
@@ -579,8 +579,8 @@ class FdmSwaggerValidator:
         else:
             item_model = model[PropName.ITEMS]
             for i, item_data in enumerate(data):
-                self._check_types(status, item_data, item_model[PropName.TYPE], item_model, "{0}[{1}]".format(path, i),
-                                  '')
+                model_type = item_model.get(PropName.TYPE, PropType.OBJECT)
+                self._check_types(status, item_data, model_type, item_model, "{0}[{1}]".format(path, i), '')
 
     @staticmethod
     def _is_correct_simple_types(expected_type, value, allow_null=True):
@@ -635,4 +635,4 @@ class FdmSwaggerValidator:
 
     @staticmethod
     def _is_object(model):
-        return PropName.TYPE in model and model[PropName.TYPE] == PropType.OBJECT
+        return PropName.REF in model or model.get(PropName.TYPE) == PropType.OBJECT
