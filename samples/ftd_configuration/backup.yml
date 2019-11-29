@@ -42,3 +42,11 @@
         object: /backups/ftd.backup
         src: /tmp/ftd.backup
         mode: put
+
+    - name: Upload the backup file back to FTD
+      ftd_file_upload:
+        operation: postuploadbackup
+        file_to_upload: /tmp/ftd.backup
+        register_as: uploadedBackupFile
+      vars:
+        ansible_command_timeout: 300
