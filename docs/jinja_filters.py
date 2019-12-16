@@ -38,7 +38,7 @@ def show_type_or_reference(data_param_spec, api_spec=None):
     :param api_spec: dict object which represents complete API spec
     :return: string value which represents simple type or hyperlink to complex type
     """
-    data_param_type = data_param_spec[PropName.TYPE]
+    data_param_type = data_param_spec.get(PropName.TYPE, PropType.OBJECT)
 
     def ref_to_model_name(ref_address):
         return ref_address.replace("#/definitions/", "")
