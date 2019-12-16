@@ -43,7 +43,7 @@ class SpecProp:
 
 class PropName:
     ENUM = 'enum'
-    TYPE = 'type'
+    TYPE = 'type'  # Not present since FTD 6.6.0 release
     REQUIRED = 'required'
     INVALID_TYPE = 'invalid_type'
     REF = '$ref'
