@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.3.1] - 2020-04-28
+### Fixed
+- Minor bugs to support FTD 6.6
+
 ## [v0.3.0] - 2019-10-23
 ### Added
 - Update duplicate object lookup process according to API updated in newer versions of FDM
