@@ -41,7 +41,7 @@ class ApiSpecAutocomplete(object):
             else:
                 base_filter_spec[PropName.REQUIRED] = True
 
-        op_spec[OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER] = base_filter_spec
+            op_spec[OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER] = base_filter_spec
         op_spec[OperationField.PARAMETERS][OperationParams.PATH].pop(PathParams.OBJ_ID, None)
 
         return op_spec
