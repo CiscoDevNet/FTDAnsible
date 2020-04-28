@@ -28,17 +28,18 @@ class ApiSpecAutocomplete(object):
     def _generate_upsert_spec(self, operations, model_name, edit_operation, list_operation):
         op_spec = deepcopy(operations[edit_operation])
         base_filter_spec = deepcopy(
-            operations[list_operation][OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER])
+            operations[list_operation][OperationField.PARAMETERS][OperationParams.QUERY].get(QueryParams.FILTER, None))
 
         def property_for_filtering_is_present(model_spec, prop_name):
             """Check that required property is present in the model spec."""
             return model_spec[PropName.PROPERTIES].get(prop_name)
 
-        if property_for_filtering_is_present(model_spec=self._api_spec[SpecProp.MODELS][model_name],
-                                             prop_name=PropName.NAME):
-            base_filter_spec[PropName.DESCRIPTION] += self.UPSERT_DEFAULT_FILTER_COMMENT
-        else:
-            base_filter_spec[PropName.REQUIRED] = True
+        if base_filter_spec:
+            if property_for_filtering_is_present(model_spec=self._api_spec[SpecProp.MODELS][model_name],
+                                                 prop_name=PropName.NAME):
+                base_filter_spec[PropName.DESCRIPTION] += self.UPSERT_DEFAULT_FILTER_COMMENT
+            else:
+                base_filter_spec[PropName.REQUIRED] = True
 
         op_spec[OperationField.PARAMETERS][OperationParams.QUERY][QueryParams.FILTER] = base_filter_spec
         op_spec[OperationField.PARAMETERS][OperationParams.PATH].pop(PathParams.OBJ_ID, None)
