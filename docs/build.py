@@ -18,7 +18,8 @@ from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, Operatio
 
 BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TEMPLATE_DIR = os.path.join(BASE_DIR_PATH, 'templates')
-STATIC_TEMPLATE_DIR = os.path.join(DEFAULT_TEMPLATE_DIR, 'static')
+FTD_ANSIBLE_STATIC_TEMPLATE_DIR = os.path.join(DEFAULT_TEMPLATE_DIR, 'static', 'ftd_ansible')
+FTD_API_STATIC_TEMPLATE_DIR = os.path.join(DEFAULT_TEMPLATE_DIR, 'static', 'ftd_api')
 DEFAULT_SAMPLES_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'samples')
 DEFAULT_DIST_DIR = os.path.join(BASE_DIR_PATH, 'dist')
 DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
@@ -202,7 +203,7 @@ def _generate_ansible_docs(args, api_spec, template_ctx):
         .generate_doc_files(args.dist, args.models)
     generator.ModuleDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, DEFAULT_MODULE_DIR) \
         .generate_doc_files(args.dist)
-    generator.StaticDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, STATIC_TEMPLATE_DIR) \
+    generator.StaticDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, FTD_ANSIBLE_STATIC_TEMPLATE_DIR) \
         .generate_doc_files(args.dist)
 
 
@@ -216,6 +217,8 @@ def _generate_ftd_api_docs(args, api_spec, template_ctx, errors_codes):
     if errors_codes:
         generator.ErrorDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx) \
             .generate_doc_files(args.dist, errors_codes)
+    generator.StaticDocGenerator(DEFAULT_TEMPLATE_DIR, template_ctx, FTD_API_STATIC_TEMPLATE_DIR) \
+        .generate_doc_files(args.dist)
 
 
 def _generate_docs(args, api_client):
@@ -230,6 +233,7 @@ def _generate_docs(args, api_client):
         _generate_ansible_docs(args, api_spec, template_ctx)
     elif args.doctype == DocType.ftd_api:
         error_codes = api_client.fetch_error_codes()
+        template_ctx['error_codes'] = bool(error_codes)
         _generate_ftd_api_docs(args, api_spec, template_ctx, error_codes)
 
 
