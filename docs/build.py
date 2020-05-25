@@ -233,7 +233,7 @@ def _generate_docs(args, api_client):
         _generate_ansible_docs(args, api_spec, template_ctx)
     elif args.doctype == DocType.ftd_api:
         error_codes = api_client.fetch_error_codes()
-        template_ctx['error_codes'] = bool(False)
+        template_ctx['error_codes'] = bool(error_codes)
         _generate_ftd_api_docs(args, api_spec, template_ctx, error_codes)
 
 
