@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Create an FQDN network for Cisco DevNet
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: CiscoDevNetNetwork
@@ -12,7 +12,7 @@
           dnsResolution: IPV4_AND_IPV6
 
     - name: Create an FQDN network for Cisco FTD
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: CiscoFtdNetwork
@@ -22,7 +22,7 @@
           dnsResolution: IPV4_AND_IPV6
 
     - name: Create a Cisco network group
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObjectGroup
         data:
           name: CiscoNetworkGroup
@@ -32,7 +32,7 @@
           - '{{ networkobject_ciscoftdnetwork }}'
 
     - name: Update the FQDN network for Cisco FTD
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: editNetworkObject
         path_params:
           objId: '{{ networkobject_ciscoftdnetwork.id }}'
@@ -46,7 +46,7 @@
           type: networkobject
 
     - name: Update the Cisco network group by removing FTD network
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: editNetworkObjectGroup
         path_params:
           objId: '{{ networkobjectgroup_cisconetworkgroup.id }}'
@@ -59,19 +59,19 @@
             - '{{ networkobject_ciscodevnetnetwork }}'
 
     - name: Delete the Cisco network group
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: deleteNetworkObjectGroup
         path_params:
           objId: '{{ networkobjectgroup_cisconetworkgroup.id }}'
 
     - name: Delete the FQDN network for Cisco DevNet
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: deleteNetworkObject
         path_params:
           objId: '{{ networkobject_ciscodevnetnetwork.id }}'
 
     - name: Delete the FQDN network for Cisco FTD
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: deleteNetworkObject
         path_params:
           objId: '{{ networkobject_ciscoftdnetwork.id }}'

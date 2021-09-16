@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Create an FQDN network for Cisco DevNet
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: CiscoDevNetNetwork
@@ -12,7 +12,7 @@
           dnsResolution: IPV4_AND_IPV6
                   
     - name: Create an access rule allowing trafic from Cisco DevNet
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertAccessRule
         data:
           name: AllowCiscoTraffic
@@ -25,7 +25,7 @@
           parentId: default
 
     - name: Update the access rule allowing trafic from/to Cisco DevNet
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: editAccessRule
         data:
           name: AllowCiscoTraffic
@@ -44,14 +44,14 @@
           parentId: default
 
     - name: Delete the access rule allowing trafic from/to Cisco DevNet
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: deleteAccessRule
         path_params:
           objId: '{{ accessrule_allowciscotraffic.id }}'
           parentId: default
 
     - name: Delete the FQDN network for Cisco DevNet
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: deleteNetworkObject
         path_params:
           objId: '{{ networkobject_ciscodevnetnetwork.id }}'

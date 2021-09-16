@@ -12,32 +12,32 @@
   gather_facts: no
   tasks:
   - name: Get Anyconnect Package Files
-    ftd_configuration:
+    cisco.ftdansible.ftd_configuration:
       operation: getAnyConnectPackageFileList
       register_as: all_anyconnect_package_files
 
   - name: Get Phisical Interfaces
-    ftd_configuration:
+    cisco.ftdansible.ftd_configuration:
       operation: getPhysicalInterfaceList
       register_as: all_phisical_interfaces
 
   - name: Get Internal Certificates
-    ftd_configuration:
+    cisco.ftdansible.ftd_configuration:
       operation: getInternalCertificateList
       register_as: all_internal_certificates
 
   - name: Get RA VPN Group Policy
-    ftd_configuration:
+    cisco.ftdansible.ftd_configuration:
       operation: getRaVpnGroupPolicyList
       register_as: all_ravpn_group_policy_list
 
   - name: Get Local Identity Sources
-    ftd_configuration:
+    cisco.ftdansible.ftd_configuration:
       operation: getLocalIdentitySourceList
       register_as: all_local_identity_sources
 
   - name: Create RA VPN
-    ftd_configuration:
+    cisco.ftdansible.ftd_configuration:
       operation: upsertRaVpn
       data:
         name: NGFW-Remote-Access-VPN # NOTE: this name is ignored on backend
@@ -59,7 +59,7 @@
       register_as: ra_vpn
 
   - name: Create RA VPN Connection Profile
-    ftd_configuration:
+    cisco.ftdansible.ftd_configuration:
       operation: upsertRaVpnConnectionProfile
       data:
         name: 'ra_vpn_connection_profile_{{inventory_hostname}}'

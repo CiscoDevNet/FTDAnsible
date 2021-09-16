@@ -3,7 +3,7 @@
 
   tasks:
     - name: 'query_params should contain valid data'
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'getNetworkObjectList'
         query_params:
           offset: True
@@ -25,7 +25,7 @@
                               in result.msg["Invalid query_params provided"]["invalid_type"]'
 
     - name: 'query_params should contain valid data'
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'getNetworkObjectList'
         query_params:
           offset: 10
@@ -38,7 +38,7 @@
           - 'result.failed == false'
 
     - name: 'add: path_params should contain all required params'
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addAccessRule'
         data:
           name: "ansible-test-accessrule"
@@ -55,7 +55,7 @@
           - 'result.msg == {"Invalid path_params provided": {"required": ["parentId"]}}'
 
     - name: path_params should contain valid data
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addAccessRule'
         data:
           name: "ansible-test-accessrule"
@@ -76,7 +76,7 @@
                               in result.msg["Invalid path_params provided"]["invalid_type"]'
 
     - name: 'edit: path_params should contain all required params'
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'editNetworkObject'
         data:
           name: "ansible-test-network"
@@ -90,7 +90,7 @@
           - 'result.msg == {"Invalid path_params provided": {"required": ["objId"]}}'
 
     - name: 'delete: path_params should contain all required params'
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'deleteNetworkObject'
         path_params:
           test: "testId"
@@ -103,7 +103,7 @@
           - 'result.msg == {"Invalid path_params provided": {"required": ["objId"]}}'
 
     - name: is_not_exist operation should be present in the swagger api
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'is_not_exist'
         data:
           name: "ansible-test-network"
@@ -121,7 +121,7 @@
           - "result.msg == 'Invalid operation name provided: is_not_exist'"
 
     - name: data should contain all required fields
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addNetworkObject'
         data:
           description: "Ansible Integration tests in action"
@@ -138,7 +138,7 @@
       tags: skip-on-6.2.3
 
     - name: data should contain valid data
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addNetworkObject'
         data:
           name: false
@@ -169,7 +169,7 @@
                               in result.msg["Invalid data provided"]["invalid_type"]'
 
     - name: data should contain valid data
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addNetworkObject'
         data:
           name: 0

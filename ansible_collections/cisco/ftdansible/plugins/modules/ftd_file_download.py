@@ -28,7 +28,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_file_download
+module: cisco.ftdansible.ftd_file_download
 short_description: Downloads files from Cisco FTD devices over HTTP(S)
 description:
   - Downloads files from Cisco FTD devices including pending changes, disk files, certificates,
@@ -77,8 +77,8 @@ try:
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError, FILE_MODEL_NAME
     from ansible.module_utils.common import FtdServerError, HTTPMethod
 except ImportError:
-    from module_utils.fdm_swagger_client import OperationField, ValidationError, FILE_MODEL_NAME
-    from module_utils.common import FtdServerError, HTTPMethod
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import OperationField, ValidationError, FILE_MODEL_NAME
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.common import FtdServerError, HTTPMethod
 
 
 def is_download_operation(op_spec):

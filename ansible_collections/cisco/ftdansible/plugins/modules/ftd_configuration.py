@@ -28,7 +28,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_configuration
+module: cisco.ftdansible.ftd_configuration
 short_description: Manages configuration on Cisco FTD devices over REST API
 description:
   - Manages configuration on Cisco FTD devices including creating, updating, removing configuration objects,
@@ -102,9 +102,9 @@ try:
     from ansible.module_utils.common import construct_ansible_facts, FtdConfigurationError, \
         FtdServerError, FtdUnexpectedResponse
 except ImportError:
-    from module_utils.configuration import BaseConfigurationResource, CheckModeException, FtdInvalidOperationNameError
-    from module_utils.fdm_swagger_client import ValidationError
-    from module_utils.common import construct_ansible_facts, FtdConfigurationError, \
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.configuration import BaseConfigurationResource, CheckModeException, FtdInvalidOperationNameError
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import ValidationError
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.common import construct_ansible_facts, FtdConfigurationError, \
         FtdServerError, FtdUnexpectedResponse
 
 

@@ -28,7 +28,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_install
+module: cisco.ftdansible.ftd_install
 short_description: Installs FTD pkg image on the firewall
 description:
   - Provisioning module for FTD devices that installs ROMMON image (if needed) and
@@ -194,8 +194,8 @@ try:
     from ansible.module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
     from ansible.module_utils.device import HAS_KICK, FtdPlatformFactory, FtdModel
 except ImportError:
-    from module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
-    from module_utils.device import HAS_KICK, FtdPlatformFactory, FtdModel
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.device import HAS_KICK, FtdPlatformFactory, FtdModel
 
 REQUIRED_PARAMS_FOR_LOCAL_CONNECTION = ['device_ip', 'device_netmask', 'device_gateway', 'device_model', 'dns_server']
 

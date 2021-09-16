@@ -2,14 +2,14 @@
   connection: httpapi
   tasks:
     - name: Get GigabitEthernet0/0 Interface
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getPhysicalInterfaceList
         filters:
           hardwareName: GigabitEthernet0/0
         register_as: interface0
 
     - name: Setup SubInterface under GigabitEthernet0/0 with DHCP
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertSubInterface
         data:
           name: outside_subinterface
@@ -31,7 +31,7 @@
           parentId: "{{ interface0[0].id }}"
 
     - name: Setup SubInterface under GigabitEthernet0/0 with static IP
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertSubInterface
         data:
           name: outside_subinterface2

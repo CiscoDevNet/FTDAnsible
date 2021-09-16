@@ -28,7 +28,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: ftd_file_upload
+module: cisco.ftdansible.ftd_file_upload
 short_description: Uploads files to Cisco FTD devices over HTTP(S)
 description:
   - Uploads files to Cisco FTD devices including disk files, backups, and upgrades.
@@ -72,8 +72,8 @@ try:
     from ansible.module_utils.fdm_swagger_client import OperationField
     from ansible.module_utils.common import construct_ansible_facts, FtdServerError, HTTPMethod
 except ImportError:
-    from module_utils.fdm_swagger_client import OperationField
-    from module_utils.common import construct_ansible_facts, FtdServerError, HTTPMethod
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import OperationField
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.common import construct_ansible_facts, FtdServerError, HTTPMethod
 
 
 def is_upload_operation(op_spec):

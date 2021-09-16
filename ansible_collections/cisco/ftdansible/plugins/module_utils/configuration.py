@@ -25,9 +25,9 @@ try:
         FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedResponse
     from ansible.module_utils.fdm_swagger_client import OperationField, ValidationError
 except ImportError:
-    from module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.common import HTTPMethod, equal_objects, FtdConfigurationError, \
         FtdServerError, ResponseParams, copy_identity_properties, FtdUnexpectedResponse
-    from module_utils.fdm_swagger_client import OperationField, ValidationError
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import OperationField, ValidationError
 
 DEFAULT_PAGE_SIZE = 10
 DEFAULT_OFFSET = 0

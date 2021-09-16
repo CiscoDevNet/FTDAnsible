@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Create custom DNS object
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertDNSServerGroup
         data:
           type: dnsservergroup
@@ -17,7 +17,7 @@
               type: dnsserver
 
     - name: Update Data-plane DNS server to customer server
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertDataDNSSettings
         data:
           name: DataDNSSettings

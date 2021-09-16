@@ -4,7 +4,7 @@
 
   tasks:
     - name: Install image v6.4.0 on FTD 2110
-      ftd_install:
+      cisco.ftdansible.ftd_install:
         device_hostname: firepower
         device_password: pass
         device_ip: 192.168.0.1

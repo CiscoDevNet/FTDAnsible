@@ -2,12 +2,12 @@
   connection: httpapi
   tasks:
     - name: Check Licenses
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getLicenseList
         register_as: all_license_list
 
     - name: Enable Malware License
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: addLicense
         data:
           licenseType: MALWARE
@@ -16,12 +16,12 @@
       when: 'all_license_list | selectattr("licenseType", "in", ["MALWARE"]) | list | length == 0'
 
     - name: Find a file policy
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getFilePolicyList
         register_as: file_policies
 
     - name: Setup a syslog server
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertSyslogServer
         data:
           name: 10.0.4.5:514
@@ -35,7 +35,7 @@
         register_as: syslog_server
 
     - name: Create an access rule logging malware files
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertAccessRule
         data:
           name: Log traffic with malware files

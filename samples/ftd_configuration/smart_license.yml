@@ -5,7 +5,7 @@
   - variables.yaml
   tasks:
     - name: Register device with a Smart License token
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertSmartAgentConnection
         data:
           connectionType: REGISTER
@@ -15,7 +15,7 @@
           type: smartagentconnection
 
     - name: Wait till all license registration jobs are completed
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getLicenseJobHistoryList
         query_params:
           sort: -startDateTime

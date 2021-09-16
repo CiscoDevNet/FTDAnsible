@@ -16,7 +16,8 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from ansible.module_utils.network.ftd.common import HTTPMethod
+# from ansible.module_utils.network.ftd.common import HTTPMethod
+from ansible_collections.community.network.plugins.module_utils.network.ftd.common import HTTPMethod
 from ansible.module_utils.six import integer_types, string_types, iteritems
 
 FILE_MODEL_NAME = '_File'
