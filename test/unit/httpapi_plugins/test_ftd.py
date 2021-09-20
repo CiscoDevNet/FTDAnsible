@@ -25,9 +25,9 @@ from units.compat import mock
 from units.compat import unittest
 from units.compat.mock import mock_open, patch
 
-from httpapi_plugins.ftd import HttpApi, BASE_HEADERS, TOKEN_PATH_TEMPLATE, DEFAULT_API_VERSIONS
-from module_utils.common import HTTPMethod, ResponseParams
-from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp
+from ansible_collections.cisco.ftdansible.plugins.httpapi.ftd import HttpApi, BASE_HEADERS, TOKEN_PATH_TEMPLATE, DEFAULT_API_VERSIONS
+from ansible_collections.cisco.ftdansible.plugins.module_utils.common import HTTPMethod, ResponseParams
+from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp
 
 if PY3:
     BUILTINS_NAME = 'builtins'

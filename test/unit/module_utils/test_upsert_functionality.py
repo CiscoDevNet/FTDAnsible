@@ -14,11 +14,11 @@ try:
         ADD_OPERATION_NOT_SUPPORTED_ERROR, ParamName
     from ansible.module_utils.fdm_swagger_client import ValidationError
 except ImportError:
-    from module_utils.common import FtdServerError, HTTPMethod, ResponseParams, FtdConfigurationError
-    from module_utils.configuration import DUPLICATE_NAME_ERROR_MESSAGE, UNPROCESSABLE_ENTITY_STATUS, \
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.common import FtdServerError, HTTPMethod, ResponseParams, FtdConfigurationError
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.configuration import DUPLICATE_NAME_ERROR_MESSAGE, UNPROCESSABLE_ENTITY_STATUS, \
         MULTIPLE_DUPLICATES_FOUND_ERROR, BaseConfigurationResource, FtdInvalidOperationNameError, QueryParams, \
         ADD_OPERATION_NOT_SUPPORTED_ERROR, ParamName
-    from module_utils.fdm_swagger_client import ValidationError
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import ValidationError
 
 ADD_RESPONSE = {'status': 'Object added'}
 EDIT_RESPONSE = {'status': 'Object edited'}

@@ -23,21 +23,21 @@ import pytest
 from units.compat import mock
 from units.compat.mock import call, patch
 
-from module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource, \
+from ansible_collections.cisco.ftdansible.plugins.module_utils.configuration import iterate_over_pageable_resource, BaseConfigurationResource, \
     OperationChecker, OperationNamePrefix, ParamName, QueryParams
 
 try:
     from ansible.module_utils.common import HTTPMethod, FtdUnexpectedResponse
     from ansible.module_utils.fdm_swagger_client import ValidationError, OperationField
 except ImportError:
-    from module_utils.common import HTTPMethod, FtdUnexpectedResponse
-    from module_utils.fdm_swagger_client import ValidationError, OperationField
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.common import HTTPMethod, FtdUnexpectedResponse
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import ValidationError, OperationField
 
 
 class TestBaseConfigurationResource(object):
     @pytest.fixture
     def connection_mock(self, mocker):
-        connection_class_mock = mocker.patch('library.ftd_configuration.Connection')
+        connection_class_mock = mocker.patch('ansible_collections.cisco.ftdansible.plugins.modules.ftd_configuration.Connection')
         connection_instance = connection_class_mock.return_value
         connection_instance.validate_data.return_value = True, None
         connection_instance.validate_query_params.return_value = True, None

@@ -24,7 +24,7 @@ import pytest
 try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerValidator, IllegalArgumentException
 except ImportError:
-    from module_utils.fdm_swagger_client import FdmSwaggerValidator, IllegalArgumentException
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import FdmSwaggerValidator, IllegalArgumentException
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
 

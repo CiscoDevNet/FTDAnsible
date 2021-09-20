@@ -16,7 +16,7 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from module_utils.common import equal_objects, delete_ref_duplicates, construct_ansible_facts
+from ansible_collections.cisco.ftdansible.plugins.module_utils.common import equal_objects, delete_ref_duplicates, construct_ansible_facts
 
 
 # simple objects

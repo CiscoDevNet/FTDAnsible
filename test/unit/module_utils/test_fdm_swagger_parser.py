@@ -24,8 +24,8 @@ try:
     from ansible.module_utils.fdm_swagger_client import FdmSwaggerParser
     from ansible.module_utils.common import HTTPMethod
 except ImportError:
-    from module_utils.fdm_swagger_client import FdmSwaggerParser
-    from module_utils.common import HTTPMethod
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import FdmSwaggerParser
+    from ansible_collections.cisco.ftdansible.plugins.module_utils.common import HTTPMethod
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_FOLDER = os.path.join(DIR_PATH, 'test_data')
