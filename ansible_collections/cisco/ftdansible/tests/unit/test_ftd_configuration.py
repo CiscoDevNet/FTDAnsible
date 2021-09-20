@@ -4,7 +4,7 @@ import pytest
 from ansible.module_utils import basic
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
-from library import ftd_configuration
+from ansible_collections.cisco.ftdansible.plugins.modules import ftd_configuration
 
 try:
     from ansible.module_utils.common import FtdConfigurationError, FtdServerError, FtdUnexpectedResponse
@@ -25,12 +25,12 @@ class TestFtdConfiguration(object):
 
     @pytest.fixture(autouse=True)
     def connection_mock(self, mocker):
-        connection_class_mock = mocker.patch('library.ftd_configuration.Connection')
+        connection_class_mock = mocker.patch('ansible_collections.cisco.ftdansible.plugins.modules.ftd_configuration.Connection')
         return connection_class_mock.return_value
 
     @pytest.fixture
     def resource_mock(self, mocker):
-        resource_class_mock = mocker.patch('library.ftd_configuration.BaseConfigurationResource')
+        resource_class_mock = mocker.patch('ansible_collections.cisco.ftdansible.plugins.modules.ftd_configuration.BaseConfigurationResource')
         resource_instance = resource_class_mock.return_value
         return resource_instance.execute_operation
 
