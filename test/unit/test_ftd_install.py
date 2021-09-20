@@ -5,8 +5,8 @@ from ansible.module_utils import basic
 from units.compat.mock import PropertyMock
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
-from library import ftd_install
-from module_utils.device import FtdModel
+from ansible_collections.cisco.ftdansible.plugins.modules import ftd_install
+from ansible_collections.cisco.ftdansible.plugins.module_utils.device import FtdModel
 
 DEFAULT_MODULE_PARAMS = dict(
     device_hostname="firepower",
@@ -42,24 +42,24 @@ class TestFtdInstall(object):
 
     @pytest.fixture(autouse=True)
     def connection_mock(self, mocker):
-        connection_class_mock = mocker.patch('library.ftd_install.Connection')
+        connection_class_mock = mocker.patch('ansible_collections.cisco.ftdansible.plugins.modules.ftd_install.Connection')
         return connection_class_mock.return_value
 
     @pytest.fixture
     def config_resource_mock(self, mocker):
-        resource_class_mock = mocker.patch('library.ftd_install.BaseConfigurationResource')
+        resource_class_mock = mocker.patch('ansible_collections.cisco.ftdansible.plugins.modules.ftd_install.BaseConfigurationResource')
         return resource_class_mock.return_value
 
     @pytest.fixture(autouse=True)
     def ftd_factory_mock(self, mocker):
-        return mocker.patch('library.ftd_install.FtdPlatformFactory')
+        return mocker.patch('ansible_collections.cisco.ftdansible.plugins.modules.ftd_install.FtdPlatformFactory')
 
     @pytest.fixture(autouse=True)
     def has_kick_mock(self, mocker):
-        return mocker.patch('library.ftd_install.HAS_KICK', True)
+        return mocker.patch('ansible_collections.cisco.ftdansible.plugins.modules.ftd_install.HAS_KICK', True)
 
     def test_module_should_fail_when_kick_is_not_installed(self, mocker):
-        mocker.patch('library.ftd_install.HAS_KICK', False)
+        mocker.patch('ansible_collections.cisco.ftdansible.plugins.modules.ftd_install.HAS_KICK', False)
 
         set_module_args(dict(DEFAULT_MODULE_PARAMS))
         with pytest.raises(AnsibleFailJson) as ex:

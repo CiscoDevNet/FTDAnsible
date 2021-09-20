@@ -4,9 +4,10 @@ import pytest
 from ansible.module_utils import basic
 from units.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
-from library import ftd_file_download
-from module_utils.fdm_swagger_client import FILE_MODEL_NAME, OperationField
-from module_utils.common import HTTPMethod
+
+from ansible_collections.cisco.ftdansible.plugins.modules import ftd_file_download
+from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import FILE_MODEL_NAME, OperationField
+from ansible_collections.cisco.ftdansible.plugins.module_utils.common import HTTPMethod
 
 
 class TestFtdFileDownload(object):
@@ -18,7 +19,7 @@ class TestFtdFileDownload(object):
 
     @pytest.fixture
     def connection_mock(self, mocker):
-        connection_class_mock = mocker.patch('library.ftd_file_download.Connection')
+        connection_class_mock = mocker.patch('ansible_collections.cisco.ftdansible.plugins.modules.ftd_file_download.Connection')
         return connection_class_mock.return_value
 
     @pytest.mark.parametrize("missing_arg", ['operation', 'destination'])
