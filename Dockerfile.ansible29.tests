@@ -1,9 +1,9 @@
 ARG PYTHON_VERSION=3.6
 FROM python:${PYTHON_VERSION}
 
-COPY requirements.txt /requirements.txt
+COPY requirements.ansible29.txt /requirements.txt
 
-RUN pip download $(grep ^ansible /requirements.txt) --no-cache-dir --no-deps -d /tmp/pip && \
+RUN pip download $(grep ^ansible ./requirements.txt) --no-cache-dir --no-deps -d /tmp/pip && \
     mkdir /tmp/ansible && \
     tar -C /tmp/ansible -xf /tmp/pip/ansible* && \
     mv /tmp/ansible/ansible* /ansible && \
@@ -13,11 +13,11 @@ COPY test-requirements.txt /test-requirements.txt
 
 RUN pip install \
     --no-cache-dir \
-    -c /ansible/ansible_collections/community/general/tests/utils/constraints.txt \
+    -c /ansible/test/lib/ansible_test/_data/requirements/constraints.txt \
     -r /test-requirements.txt \
     -r /requirements.txt
 
-ENV PYTHONPATH="$PYTHONPATH:/ftd-ansible/ansible/lib:/ftd-ansible/ansible/test"
+ENV PYTHONPATH="$PYTHONPATH:/ansible/lib:/ansible/test"
 
 COPY . /ftd-ansible
 
@@ -26,4 +26,3 @@ WORKDIR /ftd-ansible
 ENTRYPOINT ["pytest"]
 
 CMD ["test"]
-
