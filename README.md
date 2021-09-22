@@ -1,19 +1,19 @@
 # FTD Ansible Modules
 
-A collection of Ansible modules that automate configuration management 
-and execution of operational tasks on Cisco Firepower Threat Defense (FTD) devices using FTD REST API.  This has been updated add support for this module as an Ansible collection.
+An Ansible Collection that automates configuration management 
+and execution of operational tasks on Cisco Firepower Threat Defense (FTD) devices using FTD REST API.  
 
 _This file describes the development and testing aspects. In case you are looking for 
 the user documentation, please check [FTD Ansible docs on DevNet](https://developer.cisco.com/site/ftd-ansible/)._
 
 ## Installation Guide
 
-The project contains four Ansible modules:
+The collection contains four Ansible modules:
 
-* [`ftd_configuration.py`](./library/ftd_configuration.py) - manages device configuration via REST API. The module configures virtual and physical devices by sending HTTPS calls formatted according to the REST API specification;
-* [`ftd_file_download.py`](./library/ftd_file_download.py) - downloads files from FTD devices via HTTPS protocol;
-* [`ftd_file_upload.py`](./library/ftd_file_upload.py) - uploads files to FTD devices via HTTPS protocol;
-* [`ftd_install.py`](./library/ftd_install.py) - installs FTD images on hardware devices. The module performs a complete reimage of the Firepower system by downloading the new software image and installing it. 
+* [`ftd_configuration.py`](./ansible_collections/plugins/modules/ftd_configuration.py) - manages device configuration via REST API. The module configures virtual and physical devices by sending HTTPS calls formatted according to the REST API specification;
+* [`ftd_file_download.py`](./ansible_collections/plugins/modules//ftd_file_download.py) - downloads files from FTD devices via HTTPS protocol;
+* [`ftd_file_upload.py`](./ansible_collections/plugins/modules//ftd_file_upload.py) - uploads files to FTD devices via HTTPS protocol;
+* [`ftd_install.py`](./ansible_collections/plugins/modules//ftd_install.py) - installs FTD images on hardware devices. The module performs a complete reimage of the Firepower system by downloading the new software image and installing it. 
 
 Sample playbooks are located in the [`samples`](./samples) folder.
 

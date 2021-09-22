@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v0.4.0] - 2021-09-21
+### Added
+- Migrated modules to Ansible collection `cisco.ftdansible`.
+
 ## [v0.3.1] - 2020-04-28
 ### Fixed
 - Minor bugs to support FTD 6.6
