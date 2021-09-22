@@ -82,7 +82,7 @@ ansible-playbook playbooks/ftd_configuration/access_rule_with_applications.yml
     ```
     docker build -t ftd-ansible .
     ```
-    **NOTE** The default image is based on the release v0.4.0 of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
+    **NOTE**: The default image is based on the release v0.4.0 of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
 
 2. You can build the custom Docker image:
     ```
@@ -135,7 +135,7 @@ docker build -t ftd-ansible-test -f Dockerfile.tests .
 ```
 **NOTE**: Dockerfile uses Ansible version from `requirements.txt`. You can change it by replacing the version in `requirements.txt` and rebuilding the Docker image.
 
-**NOTE** There is a separate Dockerfile for Ansible 2.9.  Use this command to build that.
+**NOTE**: There is a separate Dockerfile for Ansible 2.9.  Use this command to build that.
 ```
 docker build -t ftd-ansible-test -f Dockerfile.ansible29.tests . 
 ```
