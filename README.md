@@ -19,29 +19,64 @@ Sample playbooks are located in the [`samples`](./samples) folder.
 
 ### Using the collection in Ansible
 
-1. Install the ansible collection
+1. Setup docker environment
 
-2. Reference the collection from your playbook
+```
+docker run -it -v $(pwd)/samples:/ftd-ansible/playbooks \
+-v $(pwd)/ansible.cfg:/ftd-ansible/ansible.cfg \
+-v $(pwd)/requirements.txt:/ftd-ansible/requirements.txt \
+-v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
+python:3.6 bash
+
+cd /ftd-ansible
+pip install -r requirements.txt
+```
+
+2. Install the ansible collection
+
+```
+ansible-galaxy collection install git+https://github.com/meignw2021/ftd-ansible.git#/cisco/
+
+Starting collection install process
+Installing 'cisco.ftdansible:3.3.3' to '/root/.ansible/collections/ansible_collections/cisco/ftdansible'
+Created collection for cisco.ftdansible at /root/.ansible/collections/ansible_collections/cisco/ftdansible
+cisco.ftdansible (3.3.3) was installed successfully
+```
+
+3. List installed collections.
+```
+ansible-galaxy collection list
+```
+
+3. Validate your ansible.cfg file contains a path to ansible collections:
+
+```
+cat ansible.cfg
+```
+
+4. Reference the collection from your playbook
+
+**NOTE**: The tasks in the playbook reference the collection
 
 ```
 - hosts: all
-  gather_facts: False
-  any_errors_fatal: true
   connection: httpapi
   tasks:
-    - name: Get provisioning info
+    - name: Find a Google application
       cisco.ftdansible.ftd_configuration:
-        operation: getInitialProvision
-        path_params:
-          objId: default
-        register_as: provisionInfo
+        operation: getApplicationList
+        filters:
+          name: Google
+        register_as: google_app_results
+```        
 
-    - name: Show Info
-      debug:
-        msg: "{{ provisionInfo }}"
+Run the sample playbook.
+
+```
+ansible-playbook playbooks/ftd_configuration/access_rule_with_applications.yml
 ```
 
-### Running playbooks in Docker
+### Running playbooks locally with Docker
 
 1. Build the default Python 3.6, Ansible 2.10 Docker image:
     ```
