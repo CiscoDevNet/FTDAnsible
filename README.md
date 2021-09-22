@@ -1,7 +1,7 @@
 # FTD Ansible Modules
 
 A collection of Ansible modules that automate configuration management 
-and execution of operational tasks on Cisco Firepower Threat Defense (FTD) devices using FTD REST API.
+and execution of operational tasks on Cisco Firepower Threat Defense (FTD) devices using FTD REST API.  This has been updated add support for this module as an Ansible collection.
 
 _This file describes the development and testing aspects. In case you are looking for 
 the user documentation, please check [FTD Ansible docs on DevNet](https://developer.cisco.com/site/ftd-ansible/)._
@@ -17,24 +17,52 @@ The project contains four Ansible modules:
 
 Sample playbooks are located in the [`samples`](./samples) folder.
 
+### Using the collection in Ansible
+
+1. Install the ansible collection
+
+2. Reference the collection from your playbook
+
+```
+- hosts: all
+  gather_facts: False
+  any_errors_fatal: true
+  connection: httpapi
+  tasks:
+    - name: Get provisioning info
+      cisco.ftdansible.ftd_configuration:
+        operation: getInitialProvision
+        path_params:
+          objId: default
+        register_as: provisionInfo
+
+    - name: Show Info
+      debug:
+        msg: "{{ provisionInfo }}"
+```
+
 ### Running playbooks in Docker
 
-1. Build the default Docker image:
+1. Build the default Python 3.6, Ansible 2.10 Docker image:
     ```
     docker build -t ftd-ansible .
     ```
-    **NOTE** The default image is based on the release v0.1.0 of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
+    **NOTE** The default image is based on the release v0.4.0 of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
 
 2. You can build the custom Docker image:
     ```
-    docker build -t ftd-ansible --build-arg PYTHON_VERSION=<2.7|3.5|3.6|3.7> --build-arg FTD_ANSIBLE_VERSION=<tag name | branch name> .
+    docker build -t ftd-ansible \
+    --build-arg PYTHON_VERSION=<2.7|3.5|3.6|3.7> \
+    --build-arg FTD_ANSIBLE_VERSION=<tag name | branch name> .
     ```
 
 3. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) shows an example of inventory file.
 
 4. Run the playbook in Docker mounting playbook folder to `/ftd-ansible/playbooks` and inventory file to `/etc/ansible/hosts`:
     ```
-    docker run -v $(pwd)/samples:/ftd-ansible/playbooks -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts ftd-ansible playbooks/network_object.yml
+    docker run -v $(pwd)/samples:/ftd-ansible/playbooks \
+    -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
+    ftd-ansible playbooks/ftd_configuration/network_object.yml
     ```
 
 ### Running playbooks locally 
@@ -52,8 +80,10 @@ python3 -m venv venv
 ```
 export PYTHONPATH=.:$PYTHONPATH
 ```
-  
-4. Run the playbook:
+
+4. Install the collection
+
+5. Run the playbook:
 ``` 
 ansible-playbook samples/network_object.yml
 ```
@@ -70,13 +100,33 @@ docker build -t ftd-ansible-test -f Dockerfile.tests .
 ```
 **NOTE**: Dockerfile uses Ansible version from `requirements.txt`. You can change it by replacing the version in `requirements.txt` and rebuilding the Docker image.
 
+**NOTE** There is a separate Dockerfile for Ansible 2.9.  Use this command to build that.
+```
+docker build -t ftd-ansible-test -f Dockerfile.ansible29.tests . 
+```
+
 2. Run unit tests with:
 ```
 docker run ftd-ansible-test
 ```
+
 To run a single test, specify the filename at the end of command:
 ```
 docker run ftd-ansible-test test/unit/test_ftd_configuration.py
+docker run ftd-ansible-test test/unit/test_ftd_file_download.py
+docker run ftd-ansible-test test/unit/test_ftd_file_upload.py
+docker run ftd-ansible-test test/unit/test_ftd_install.py
+
+docker run ftd-ansible-test test/unit/module_utils/test_common.py
+docker run ftd-ansible-test test/unit/module_utils/test_configuration.py
+docker run ftd-ansible-test test/unit/module_utils/test_device.py
+docker run ftd-ansible-test test/unit/module_utils/test_fdm_swagger_parser.py
+docker run ftd-ansible-test test/unit/module_utils/test_fdm_swagger_validator.py
+docker run ftd-ansible-test test/unit/module_utils/test_fdm_swagger_with_real_data.py
+docker run ftd-ansible-test test/unit/module_utils/test_upsert_functionality.py
+
+docker run ftd-ansible-test test/unit/httpapi_plugins/test_ftd.py
+
 ```
 
 **NOTE**: You need to rebuild the Docker image on every change of the code.
@@ -97,9 +147,25 @@ In case you experience the following error while running the tests in Docker, re
 ### Running unit tests locally
 
 1. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
+```
+git clone https://github.com/ansible/ansible.git
+```
+
+**NOTE**: The next steps can be hosted in docker container
+```
+docker run -it -v `pwd`:/ftd-ansible python:3.6 bash
+cd /ftd-ansible
+pip download $(grep ^ansible ./requirements.txt) --no-cache-dir --no-deps -d /tmp/pip 
+mkdir /tmp/ansible
+tar -C /tmp/ansible -xf /tmp/pip/ansible*
+mv /tmp/ansible/ansible* /ansible
+rm -rf /tmp/pip /tmp/ansible
+```
 
 2. Install Ansible and test dependencies:
 ```
+export ANSIBLE_DIR=`pwd`/ansible
+pip install -r requirements.txt
 pip install -r $ANSIBLE_DIR/requirements.txt
 pip install -r test-requirements.txt
 ```
@@ -112,6 +178,25 @@ export PYTHONPATH=$PYTHONPATH:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
 4. Run unit tests:
 ```
 pytest test/unit
+```
+
+5. Run individual unit tests:
+
+```
+pytest test/unit/test_ftd_configuration.py
+pytest test/unit/test_ftd_file_download.py
+pytest test/unit/test_ftd_file_upload.py
+pytest test/unit/test_ftd_install.py
+
+pytest test/unit/module_utils/test_common.py
+pytest test/unit/module_utils/test_configuration.py
+pytest test/unit/module_utils/test_device.py
+pytest test/unit/module_utils/test_fdm_swagger_parser.py
+pytest test/unit/module_utils/test_fdm_swagger_validator.py
+pytest test/unit/module_utils/test_fdm_swagger_with_real_data.py
+pytest test/unit/module_utils/test_upsert_functionality.py
+
+pytest test/unit/httpapi_plugins/test_ftd.py
 ```
  
 ### Running tests with [TOX](https://tox.readthedocs.io/en/latest/) 
