@@ -10,8 +10,8 @@ from shutil import copyfile
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-from module_utils.common import HTTPMethod
-from module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME
+from ansible_collections.cisco.ftdansible.plugins.module_utils.common import HTTPMethod
+from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import SpecProp, OperationField, PropName, OperationParams, FILE_MODEL_NAME
 from docs.snippets_generation import swagger_ui_bravado, swagger_ui_curlify
 from docs import utils
 from docs import jinja_filters
@@ -249,7 +249,7 @@ class ModuleDocGenerator(BaseDocGenerator):
             module_name = os.path.splitext(module_filename)[0]
             module = importlib.import_module(module_name)
 
-            module_docs = yaml.load(module.DOCUMENTATION)
+            module_docs = yaml.safe_load(module.DOCUMENTATION)
             module_spec = ModuleSpec(
                 name=module_name,
                 short_description=self._doc_to_text(module_docs.get('short_description')),
@@ -259,6 +259,7 @@ class ModuleDocGenerator(BaseDocGenerator):
                 examples=module.EXAMPLES
             )
             module_content = module_template.render(module=module_spec, **self._template_ctx)
+            print("Generating documentation for %s" % module_name)
             self._write_generated_file(module_dir, module_name + self.MD_SUFFIX, module_content)
             module_index.append(module_name)
 
@@ -270,7 +271,7 @@ class ModuleDocGenerator(BaseDocGenerator):
 
     @staticmethod
     def _get_module_params(module):
-        docs = yaml.load(module.DOCUMENTATION)
+        docs = yaml.safe_load(module.DOCUMENTATION)
         return {k: {
             'description': ModuleDocGenerator._doc_to_text(v.get('description')),
             'required': v.get('required', False),
@@ -279,7 +280,7 @@ class ModuleDocGenerator(BaseDocGenerator):
 
     @staticmethod
     def _get_module_return_values(module):
-        return_params = yaml.load(module.RETURN)
+        return_params = yaml.safe_load(module.RETURN)
         return {k: {
             'description': ModuleDocGenerator._doc_to_text(v.get('description')),
             'returned': v.get('returned', ''),

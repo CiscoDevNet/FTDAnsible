@@ -1,4 +1,4 @@
-from module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
+from ansible_collections.cisco.ftdansible.plugins.module_utils.common import HTTPMethod, IDENTITY_PROPERTIES
 
 
 def filter_data_params(op_name, op_method, data_params):

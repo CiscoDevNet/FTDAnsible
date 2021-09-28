@@ -12,9 +12,9 @@ from ansible.module_utils.urls import open_url
 
 from docs import generator
 from docs.enricher import ApiSpecAutocomplete
-from httpapi_plugins.ftd import BASE_HEADERS
-from module_utils.common import HTTPMethod
-from module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
+from ansible_collections.cisco.ftdansible.plugins.httpapi.ftd import BASE_HEADERS
+from ansible_collections.cisco.ftdansible.plugins.module_utils.common import HTTPMethod
+from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import FdmSwaggerParser, SpecProp, OperationField
 
 BASE_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_TEMPLATE_DIR = os.path.join(BASE_DIR_PATH, 'templates')
@@ -22,7 +22,7 @@ FTD_ANSIBLE_STATIC_TEMPLATE_DIR = os.path.join(DEFAULT_TEMPLATE_DIR, 'static', '
 FTD_API_STATIC_TEMPLATE_DIR = os.path.join(DEFAULT_TEMPLATE_DIR, 'static', 'ftd_api')
 DEFAULT_SAMPLES_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'samples')
 DEFAULT_DIST_DIR = os.path.join(BASE_DIR_PATH, 'dist')
-DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'library')
+DEFAULT_MODULE_DIR = os.path.join(os.path.dirname(BASE_DIR_PATH), 'ansible_collections/cisco/ftdansible/plugins/modules')
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)

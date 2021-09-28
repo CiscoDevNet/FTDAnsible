@@ -1,6 +1,6 @@
 import re
 
-from module_utils.fdm_swagger_client import SpecProp, PropName, PropType
+from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import SpecProp, PropName, PropType
 
 
 def camel_to_snake(text):

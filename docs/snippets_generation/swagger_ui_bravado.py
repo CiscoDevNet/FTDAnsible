@@ -1,6 +1,6 @@
 from pprint import PrettyPrinter
 
-from module_utils.fdm_swagger_client import OperationField
+from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import OperationField
 
 from docs.snippets_generation import body_generator
 from docs import utils
