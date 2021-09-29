@@ -33,8 +33,7 @@ jobs:
           # Testing against `devel` may fail as new tests are added.
         # - stable-2.9 # Only if your collection supports Ansible 2.9
           - stable-2.10
-          - devel
-          - ftd-y
+          - ftd-7
     runs-on: ubuntu-latest
     steps:
 
@@ -79,7 +78,6 @@ jobs:
         ansible:
           # - stable-2.9 # Only if your collection supports Ansible 2.9
           - stable-2.10
-          - devel
           - ftd-7
 
     steps:
