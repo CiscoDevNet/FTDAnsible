@@ -31,9 +31,8 @@ jobs:
         ansible:
           # It's important that Sanity is tested against all stable-X.Y branches
           # Testing against `devel` may fail as new tests are added.
-        # - stable-2.9 # Only if your collection supports Ansible 2.9
+          - stable-2.9 # Only if your collection supports Ansible 2.9
           - stable-2.10
-          - ftd-7
     runs-on: ubuntu-latest
     steps:
 
@@ -76,9 +75,8 @@ jobs:
       fail-fast: true
       matrix:
         ansible:
-          # - stable-2.9 # Only if your collection supports Ansible 2.9
+          - stable-2.9 # Only if your collection supports Ansible 2.9
           - stable-2.10
-          - ftd-7
 
     steps:
       - name: Check out code
