@@ -1,5 +1,5 @@
 [all:vars]
-ansible_network_os=ftd
+ansible_network_os=cisco.ftdansible.ftd
 
 [vftd]
 localhost ansible_user=admin ansible_password=123qwe ansible_httpapi_port=8585 ansible_httpapi_use_ssl=False network_value=130.51.181.228
