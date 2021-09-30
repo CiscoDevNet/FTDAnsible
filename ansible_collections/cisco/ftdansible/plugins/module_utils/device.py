@@ -1,3 +1,7 @@
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 from enum import Enum
 from ansible.module_utils.six.moves.urllib.parse import urlparse
 

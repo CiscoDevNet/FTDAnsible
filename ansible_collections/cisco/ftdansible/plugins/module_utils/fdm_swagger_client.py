@@ -16,6 +16,10 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 try:
     # ansible 2.9
     from ansible.module_utils.network.ftd.common import HTTPMethod
