@@ -75,4 +75,3 @@
         operation: deleteNetworkObject
         path_params:
           objId: '{{ networkobject_ciscoftdnetwork.id }}'
-

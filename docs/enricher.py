@@ -1,3 +1,7 @@
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 from copy import deepcopy
 
 from ansible_collections.cisco.ftdansible.plugins.module_utils.configuration import OperationChecker, QueryParams, OperationNamePrefix

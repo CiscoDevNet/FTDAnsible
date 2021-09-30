@@ -1,3 +1,7 @@
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 import re
 
 from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import SpecProp, PropName, PropType

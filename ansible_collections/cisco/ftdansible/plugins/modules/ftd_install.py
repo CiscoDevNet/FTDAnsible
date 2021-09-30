@@ -188,7 +188,7 @@ msg:
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
 from enum import Enum
-from six import iteritems
+from ansible.module_utils.six import iteritems
 
 try:
     from ansible.module_utils.configuration import BaseConfigurationResource, ParamName, PATH_PARAMS_FOR_DEFAULT_OBJ
