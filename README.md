@@ -17,7 +17,19 @@ The collection contains four Ansible modules:
 
 Sample playbooks are located in the [`samples`](./samples) folder.
 
-### Using the collection in Ansible
+## View Collection Documentation With ansible-docs
+
+The following commands will generate ansible-docs for each of the collection modules
+
+```
+ansible-doc -M ansible_collections/cisco/ftdansible/plugins/modules/ ftd_configuration
+ansible-doc -M ansible_collections/cisco/ftdansible/plugins/modules/ ftd_file_download
+ansible-doc -M ansible_collections/cisco/ftdansible/plugins/modules/ ftd_file_upload
+ansible-doc -M ansible_collections/cisco/ftdansible/plugins/modules/ ftd_install
+```
+
+
+## Using the collection in Ansible
 
 1. Setup docker environment
 
@@ -73,7 +85,8 @@ cat ansible.cfg
 Run the sample playbook.
 
 ```
-ansible-playbook playbooks/ftd_configuration/access_rule_with_applications.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_applications.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_policy.yml
 ```
 
 ### Running playbooks locally with Docker
@@ -104,7 +117,7 @@ ansible-playbook playbooks/ftd_configuration/access_rule_with_applications.yml
 
 1. Create a virtual environment and activate it:
 ```
-python3 -m venv venv
+python -m venv venv
 . venv/bin/activate
 ```
 
@@ -120,7 +133,7 @@ export PYTHONPATH=.:$PYTHONPATH
 
 5. Run the playbook:
 ``` 
-ansible-playbook samples/network_object.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_applications.yml
 ```
 
 ## Unit Tests
@@ -274,13 +287,66 @@ Flake8 configuration is defined in the [tox config file](./tox.ini) file.
 
 Integration tests are written in a form of playbooks and usually started with `ansible-test` command from Ansible repository. As this project is created outside Ansible, it does not have utils to run the tests. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be run as usual playbooks.
 
+## Developing Locally With Docker
+
+1. Setup docker environment
+
+```
+docker run -it -v $(pwd):/ftd-ansible \
+python:3.6 bash
+```
+
+2. Change to working directory
+
+`cd /ftd-ansible`
+
+3. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
+```
+git clone https://github.com/ansible/ansible.git
+```
+
+**NOTE**: The next steps can be hosted in docker container
+```
+pip download $(grep ^ansible ./requirements.txt) --no-cache-dir --no-deps -d /tmp/pip 
+mkdir /tmp/ansible
+tar -C /tmp/ansible -xf /tmp/pip/ansible*
+mv /tmp/ansible/ansible* /ansible
+rm -rf /tmp/pip /tmp/ansible
+```
+
+
+4. Install Ansible and test dependencies:
+
+```
+export ANSIBLE_DIR=`pwd`/ansible
+pip install -r requirements.txt
+pip install -r $ANSIBLE_DIR/requirements.txt
+pip install -r test-requirements.txt
+```
+
+5. Add Ansible modules to the Python path:
+
+`export PYTHONPATH=$PYTHONPATH:.:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test`
+
+6. Run unit tests:
+```
+pytest ansible_collections/cisco/ftdansible/tests
+```
+
+7. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) shows an example of inventory file.
+
+8. Run the playbook in Docker mounting playbook folder to `/ftd-ansible/playbooks` and inventory file to `/etc/ansible/hosts`:
+    
+`ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/network_object.yml`
+
+
 ## Debugging
 
 1. Add `log_path` with path to log file in `ansible.cfg`
 
 2. Run `ansible-playbook` with `-vvvv`
     ```
-    $ ansible-playbook samples/network_object.yml -vvvv
+    $ ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_applications.yml -vvvv
     ```
 
 3. The log file will contain additional information (REST, etc.)
