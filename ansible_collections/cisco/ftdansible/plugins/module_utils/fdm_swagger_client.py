@@ -33,6 +33,7 @@ FILE_MODEL_NAME = '_File'
 SUCCESS_RESPONSE_CODE = '200'
 DELETE_PREFIX = 'delete'
 
+
 class OperationField:
     URL = 'url'
     METHOD = 'method'

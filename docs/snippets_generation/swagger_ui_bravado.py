@@ -1,3 +1,7 @@
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 from pprint import PrettyPrinter
 
 from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import OperationField

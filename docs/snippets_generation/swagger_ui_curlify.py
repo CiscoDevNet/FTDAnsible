@@ -1,3 +1,7 @@
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 """
 Content of the file is just Python implementation of the curlify functionality implemented in SwaggerUI
 Original implementation: https://github.com/swagger-api/swagger-ui/blob/master/src/core/curlify.js
