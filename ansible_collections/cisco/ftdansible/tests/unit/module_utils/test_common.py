@@ -16,6 +16,10 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 from ansible_collections.cisco.ftdansible.plugins.module_utils.common import equal_objects, delete_ref_duplicates, construct_ansible_facts
 
 

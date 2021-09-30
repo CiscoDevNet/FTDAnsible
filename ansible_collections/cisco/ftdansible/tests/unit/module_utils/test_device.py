@@ -1,9 +1,13 @@
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 import pytest
 
 pytest.importorskip("kick")
 
 from ansible_collections.cisco.ftdansible.plugins.module_utils.device import FtdPlatformFactory, FtdModel, FtdAsa5500xPlatform, Ftd2100Platform, AbstractFtdPlatform
-from test.unit.test_ftd_install import DEFAULT_MODULE_PARAMS
+from ansible_collections.cisco.ftdansible.tests.unit.test_ftd_install import DEFAULT_MODULE_PARAMS
 
 
 class TestFtdModel(object):
