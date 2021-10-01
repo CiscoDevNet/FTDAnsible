@@ -336,8 +336,37 @@ pytest ansible_collections/cisco/ftdansible/tests
 7. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) shows an example of inventory file.
 
 8. Run an integration playbook.
-    
-`ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/network_object.yml`
+
+```    
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_policy.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_applications.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_intrusion_and_file_policies.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_logging.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_networks.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_urls.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_users.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/anyconnect_package_file.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/backup.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/data_dns_settings.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/deployment.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/dhcp_container.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/download_upload.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/ha_join.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/identity_policy.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/initial_provisioning.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/nat.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/network_object_with_host_vars.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/network_object.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/physical_interface.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/port_object.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/ra_vpn_license.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/ra_vpn.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/security_intelligence_url_policy.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/smart_license.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/ssl_policy.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/static_route_entry.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/sub_interface.yml
+```
 
 
 ## Debugging
