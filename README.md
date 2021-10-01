@@ -335,7 +335,7 @@ pytest ansible_collections/cisco/ftdansible/tests
 
 7. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) shows an example of inventory file.
 
-8. Run the playbook in Docker mounting playbook folder to `/ftd-ansible/playbooks` and inventory file to `/etc/ansible/hosts`:
+8. Run an integration playbook.
     
 `ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/network_object.yml`
 
