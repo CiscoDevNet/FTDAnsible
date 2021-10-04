@@ -41,8 +41,6 @@ jobs:
 
       - name: Check out code
         uses: actions/checkout@v2
-        with:
-          path: .
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -58,7 +56,6 @@ jobs:
       # Install test requirements
       - name: Install test requirements
         run: pwd && ls -al && find . && pip install -r ./test-requirements.txt
-        working-directory: .
 
       # run ansible-test sanity inside of Docker.
       # The docker container has all the pinned dependencies that are required
