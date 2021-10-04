@@ -57,6 +57,10 @@ jobs:
       - name: Install test requirements
         run: pwd && ls -al && find . && pip install -r ./test-requirements.txt
 
+      # Install ansible galaxy community
+      - name: Install test requirements
+        run: ansible-galaxy collection install community.general
+
       # run ansible-test sanity inside of Docker.
       # The docker container has all the pinned dependencies that are required
       # and all python versions ansible supports.
