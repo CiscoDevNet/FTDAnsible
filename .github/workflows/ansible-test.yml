@@ -57,7 +57,8 @@ jobs:
 
       # Install test requirements
       - name: Install test requirements
-        run: pip install -r test-requirements.txt
+        run: pip install -r ./test-requirements.txt
+        working-directory: .
 
       # run ansible-test sanity inside of Docker.
       # The docker container has all the pinned dependencies that are required
