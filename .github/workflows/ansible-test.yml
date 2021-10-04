@@ -57,7 +57,7 @@ jobs:
 
       # Install test requirements
       - name: Install test requirements
-        run: pip install -r ./test-requirements.txt
+        run: pwd && ls -al && pip install -r ./test-requirements.txt
         working-directory: .
 
       # run ansible-test sanity inside of Docker.
