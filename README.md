@@ -225,26 +225,30 @@ export PYTHONPATH=$PYTHONPATH:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
 
 4. Run unit tests:
 ```
-pytest test/unit
+cd /ftd-ansible
+pytest --cov-report term \
+  --cov=ansible_collections/cisco/ftdansible/plugins \
+  ansible_collections/cisco/ftdansible/tests
 ```
+
 
 5. Run individual unit tests:
 
 ```
-pytest test/unit/test_ftd_configuration.py
-pytest test/unit/test_ftd_file_download.py
-pytest test/unit/test_ftd_file_upload.py
-pytest test/unit/test_ftd_install.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_configuration.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_file_download.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_file_upload.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_install.py
 
-pytest test/unit/module_utils/test_common.py
-pytest test/unit/module_utils/test_configuration.py
-pytest test/unit/module_utils/test_device.py
-pytest test/unit/module_utils/test_fdm_swagger_parser.py
-pytest test/unit/module_utils/test_fdm_swagger_validator.py
-pytest test/unit/module_utils/test_fdm_swagger_with_real_data.py
-pytest test/unit/module_utils/test_upsert_functionality.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_common.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_configuration.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_device.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_fdm_swagger_parser.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_fdm_swagger_validator.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_fdm_swagger_with_real_data.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_upsert_functionality.py
 
-pytest test/unit/httpapi_plugins/test_ftd.py
+pytest ansible_collections/cisco/ftdansible/tests/unit/httpapi_plugins/test_ftd.py
 ```
  
 ### Running tests with [TOX](https://tox.readthedocs.io/en/latest/) 
@@ -298,26 +302,40 @@ python:3.6 bash
 
 2. Change to working directory
 
-`cd /ftd-ansible`
+```
+cd /ftd-ansible
+apt update && apt upgrade -y
+```
 
 3. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
 ```
+cd /ftd-ansible
+rm -rf ./ansible
 git clone https://github.com/ansible/ansible.git
+
+# check out the stable version
+cd /ftd-ansible/ansible
+git checkout stable-2.10
 ```
 
-**NOTE**: The next steps can be hosted in docker container
 ```
+cd /ftd-ansible
 pip download $(grep ^ansible ./requirements.txt) --no-cache-dir --no-deps -d /tmp/pip 
 mkdir /tmp/ansible
 tar -C /tmp/ansible -xf /tmp/pip/ansible*
 mv /tmp/ansible/ansible* /ansible
 rm -rf /tmp/pip /tmp/ansible
+
+# used when running sanity tests
+ansible-galaxy collection install community.general
+ansible-galaxy collection install community.network
 ```
 
 
-4. Install Ansible and test dependencies:
+4. Install requirements and test dependencies:
 
 ```
+cd /ftd-ansible
 export ANSIBLE_DIR=`pwd`/ansible
 pip install -r requirements.txt
 pip install -r $ANSIBLE_DIR/requirements.txt
@@ -326,11 +344,17 @@ pip install -r test-requirements.txt
 
 5. Add Ansible modules to the Python path:
 
-`export PYTHONPATH=$PYTHONPATH:.:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test`
+```
+cd /ftd-ansible
+export PYTHONPATH=$PYTHONPATH:.:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
+```
 
 6. Run unit tests:
 ```
-pytest ansible_collections/cisco/ftdansible/tests
+cd /ftd-ansible
+pytest --cov-report term \
+  --cov=ansible_collections/cisco/ftdansible/plugins \
+  ansible_collections/cisco/ftdansible/tests
 ```
 
 7. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) shows an example of inventory file.

@@ -1,8 +1,9 @@
-pytest
-pytest-mock
-urllib3==1.26.5
-units
-pylint
 pycodestyle
+pylint
+pytest
+pytest-cov
+pytest-mock
+units
+urllib3==1.26.5
 voluptuous
 yamllint
