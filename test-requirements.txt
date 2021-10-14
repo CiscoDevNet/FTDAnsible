@@ -1,4 +1,5 @@
 coverage==4.5.4
+future-fstrings
 mock
 pycodestyle
 pylint
