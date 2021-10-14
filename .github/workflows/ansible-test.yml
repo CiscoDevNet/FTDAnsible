@@ -47,7 +47,7 @@ jobs:
         with:
           # it is just required to run that once as "ansible-test sanity" in the docker image
           # will run on all python versions it supports.
-          python-version: 3.6
+          python-version: 3.8
 
       # Install the head of the given branch (devel, stable-2.10)
       - name: Install ansible-base (${{ matrix.ansible }})
@@ -71,19 +71,19 @@ jobs:
       - name: Run sanity tests on python 3.6
         # run: ansible-test sanity --docker -v --color
         # run: ansible-test sanity -v --color
-        run: ansible-test sanity -v --color --python 3.6
+        run: ansible-test sanity --docker -v --color --python 3.6
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       - name: Run sanity tests on python 3.7
-        run: ansible-test sanity -v --color --python 3.7
+        run: ansible-test sanity --docker -v --color --python 3.7
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       - name: Run sanity tests on python 3.8
-        run: ansible-test sanity -v --color --python 3.8
+        run: ansible-test sanity --docker -v --color --python 3.8
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       - name: Run sanity tests on python 3.9
-        run: ansible-test sanity -v --color --python 3.9
+        run: ansible-test sanity --docker -v --color --python 3.9
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
 
