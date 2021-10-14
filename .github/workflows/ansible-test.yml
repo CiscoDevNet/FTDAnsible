@@ -92,6 +92,10 @@ jobs:
         with:
           fail_ci_if_error: false
 
+      # Install units
+      - name: Install units
+        run: pip install units
+
       #   # Run the unit tests
       - name: Run unit test
         # run: ansible-test units -v --color --docker --coverage
