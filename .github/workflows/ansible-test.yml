@@ -71,13 +71,13 @@ jobs:
       - name: Run sanity tests
         # run: ansible-test sanity --docker -v --color
         # run: ansible-test sanity -v --color
-        run: ansible-test sanity -v --color --python 3.6
+        run: ansible-test sanity -v --color
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
         # ansible-test support producing code coverage date
       - name: Generate coverage report
         # run: ansible-test coverage xml -v --requirements --group-by command --group-by version
-        run: ansible-test coverage xml -v --requirements --group-by command --group-by version  --python 3.6
+        run: ansible-test coverage xml -v --requirements --group-by command --group-by version
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       # See the reports at https://codecov.io/gh/GITHUBORG/REPONAME
@@ -86,8 +86,8 @@ jobs:
           fail_ci_if_error: false
 
         # Run the unit tests
-      - name: Run unit test
-        # run: ansible-test units -v --color --docker --coverage
-        run: ansible-test units -v --color --docker --coverage --python 3.6
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+      # - name: Run unit test
+      #   # run: ansible-test units -v --color --docker --coverage
+      #   run: ansible-test units -v --color --docker --coverage --python 3.6
+      #   working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
