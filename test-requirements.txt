@@ -1,9 +1,9 @@
-coverage>=5.2.1
+coverage==4.5.4
 mock
 pycodestyle
 pylint
 pytest
-pytest-cov
+pytest-cov==2.10.1
 pytest-xdist
 pytest-mock
 six
