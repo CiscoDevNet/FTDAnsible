@@ -1,7 +1,10 @@
+coverage
+mock
 pycodestyle
 pylint
 pytest
 pytest-cov
+pytest-xdist
 pytest-mock
 units
 urllib3==1.26.5
