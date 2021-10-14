@@ -1,4 +1,4 @@
-coverage
+coverage>=5.2.1
 mock
 pycodestyle
 pylint
