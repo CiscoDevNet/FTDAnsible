@@ -6,6 +6,7 @@ pytest
 pytest-cov
 pytest-xdist
 pytest-mock
+six
 units
 urllib3==1.26.5
 voluptuous
