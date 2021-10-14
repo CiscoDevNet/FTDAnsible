@@ -93,8 +93,8 @@ jobs:
           fail_ci_if_error: false
 
       #   # Run the unit tests
-      # - name: Run unit test
-      #   # run: ansible-test units -v --color --docker --coverage
-      #   run: ansible-test units -v --color --docker --coverage --python 3.6
-      #   working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+      - name: Run unit test
+        # run: ansible-test units -v --color --docker --coverage
+        run: ansible-test units -v --color --docker --coverage --python 3.6
+        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
