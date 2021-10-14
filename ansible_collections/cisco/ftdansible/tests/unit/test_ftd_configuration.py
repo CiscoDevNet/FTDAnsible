@@ -42,7 +42,7 @@ class TestFtdConfiguration(object):
 
         result = self._run_module_with_fail_json({'operation': operation_name})
         assert result['failed']
-        assert 'Invalid operation name provided: %s' % operation_name == result['msg']
+        assert f"Invalid operation name provided: {operation_name == result['msg']}"
 
     def test_module_should_fail_when_ftd_configuration_error(self, resource_mock):
         operation_name = 'test name'
@@ -51,7 +51,7 @@ class TestFtdConfiguration(object):
 
         result = self._run_module_with_fail_json({'operation': operation_name})
         assert result['failed']
-        assert 'Failed to execute %s operation because of the configuration error: %s' % (operation_name, msg) == \
+        assert f'Failed to execute {operation_name} operation because of the configuration error: {msg}' == \
                result['msg']
 
     def test_module_should_fail_when_ftd_server_error(self, resource_mock):
@@ -62,8 +62,8 @@ class TestFtdConfiguration(object):
 
         result = self._run_module_with_fail_json({'operation': operation_name})
         assert result['failed']
-        assert 'Server returned an error trying to execute %s operation. Status code: %s. ' \
-               'Server response: %s' % (operation_name, code, response) == \
+        assert f'Server returned an error trying to execute {operation_name} operation. Status code: {code}. ' \
+               f'Server response: {response}' == \
                result['msg']
 
     def test_module_should_fail_when_validation_error(self, resource_mock):

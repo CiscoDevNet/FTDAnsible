@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -26,20 +27,20 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: cisco.ftdansible.ftd_configuration
+module: ftd_configuration
 short_description: Manages configuration on Cisco FTD devices over REST API
 description:
   - Manages configuration on Cisco FTD devices including creating, updating, removing configuration objects,
     scheduling and staring jobs, deploying pending changes, etc. All operation are performed over REST API.
-version_added: "2.7"
-author: "Cisco Systems, Inc."
+version_added: "2.7.0"
+author: "Cisco Systems (@cisco)"
 options:
   operation:
     description:
       - The name of the operation to execute. Commonly, the operation starts with 'add', 'edit', 'get', 'upsert'
        or 'delete' verbs, but can have an arbitrary name too.
     required: true
-    type: string
+    type: str
   data:
     description:
       - Key-value pairs that should be sent as body parameters in a REST API call
@@ -55,7 +56,7 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
-    type: string
+    type: str
   filters:
     description:
       - Key-value dict that represents equality filters. Every key is a property name and value is its desired value.
@@ -128,12 +129,12 @@ def main():
         module.exit_json(changed=resource.config_changed, response=resp,
                          ansible_facts=construct_ansible_facts(resp, module.params))
     except FtdInvalidOperationNameError as e:
-        module.fail_json(msg='Invalid operation name provided: %s' % e.operation_name)
+        module.fail_json(msg=f'Invalid operation name provided: {e.operation_name}')
     except FtdConfigurationError as e:
-        module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e.msg))
+        module.fail_json(msg=f'Failed to execute {op_name} operation because of the configuration error: {e.msg}')
     except FtdServerError as e:
-        module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
-                             'Server response: %s' % (op_name, e.code, e.response))
+        module.fail_json(msg=f'Server returned an error trying to execute {op_name} operation. Status code: {e.code}. '
+                             f'Server response: {e.response}')
     except FtdUnexpectedResponse as e:
         module.fail_json(msg=e.args[0])
     except ValidationError as e:

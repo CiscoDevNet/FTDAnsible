@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Copyright (c) 2019 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -26,7 +27,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: cisco.ftdansible.ftd_install
+module: ftd_install
 short_description: Installs FTD pkg image on the firewall
 description:
   - Provisioning module for FTD devices that installs ROMMON image (if needed) and
@@ -34,126 +35,134 @@ description:
   - Can be used with `httpapi` and `local` connection types. The `httpapi` is preferred,
     the `local` connection should be used only when the device cannot be accessed via
     REST API.
-version_added: "2.8"
+version_added: "2.8.0"
 requirements: [ "python >= 3.5", "firepower-kickstart" ]
-author: "Cisco Systems, Inc."
+author: "Cisco Systems (@cisco)"
 options:
   device_hostname:
     description:
       - Hostname of the device as appears in the prompt (e.g., 'firepower-5516').
     required: true
-    type: string
+    type: str
   device_username:
     description:
       - Username to login on the device.
       - Defaulted to 'admin' if not specified.
     required: false
-    type: string
+    type: str
     default: admin
   device_password:
     description:
       - Password to login on the device.
     required: true
-    type: string
+    type: str
   device_sudo_password:
     description:
       - Root password for the device. If not specified, `device_password` is used.
     required: false
-    type: string
+    type: str
   device_new_password:
     description:
       - New device password to set after image installation.
       - If not specified, current password from `device_password` property is reused.
       - Not applicable for ASA5500-X series devices.
     required: false
-    type: string
+    type: str
   device_ip:
     description:
       - Device IP address of management interface.
       - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
       - For 'local' connection type, this parameter is mandatory.
     required: false
-    type: string
+    type: str
   device_gateway:
     description:
       - Device gateway of management interface.
       - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
       - For 'local' connection type, this parameter is mandatory.
     required: false
-    type: string
+    type: str
   device_netmask:
     description:
       - Device netmask of management interface.
       - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
       - For 'local' connection type, this parameter is mandatory.
     required: false
-    type: string
+    type: str
   device_model:
+    choices:
+      - "Cisco ASA5506-X Threat Defense"
+      - "Cisco ASA5508-X Threat Defense"
+      - "Cisco ASA5516-X Threat Defense"
+      - "Cisco Firepower 2110 Threat Defense"
+      - "Cisco Firepower 2120 Threat Defense"
+      - "Cisco Firepower 2130 Threat Defense"
+      - "Cisco Firepower 2140 Threat Defense"
     description:
       - Platform model of the device (e.g., 'Cisco ASA5506-X Threat Defense').
       - If not specified and connection is 'httpapi`, the module tries to fetch the device model via REST API.
       - For 'local' connection type, this parameter is mandatory.
     required: false
-    type: string
+    type: str
   dns_server:
     description:
       - DNS IP address of management interface.
       - If not specified and connection is 'httpapi`, the module tries to fetch the existing value via REST API.
       - For 'local' connection type, this parameter is mandatory.
     required: false
-    type: string
+    type: str
   console_ip:
     description:
       - IP address of a terminal server.
       - Used to set up an SSH connection with device's console port through the terminal server.
     required: true
-    type: string
+    type: str
   console_port:
     description:
       - Device's port on a terminal server.
     required: true
-    type: string
+    type: str
   console_username:
     description:
       - Username to login on a terminal server.
     required: true
-    type: string
+    type: str
   console_password:
     description:
       - Password to login on a terminal server.
     required: true
-    type: string
+    type: str
   rommon_file_location:
     description:
       - Path to the boot (ROMMON) image on TFTP server.
       - Only TFTP is supported.
     required: true
-    type: string
+    type: str
   image_file_location:
     description:
       - Path to the FTD pkg image on the server to be downloaded.
       - FTP, SCP, SFTP, TFTP, or HTTP protocols are usually supported, but may depend on the device model.
     required: true
-    type: string
+    type: str
   image_version:
     description:
       - Version of FTD image to be installed.
       - Helps to compare target and current FTD versions to prevent unnecessary reinstalls.
     required: true
-    type: string
-  force_install:
+    type: str
+  force_reinstall:
     description:
-      - Forces the FTD image to be installed even when the same version is already installed on the firewall.
+      - Forces the FTD image to be reinstalled even when the same version is already installed on the firewall.
       - By default, the module stops execution when the target version is installed in the device.
     required: false
-    type: boolean
+    type: bool
     default: false
   search_domains:
     description:
       - Search domains delimited by comma.
       - Defaulted to 'cisco.com' if not specified.
     required: false
-    type: string
+    type: str
     default: cisco.com
 """
 
@@ -181,7 +190,7 @@ RETURN = """
 msg:
     description: The message saying whether the image was installed or explaining why the installation failed.
     returned: always
-    type: string
+    type: str
 """
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
@@ -254,14 +263,13 @@ def main():
     ftd_platform.install_ftd_image(module.params)
 
     module.exit_json(changed=True,
-                     msg='Successfully installed FTD image %s on the firewall device.' % module.params["image_version"])
+                     msg=f'Successfully installed FTD image {module.params["image_version"]} on the firewall device.')
 
 
 def check_required_params_for_local_connection(module, params):
     missing_params = [k for k, v in iteritems(params) if k in REQUIRED_PARAMS_FOR_LOCAL_CONNECTION and v is None]
     if missing_params:
-        message = "The following parameters are mandatory when the module is used with 'local' connection: %s." %\
-                  ', '.join(sorted(missing_params))
+        message = f"The following parameters are mandatory when the module is used with 'local' connection: {', '.join(sorted(missing_params))}."
         module.fail_json(msg=message)
 
 
@@ -273,13 +281,13 @@ def get_system_info(resource):
 
 def check_that_model_is_supported(module, platform_model):
     if not FtdModel.has_value(platform_model):
-        module.fail_json(msg="Platform model '%s' is not supported by this module." % platform_model)
+        module.fail_json(msg=f"Platform model '{platform_model}' is not supported by this module.")
 
 
 def check_that_update_is_needed(module, system_info):
     target_ftd_version = module.params["image_version"]
     if not module.params["force_reinstall"] and target_ftd_version == system_info['softwareVersion']:
-        module.exit_json(changed=False, msg="FTD already has %s version of software installed." % target_ftd_version)
+        module.exit_json(changed=False, msg=f"FTD already has {target_ftd_version} version of software installed.")
 
 
 def check_management_and_dns_params(resource, params):

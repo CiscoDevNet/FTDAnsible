@@ -426,7 +426,7 @@ class TestUpsertOperationFunctionalTests(object):
         url = '/test'
         obj_id = '456'
         version = 'test_version'
-        url_with_id_templ = '{0}/{1}'.format(url, '{objId}')
+        url_with_id_templ = f'{url}/{obj_id}'
 
         new_value = '0000'
         old_value = '1111'
@@ -509,7 +509,8 @@ class TestUpsertOperationFunctionalTests(object):
     def test_module_should_not_update_object_when_upsert_operation_and_object_exists_with_the_same_fields(
             self, connection_mock):
         url = '/test'
-        url_with_id_templ = '{0}/{1}'.format(url, '{objId}')
+        obj_id = '456'
+        url_with_id_templ = f'{url}/{obj_id}'
 
         params = {
             'operation': 'upsertObject',
@@ -574,8 +575,9 @@ class TestUpsertOperationFunctionalTests(object):
     def test_module_should_not_update_object_when_upsert_operation_and_server_returns_204(
             self, connection_mock):
         url = '/test'
-        url_object = '/test/{objId}'
-        url_with_id_templ = '{0}/{1}'.format(url, '{objId}')
+        obj_id = '456'
+        url_object = f'/test/{obj_id}'
+        url_with_id_templ = f'{url}/{obj_id}'
 
         params = {
             'operation': 'upsertObject',
@@ -677,7 +679,8 @@ class TestUpsertOperationFunctionalTests(object):
     # when create operation raised FtdConfigurationError exception without id and version
     def test_module_should_fail_when_upsert_operation_and_failed_create_without_id_and_version(self, connection_mock):
         url = '/test'
-        url_with_id_templ = '{0}/{1}'.format(url, '{objId}')
+        obj_id = '456'
+        url_with_id_templ = f'{url}/{obj_id}'
 
         params = {
             'operation': 'upsertObject',
@@ -741,7 +744,7 @@ class TestUpsertOperationFunctionalTests(object):
         url = '/test'
         obj_id = '456'
         version = 'test_version'
-        url_with_id_templ = '{0}/{1}'.format(url, '{objId}')
+        url_with_id_templ = f'{url}/{obj_id}'
 
         error_code = 404
 
@@ -877,7 +880,8 @@ class TestUpsertOperationFunctionalTests(object):
 
     def test_module_should_fail_when_upsert_operation_and_few_objects_found_by_filter(self, connection_mock):
         url = '/test'
-        url_with_id_templ = '{0}/{1}'.format(url, '{objId}')
+        obj_id = '456'
+        url_with_id_templ = f'{url}/{obj_id}'
 
         sample_obj = {'name': 'testObject', 'value': '3333', 'type': 'object'}
         params = {

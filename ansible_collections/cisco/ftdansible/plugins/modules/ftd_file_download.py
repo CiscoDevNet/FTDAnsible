@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -27,20 +28,20 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: cisco.ftdansible.ftd_file_download
+module: ftd_file_download
 short_description: Downloads files from Cisco FTD devices over HTTP(S)
 description:
   - Downloads files from Cisco FTD devices including pending changes, disk files, certificates,
     troubleshoot reports, and backups.
-version_added: "2.7"
-author: "Cisco Systems, Inc."
+version_added: "2.7.0"
+author: "Cisco Systems (@cisco)"
 options:
   operation:
     description:
       - The name of the operation to execute.
       - Only operations that return a file can be used in this module.
     required: true
-    type: string
+    type: str
   path_params:
     description:
       - Key-value pairs that should be sent as path parameters in a REST API call.
@@ -67,7 +68,7 @@ RETURN = """
 msg:
     description: The error message describing why the module failed.
     returned: error
-    type: string
+    type: str
 """
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
@@ -93,9 +94,7 @@ def validate_params(connection, op_name, path_params):
                 field_name: validation_report
             })
     except Exception as e:
-        raise ValidationError({
-            field_name: str(e)
-        })
+        raise ValidationError({field_name: str(e)}) from e
 
 
 def main():
@@ -112,11 +111,10 @@ def main():
     op_name = params['operation']
     op_spec = connection.get_operation_spec(op_name)
     if op_spec is None:
-        module.fail_json(msg='Operation with specified name is not found: %s' % op_name)
+        module.fail_json(msg=f'Operation with specified name is not found: {op_name}')
     if not is_download_operation(op_spec):
         module.fail_json(
-            msg='Invalid download operation: %s. The operation must make GET request and return a file.' %
-                op_name)
+            msg=f'Invalid download operation: {op_name}. The operation must make GET request and return a file.')
 
     try:
         path_params = params['path_params']
@@ -126,8 +124,8 @@ def main():
         connection.download_file(op_spec[OperationField.URL], params['destination'], path_params)
         module.exit_json(changed=False)
     except FtdServerError as e:
-        module.fail_json(msg='Download request for %s operation failed. Status code: %s. '
-                             'Server response: %s' % (op_name, e.code, e.response))
+        module.fail_json(msg='Download request for {op_name} operation failed. Status code: {e.code}. '
+                             'Server response: {e.response}')
     except ValidationError as e:
         module.fail_json(msg=e.args[0])
 

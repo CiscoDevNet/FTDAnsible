@@ -337,8 +337,7 @@ class TestBaseConfigurationResource(object):
             }
             resource = BaseConfigurationResource(connection_mock, False)
 
-            assert resource._stringify_name_filter(filters) == expected_result, "Unexpected result for version %s" % (
-                test_api_version)
+            assert resource._stringify_name_filter(filters) == expected_result, f"Unexpected result for version {test_api_version}"
 
 
 class TestIterateOverPageableResource(object):

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -27,19 +28,19 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 ---
-module: cisco.ftdansible.ftd_file_upload
+module: ftd_file_upload
 short_description: Uploads files to Cisco FTD devices over HTTP(S)
 description:
   - Uploads files to Cisco FTD devices including disk files, backups, and upgrades.
-version_added: "2.7"
-author: "Cisco Systems, Inc."
+version_added: "2.7.0"
+author: "Cisco Systems (@cisco)"
 options:
   operation:
     description:
       - The name of the operation to execute.
       - Only operations that upload file can be used in this module.
     required: true
-    type: string
+    type: str
   file_to_upload:
     description:
       - Absolute path to the file that should be uploaded.
@@ -48,7 +49,7 @@ options:
   register_as:
     description:
       - Specifies Ansible fact name that is used to register received response from the FTD device.
-    type: string
+    type: str
 """
 
 EXAMPLES = """
@@ -62,7 +63,7 @@ RETURN = """
 msg:
     description: The error message describing why the module failed.
     returned: error
-    type: string
+    type: str
 """
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.connection import Connection
@@ -92,11 +93,10 @@ def main():
 
     op_spec = connection.get_operation_spec(params['operation'])
     if op_spec is None:
-        module.fail_json(msg='Operation with specified name is not found: %s' % params['operation'])
+        module.fail_json(msg=f"Operation with specified name is not found: {params['operation']}")
     if not is_upload_operation(op_spec):
         module.fail_json(
-            msg='Invalid upload operation: %s. The operation must make POST request and return UploadStatus model.' %
-                params['operation'])
+            msg=f"Invalid upload operation: {params['operation']}. The operation must make POST request and return UploadStatus model.")
 
     try:
         if module.check_mode:
@@ -104,8 +104,8 @@ def main():
         resp = connection.upload_file(params['file_to_upload'], op_spec[OperationField.URL])
         module.exit_json(changed=True, response=resp, ansible_facts=construct_ansible_facts(resp, module.params))
     except FtdServerError as e:
-        module.fail_json(msg='Upload request for %s operation failed. Status code: %s. '
-                             'Server response: %s' % (params['operation'], e.code, e.response))
+        module.fail_json(msg=f"Upload request for {params['operation']} operation failed. Status code: {e.code}. "
+                             "Server response: {e.response}")
 
 
 if __name__ == '__main__':

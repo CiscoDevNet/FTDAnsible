@@ -84,7 +84,7 @@ class CheckModeException(Exception):
 
 class FtdInvalidOperationNameError(Exception):
     def __init__(self, operation_name):
-        super(FtdInvalidOperationNameError, self).__init__(operation_name)
+        super().__init__(operation_name)
         self.operation_name = operation_name
 
 
@@ -288,7 +288,7 @@ class BaseConfigurationResource(object):
                     return False
             return True
 
-        _, query_params, path_params = _get_user_params(params)
+        __, query_params, path_params = _get_user_params(params)
         # copy required params to avoid mutation of passed `params` dict
         url_params = {ParamName.QUERY_PARAMS: dict(query_params), ParamName.PATH_PARAMS: dict(path_params)}
 
@@ -305,8 +305,8 @@ class BaseConfigurationResource(object):
     def _stringify_name_filter(self, filters):
         build_version = self.get_build_version()
         if build_version >= '6.4.0':
-            return "fts~%s" % filters['name']
-        return "name:%s" % filters['name']
+            return f"fts~{filters['name']}"
+        return f"name:{filters['name']}"
 
     def _fetch_system_info(self):
         if not self._system_info:
@@ -365,10 +365,10 @@ class BaseConfigurationResource(object):
         obj = None
         filtered_objs = self.get_objects_by_filter(get_list_operation, params)
 
-        for i, obj in enumerate(filtered_objs):
+        for i, o in enumerate(filtered_objs):
             if i > 0:
                 raise FtdConfigurationError(MULTIPLE_DUPLICATES_FOUND_ERROR)
-            obj = obj
+            obj = o
 
         return obj
 
@@ -397,7 +397,7 @@ class BaseConfigurationResource(object):
                 raise e
 
     def edit_object(self, operation_name, params):
-        existing_object, _, _ = data, _, path_params = _get_user_params(params)
+        existing_object, __, __ = data, __, path_params = _get_user_params(params)
 
         model_name = self.get_operation_spec(operation_name)[OperationField.MODEL_NAME]
         get_operation = self._find_get_operation(model_name)
@@ -447,7 +447,7 @@ class BaseConfigurationResource(object):
         data, query_params, path_params = _get_user_params(params)
 
         def validate(validation_method, field_name, user_params):
-            key = 'Invalid %s provided' % field_name
+            key = f'Invalid {field_name} provided'
             try:
                 is_valid, validation_report = validation_method(operation_name, user_params)
                 if not is_valid:
@@ -562,8 +562,7 @@ def iterate_over_pageable_resource(resource_func, params):
 
         raise FtdUnexpectedResponse(
             "Get List of Objects Response from the server contains more objects than requested. "
-            "There are {0} item(s) in the response while {1} was(ere) requested".format(
-                items_in_response, items_expected)
+            f"There are {items_in_response} item(s) in the response while {items_expected} was(ere) requested"
         )
 
     while True:
