@@ -326,9 +326,6 @@ tar -C /tmp/ansible -xf /tmp/pip/ansible*
 mv /tmp/ansible/ansible* /ansible
 rm -rf /tmp/pip /tmp/ansible
 
-# used when running sanity tests
-ansible-galaxy collection install community.general
-ansible-galaxy collection install community.network
 ```
 
 
@@ -340,12 +337,18 @@ export ANSIBLE_DIR=`pwd`/ansible
 pip install -r requirements.txt
 pip install -r $ANSIBLE_DIR/requirements.txt
 pip install -r test-requirements.txt
+
+# used when running sanity tests
+ansible-galaxy collection install community.general
+ansible-galaxy collection install community.network
+
 ```
 
 5. Add Ansible modules to the Python path:
 
 ```
 cd /ftd-ansible
+export ANSIBLE_DIR=`pwd`/ansible
 export PYTHONPATH=$PYTHONPATH:.:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
 ```
 
