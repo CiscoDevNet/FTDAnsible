@@ -7,7 +7,7 @@ import json
 import unittest
 
 import pytest
-from units.compat import mock
+from ansible_collections.cisco.ftdansible.tests.unit.compat import mock
 
 try:
     from ansible.module_utils.common import FtdServerError, HTTPMethod, ResponseParams, FtdConfigurationError
