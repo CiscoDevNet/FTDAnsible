@@ -85,10 +85,6 @@ jobs:
         run: ansible-test sanity --docker -v --color --python 3.8
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
-      - name: Run sanity tests on python 3.9
-        run: ansible-test sanity --docker -v --color --python 3.9
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-
       # ansible-test support producing code coverage date
       - name: Generate coverage report
         # run: ansible-test coverage xml -v --requirements --group-by command --group-by version
@@ -117,10 +113,5 @@ jobs:
       #   # Run the unit tests on python 3.8
       - name: Run unit test
         run: ansible-test units --docker -v --color --python 3.8
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-
-      #   # Run the unit tests on python 3.9
-      - name: Run unit test
-        run: ansible-test units --docker -v --color --python 3.9
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
