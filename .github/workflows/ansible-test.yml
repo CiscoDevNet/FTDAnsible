@@ -106,21 +106,21 @@ jobs:
 
       #   # Run the unit tests on python 3.6
       - name: Run unit test
-        run: ansible-test units -v --color --docker --coverage --python 3.6
+        run: ansible-test units --docker -v --color --python 3.6
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       #   # Run the unit tests on python 3.7
       - name: Run unit test
-        run: ansible-test units -v --color --docker --coverage --python 3.7
+        run: ansible-test units --docker -v --color --python 3.7
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       #   # Run the unit tests on python 3.8
       - name: Run unit test
-        run: ansible-test units -v --color --docker --coverage --python 3.8
+        run: ansible-test units --docker -v --color --python 3.8
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       #   # Run the unit tests on python 3.9
       - name: Run unit test
-        run: ansible-test units -v --color --docker --coverage --python 3.9
+        run: ansible-test units --docker -v --color --python 3.9
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
