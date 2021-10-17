@@ -30,7 +30,7 @@ jobs:
       matrix:
         ansible:
           - stable-2.9
-          # - stable-2.10
+          - stable-2.10
           # It's important that Sanity is tested against all stable-X.Y branches
           # Testing against `devel` may fail as new tests are added.
           # - stable-2.9 # Only if your collection supports Ansible 2.9
@@ -87,6 +87,10 @@ jobs:
 
       # ansible-test support producing code coverage date
       - name: Generate coverage report
+        # run: ansible-test coverage xml -v --requirements --group-by command --group-by version
+        run: ansible-test coverage -v --requirements --group-by command --group-by version
+        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+
         # run: ansible-test coverage xml -v --requirements --group-by command --group-by version
         run: ansible-test coverage xml -v --requirements --group-by command --group-by version
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
