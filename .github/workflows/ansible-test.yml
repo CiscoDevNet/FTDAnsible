@@ -66,6 +66,10 @@ jobs:
       - name: Install ansible galaxy community network
         run: ansible-galaxy collection install community.network
 
+      # Install ansible galaxy cisco nso network
+      - name: Install ansible galaxy community network
+        run: ansible-galaxy collection install cisco.nso
+
       # run ansible-test sanity inside of Docker.
       # The docker container has all the pinned dependencies that are required
       # and all python versions ansible supports.
