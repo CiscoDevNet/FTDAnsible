@@ -66,8 +66,8 @@ jobs:
       - name: Install ansible galaxy community network
         run: ansible-galaxy collection install community.network
 
-      # Install ansible galaxy cisco nso network
-      - name: Install ansible galaxy community network
+      # Install ansible galaxy cisco nso 
+      - name: Install ansible galaxy community nso
         run: ansible-galaxy collection install cisco.nso
 
       # run ansible-test sanity inside of Docker.
