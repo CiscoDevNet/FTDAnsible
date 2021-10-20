@@ -77,15 +77,15 @@ jobs:
         # run: ansible-test sanity --docker -v --color
         run: ansible-test sanity -v --color
         
-      - name: Run sanity tests on python 2.7
-        run: ansible-test sanity --docker -v --color --python 2.7
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-        continue-on-error: true
+      # - name: Run sanity tests on python 2.7
+      #   run: ansible-test sanity --docker -v --color --python 2.7
+      #   working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+      #   continue-on-error: true
 
-      - name: Run sanity tests on python 3.5
-        run: ansible-test sanity --docker -v --color --python 3.5
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-        continue-on-error: true
+      # - name: Run sanity tests on python 3.5
+      #   run: ansible-test sanity --docker -v --color --python 3.5
+      #   working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+      #   continue-on-error: true
 
       - name: Run sanity tests on python 3.6
         run: ansible-test sanity --docker -v --color --python 3.6
@@ -114,17 +114,17 @@ jobs:
       - name: Install units
         run: pip install units
 
-      # Run the unit tests on python 2.7
-      - name: Run unit test
-        run: ansible-test units --docker -v --color --python 2.7
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-        continue-on-error: true
+      # # Run the unit tests on python 2.7
+      # - name: Run unit test
+      #   run: ansible-test units --docker -v --color --python 2.7
+      #   working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+      #   continue-on-error: true
 
-      # Run the unit tests on python 3.5
-      - name: Run unit test
-        run: ansible-test units --docker -v --color --python 3.5
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-        continue-on-error: true
+      # # Run the unit tests on python 3.5
+      # - name: Run unit test
+      #   run: ansible-test units --docker -v --color --python 3.5
+      #   working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+      #   continue-on-error: true
 
       # Run the unit tests on python 3.6
       - name: Run unit test
