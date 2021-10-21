@@ -128,7 +128,8 @@ def sort_validator_rez(data):
         data['required'] = sorted(data['required'])
     if 'invalid_type' in data:
         data['invalid_type'] = sorted(data['invalid_type'],
-            key=lambda k: '{0}{1}{2}'.format(k['path'], ['expected_type'], ['actually_value']))
+                                      key=lambda k: '{0}{1}{2}'.format(k['path'], ['expected_type'],
+                                                                       ['actually_value']))
 
     return data
 
