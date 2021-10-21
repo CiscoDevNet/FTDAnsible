@@ -77,7 +77,6 @@ jobs:
       - name: Run sanity tests on
         run: ansible-test sanity --docker -v --color
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-        continue-on-error: true
 
       # ansible-test support producing code coverage date
       - name: Generate coverage report
@@ -98,4 +97,3 @@ jobs:
       - name: Run unit test
         run: ansible-test units --docker -v --color
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-        continue-on-error: true
