@@ -112,10 +112,11 @@ def main():
     op_name = params['operation']
     op_spec = connection.get_operation_spec(op_name)
     if op_spec is None:
-        module.fail_json(msg=f'Operation with specified name is not found: {op_name}')
+        module.fail_json(msg='Operation with specified name is not found: %s' % op_name)
     if not is_download_operation(op_spec):
         module.fail_json(
-            msg=f'Invalid download operation: {op_name}. The operation must make GET request and return a file.')
+            msg='Invalid download operation: %s. The operation must make GET request and return a file.' %
+                op_name)
 
     try:
         path_params = params['path_params']
@@ -125,8 +126,8 @@ def main():
         connection.download_file(op_spec[OperationField.URL], params['destination'], path_params)
         module.exit_json(changed=False)
     except FtdServerError as e:
-        module.fail_json(msg='Download request for {op_name} operation failed. Status code: {e.code}. '
-                             'Server response: {e.response}')
+        module.fail_json(msg='Download request for %s operation failed. Status code: %s. '
+                             'Server response: %s' % (op_name, e.code, e.response))
     except ValidationError as e:
         module.fail_json(msg=e.args[0])
 

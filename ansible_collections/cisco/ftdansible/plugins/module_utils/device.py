@@ -38,7 +38,7 @@ class FtdPlatformFactory(object):
         for cls in AbstractFtdPlatform.__subclasses__():
             if cls.supports_ftd_model(model):
                 return cls(module_params)
-        raise ValueError(f"FTD model '{model}' is not supported by this module.")
+        raise ValueError("FTD model '%s' is not supported by this module." % model)
 
 
 class AbstractFtdPlatform(object):

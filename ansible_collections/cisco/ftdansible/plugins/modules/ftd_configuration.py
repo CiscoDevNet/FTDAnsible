@@ -130,12 +130,12 @@ def main():
         module.exit_json(changed=resource.config_changed, response=resp,
                          ansible_facts=construct_ansible_facts(resp, module.params))
     except FtdInvalidOperationNameError as e:
-        module.fail_json(msg=f'Invalid operation name provided: {e.operation_name}')
+        module.fail_json(msg='Invalid operation name provided: %s' % e.operation_name)
     except FtdConfigurationError as e:
-        module.fail_json(msg=f'Failed to execute {op_name} operation because of the configuration error: {e.msg}')
+        module.fail_json(msg='Failed to execute %s operation because of the configuration error: %s' % (op_name, e.msg))
     except FtdServerError as e:
-        module.fail_json(msg=f'Server returned an error trying to execute {op_name} operation. Status code: {e.code}. '
-                             f'Server response: {e.response}')
+        module.fail_json(msg='Server returned an error trying to execute %s operation. Status code: %s. '
+                             'Server response: %s' % (op_name, e.code, e.response))
     except FtdUnexpectedResponse as e:
         module.fail_json(msg=e.args[0])
     except ValidationError as e:

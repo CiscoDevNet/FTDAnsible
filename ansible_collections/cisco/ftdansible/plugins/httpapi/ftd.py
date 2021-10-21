@@ -125,10 +125,10 @@ class HttpApi(HttpApiBase):
         try:
             self.refresh_token = response['refresh_token']
             self.access_token = response['access_token']
-            self.connection._auth = {'Authorization': f'Bearer {self.access_token}'}
+            self.connection._auth = {'Authorization': "Bearer %s" % self.access_token}
         except KeyError as key_error:
             raise ConnectionError(
-                f'Server returned response without token info during connection authentication: {response}') from key_error
+                "Server returned response without token info during connection authentication: %s" % response) from key_error
 
     def _lookup_login_url(self, payload):
         """ Try to find correct login URL and get api token using this URL.
@@ -148,7 +148,7 @@ class HttpApi(HttpApiBase):
                 response = self._send_login_request(payload, url)
 
             except ConnectionError as e:
-                display.vvvv(f'REST:request to {url} failed because of connection error: {e}')
+                display.vvvv("REST:request to %s failed because of connection error: %s" % (url, e))
                 # In the case of ConnectionError caused by HTTPError we should check response code.
                 # Response code 400 returned in case of invalid credentials so we should stop attempts to log in and
                 # inform the user.
@@ -196,7 +196,7 @@ class HttpApi(HttpApiBase):
             # HttpApi connection does not read the error response from HTTPError, so we do it here and wrap it up in
             # ConnectionError, so the actual error message is displayed to the user.
             error_msg = json.loads(to_text(e.read()))
-            raise ConnectionError(f'{error_msg_prefix}: {error_msg}', http_code=e.code) from e
+            raise ConnectionError("%s: %s" % (error_msg_prefix,error_msg), http_code=e.code) from e
         finally:
             self._ignore_http_errors = False
 
@@ -273,7 +273,7 @@ class HttpApi(HttpApiBase):
         return False
 
     def _display(self, http_method, title, msg=''):
-        display.vvvv(f'REST:{http_method}:{self.connection._url}:{title}\n{msg}')
+        display.vvvv("REST:%s:%s:%s\n%s" % (http_method,self.connection._url,title,msg))
 
     @staticmethod
     def _get_response_value(response_data):
@@ -330,7 +330,7 @@ class HttpApi(HttpApiBase):
             return json.loads(response_text) if response_text else {}
         # JSONDecodeError only available on Python 3.5+
         except getattr(json.decoder, 'JSONDecodeError', ValueError) as get_attr_error:
-            raise ConnectionError(f'Invalid JSON response: {response_text}') from get_attr_error
+            raise ConnectionError("Invalid JSON response: %s" % response_text) from get_attr_error
 
     def get_operation_spec(self, operation_name):
         return self.api_spec[SpecProp.OPERATIONS].get(operation_name, None)
@@ -364,7 +364,7 @@ class HttpApi(HttpApiBase):
                 s = response[ResponseParams.STATUS_CODE]
                 r = response[ResponseParams.RESPONSE]
 
-                raise ConnectionError(f'Failed to download API specification. Status code: {s}. Response: {r}')
+                raise ConnectionError("Failed to download API specification. Status code: %s. Response: %s" % (s,r))
         return self._api_spec
 
     @property
