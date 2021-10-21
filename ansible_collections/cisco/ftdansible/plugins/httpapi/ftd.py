@@ -196,7 +196,7 @@ class HttpApi(HttpApiBase):
             # HttpApi connection does not read the error response from HTTPError, so we do it here and wrap it up in
             # ConnectionError, so the actual error message is displayed to the user.
             error_msg = json.loads(to_text(e.read()))
-            raise ConnectionError("%s: %s" % (error_msg_prefix,error_msg), http_code=e.code) from e
+            raise ConnectionError("%s: %s" % (error_msg_prefix, error_msg), http_code=e.code) from e
         finally:
             self._ignore_http_errors = False
 
@@ -273,7 +273,7 @@ class HttpApi(HttpApiBase):
         return False
 
     def _display(self, http_method, title, msg=''):
-        display.vvvv("REST:%s:%s:%s\n%s" % (http_method,self.connection._url,title,msg))
+        display.vvvv("REST:%s:%s:%s\n%s" % (http_method, self.connection._url, title, msg))
 
     @staticmethod
     def _get_response_value(response_data):
@@ -364,7 +364,7 @@ class HttpApi(HttpApiBase):
                 s = response[ResponseParams.STATUS_CODE]
                 r = response[ResponseParams.RESPONSE]
 
-                raise ConnectionError("Failed to download API specification. Status code: %s. Response: %s" % (s,r))
+                raise ConnectionError("Failed to download API specification. Status code: %s. Response: %s" % (s, r))
         return self._api_spec
 
     @property
