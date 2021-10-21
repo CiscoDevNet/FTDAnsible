@@ -29,7 +29,7 @@ jobs:
     strategy:
       matrix:
         ansible:
-          # - stable-2.9
+          - stable-2.9
           - stable-2.10
           # It's important that Sanity is tested against all stable-X.Y branches
           # Testing against `devel` may fail as new tests are added.
@@ -112,29 +112,29 @@ jobs:
         run: pip install units
 
       # Run the unit tests on python 2.7
-      - name: Run unit test
+      - name: Run unit test python 2.7
         run: ansible-test units --docker -v --color --python 2.7
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
         continue-on-error: true
 
       # Run the unit tests on python 3.5
-      - name: Run unit test
+      - name: Run unit test python 3.5
         run: ansible-test units --docker -v --color --python 3.5
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
       #   continue-on-error: true
 
       # Run the unit tests on python 3.6
-      - name: Run unit test
+      - name: Run unit test python 3.6
         run: ansible-test units --docker -v --color --python 3.6
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       # Run the unit tests on python 3.7
-      - name: Run unit test
+      - name: Run unit test python 3.7
         run: ansible-test units --docker -v --color --python 3.7
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       # Run the unit tests on python 3.8
-      - name: Run unit test
+      - name: Run unit test python 3.8
         run: ansible-test units --docker -v --color --python 3.8
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
