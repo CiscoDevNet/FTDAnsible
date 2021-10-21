@@ -29,7 +29,7 @@ jobs:
     strategy:
       matrix:
         ansible:
-          - stable-2.9
+          # - stable-2.9
           - stable-2.10
           # It's important that Sanity is tested against all stable-X.Y branches
           # Testing against `devel` may fail as new tests are added.
