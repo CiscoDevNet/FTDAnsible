@@ -51,14 +51,16 @@ class ResponseParams:
 
 class FtdConfigurationError(Exception):
     def __init__(self, msg, obj=None):
-        super().__init__(msg)
+        super(FtdConfigurationError, self).__init__(msg)
+        # super().__init__(msg)
         self.msg = msg
         self.obj = obj
 
 
 class FtdServerError(Exception):
     def __init__(self, response, code):
-        super().__init__(response)
+        super(FtdServerError, self).__init__(response)
+        # super().__init__(response)
         self.response = response
         self.code = code
 
