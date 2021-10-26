@@ -25,18 +25,18 @@ releases:
     release_date: '2019-05-23'
     changes:
       bugfixes: 
-      - Usage of `register_as` parameter in `ftd_configuration` module.
+      - Usage of ``register_as`` parameter in ``ftd_configuration`` module.
   0.2.1:
     release_date: '2019-06-06'
     changes:
       minor_changes: 
       - Ansible playbooks for configuring DHCP servers and Static Routes.
-      - `firepower-kickstart` dependency used in `ftd_install` module being installed from official PyPI
+      - ``firepower-kickstart`` dependency used in ``ftd_install`` module being installed from official PyPI
   0.2.0:
       release_date: '2019-04-12'
       changes:
         minor_changes: 
-        - Ansible module (`ftd_install`) for installing package images on hardware FTD device.
+        - Ansible module (``ftd_install``) for installing package images on hardware FTD device.
         - Ansible playbooks for provisioning virtual FTDs on AWS, KVM, and VMware platforms.
         - Dynamic lookup of API version in FTD HTTP API plugin.
         - More Ansible playbooks for various FTD configurations (advanced Access Rules, registering Smart License, creating a backup, etc).
@@ -45,12 +45,12 @@ releases:
       release_date: '2019-01-16'
       changes:
         minor_changes: 
-        - Update Ansible module (`ftd_configuration`) to support `upsert` operations for non-creatable objects (e.g., PhysicalInterfaces).
+        - Update Ansible module (``ftd_configuration``) to support ``upsert`` operations for non-creatable objects (e.g., PhysicalInterfaces).
   0.1.0:
       release_date: '2018-11-01'
       changes:
         minor_changes: 
         - Ansible HTTP API plugin that connects to FTD devices over REST API and communicates with them.
-        - Ansible module (`ftd_configuration`) for managing configuration on FTD devices.
-        - Ansible module (`ftd_file_download`) for downloading files from FTD devices.
-        - Ansible module (`ftd_file_upload`) for uploading filed to FTD devices.
+        - Ansible module (``ftd_configuration``) for managing configuration on FTD devices.
+        - Ansible module (``ftd_file_download``) for downloading files from FTD devices.
+        - Ansible module (``ftd_file_upload``) for uploading filed to FTD devices.
