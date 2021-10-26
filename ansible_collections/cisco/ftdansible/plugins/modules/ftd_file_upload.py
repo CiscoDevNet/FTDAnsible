@@ -94,11 +94,10 @@ def main():
 
     op_spec = connection.get_operation_spec(params['operation'])
     if op_spec is None:
-        module.fail_json(msg='Operation with specified name is not found: %s' % params['operation'])
+        module.fail_json(msg="Operation with specified name is not found: %s" % (params['operation']))
     if not is_upload_operation(op_spec):
         module.fail_json(
-            msg='Invalid upload operation: %s. The operation must make POST request and return UploadStatus model.' %
-                params['operation'])
+            msg="Invalid upload operation: %s. The operation must make POST request and return UploadStatus model." % (params['operation']))
 
     try:
         if module.check_mode:
@@ -106,8 +105,8 @@ def main():
         resp = connection.upload_file(params['file_to_upload'], op_spec[OperationField.URL])
         module.exit_json(changed=True, response=resp, ansible_facts=construct_ansible_facts(resp, module.params))
     except FtdServerError as e:
-        module.fail_json(msg='Upload request for %s operation failed. Status code: %s. '
-                             'Server response: %s' % (params['operation'], e.code, e.response))
+        module.fail_json(msg="Upload request for %s operation failed. Status code: %s. "
+                             "Server response: %s" % (params['operation'], e.code, e.response))
 
 
 if __name__ == '__main__':

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -38,7 +36,7 @@ class FtdPlatformFactory(object):
         for cls in AbstractFtdPlatform.__subclasses__():
             if cls.supports_ftd_model(model):
                 return cls(module_params)
-        raise ValueError("FTD model '%s' is not supported by this module." % model)
+        raise ValueError("FTD model '%s' is not supported by this module." % (model))
 
 
 class AbstractFtdPlatform(object):

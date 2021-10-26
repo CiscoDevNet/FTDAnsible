@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -128,8 +129,7 @@ def sort_validator_rez(data):
         data['required'] = sorted(data['required'])
     if 'invalid_type' in data:
         data['invalid_type'] = sorted(data['invalid_type'],
-                                      key=lambda k: '{0}{1}{2}'.format(k['path'], ['expected_type'],
-                                                                       ['actually_value']))
+                                      key=lambda k: "%s%s%s" % (k['path'], ['expected_type'], ['actually_value']))
 
     return data
 

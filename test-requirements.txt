@@ -1,5 +1,4 @@
 coverage==4.5.4
-# future-fstrings
 mock
 pycodestyle
 pylint
@@ -12,3 +11,5 @@ units
 urllib3==1.26.5
 voluptuous
 yamllint
+enum34
+ordereddict

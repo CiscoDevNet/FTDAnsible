@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -399,7 +398,7 @@ class FdmSwaggerValidator:
         if not isinstance(data, dict):
             raise IllegalArgumentException("The data parameter must be a dict")
         if operation_name not in self._operations:
-            raise IllegalArgumentException("{0} operation does not support".format(operation_name))
+            raise IllegalArgumentException("%s operation does not support" % (operation_name))
 
     def validate_query_params(self, operation_name, params):
         """
@@ -502,7 +501,7 @@ class FdmSwaggerValidator:
         if not isinstance(params, dict):
             raise IllegalArgumentException("The params parameter must be a dict")
         if operation not in self._operations:
-            raise IllegalArgumentException("{0} operation does not support".format(operation))
+            raise IllegalArgumentException("%s operation does not support" % (operation))
 
     def _check_url_params(self, status, spec, params):
         for prop_name in spec.keys():
@@ -586,7 +585,7 @@ class FdmSwaggerValidator:
             item_model = model[PropName.ITEMS]
             for i, item_data in enumerate(data):
                 model_type = item_model.get(PropName.TYPE, PropType.OBJECT)
-                self._check_types(status, item_data, model_type, item_model, "{0}[{1}]".format(path, i), '')
+                self._check_types(status, item_data, model_type, item_model, "%s[%s]" % (path, i), '')
 
     @staticmethod
     def _is_correct_simple_types(expected_type, value, allow_null=True):
@@ -637,7 +636,7 @@ class FdmSwaggerValidator:
         separator = ''
         if path and field:
             separator = '.'
-        return "{0}{1}{2}".format(path, separator, field)
+        return "%s%s%s" % (path, separator, field)
 
     @staticmethod
     def _is_object(model):

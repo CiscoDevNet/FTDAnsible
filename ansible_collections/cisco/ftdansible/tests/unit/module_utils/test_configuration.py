@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -337,8 +338,7 @@ class TestBaseConfigurationResource(object):
             }
             resource = BaseConfigurationResource(connection_mock, False)
 
-            assert resource._stringify_name_filter(filters) == expected_result, "Unexpected result for version %s" % (
-                test_api_version)
+            assert resource._stringify_name_filter(filters) == expected_result, "Unexpected result for version %s" % (test_api_version)
 
 
 class TestIterateOverPageableResource(object):

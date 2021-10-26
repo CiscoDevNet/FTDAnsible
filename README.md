@@ -329,7 +329,6 @@ rm -rf /tmp/pip /tmp/ansible
 # used when running sanity tests
 ansible-galaxy collection install community.general
 ansible-galaxy collection install community.network
-ansible-galaxy collection install cisco.nso
 ```
 
 
@@ -345,7 +344,6 @@ pip install -r test-requirements.txt
 # used when running sanity tests
 ansible-galaxy collection install community.general
 ansible-galaxy collection install community.network
-ansible-galaxy collection install cisco.nso
 ```
 
 5. Add Ansible modules to the Python path:

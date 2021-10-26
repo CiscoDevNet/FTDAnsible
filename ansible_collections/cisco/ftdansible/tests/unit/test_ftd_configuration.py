@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -43,7 +45,7 @@ class TestFtdConfiguration(object):
 
         result = self._run_module_with_fail_json({'operation': operation_name})
         assert result['failed']
-        assert 'Invalid operation name provided: %s' % operation_name == result['msg']
+        assert "Invalid operation name provided: %s" % (operation_name == result['msg'])
 
     def test_module_should_fail_when_ftd_configuration_error(self, resource_mock):
         operation_name = 'test name'

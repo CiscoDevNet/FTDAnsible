@@ -95,7 +95,7 @@ def validate_params(connection, op_name, path_params):
                 field_name: validation_report
             })
     except Exception as e:
-        raise ValidationError({field_name: str(e)}) from e
+        raise ValidationError({field_name: str(e)})
 
 
 def main():
@@ -112,11 +112,10 @@ def main():
     op_name = params['operation']
     op_spec = connection.get_operation_spec(op_name)
     if op_spec is None:
-        module.fail_json(msg='Operation with specified name is not found: %s' % op_name)
+        module.fail_json(msg='Operation with specified name is not found: %s' % (op_name))
     if not is_download_operation(op_spec):
         module.fail_json(
-            msg='Invalid download operation: %s. The operation must make GET request and return a file.' %
-                op_name)
+            msg='Invalid download operation: %s. The operation must make GET request and return a file.' % (op_name))
 
     try:
         path_params = params['path_params']

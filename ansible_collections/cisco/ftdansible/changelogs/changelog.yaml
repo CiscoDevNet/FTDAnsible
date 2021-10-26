@@ -1,0 +1,56 @@
+ancestor: null
+releases:
+  0.4.0:
+    release_date: '2021-09-21'
+    changes:
+      major_changes:
+      release_summary: This is the first release of the ``cisco.ftdansible`` collection.
+        The modules in this collection were migrated from Ansible Core with no changes
+        to their functionality.
+    fragments:
+    - 0.4.0.yml      
+  0.3.1:
+    release_date: '2021-09-21'
+    changes:
+      bugfixes: 
+      - Minor bugs to support FTD 6.6
+  0.3.0:
+    release_date: '2019-10-23'
+    changes:
+      minor_changes: 
+      - Update duplicate object lookup process according to API updated in newer versions of FDM
+      - Add handling of No content response for update resource requests
+      - Switch to Ansible 2.8.3
+  0.2.2:
+    release_date: '2019-05-23'
+    changes:
+      bugfixes: 
+      - Usage of `register_as` parameter in `ftd_configuration` module.
+  0.2.1:
+    release_date: '2019-06-06'
+    changes:
+      minor_changes: 
+      - Ansible playbooks for configuring DHCP servers and Static Routes.
+      - `firepower-kickstart` dependency used in `ftd_install` module being installed from official PyPI
+  0.2.0:
+      release_date: '2019-04-12'
+      changes:
+        minor_changes: 
+        - Ansible module (`ftd_install`) for installing package images on hardware FTD device.
+        - Ansible playbooks for provisioning virtual FTDs on AWS, KVM, and VMware platforms.
+        - Dynamic lookup of API version in FTD HTTP API plugin.
+        - More Ansible playbooks for various FTD configurations (advanced Access Rules, registering Smart License, creating a backup, etc).
+        - Automatic [removal of duplicates](https://github.com/CiscoDevNet/FTDAnsible/issues/79) from reference lists for better idempotency.
+  0.1.1:
+      release_date: '2019-01-16'
+      changes:
+        minor_changes: 
+        - Update Ansible module (`ftd_configuration`) to support `upsert` operations for non-creatable objects (e.g., PhysicalInterfaces).
+  0.1.0:
+      release_date: '2018-11-01'
+      changes:
+        minor_changes: 
+        - Ansible HTTP API plugin that connects to FTD devices over REST API and communicates with them.
+        - Ansible module (`ftd_configuration`) for managing configuration on FTD devices.
+        - Ansible module (`ftd_file_download`) for downloading files from FTD devices.
+        - Ansible module (`ftd_file_upload`) for uploading filed to FTD devices.

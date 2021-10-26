@@ -264,14 +264,13 @@ def main():
     ftd_platform.install_ftd_image(module.params)
 
     module.exit_json(changed=True,
-                     msg='Successfully installed FTD image %s on the firewall device.' % module.params["image_version"])
+                     msg='Successfully installed FTD image %s on the firewall device.' % (module.params["image_version"]))
 
 
 def check_required_params_for_local_connection(module, params):
     missing_params = [k for k, v in iteritems(params) if k in REQUIRED_PARAMS_FOR_LOCAL_CONNECTION and v is None]
     if missing_params:
-        message = "The following parameters are mandatory when the module is used with 'local' connection: %s." %\
-                  ', '.join(sorted(missing_params))
+        message = "The following parameters are mandatory when the module is used with 'local' connection: %s." % (', '.join(sorted(missing_params)))
         module.fail_json(msg=message)
 
 
@@ -283,13 +282,13 @@ def get_system_info(resource):
 
 def check_that_model_is_supported(module, platform_model):
     if not FtdModel.has_value(platform_model):
-        module.fail_json(msg="Platform model '%s' is not supported by this module." % platform_model)
+        module.fail_json(msg="Platform model '%s' is not supported by this module." % (platform_model))
 
 
 def check_that_update_is_needed(module, system_info):
     target_ftd_version = module.params["image_version"]
     if not module.params["force_reinstall"] and target_ftd_version == system_info['softwareVersion']:
-        module.exit_json(changed=False, msg="FTD already has %s version of software installed." % target_ftd_version)
+        module.exit_json(changed=False, msg="FTD already has %s version of software installed." % (target_ftd_version))
 
 
 def check_management_and_dns_params(resource, params):

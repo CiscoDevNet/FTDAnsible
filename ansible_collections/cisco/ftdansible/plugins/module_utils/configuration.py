@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -85,7 +84,7 @@ class CheckModeException(Exception):
 
 class FtdInvalidOperationNameError(Exception):
     def __init__(self, operation_name):
-        super().__init__(operation_name)
+        super(FtdInvalidOperationNameError, self).__init__(operation_name)
         self.operation_name = operation_name
 
 
@@ -306,8 +305,8 @@ class BaseConfigurationResource(object):
     def _stringify_name_filter(self, filters):
         build_version = self.get_build_version()
         if build_version >= '6.4.0':
-            return "fts~%s" % filters['name']
-        return "name:%s" % filters['name']
+            return "fts~%s" % (filters['name'])
+        return "name:%s" % (filters['name'])
 
     def _fetch_system_info(self):
         if not self._system_info:
@@ -448,7 +447,7 @@ class BaseConfigurationResource(object):
         data, query_params, path_params = _get_user_params(params)
 
         def validate(validation_method, field_name, user_params):
-            key = 'Invalid %s provided' % field_name
+            key = 'Invalid %s provided' % (field_name)
             try:
                 is_valid, validation_report = validation_method(operation_name, user_params)
                 if not is_valid:
@@ -563,8 +562,7 @@ def iterate_over_pageable_resource(resource_func, params):
 
         raise FtdUnexpectedResponse(
             "Get List of Objects Response from the server contains more objects than requested. "
-            "There are {0} item(s) in the response while {1} was(ere) requested".format(
-                items_in_response, items_expected)
+            "There are %s item(s) in the response while %s was(ere) requested" % (items_in_response, items_expected)
         )
 
     while True:

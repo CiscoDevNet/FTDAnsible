@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 # Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -52,14 +53,13 @@ class ResponseParams:
 class FtdConfigurationError(Exception):
     def __init__(self, msg, obj=None):
         super(FtdConfigurationError, self).__init__(msg)
-        super().__init__(msg)
         self.msg = msg
         self.obj = obj
 
 
 class FtdServerError(Exception):
     def __init__(self, response, code):
-        super().__init__(response)
+        super(FtdServerError, self).__init__(response)
         self.response = response
         self.code = code
 
@@ -77,7 +77,7 @@ def construct_ansible_facts(response, params):
             facts[params['register_as']] = response_body
         elif type(response_body) is dict and response_body.get('name') and response_body.get('type'):
             object_name = re.sub(INVALID_IDENTIFIER_SYMBOLS, '_', response_body['name'].lower())
-            fact_name = '%s_%s' % (response_body['type'], object_name)
+            fact_name = "%s_%s" % (response_body['type'], object_name)
             facts[fact_name] = response_body
     return facts
 

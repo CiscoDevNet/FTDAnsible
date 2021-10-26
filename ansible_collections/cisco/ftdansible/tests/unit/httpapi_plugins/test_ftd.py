@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2018 Cisco and/or its affiliates.
 #
 # This file is part of Ansible
@@ -42,7 +43,7 @@ else:
 
 class FakeFtdHttpApiPlugin(HttpApi):
     def __init__(self, conn):
-        super().__init__(conn)
+        super(FakeFtdHttpApiPlugin, self).__init__(conn)
         self.hostvars = {
             'token_path': '/testLoginUrl',
             'spec_path': '/testSpecUrl'
@@ -204,7 +205,7 @@ class TestFtdHttpApi(unittest.TestCase):
         self.connection_mock.send.return_value = self._connection_response('File content')
 
         open_mock = mock_open()
-        with patch('%s.open' % BUILTINS_NAME, open_mock):
+        with patch('%s.open' % (BUILTINS_NAME), open_mock):
             self.ftd_plugin.download_file('/files/1', '/tmp/test.txt')
 
         open_mock.assert_called_once_with('/tmp/test.txt', 'wb')
@@ -214,15 +215,15 @@ class TestFtdHttpApi(unittest.TestCase):
     def test_download_file_should_extract_filename_from_headers(self):
         filename = 'test_file.txt'
         response = mock.Mock()
-        response.info.return_value = {'Content-Disposition': 'attachment; filename="%s"' % filename}
+        response.info.return_value = {'Content-Disposition': 'attachment; filename="%s"' % (filename)}
         dummy, response_data = self._connection_response('File content')
         self.connection_mock.send.return_value = response, response_data
 
         open_mock = mock_open()
-        with patch('%s.open' % BUILTINS_NAME, open_mock):
+        with patch('%s.open' % (BUILTINS_NAME), open_mock):
             self.ftd_plugin.download_file('/files/1', '/tmp/')
 
-        open_mock.assert_called_once_with('/tmp/%s' % filename, 'wb')
+        open_mock.assert_called_once_with('/tmp/%s' % (filename), 'wb')
         open_mock().write.assert_called_once_with(b'File content')
 
     @patch('os.path.basename', mock.Mock(return_value='test.txt'))
@@ -232,7 +233,7 @@ class TestFtdHttpApi(unittest.TestCase):
         self.connection_mock.send.return_value = self._connection_response({'id': '123'})
 
         open_mock = mock_open()
-        with patch('%s.open' % BUILTINS_NAME, open_mock):
+        with patch('%s.open' % (BUILTINS_NAME), open_mock):
             resp = self.ftd_plugin.upload_file('/tmp/test.txt', '/files')
 
         assert {'id': '123'} == resp
@@ -250,7 +251,7 @@ class TestFtdHttpApi(unittest.TestCase):
         self.connection_mock.send.return_value = self._connection_response('invalidJsonResponse')
 
         open_mock = mock_open()
-        with patch('%s.open' % BUILTINS_NAME, open_mock):
+        with patch('%s.open' % (BUILTINS_NAME), open_mock):
             with self.assertRaises(ConnectionError) as res:
                 self.ftd_plugin.upload_file('/tmp/test.txt', '/files')
 
@@ -325,7 +326,7 @@ class TestFtdHttpApi(unittest.TestCase):
     def test_get_list_of_supported_api_versions_with_failed_http_request(self):
         error_msg = "Invalid Credentials"
         fp = mock.MagicMock()
-        fp.read.return_value = '{{"error-msg": "{0}"}}'.format(error_msg)
+        fp.read.return_value = '"error-msg": "%s"' % (error_msg)
         send_mock = mock.MagicMock(side_effect=HTTPError('url', 400, 'msg', 'hdrs', fp))
         with mock.patch.object(self.ftd_plugin.connection, 'send', send_mock):
             with self.assertRaises(ConnectionError) as res:

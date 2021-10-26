@@ -4,7 +4,7 @@ __metaclass__ = type
 
 import pytest
 from ansible.module_utils import basic
-from ansible_collections.ansible.netcommon.tests.unit.compat.mock import PropertyMock
+from ansible_collections.cisco.ftdansible.tests.unit.compat.mock import PropertyMock
 from ansible_collections.cisco.ftdansible.tests.unit.modules.utils import set_module_args, exit_json, fail_json, AnsibleFailJson, AnsibleExitJson
 
 from ansible_collections.cisco.ftdansible.plugins.modules import ftd_install
