@@ -31,7 +31,7 @@ releases:
     changes:
       minor_changes: 
       - Ansible playbooks for configuring DHCP servers and Static Routes.
-      - `firepower-kickstart dependency used in ``ftd_install`` module being installed from official PyPI
+      - firepower-kickstart dependency used in ``ftd_install`` module being installed from official PyPI
   0.2.0:
       release_date: '2019-04-12'
       changes:
