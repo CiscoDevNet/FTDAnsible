@@ -1,0 +1,10 @@
+plugins/module_utils/device.py import-2.7
+plugins/modules/ftd_install.py import-2.7
+plugins/module_utils/common.py import-2.6
+plugins/module_utils/configuration.py import-2.6
+plugins/module_utils/device.py import-2.6
+plugins/module_utils/fdm_swagger_client.py import-2.6
+plugins/modules/ftd_configuration.py import-2.6
+plugins/modules/ftd_file_download.py import-2.6
+plugins/modules/ftd_file_upload.py import-2.6
+plugins/modules/ftd_install.py import-2.6

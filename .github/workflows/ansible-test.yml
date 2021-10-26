@@ -73,21 +73,9 @@ jobs:
       # run ansible-test sanity inside of Docker.
       # The docker container has all the pinned dependencies that are required
       # and all python versions ansible supports.
-        
-      - name: Run sanity tests on python 3.5
-        run: ansible-test sanity --docker -v --color --python 3.5
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
-      - name: Run sanity tests on python 3.6
-        run: ansible-test sanity --docker -v --color --python 3.6
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-
-      - name: Run sanity tests on python 3.7
-        run: ansible-test sanity --docker -v --color --python 3.7
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-
-      - name: Run sanity tests on python 3.8
-        run: ansible-test sanity --docker -v --color --python 3.8
+      - name: Run sanity tests
+        run: ansible-test sanity --docker -v --color
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       # ansible-test support producing code coverage date
@@ -106,24 +94,10 @@ jobs:
         run: pip install units
 
       # Run the unit tests on python 3.5
-      - name: Run unit test python 3.5
-        run: ansible-test units --docker -v --color --python 3.5
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-        continue-on-error: true
-
-      # Run the unit tests on python 3.6
-      - name: Run unit test python 3.6
-        run: ansible-test units --docker -v --color --python 3.6
+      - name: Run unit tests
+        run: ansible-test units --docker -v --color
         working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
-      # Run the unit tests on python 3.7
-      - name: Run unit test python 3.7
-        run: ansible-test units --docker -v --color --python 3.7
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-
-      # Run the unit tests on python 3.8
-      - name: Run unit test python 3.8
-        run: ansible-test units --docker -v --color --python 3.8
-        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
-
-
+# ansible-galaxy importer test
+# do not set this to run as true
+# just set it to run minus the ansible-test
