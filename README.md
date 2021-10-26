@@ -47,7 +47,7 @@ pip install -r requirements.txt
 2. Install the ansible collection
 
 ```
-ansible-galaxy collection install git+https://github.com/meignw2021/ftd-ansible.git#/cisco/
+ansible-galaxy collection install git+https://github.com/meignw2021/FTDAnsible.git#/cisco/
 
 Starting collection install process
 Installing 'cisco.ftdansible:3.3.3' to '/root/.ansible/collections/ansible_collections/cisco/ftdansible'
@@ -234,6 +234,8 @@ pytest --cov-report term \
 
 5. Run individual unit tests:
 
+Please note that when developing locally you can run the python tests below.  In the case where the github workflow pipepline is running the unit tests are triggered via ansible-test.
+
 ```
 pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_configuration.py
 pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_file_download.py
@@ -251,42 +253,6 @@ pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_upsert_
 pytest ansible_collections/cisco/ftdansible/tests/unit/httpapi_plugins/test_ftd.py
 ```
  
-### Running tests with [TOX](https://tox.readthedocs.io/en/latest/) 
-**NOTE**: To be able to run tests with the specific version of Python using tox you need to have this version of Python installed locally  
-
-Install tox locally:
-```
-pip install tox
-```
-Check the list of currently supported environments:
-```
-tox -l
-```
-**NOTE**: environments with _-integration_ postfix preconfigured for integration tests:
-
-Setup `PYTHONPATH` as described in the previous section
-Run unit tests in virtualenvs using tox:
-```
-tox -e py27,py35,py36,py37
-```
-Run integration tests in virtualenvs using tox:
-```
-export REPORTS_DIR=<path to the folder where JUnit reports will be stored>
-tox -e py27-integration,py35-integration,py36-integration,py37-integration -- samples/network_object.yml -i inventory/sample_hosts
-```
-### Running style check locally
-1. Install [Flake8](http://flake8.pycqa.org/en/latest/) locally:
-    ```
-    pip install flake8
-    ```
-
-2. Run Flake8 check:
-    ```
-    flake8
-    ```
-
-Flake8 configuration is defined in the [tox config file](./tox.ini) file.
-
 ## Integration Tests
 
 Integration tests are written in a form of playbooks and usually started with `ansible-test` command from Ansible repository. As this project is created outside Ansible, it does not have utils to run the tests. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be run as usual playbooks.
@@ -315,6 +281,8 @@ git clone https://github.com/ansible/ansible.git
 
 # check out the stable version
 cd /ftd-ansible/ansible
+
+# if you want to test with 2.9 specify that in the line below
 git checkout stable-2.10
 ```
 
