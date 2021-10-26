@@ -58,17 +58,13 @@ jobs:
       - name: Install test requirements
         run: pwd && ls -al && find . && pip install -r ./test-requirements.txt
 
-      # Install ansible galaxy community general
-      - name: Install ansible galaxy community general
-        run: ansible-galaxy collection install community.general
+      # # Install ansible galaxy community general
+      # - name: Install ansible galaxy community general
+      #   run: ansible-galaxy collection install community.general
 
-      # Install ansible galaxy community network
-      - name: Install ansible galaxy community network
-        run: ansible-galaxy collection install community.network
-
-      # Install ansible galaxy cisco nso 
-      - name: Install ansible galaxy community nso
-        run: ansible-galaxy collection install cisco.nso
+      # # Install ansible galaxy community network
+      # - name: Install ansible galaxy community network
+      #   run: ansible-galaxy collection install community.network
 
       # run ansible-test sanity inside of Docker.
       # The docker container has all the pinned dependencies that are required
