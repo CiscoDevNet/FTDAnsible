@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -26,11 +28,11 @@ def get_link_to_model_page_by_name(model_name, display_name="object"):
     :param display_name: string value to be displayed as hyperlink text. default value is "object"
     :return: string value which represents Markdown hyperlink statement
     """
-    return "[{}]{}".format(display_name, _get_link_path(model_name))
+    return "[%s]%s" % (display_name, _get_link_path(model_name))
 
 
 def _get_link_path(model_name):
-    return "(/models/{}.md)".format(camel_to_snake(model_name))
+    return "(/models/%s.md)" % (camel_to_snake(model_name))
 
 
 def show_type_or_reference(data_param_spec, api_spec=None):
@@ -54,9 +56,9 @@ def show_type_or_reference(data_param_spec, api_spec=None):
         ref_name = data_param_spec[PropName.ITEMS].get(PropName.REF)
         if ref_name:
             model = ref_to_model_name(ref_name)
-            return "[{}]".format(get_link_to_model_page_by_name(model))
+            return "[%s]" % (get_link_to_model_page_by_name(model))
 
-        return "[{}]".format(data_param_spec[PropName.ITEMS][PropName.TYPE])
+        return "[%s]" % (data_param_spec[PropName.ITEMS][PropName.TYPE])
 
     def process_object():
         if PropName.REF not in data_param_spec:

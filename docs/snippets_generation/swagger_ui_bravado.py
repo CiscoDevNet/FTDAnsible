@@ -13,7 +13,7 @@ from docs import utils
 def generate_sample(op_name, op_spec, data_params_are_present, model_name, full_spec, jinja_env):
     template_name = "snippet_bravado.j2"
     operation_arguments = {
-        k: '"{}"'.format(v['type'])
+        k: '"%s"' % (v['type'])
         for k, v in op_spec.get("parameters", {}).get('path', {}).items()
     }
 

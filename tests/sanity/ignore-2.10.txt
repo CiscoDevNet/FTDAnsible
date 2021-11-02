@@ -1,5 +1,10 @@
+docs/generator.py compile-2.7
 plugins/module_utils/device.py import-2.7
 plugins/modules/ftd_install.py import-2.7
+docs/extension.py compile-2.6
+docs/generator.py compile-2.6
+docs/snippets_generation/swagger_ui_bravado.py compile-2.6
+docs/utils.py compile-2.6
 plugins/module_utils/common.py import-2.6
 plugins/module_utils/configuration.py import-2.6
 plugins/module_utils/device.py import-2.6

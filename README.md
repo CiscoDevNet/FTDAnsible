@@ -22,10 +22,11 @@ Sample playbooks are located in the [`samples`](./samples) folder.
 The following commands will generate ansible-docs for each of the collection modules
 
 ```
-ansible-doc -M ansible_collections/cisco/ftdansible/plugins/modules/ ftd_configuration
-ansible-doc -M ansible_collections/cisco/ftdansible/plugins/modules/ ftd_file_download
-ansible-doc -M ansible_collections/cisco/ftdansible/plugins/modules/ ftd_file_upload
-ansible-doc -M ansible_collections/cisco/ftdansible/plugins/modules/ ftd_install
+
+ansible-doc -M ./plugins/modules/ ftd_configuration
+ansible-doc -M ./plugins/modules/ ftd_file_download
+ansible-doc -M ./plugins/modules/ ftd_file_upload
+ansible-doc -M ./plugins/modules/ ftd_install
 ```
 
 
@@ -227,8 +228,7 @@ export PYTHONPATH=$PYTHONPATH:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
 ```
 cd /ftd-ansible
 pytest --cov-report term \
-  --cov=ansible_collections/cisco/ftdansible/plugins \
-  ansible_collections/cisco/ftdansible/tests
+  --cov=./plugins ./tests
 ```
 
 
@@ -237,20 +237,20 @@ pytest --cov-report term \
 Please note that when developing locally you can run the python tests below.  In the case where the github workflow pipepline is running the unit tests are triggered via ansible-test.
 
 ```
-pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_configuration.py
-pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_file_download.py
-pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_file_upload.py
-pytest ansible_collections/cisco/ftdansible/tests/unit/test_ftd_install.py
+pytest ./tests/unit/test_ftd_configuration.py
+pytest ./tests/unit/test_ftd_file_download.py
+pytest ./tests/unit/test_ftd_file_upload.py
+pytest ./tests/unit/test_ftd_install.py
 
-pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_common.py
-pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_configuration.py
-pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_device.py
-pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_fdm_swagger_parser.py
-pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_fdm_swagger_validator.py
-pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_fdm_swagger_with_real_data.py
-pytest ansible_collections/cisco/ftdansible/tests/unit/module_utils/test_upsert_functionality.py
+pytest ./tests/unit/module_utils/test_common.py
+pytest ./tests/unit/module_utils/test_configuration.py
+pytest ./tests/unit/module_utils/test_device.py
+pytest ./tests/unit/module_utils/test_fdm_swagger_parser.py
+pytest ./tests/unit/module_utils/test_fdm_swagger_validator.py
+pytest ./tests/unit/module_utils/test_fdm_swagger_with_real_data.py
+pytest ./tests/unit/module_utils/test_upsert_functionality.py
 
-pytest ansible_collections/cisco/ftdansible/tests/unit/httpapi_plugins/test_ftd.py
+pytest ./tests/unit/httpapi_plugins/test_ftd.py
 ```
  
 ## Integration Tests
@@ -280,9 +280,8 @@ rm -rf ./ansible
 git clone https://github.com/ansible/ansible.git
 
 # check out the stable version
+# if you want to test with 2.9 specify that in the version below
 cd /ftd-ansible/ansible
-
-# if you want to test with 2.9 specify that in the line below
 git checkout stable-2.10
 ```
 
@@ -326,8 +325,8 @@ export PYTHONPATH=$PYTHONPATH:.:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
 ```
 cd /ftd-ansible
 pytest --cov-report term \
-  --cov=ansible_collections/cisco/ftdansible/plugins \
-  ansible_collections/cisco/ftdansible/tests
+  --cov=./plugins \
+  ./tests
 ```
 
 7. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) shows an example of inventory file.

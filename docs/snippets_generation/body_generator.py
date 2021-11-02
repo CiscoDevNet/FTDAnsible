@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+
 def _get_default_value(value, *args):
     if value.get("default"):
         return value["default"]
