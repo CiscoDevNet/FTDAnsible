@@ -1,5 +1,7 @@
 # FTD Ansible Modules
 
+IMPORTANT: When cloning this repository place it under ansible_collections/cisco (requirement to run some of the Ansible tools like ansible-test).
+
 An Ansible Collection that automates configuration management 
 and execution of operational tasks on Cisco Firepower Threat Defense (FTD) devices using FTD REST API.  
 
@@ -90,7 +92,36 @@ ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule
 ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_policy.yml
 ```
 
-### Running playbooks locally with Docker
+## Tests
+
+The project contains unit tests for Ansible modules, HTTP API plugin and util files. They can be found in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests in this project also rely on them and including Ansible test module to the Python path is required.
+
+### Running Sanity Tests In Docker
+
+```
+rm -rf tests/output 
+ansible-test sanity --docker -v --color --python 3.6
+ansible-test sanity --docker -v --color --python 3.7
+```
+
+### Running Units Tests In Docker
+
+```
+rm -rf tests/output 
+ansible-test units --docker -v --python 3.6
+ansible-test units --docker -v --python 3.7
+```
+
+To run a single test, specify the filename at the end of command:
+```
+rm -rf tests/output 
+ansible-test units --docker -v tests/unit/httpapi_plugins/test_ftd.py --color --python 3.6
+ansible-test units --docker -v tests/unit/module_utils/test_upsert_functionality.py --color --python 3.6
+```
+
+### Integration Tests
+
+Integration tests are written in a form of playbooks. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be run as usual playbooks.
 
 1. Build the default Python 3.6, Ansible 2.10 Docker image:
     ```
@@ -112,150 +143,19 @@ ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_poli
     docker run -v $(pwd)/samples:/ftd-ansible/playbooks \
     -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
     ftd-ansible playbooks/ftd_configuration/network_object.yml
+
+    docker run -v $(pwd)/samples:/ftd-ansible/playbooks \
+    -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
+    ftd-ansible playbooks/ftd_configuration/access_policy.yml    
+
     ```
 
-### Running playbooks locally 
-
-1. Create a virtual environment and activate it:
-```
-python -m venv venv
-. venv/bin/activate
-```
-
-2. Install dependencies:
-`pip install -r requirements.txt`
-
-3. Update Python path to include the project's directory:
-```
-export PYTHONPATH=.:$PYTHONPATH
-```
-
-4. Install the collection
-
-5. Run the playbook:
-``` 
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_applications.yml
-```
-
-## Unit Tests
-
-The project contains unit tests for Ansible modules, HTTP API plugin and util files. They can be found in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests in this project also rely on them and including Ansible test module to the Python path is required.
-
-### Running unit tests in Docker
-
-1. Build the Docker image: 
-```
-docker build -t ftd-ansible-test -f Dockerfile.tests . 
-```
-**NOTE**: Dockerfile uses Ansible version from `requirements.txt`. You can change it by replacing the version in `requirements.txt` and rebuilding the Docker image.
-
-**NOTE**: There is a separate Dockerfile for Ansible 2.9.  Use this command to build that.
-```
-docker build -t ftd-ansible-test -f Dockerfile.ansible29.tests . 
-```
-
-2. Run unit tests with:
-```
-docker run ftd-ansible-test
-```
-
-To run a single test, specify the filename at the end of command:
-```
-docker run ftd-ansible-test test/unit/test_ftd_configuration.py
-docker run ftd-ansible-test test/unit/test_ftd_file_download.py
-docker run ftd-ansible-test test/unit/test_ftd_file_upload.py
-docker run ftd-ansible-test test/unit/test_ftd_install.py
-
-docker run ftd-ansible-test test/unit/module_utils/test_common.py
-docker run ftd-ansible-test test/unit/module_utils/test_configuration.py
-docker run ftd-ansible-test test/unit/module_utils/test_device.py
-docker run ftd-ansible-test test/unit/module_utils/test_fdm_swagger_parser.py
-docker run ftd-ansible-test test/unit/module_utils/test_fdm_swagger_validator.py
-docker run ftd-ansible-test test/unit/module_utils/test_fdm_swagger_with_real_data.py
-docker run ftd-ansible-test test/unit/module_utils/test_upsert_functionality.py
-
-docker run ftd-ansible-test test/unit/httpapi_plugins/test_ftd.py
+5. To run all of the integration tests
 
 ```
-
-**NOTE**: You need to rebuild the Docker image on every change of the code.
-
-#### Troubleshooting
-
-```
-import file mismatch:
-imported module 'test.unit.module_utils.test_common' has this __file__ attribute: ...
-which is not the same as the test file we want to collect:
-  /ftd-ansible/test/unit/module_utils/test_common.py
-HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
+source ./all_sample_tests.sh
 ```
 
-In case you experience the following error while running the tests in Docker, remove compiled bytecode files files with 
-`find . -name "*.pyc" -type f -delete` command and try again.
-
-### Running unit tests locally
-
-1. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
-```
-git clone https://github.com/ansible/ansible.git
-```
-
-**NOTE**: The next steps can be hosted in docker container
-```
-docker run -it -v `pwd`:/ftd-ansible python:3.6 bash
-cd /ftd-ansible
-pip download $(grep ^ansible ./requirements.txt) --no-cache-dir --no-deps -d /tmp/pip 
-mkdir /tmp/ansible
-tar -C /tmp/ansible -xf /tmp/pip/ansible*
-mv /tmp/ansible/ansible* /ansible
-rm -rf /tmp/pip /tmp/ansible
-```
-
-2. Install Ansible and test dependencies:
-```
-export ANSIBLE_DIR=`pwd`/ansible
-pip install -r requirements.txt
-pip install -r $ANSIBLE_DIR/requirements.txt
-pip install -r test-requirements.txt
-```
-
-3. Add Ansible modules to the Python path:
-```
-export PYTHONPATH=$PYTHONPATH:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
-```
-
-4. Run unit tests:
-```
-cd /ftd-ansible
-pytest --cov-report term \
-  --cov=./plugins ./tests
-```
-
-
-5. Run individual unit tests:
-
-Please note that when developing locally you can run the python tests below.  In the case where the github workflow pipepline is running the unit tests are triggered via ansible-test.
-
-```
-pytest ./tests/unit/test_ftd_configuration.py
-pytest ./tests/unit/test_ftd_file_download.py
-pytest ./tests/unit/test_ftd_file_upload.py
-pytest ./tests/unit/test_ftd_install.py
-
-pytest ./tests/unit/module_utils/test_common.py
-pytest ./tests/unit/module_utils/test_configuration.py
-pytest ./tests/unit/module_utils/test_device.py
-pytest ./tests/unit/module_utils/test_fdm_swagger_parser.py
-pytest ./tests/unit/module_utils/test_fdm_swagger_validator.py
-pytest ./tests/unit/module_utils/test_fdm_swagger_with_real_data.py
-pytest ./tests/unit/module_utils/test_upsert_functionality.py
-
-pytest ./tests/unit/httpapi_plugins/test_ftd.py
-```
- 
-## Integration Tests
-
-Integration tests are written in a form of playbooks and usually started with `ansible-test` command from Ansible repository. As this project is created outside Ansible, it does not have utils to run the tests. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be run as usual playbooks.
 
 ## Developing Locally With Docker
 
@@ -292,12 +192,7 @@ mkdir /tmp/ansible
 tar -C /tmp/ansible -xf /tmp/pip/ansible*
 mv /tmp/ansible/ansible* /ansible
 rm -rf /tmp/pip /tmp/ansible
-
-# used when running sanity tests
-ansible-galaxy collection install community.general
-ansible-galaxy collection install community.network
 ```
-
 
 4. Install requirements and test dependencies:
 
@@ -322,47 +217,14 @@ export PYTHONPATH=$PYTHONPATH:.:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
 ```
 
 6. Run unit tests:
-```
-cd /ftd-ansible
-pytest --cov-report term \
-  --cov=./plugins \
-  ./tests
-```
+
+See Secion Above
 
 7. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) shows an example of inventory file.
 
 8. Run an integration playbook.
 
-```    
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_policy.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_applications.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_intrusion_and_file_policies.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_logging.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_networks.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_urls.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_users.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/anyconnect_package_file.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/backup.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/data_dns_settings.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/deployment.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/dhcp_container.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/download_upload.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/ha_join.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/identity_policy.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/initial_provisioning.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/nat.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/network_object_with_host_vars.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/network_object.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/physical_interface.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/port_object.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/ra_vpn_license.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/ra_vpn.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/security_intelligence_url_policy.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/smart_license.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/ssl_policy.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/static_route_entry.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/sub_interface.yml
-```
+See section Above 
 
 ## Debugging
 
@@ -375,4 +237,17 @@ ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/sub_interfa
 
 3. The log file will contain additional information (REST, etc.)
 
+
+## Troubleshooting
+
+```
+import file mismatch:
+imported module 'test.unit.module_utils.test_common' has this __file__ attribute: ...
+which is not the same as the test file we want to collect:
+  /ftd-ansible/test/unit/module_utils/test_common.py
+HINT: remove __pycache__ / .pyc files and/or use a unique basename for your test file modules
+```
+
+In case you experience the following error while running the tests in Docker, remove compiled bytecode files files with 
+`find . -name "*.pyc" -type f -delete` command and try again.
 
