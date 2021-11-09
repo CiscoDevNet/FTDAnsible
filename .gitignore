@@ -59,3 +59,4 @@ venv.bak/
 # Doc distribution folder
 docs/dist
 workspace/
+tests/output

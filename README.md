@@ -153,7 +153,7 @@ Integration tests are written in a form of playbooks. Thus, integration tests ar
 5. To run all of the integration tests
 
 ```
-source ./all_sample_tests.sh
+bash ./all_sample_tests.sh
 ```
 
 

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 samples=(
 playbooks/ftd_configuration/access_policy.yml
 playbooks/ftd_configuration/access_rule_with_applications.yml
@@ -31,7 +29,7 @@ playbooks/ftd_configuration/static_route_entry.yml
 playbooks/ftd_configuration/sub_interface.yml    
 )
 
-for f in "$samples[@]"
+for f in "${samples[@]}"
 do
  echo "Running playbook for $f"
  docker run -v $(pwd)/samples:/ftd-ansible/playbooks \
