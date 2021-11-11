@@ -249,7 +249,7 @@ class ModuleDocGenerator(BaseDocGenerator):
             module_name = os.path.splitext(module_filename)[0]
             module = importlib.import_module(module_name)
 
-            module_docs = yaml.load(module.DOCUMENTATION)
+            module_docs = yaml.load(module.DOCUMENTATION, Loader=yaml.FullLoader)
             module_spec = ModuleSpec(
                 name=module_name,
                 short_description=self._doc_to_text(module_docs.get('short_description')),
