@@ -249,7 +249,7 @@ class ModuleDocGenerator(BaseDocGenerator):
             module_name = os.path.splitext(module_filename)[0]
             module = importlib.import_module(module_name)
 
-            module_docs = yaml.load(module.DOCUMENTATION)
+            module_docs = yaml.load(module.DOCUMENTATION, Loader=yaml.FullLoader)
             module_spec = ModuleSpec(
                 name=module_name,
                 short_description=self._doc_to_text(module_docs.get('short_description')),
@@ -270,7 +270,7 @@ class ModuleDocGenerator(BaseDocGenerator):
 
     @staticmethod
     def _get_module_params(module):
-        docs = yaml.load(module.DOCUMENTATION)
+        docs = yaml.load(module.DOCUMENTATION, Loader=yaml.FullLoader)
         return {k: {
             'description': ModuleDocGenerator._doc_to_text(v.get('description')),
             'required': v.get('required', False),
@@ -279,7 +279,7 @@ class ModuleDocGenerator(BaseDocGenerator):
 
     @staticmethod
     def _get_module_return_values(module):
-        return_params = yaml.load(module.RETURN)
+        return_params = yaml.load(module.RETURN, Loader=yaml.FullLoader)
         return {k: {
             'description': ModuleDocGenerator._doc_to_text(v.get('description')),
             'returned': v.get('returned', ''),

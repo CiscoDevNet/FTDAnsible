@@ -208,7 +208,7 @@ def _generate_ansible_docs(args, api_spec, template_ctx):
 
 
 def _generate_ftd_api_docs(args, api_spec, template_ctx, errors_codes):
-    if template_ctx['ftd_version'] == '7.0.0':
+    if template_ctx['ftd_version'] == '7.0.0' or template_ctx['ftd_version'] == '7.1.0':
         # SSLGroupType has incorrect representation in 7.0.0 API spec, as it doesn't contain possible enum values.
         # We need to add these enum values here to generate docs and represent possible values.
         api_spec['models']['SSLGroupType']['enum'] = ["GROUP_14", "GROUP_15", "GROUP_19", "GROUP_20", "GROUP_21"]
