@@ -1,0 +1,28 @@
+ARG PYTHON_VERSION=3.6
+FROM python:${PYTHON_VERSION}
+ARG FTD_ANSIBLE_VERSION=v0.4.1236
+ARG FTD_ANSIBLE_FOLDER=/root/ansible_collections/cisco/ftdansible
+
+RUN apt-get update && \
+    apt-get install -yq sshpass && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN mkdir -p ${FTD_ANSIBLE_FOLDER}/ 
+
+RUN ls -al /tmp
+
+COPY requirements.txt ${FTD_ANSIBLE_FOLDER}/
+RUN pip install --no-cache-dir -r /${FTD_ANSIBLE_FOLDER}/requirements.txt
+
+COPY test-requirements.txt ${FTD_ANSIBLE_FOLDER}/
+COPY galaxy.yml ${FTD_ANSIBLE_FOLDER}/
+COPY meta ${FTD_ANSIBLE_FOLDER}/meta
+COPY plugins ${FTD_ANSIBLE_FOLDER}/plugins
+COPY samples ${FTD_ANSIBLE_FOLDER}/samples
+COPY tests ${FTD_ANSIBLE_FOLDER}/tests
+
+
+ENV PYTHONPATH="$PYTHONPATH:/${FTD_ANSIBLE_FOLDER}/"
+WORKDIR /${FTD_ANSIBLE_FOLDER}
+# ENTRYPOINT ["ansible-playbook"]
+CMD ["bash"]
