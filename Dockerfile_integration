@@ -24,5 +24,5 @@ COPY tests ${FTD_ANSIBLE_FOLDER}/tests
 
 ENV PYTHONPATH="$PYTHONPATH:/${FTD_ANSIBLE_FOLDER}/"
 WORKDIR /${FTD_ANSIBLE_FOLDER}
-# ENTRYPOINT ["ansible-playbook"]
-CMD ["bash"]
+ENTRYPOINT ["ansible-playbook"]
+# CMD ["bash"]

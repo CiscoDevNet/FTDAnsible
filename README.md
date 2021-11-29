@@ -24,7 +24,6 @@ Sample playbooks are located in the [`samples`](./samples) folder.
 The following commands will generate ansible-docs for each of the collection modules
 
 ```
-
 ansible-doc -M ./plugins/modules/ ftd_configuration
 ansible-doc -M ./plugins/modules/ ftd_file_download
 ansible-doc -M ./plugins/modules/ ftd_file_upload
@@ -50,7 +49,7 @@ pip install -r requirements.txt
 2. Install the ansible collection
 
 ```
-ansible-galaxy collection install git+https://github.com/meignw2021/FTDAnsible.git#/cisco/
+ansible-galaxy collection install git+https://github.com/meignw2021/FTDAnsible.git,ftd-7
 
 Starting collection install process
 Installing 'cisco.ftdansible:3.3.3' to '/root/.ansible/collections/ansible_collections/cisco/ftdansible'
@@ -63,13 +62,13 @@ cisco.ftdansible (3.3.3) was installed successfully
 ansible-galaxy collection list
 ```
 
-3. Validate your ansible.cfg file contains a path to ansible collections:
+4. Validate your ansible.cfg file contains a path to ansible collections:
 
 ```
 cat ansible.cfg
 ```
 
-4. Reference the collection from your playbook
+5. Reference the collection from your playbook
 
 **NOTE**: The tasks in the playbook reference the collection
 
@@ -88,8 +87,7 @@ cat ansible.cfg
 Run the sample playbook.
 
 ```
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_rule_with_applications.yml
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/access_policy.yml
+ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/download_upload.yml
 ```
 
 ## Tests
@@ -119,19 +117,20 @@ ansible-test units --docker -v tests/unit/httpapi_plugins/test_ftd.py --color --
 ansible-test units --docker -v tests/unit/module_utils/test_upsert_functionality.py --color --python 3.6
 ```
 
-### Integration Tests
+### Integration Tests via Docker Container
 
-Integration tests are written in a form of playbooks. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be run as usual playbooks.
+Integration tests are written in a form of playbooks. Thus, integration tests are written as sample playbooks with assertion and can be found in the `samples` folder. They start with `test_` prefix and can be run as usual playbooks.  The integration tests use a local Docker container which copies the necessary code and folders from your local path into a docker container for testing.
 
 1. Build the default Python 3.6, Ansible 2.10 Docker image:
     ```
-    docker build -t ftd-ansible .
+    docker build -t ftd-ansible:local -f Dockerfile_integration.
     ```
     **NOTE**: The default image is based on the release v0.4.0 of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
 
 2. You can build the custom Docker image:
     ```
-    docker build -t ftd-ansible \
+    docker build -t ftd-ansible:local \
+    -f Dockerfile_integration \
     --build-arg PYTHON_VERSION=<2.7|3.5|3.6|3.7> \
     --build-arg FTD_ANSIBLE_VERSION=<tag name | branch name> .
     ```
@@ -139,21 +138,23 @@ Integration tests are written in a form of playbooks. Thus, integration tests ar
 3. Create an inventory file that tells Ansible what devices to run the tasks on. [`sample_hosts`](./inventory/sample_hosts) shows an example of inventory file.
 
 4. Run the playbook in Docker mounting playbook folder to `/ftd-ansible/playbooks` and inventory file to `/etc/ansible/hosts`:
-    ```
-    docker run -v $(pwd)/samples:/ftd-ansible/playbooks \
-    -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
-    ftd-ansible playbooks/ftd_configuration/network_object.yml
 
-    docker run -v $(pwd)/samples:/ftd-ansible/playbooks \
-    -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
-    ftd-ansible playbooks/ftd_configuration/access_policy.yml    
+    ```
+    docker run -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
+    -v $(pwd)/ansible.cfg:/root/ansible_collections/cisco/ftdansible/ansible.cfg \
+    ftd-ansible:local /root/ansible_collections/cisco/ftdansible/samples/ftd_configuration/download_upload.yml
+
+    docker run -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
+    -v $(pwd)/ansible.cfg:/root/ansible_collections/cisco/ftdansible/ansible.cfg \
+    ftd-ansible:local /root/ansible_collections/cisco/ftdansible/samples/ftd_install/install_ftd_on_2110.yml
+
 
     ```
 
 5. To run all of the integration tests
 
 ```
-bash ./all_sample_tests.sh
+bash ./all_sample_tests.txt
 ```
 
 
