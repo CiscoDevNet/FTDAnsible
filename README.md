@@ -52,9 +52,9 @@ pip install -r requirements.txt
 ansible-galaxy collection install git+https://github.com/meignw2021/FTDAnsible.git,ftd-7
 
 Starting collection install process
-Installing 'cisco.ftdansible:3.3.3' to '/root/.ansible/collections/ansible_collections/cisco/ftdansible'
+Installing 'cisco.ftdansible:0.4.0' to '/root/.ansible/collections/ansible_collections/cisco/ftdansible'
 Created collection for cisco.ftdansible at /root/.ansible/collections/ansible_collections/cisco/ftdansible
-cisco.ftdansible (3.3.3) was installed successfully
+cisco.ftdansible (0.4.0) was installed successfully
 ```
 
 3. List installed collections.
@@ -87,14 +87,16 @@ cat ansible.cfg
 Run the sample playbook.
 
 ```
-ansible-playbook -i inventory/sample_hosts samples/ftd_configuration/download_upload.yml
+ansible-playbook -i /etc/ansible/hosts playbooks/ftd_configuration/download_upload.yml
 ```
 
 ## Tests
 
 The project contains unit tests for Ansible modules, HTTP API plugin and util files. They can be found in `test/unit` directory. Ansible has many utils for mocking and running tests, so unit tests in this project also rely on them and including Ansible test module to the Python path is required.
 
-### Running Sanity Tests In Docker
+### Running Sanity Tests Using Docker
+
+When running sanity tests locally this project needs to be located at a path under ansible_collections/cisco (for example ansible_collections/cisco/ftdansible)
 
 ```
 rm -rf tests/output 
@@ -102,7 +104,10 @@ ansible-test sanity --docker -v --color --python 3.6
 ansible-test sanity --docker -v --color --python 3.7
 ```
 
-### Running Units Tests In Docker
+### Running Units Tests Using Docker
+
+When running sanity tests locally this project needs to be located at a path under ansible_collections/cisco (for example ansible_collections/cisco/ftdansible)
+
 
 ```
 rm -rf tests/output 
@@ -123,13 +128,13 @@ Integration tests are written in a form of playbooks. Thus, integration tests ar
 
 1. Build the default Python 3.6, Ansible 2.10 Docker image:
     ```
-    docker build -t ftd-ansible:local -f Dockerfile_integration.
+    docker build -t ftd-ansible:integration -f Dockerfile_integration .
     ```
     **NOTE**: The default image is based on the release v0.4.0 of the [`FTD-Ansible`](https://github.com/CiscoDevNet/FTDAnsible) and Python 3.6. 
 
 2. You can build the custom Docker image:
     ```
-    docker build -t ftd-ansible:local \
+    docker build -t ftd-ansible:integration \
     -f Dockerfile_integration \
     --build-arg PYTHON_VERSION=<2.7|3.5|3.6|3.7> \
     --build-arg FTD_ANSIBLE_VERSION=<tag name | branch name> .
@@ -142,12 +147,11 @@ Integration tests are written in a form of playbooks. Thus, integration tests ar
     ```
     docker run -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
     -v $(pwd)/ansible.cfg:/root/ansible_collections/cisco/ftdansible/ansible.cfg \
-    ftd-ansible:local /root/ansible_collections/cisco/ftdansible/samples/ftd_configuration/download_upload.yml
+    ftd-ansible:integration /root/ansible_collections/cisco/ftdansible/samples/ftd_configuration/download_upload.yml
 
     docker run -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
     -v $(pwd)/ansible.cfg:/root/ansible_collections/cisco/ftdansible/ansible.cfg \
-    ftd-ansible:local /root/ansible_collections/cisco/ftdansible/samples/ftd_install/install_ftd_on_2110.yml
-
+    ftd-ansible:integration /root/ansible_collections/cisco/ftdansible/samples/ftd_install/install_ftd_on_2110.yml
 
     ```
 
