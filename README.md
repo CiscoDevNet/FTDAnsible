@@ -96,7 +96,7 @@ The project contains unit tests for Ansible modules, HTTP API plugin and util fi
 
 ### Running Sanity Tests Using Docker
 
-When running sanity tests locally this project needs to be located at a path under ansible_collections/cisco (for example ansible_collections/cisco/ftdansible)
+When running sanity tests locally this project needs to be located at a path under ansible_collections/cisco (for example ansible_collections/cisco/ftdansible).  
 
 ```
 rm -rf tests/output 
@@ -167,31 +167,31 @@ bash ./all_sample_tests.txt
 1. Setup docker environment
 
 ```
-docker run -it -v $(pwd):/ftd-ansible \
+docker run -it -v $(pwd):/root/ansible_collections/ansible/ftdansible \
 python:3.6 bash
 ```
 
 2. Change to working directory
 
 ```
-cd /ftd-ansible
+cd /root/ansible_collections/ansible/ftdansible
 apt update && apt upgrade -y
 ```
 
 3. Clone [Ansible repository](https://github.com/ansible/ansible) from GitHub;
 ```
-cd /ftd-ansible
+cd /root/ansible_collections/ansible/ftdansible
 rm -rf ./ansible
 git clone https://github.com/ansible/ansible.git
 
 # check out the stable version
 # if you want to test with 2.9 specify that in the version below
-cd /ftd-ansible/ansible
+cd /root/ansible_collections/ansible/ftdansible/ansible
 git checkout stable-2.10
 ```
 
 ```
-cd /ftd-ansible
+cd /root/ansible_collections/ansible/ftdansible
 pip download $(grep ^ansible ./requirements.txt) --no-cache-dir --no-deps -d /tmp/pip 
 mkdir /tmp/ansible
 tar -C /tmp/ansible -xf /tmp/pip/ansible*
@@ -202,7 +202,7 @@ rm -rf /tmp/pip /tmp/ansible
 4. Install requirements and test dependencies:
 
 ```
-cd /ftd-ansible
+cd /root/ansible_collections/ansible/ftdansible
 export ANSIBLE_DIR=`pwd`/ansible
 pip install -r requirements.txt
 pip install -r $ANSIBLE_DIR/requirements.txt
@@ -216,7 +216,7 @@ ansible-galaxy collection install community.network
 5. Add Ansible modules to the Python path:
 
 ```
-cd /ftd-ansible
+cd /root/ansible_collections/ansible/ftdansible
 export ANSIBLE_DIR=`pwd`/ansible
 export PYTHONPATH=$PYTHONPATH:.:$ANSIBLE_DIR/lib:$ANSIBLE_DIR/test
 ```
