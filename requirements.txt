@@ -1,6 +1,6 @@
 ansible==2.8.8
 urllib3==1.24.2
-lxml==4.2.6
+lxml==4.6.5
 # kick library depends on unicon that is available for specific Pythons: https://pypi.org/project/unicon/#files
 firepower-kickstart ; python_version >= '3.4' and python_version <= '3.7' and platform_python_implementation == 'CPython'
 ordereddict ; python_version == '2.6'
