@@ -21,6 +21,7 @@ releases:
       - Update duplicate object lookup process according to API updated in newer versions of FDM
       - Add handling of No content response for update resource requests
       - Switch to Ansible 2.8.3
+      
   0.2.2:
     release_date: '2019-05-23'
     changes:
