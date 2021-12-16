@@ -15,7 +15,6 @@ The collection contains four Ansible modules:
 * [`ftd_configuration.py`](./ansible_collections/plugins/modules/ftd_configuration.py) - manages device configuration via REST API. The module configures virtual and physical devices by sending HTTPS calls formatted according to the REST API specification;
 * [`ftd_file_download.py`](./ansible_collections/plugins/modules//ftd_file_download.py) - downloads files from FTD devices via HTTPS protocol;
 * [`ftd_file_upload.py`](./ansible_collections/plugins/modules//ftd_file_upload.py) - uploads files to FTD devices via HTTPS protocol;
-* [`ftd_install.py`](./ansible_collections/plugins/modules//ftd_install.py) - installs FTD images on hardware devices. The module performs a complete reimage of the Firepower system by downloading the new software image and installing it. 
 
 Sample playbooks are located in the [`samples`](./samples) folder.
 
@@ -27,7 +26,6 @@ The following commands will generate ansible-docs for each of the collection mod
 ansible-doc -M ./plugins/modules/ ftd_configuration
 ansible-doc -M ./plugins/modules/ ftd_file_download
 ansible-doc -M ./plugins/modules/ ftd_file_upload
-ansible-doc -M ./plugins/modules/ ftd_install
 ```
 
 
@@ -148,10 +146,6 @@ Integration tests are written in a form of playbooks. Thus, integration tests ar
     docker run -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
     -v $(pwd)/ansible.cfg:/root/ansible_collections/cisco/ftdansible/ansible.cfg \
     ftd-ansible:integration /root/ansible_collections/cisco/ftdansible/samples/ftd_configuration/download_upload.yml
-
-    docker run -v $(pwd)/inventory/sample_hosts:/etc/ansible/hosts \
-    -v $(pwd)/ansible.cfg:/root/ansible_collections/cisco/ftdansible/ansible.cfg \
-    ftd-ansible:integration /root/ansible_collections/cisco/ftdansible/samples/ftd_install/install_ftd_on_2110.yml
 
     ```
 

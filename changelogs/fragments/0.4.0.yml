@@ -1,3 +1,4 @@
 major_changes:
   - Migrated modules to Ansible collection `cisco.ftdansible`
   - fixed linting issues and other issues raised by ansible-test
+  - Deprecate Ansible module (``ftd_install``) for installing package images on hardware FTD device.
