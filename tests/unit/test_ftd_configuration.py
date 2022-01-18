@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
 
 import pytest
 from ansible.module_utils import basic
@@ -14,7 +16,6 @@ except ImportError:
     from ansible_collections.cisco.ftdansible.plugins.module_utils.configuration import FtdInvalidOperationNameError, CheckModeException
     from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import ValidationError
     from ansible_collections.cisco.ftdansible.plugins.modules import ftd_configuration
-
 
 
 class TestFtdConfiguration(object):
@@ -109,5 +110,6 @@ class TestFtdConfiguration(object):
         set_module_args(module_args)
         with pytest.raises(AnsibleFailJson) as exc:
             self.module.main()
+
         result = exc.value.args[0]
         return result
