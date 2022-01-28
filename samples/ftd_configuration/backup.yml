@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Schedule an immediate backup
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: addBackupImmediate
         data:
           scheduleType: IMMEDIATE
@@ -12,7 +12,7 @@
         register_as: backup
 
     - name: Wait till the backup job is completed
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getJobHistoryBackup
         path_params:
           objId: "{{ backup.jobHistoryUuid }}"
@@ -27,7 +27,7 @@
       when: backup_job.status != 'SUCCESS'
 
     - name: Download the backup file
-      ftd_file_download:
+      cisco.ftdansible.ftd_file_download:
         operation: getdownloadbackup
         path_params:
           objId: "{{ backup_job.archiveName }}"
@@ -44,7 +44,7 @@
         mode: put
 
     - name: Upload the backup file back to FTD
-      ftd_file_upload:
+      cisco.ftdansible.ftd_file_upload:
         operation: postuploadbackup
         file_to_upload: /tmp/ftd.backup
         register_as: uploadedBackupFile

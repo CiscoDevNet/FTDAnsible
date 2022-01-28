@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Setup the first destination network for static route
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: PrivateNetwork4
@@ -11,7 +11,7 @@
           dnsResolution: IPV4_AND_IPV6
           type: networkobject
     - name: Setup the second destination network for static route
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: PrivateNetwork5
@@ -21,7 +21,7 @@
           type: networkobject
 
     - name: Setup gateway network for static route
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: Router2
@@ -31,14 +31,14 @@
           type: networkobject
 
     - name: Get GigabitEthernet0/0 Interface
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getPhysicalInterfaceList
         filters:
           hardwareName: GigabitEthernet0/0
         register_as: interface0
 
     - name: Setup static route
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertStaticRouteEntry
         data:
           iface: "{{ interface0[0] }}"

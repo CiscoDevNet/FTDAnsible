@@ -1,0 +1,198 @@
+# README FIRST
+# 1. replace "NAMESPACE" and "COLLECTION_NAME" with the correct name in the env section (e.g. with 'community' and 'mycollection')
+# 2. If you don't have unit tests remove that section
+# 3. If your collection depends on other collections ensure they are installed, see "Install collection dependencies"
+# If you need help please ask in #ansible-devel on Freenode IRC
+
+name: CI
+on:
+  # Run CI against all pushes (direct commits, also merged PRs), Pull Requests
+  push:
+  pull_request:
+  # Run CI once per day (at 06:00 UTC)
+  # This ensures that even if there haven't been commits that we are still testing against latest version of ansible-test for each ansible-base version
+  schedule:
+    - cron: '0 6 * * *'
+env:
+  NAMESPACE: cisco
+  COLLECTION_NAME: ftdansible 
+
+jobs:
+
+###
+# Check Build
+#
+
+
+  build:
+    name: Build collection
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ansible: [2.9.17, 2.10.5]
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+    
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install ansible-base (v${{ matrix.ansible }})
+      run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+    - name: Build a collection tarball
+      run: pwd && ls -al && find . && ansible-galaxy collection build --output-path "${GITHUB_WORKSPACE}/.cache/collection-tarballs"
+
+    - name: Store migrated collection artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: collection
+        path: .cache/collection-tarballs
+
+###
+# Check Importer
+#
+
+  importer:
+    name: Galaxy-importer check
+    needs:
+    - build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install ansible-base (v2.11.0)
+      run: pip install https://github.com/ansible/ansible/archive/v2.11.0.tar.gz --disable-pip-version-check
+
+    - name: Download migrated collection artifacts
+      uses: actions/download-artifact@v1
+      with:
+        name: collection
+        path: .cache/collection-tarballs
+
+    - name: Install the collection tarball
+      run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
+
+    - name: Install galaxy-importer
+      run: pip install galaxy-importer
+
+    - name: Create galaxy-importer directory
+      run: sudo mkdir -p /etc/galaxy-importer
+
+    - name: Create galaxy-importer.cfg
+      run: sudo cp /home/runner/.ansible/collections/ansible_collections/cisco/ftdansible/.github/workflows/galaxy-importer.cfg /etc/galaxy-importer/galaxy-importer.cfg
+
+    - name: Run galaxy-importer check
+      run: python -m galaxy_importer.main .cache/collection-tarballs/cisco-*.tar.gz | tee .cache/collection-tarballs/log.txt && sudo cp ./importer_result.json .cache/collection-tarballs/importer_result.json
+
+    - name: Check warnings and errors
+      run: if grep -E 'ERROR' .cache/collection-tarballs/log.txt; then exit 1; else exit 0; fi
+
+    - name: Store galaxy_importer check log file
+      uses: actions/upload-artifact@v1
+      with:
+        name: galaxy-importer-log
+        path: .cache/collection-tarballs/importer_result.json
+
+###
+# Sanity tests (REQUIRED)
+#
+# https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
+
+  sanity:
+    name: Sanity (Ⓐ${{ matrix.ansible }})
+    strategy:
+      matrix:
+        ansible:
+          - stable-2.9
+          - stable-2.10
+          # It's important that Sanity is tested against all stable-X.Y branches
+          # Testing against `devel` may fail as new tests are added.
+          # - stable-2.9 # Only if your collection supports Ansible 2.9
+    runs-on: ubuntu-latest
+    steps:
+
+      # ansible-test requires the collection to be in a directory in the form
+      # .../ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}/
+
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          # it is just required to run that once as "ansible-test sanity" in the docker image
+          # will run on all python versions it supports.
+          python-version: 3.8
+
+      # Install the head of the given branch (devel, stable-2.10)
+      - name: Install ansible-base (${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      - name: Run sanity tests
+        run: ansible-test sanity --docker -v --color
+        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+
+      # ansible-test support producing code coverage date
+      - name: Generate coverage report
+        # run: ansible-test coverage xml -v --requirements --group-by command --group-by version
+        run: ansible-test coverage xml -v --requirements --group-by command --group-by version
+        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+
+      # See the reports at https://codecov.io/gh/GITHUBORG/REPONAME
+      - uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: false
+
+###
+# Unit tests (REQUIRED)
+#
+# https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
+
+  units:
+    name: Unit (Ⓐ${{ matrix.ansible }})
+    strategy:
+      matrix:
+        ansible:
+          - stable-2.9
+          - stable-2.10
+          # It's important that Sanity is tested against all stable-X.Y branches
+          # Testing against `devel` may fail as new tests are added.
+          # - stable-2.9 # Only if your collection supports Ansible 2.9
+    runs-on: ubuntu-latest
+    steps:
+
+      # ansible-test requires the collection to be in a directory in the form
+      # .../ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}/
+
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          # it is just required to run that once as "ansible-test sanity" in the docker image
+          # will run on all python versions it supports.
+          python-version: 3.8
+
+      # Install the head of the given branch (devel, stable-2.10)
+      - name: Install ansible-base (${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      # Install units
+      # - name: Install units
+      #   run: pip install units
+
+      # Run the unit tests on python 3.5
+      - name: Run unit tests
+        run: ansible-test units --docker -v --color
+        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}

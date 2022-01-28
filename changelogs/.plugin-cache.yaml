@@ -1,0 +1,40 @@
+objects: {}
+plugins:
+  become: {}
+  cache: {}
+  callback: {}
+  cliconf: {}
+  connection: {}
+  httpapi:
+    ftd:
+      description: HttpApi Plugin for Cisco ASA Firepower device
+      name: ftd
+      version_added: 2.7.0
+  inventory: {}
+  lookup: {}
+  module:
+    ftd_configuration:
+      description: Manages configuration on Cisco FTD devices over REST API
+      name: ftd_configuration
+      namespace: ''
+      version_added: 2.7.0
+    ftd_file_download:
+      description: Downloads files from Cisco FTD devices over HTTP(S)
+      name: ftd_file_download
+      namespace: ''
+      version_added: 2.7.0
+    ftd_file_upload:
+      description: Uploads files to Cisco FTD devices over HTTP(S)
+      name: ftd_file_upload
+      namespace: ''
+      version_added: 2.7.0
+    ftd_install:
+      description: Installs FTD pkg image on the firewall
+      name: ftd_install
+      namespace: ''
+      version_added: 2.8.0
+  netconf: {}
+  shell: {}
+  strategy: {}
+  vars: {}
+version: 0.3.0

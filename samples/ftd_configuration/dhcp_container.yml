@@ -4,11 +4,11 @@
     iface_name: "inside"
   tasks:
     - name: Get List of DHCP servers
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: "getDHCPServerContainerList"
         register_as: dhcp_containers_list
     - name: Remove default DHCP server for inside interface
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: "editDHCPServerContainer"
         data:
             name: "{{ dhcp_containers_list.0.name }}"

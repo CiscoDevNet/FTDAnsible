@@ -3,7 +3,7 @@
 
   tasks:
     - name: Single-object response must be registered as 'TYPE_NAME' when 'register_as' is absent
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: test-network
@@ -16,7 +16,7 @@
           - networkobject_test_network.name == "test-network"
 
     - name: Single-object response must be registered as 'register_as' value when 'register_as' is present
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: test-network
@@ -30,13 +30,13 @@
           - test_network.name  == "test-network"
 
     - name: List-object response must be ignored when 'register_as' is absent
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getNetworkObjectList
         query_params:
           filter: "name:test-network"
 
     - name: List-object response must be registered as 'register_as' value when 'register_as' is present
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getNetworkObjectList
         query_params:
           filter: "name:test-network"
@@ -48,7 +48,7 @@
          - networks.0.name == "test-network"
 
     - name: Delete created Network Object
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: deleteNetworkObject
         path_params:
           objId: "{{ test_network.id }}"

@@ -13,11 +13,11 @@ COPY test-requirements.txt /test-requirements.txt
 
 RUN pip install \
     --no-cache-dir \
-    -c /ansible/test/runner/requirements/constraints.txt \
+    -c /ansible/ansible_collections/community/general/tests/utils/constraints.txt \
     -r /test-requirements.txt \
     -r /requirements.txt
 
-ENV PYTHONPATH="$PYTHONPATH:/ansible/lib:/ansible/test"
+ENV PYTHONPATH="$PYTHONPATH:/ftd-ansible/ansible/lib:/ftd-ansible/ansible/test"
 
 COPY . /ftd-ansible
 
@@ -26,3 +26,4 @@ WORKDIR /ftd-ansible
 ENTRYPOINT ["pytest"]
 
 CMD ["test"]
+

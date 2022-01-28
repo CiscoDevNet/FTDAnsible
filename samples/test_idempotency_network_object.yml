@@ -3,7 +3,7 @@
 
   tasks:
     - name: addNetworkObject should create a new network
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addNetworkObject'
         data:
           name: "ansible-test-network"
@@ -21,7 +21,7 @@
 
 
     - name: addNetworkObject should NOT create a network when the network with the same name exists
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addNetworkObject'
         data:
           name: "ansible-test-network"
@@ -39,7 +39,7 @@
 
 
     - name: addNetworkObject should raise an error when the network with the same name but different params exists
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addNetworkObject'
         data:
           name: "ansible-test-network"
@@ -57,7 +57,7 @@
 
 
     - name: upsertNetworkObject should update the existing network when it exists
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'upsertNetworkObject'
         data:
           name: "ansible-test-network"
@@ -76,7 +76,7 @@
 
 
     - name: editNetworkObject should update the existing network
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'editNetworkObject'
         path_params:
           objId: "{{ upsertedTestObj['id'] }}"
@@ -98,7 +98,7 @@
 
 
     - name: editNetworkObject should NOT update the network if there are no changes
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'editNetworkObject'
         path_params:
           objId: "{{ updatedTestObj['id'] }}"
@@ -118,7 +118,7 @@
 
 
     - name: deleteNetworkObject should delete the network
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'deleteNetworkObject'
         path_params:
           objId: "{{ testObj['id'] }}"
@@ -129,7 +129,7 @@
 
 
     - name: deleteNetworkObject should silently pass when the referenced network does not exist
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'deleteNetworkObject'
         path_params:
           objId: "{{ testObj['id'] }}"

@@ -3,14 +3,14 @@
   connection: httpapi
   tasks:
     - name: Get failover interface
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getPhysicalInterfaceList
         filters:
           hardwareName: GigabitEthernet0/6
         register_as: failover_interfaces
 
     - name: Update HA configuration
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertHAConfiguration
         data:
           name: HA
@@ -38,12 +38,12 @@
           statefulFailoverInterface: "{{ failover_interfaces[0] }}"
 
     - name: Start HA join
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: addJoinHAStatus
         register_as: ha_job
 
     - name: Poll HA status until the job is finished
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getJoinHAStatus
         path_params:
           objId: '{{ ha_job.id }}'

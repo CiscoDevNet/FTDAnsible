@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: create auxilary network object
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addNetworkObject'
         data:
           name: "ansible-test-network"
@@ -14,7 +14,7 @@
 
 
     - name: addAccessRule should create a new access rule
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addAccessRule'
         data:
           name: "ansible-test-accessrule"
@@ -34,7 +34,7 @@
 
 
     - name: addAccessRule should NOT create an access rule when the rule with the same name exists
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addAccessRule'
         data:
           name: "ansible-test-accessrule"
@@ -55,7 +55,7 @@
 
 
     - name: addAccessRule should raise an error when the rule with the same name but different params exists
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'addAccessRule'
         data:
           name: "ansible-test-accessrule"
@@ -76,7 +76,7 @@
 
 
     - name: editAccessRule should update the existing rule
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'editAccessRule'
         data:
           ruleId: "{{ testRuleObj['ruleId'] }}"
@@ -100,7 +100,7 @@
 
 
     - name: editAccessRule should NOT update the rule if there are no changes
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'editAccessRule'
         data:
           ruleId: "{{ updatedRuleObj['ruleId'] }}"
@@ -123,7 +123,7 @@
 
 
     - name: upsertAccessRule should update the existing rule when it exists
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'upsertAccessRule'
         data:
           name: "ansible-test-accessrule"
@@ -144,7 +144,7 @@
 
 
     - name: deleteAccessRule should delete the rule
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'deleteAccessRule'
         path_params:
           objId: "{{ testRuleObj['id'] }}"
@@ -155,7 +155,7 @@
           - result.changed == true
 
     - name: delete auxilary network object
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: 'deleteNetworkObject'
         path_params:
           objId: "{{ testNetworkObj['id'] }}"

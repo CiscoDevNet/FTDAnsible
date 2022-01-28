@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Setup Outside Interface with static IP
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertPhysicalInterface
         data:
           name: outside
@@ -27,7 +27,7 @@
           hardwareName: GigabitEthernet0/0
 
     - name: Setup Inside Interface with static IP
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertPhysicalInterface
         data:
           name: inside
@@ -52,7 +52,7 @@
           hardwareName: GigabitEthernet0/1
 
     - name: Setup Interface with DHCP
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertPhysicalInterface
         data:
           name: outside02

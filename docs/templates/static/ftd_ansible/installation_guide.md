@@ -4,14 +4,14 @@ Welcome to the FTD Ansible Installation Guide!
 
 ## Dependency Requirements
 
-FTD modules can be run from any machine with Ansible 2.7 or higher installed.
+FTD modules can be run from any machine with Ansible 2.9 or higher installed.
 
 Ansible itself requires Python 2 (version 2.7) or Python 3 (versions 3.5 and higher) installed. 
 
 ## Installing Ansible with FTD modules
 
 ### Using Ansible
-Ansible (version 2.7 and higher) automatically [contains](https://docs.ansible.com/ansible/latest/modules/list_of_all_modules.html?highlight=ftd) 
+Ansible (version 2.9 and higher) automatically [contains](https://docs.ansible.com/ansible/latest/modules/list_of_all_modules.html?highlight=ftd) 
 FTD modules inside, and in most cases installing the latest Ansible should be sufficient to run the playbooks. We periodically update FTD modules
 and they get released in Ansible according to the [roadmap](https://docs.ansible.com/ansible/latest/roadmap/index.html).
 

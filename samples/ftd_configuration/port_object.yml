@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Create a TCP port for PostgreSQL
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertTCPPortObject
         data:
           name: PostgreSQL port
@@ -10,7 +10,7 @@
           type: tcpportobject
 
     - name: Create a TCP port for MySQL
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertTCPPortObject
         data:
           name: MySQL port
@@ -18,7 +18,7 @@
           type: tcpportobject
 
     - name: Create a database port group
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertPortObjectGroup
         data:
           name: Database ports
@@ -28,7 +28,7 @@
           type: portobjectgroup
 
     - name: Create a UDP port for NTP protocol
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertUDPPortObject
         data:
           name: NTP port
@@ -36,7 +36,7 @@
           type: udpportobject
 
     - name: Create an object for ICMP Time Exceeded type
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertICMPv4PortObject
         data:
           name: ICMP Time Exceeded

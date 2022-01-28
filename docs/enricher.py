@@ -1,7 +1,11 @@
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 from copy import deepcopy
 
-from module_utils.configuration import OperationChecker, QueryParams, OperationNamePrefix
-from module_utils.fdm_swagger_client import SpecProp, OperationField, OperationParams, PropName, PathParams
+from ansible_collections.cisco.ftdansible.plugins.module_utils.configuration import OperationChecker, QueryParams, OperationNamePrefix
+from ansible_collections.cisco.ftdansible.plugins.module_utils.fdm_swagger_client import SpecProp, OperationField, OperationParams, PropName, PathParams
 
 
 class ApiSpecAutocomplete(object):

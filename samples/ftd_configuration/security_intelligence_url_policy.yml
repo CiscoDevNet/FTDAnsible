@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Create a Cisco URL Object
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertURLObject
         data:
           name: Cisco
@@ -11,12 +11,12 @@
           type: urlobject
 
     - name: Find a Security Intelligence URL Policy
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getSecurityIntelligenceURLPolicyList
         register_as: policies
 
     - name: Add Cisco as whitelisted URL to SecurityIntelligenceURLPolicy
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertSecurityIntelligenceURLPolicy
         data:
           name: NGFW-Default-Security-Intelligence-URL-Policy

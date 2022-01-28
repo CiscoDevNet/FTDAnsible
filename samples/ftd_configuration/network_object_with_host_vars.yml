@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Create a NetworkObject based on host variables
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: addNetworkObject
         data:
           name: HostSpecificNetwork
@@ -13,7 +13,7 @@
           dnsResolution: IPV4_AND_IPV6
 
     - name: Delete the created NetworkObject
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: deleteNetworkObject
         path_params:
           objId: '{{ networkobject_hostspecificnetwork.id }}'

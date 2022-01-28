@@ -5,7 +5,7 @@
   - variables.yaml
   tasks:
   - name: Check AnyConnect package file presence
-    ftd_configuration:
+    cisco.ftdansible.ftd_configuration:
       operation: getAnyConnectPackageFileList
       register_as: all_anyconnect_package_files
 
@@ -27,14 +27,14 @@
     run_once: true
 
   - name: Upload AnyConnect package from local filesystem to device
-    ftd_file_upload:
+    cisco.ftdansible.ftd_file_upload:
       operation: postuploaddiskfile
       file_to_upload: '{{ anyconnect_linux_image_file_path }}'
       register_as: anyconnect_linux_image_file_on_device
     when: 'all_anyconnect_package_files | length == 0'
 
   - name: Add AnyConnect package file
-    ftd_configuration:
+    cisco.ftdansible.ftd_configuration:
       operation: addAnyConnectPackageFile
       data:
         name: anyconnect_package_file

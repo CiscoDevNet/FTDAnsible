@@ -4,7 +4,7 @@
   connection: httpapi
   tasks:
     - name: Get provisioning info
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getInitialProvision
         path_params:
           objId: default
@@ -23,7 +23,7 @@
         ansible_password_temp: wiaS=KwZA7iY72iRb+4ZsmQoLApUpRh9UE=vNnEK>LmYTD*eo<UW+ah+ZjbCm
 
     - name: Complete initial provisioning
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: addInitialProvision
         data:
           acceptEULA: True
@@ -35,14 +35,14 @@
         ansible_command_timeout: 30
 
     - name: Get user id
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getUserList
         filters:
           name: admin
         register_as: admin_user
 
     - name: Set password back
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: editUser
         data:
           name: "{{ ansible_user }}"

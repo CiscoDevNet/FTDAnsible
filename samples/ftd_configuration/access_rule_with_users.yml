@@ -2,7 +2,7 @@
   connection: httpapi
   tasks:
     - name: Create an FQDN network for Cisco DevNet
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertNetworkObject
         data:
           name: CiscoDevNetNetwork
@@ -12,14 +12,14 @@
           dnsResolution: IPV4_AND_IPV6
 
     - name: Find a guest realm
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: getSpecialRealmList
         filters:
           name: Special-Identities-Realm
         register_as: special_realms
 
     - name: Create an access rule blocking access for guests to Cisco website
-      ftd_configuration:
+      cisco.ftdansible.ftd_configuration:
         operation: upsertAccessRule
         data:
           name: Block traffic for guests to Cisco

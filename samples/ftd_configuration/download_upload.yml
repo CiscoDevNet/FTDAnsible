@@ -1,15 +1,19 @@
 - hosts: all
   connection: httpapi
   tasks:
+    - name: Creating a file with content
+      copy:
+        dest: "/tmp/test_up.json"
+        content: '{"a":"b"}'
     - name: Upload disk file
-      ftd_file_upload:
+      cisco.ftdansible.ftd_file_upload:
         operation: postuploaddiskfile
-        file_to_upload: /tmp/test1.txt
+        file_to_upload: "/tmp/test_up.json"
         register_as: diskFile
 
     - name: Download disk file
-      ftd_file_download:
+      cisco.ftdansible.ftd_file_download:
         operation: getdownloaddiskfile
         path_params:
           objId: '{{ diskFile.id }}'
-        destination: /tmp/test2.txt
+        destination: "/tmp/test_down.json"
