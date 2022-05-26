@@ -270,7 +270,7 @@ class ModuleDocGenerator(BaseDocGenerator):
 
     @staticmethod
     def _get_module_params(module):
-        docs = yaml.load(module.DOCUMENTATION)
+        docs = yaml.full_load(module.DOCUMENTATION)
         return {k: {
             'description': ModuleDocGenerator._doc_to_text(v.get('description')),
             'required': v.get('required', False),
@@ -279,7 +279,7 @@ class ModuleDocGenerator(BaseDocGenerator):
 
     @staticmethod
     def _get_module_return_values(module):
-        return_params = yaml.load(module.RETURN)
+        return_params = yaml.full_load(module.RETURN)
         return {k: {
             'description': ModuleDocGenerator._doc_to_text(v.get('description')),
             'returned': v.get('returned', ''),
