@@ -54,9 +54,12 @@ def _generated_sample_by_model_spec(data_params, full_spec):
     }
 
     for key, value in data_params.items():
-        value_type = value.get("type", "object")
-        result[key] = processing_map.get(value_type, _get_default_value)(value, full_spec)
-
+        try:
+            value_type = value.get("type", "object")
+            result[key] = processing_map.get(value_type, _get_default_value)(value, full_spec)
+        except AttributeError:
+            # ignore errors for string values
+            pass
     return result
 
 
