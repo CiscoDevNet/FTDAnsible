@@ -1,13 +1,16 @@
 def _get_default_value(value, *args):
-    if value.get("default"):
-        return value["default"]
-    elif value["type"] == "integer":
-        return 0
-    elif value["type"] == "boolean":
-        return True
-    else:
-        return value["type"]
-
+    try:
+        if value.get("default"):
+            return value["default"]
+        elif value["type"] == "integer":
+            return 0
+        elif value["type"] == "boolean":
+            return True
+        else:
+            return value["type"]
+    except AttributeError:
+        if type(value) == str:
+            return ''
 
 def _get_model_name_from_reference(ref):
     return ref.replace("#/definitions/", "")
@@ -54,9 +57,14 @@ def _generated_sample_by_model_spec(data_params, full_spec):
     }
 
     for key, value in data_params.items():
-        value_type = value.get("type", "object")
-        result[key] = processing_map.get(value_type, _get_default_value)(value, full_spec)
+        try:
+            value_type = value.get("type", "object")
+        except AttributeError:
+            # for values that don't support get method they will be handled in _get_default_values
+            # this usually indicates the model is not defined properly
+            value_type = value
 
+        result[key] = processing_map.get(value_type, _get_default_value)(value, full_spec)
     return result
 
 
